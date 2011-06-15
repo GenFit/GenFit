@@ -1,0 +1,50 @@
+*
+* $Id: result.doc 212 2007-10-04 23:45:50Z rdm $
+*
+* $Log: result.doc,v $
+* Revision 1.1.1.1  2002/06/16 15:18:35  hristov
+* Separate distribution  of Geant3
+*
+* Revision 1.1.1.1  1999/05/18 15:55:15  fca
+* AliRoot sources
+*
+* Revision 1.1.1.1  1995/10/24 10:19:51  cernlib
+* Geant
+*
+*
+*CMZ :  3.21/02 29/03/94  15.41.37  by  S.Giani
+*-- Author :
+C**
+C** THE RESULT COMMON STORES ALL INFORMATION OF THE CURRENT TRACK:
+C**
+C** XEND    |    START- OR END- COORDINATES OF THE CURRENT STEP.
+C** YEND    |
+C** ZEND    |
+C** RCA          CALO1*1000.+CALO2*1.  |CALO1 AND CALO2 (CELL1 AND
+C** RCE          CELL1*1000.+CELL2*1.  |CELL2) ARE THE CALORIMETER
+C**                                    |(CELLS), WHERE THIS STEP COMES
+C**                                    |FROM AND GOES TO.
+C** AMAS         MASS
+C** NCH          CHARGE
+C** TOF          TIME OF FLIGHT  (IN 1/20 NSEC)
+C** PX           PX/P = COSL*COSP
+C** PY           PY/P = COSL*SINP
+C** PZ           PZ/P = SINL
+C** USERW        USERWORD (SEE 'HSTORY')
+C** INTCT        INTERACTION/DECAY-COUNTER
+C** P            MOMENTUM
+C** EN           TOTAL ENERGY
+C** EK           KINETIC ENERGY
+C** AMASQ        MASS**2
+C** DELTN        ACTUAL STEPSIZE  (SEE ALSO DDELTN IN COMMON /CURPAR)
+C** ITK          NUMBER OF GENERATOR TRACK (SEE INPUT-ROUTINES)
+C** NTK          NUMBER OF TRACK IN SHOWER
+C** IPART        PARTICLE INDEX (SEE #MASIND)
+C** IND          MATERIAL INDEX (SEE #MATTER)
+C** LCALO        CALORIMETER NUMBER (=CALORIMETER1 IN RCA)
+C** ICEL         CELL NUMBER        (=CELL1 IN RCE)
+C** SINL         SINE OF DIP-ANGLE
+C** COSL         COSINE OF DIP-ANGLE
+C** SINP         SINE OF NORMAL PHI-ANGLE (WITH RESPECT TO X-AXIS)
+C** COSP         COSINE OF NORMAL PHI-ANGLE
+C**

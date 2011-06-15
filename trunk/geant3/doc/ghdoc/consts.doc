@@ -1,0 +1,47 @@
+*
+* $Id: consts.doc 212 2007-10-04 23:45:50Z rdm $
+*
+* $Log: consts.doc,v $
+* Revision 1.1.1.1  2002/06/16 15:18:35  hristov
+* Separate distribution  of Geant3
+*
+* Revision 1.1.1.1  1999/05/18 15:55:15  fca
+* AliRoot sources
+*
+* Revision 1.1.1.1  1995/10/24 10:19:51  cernlib
+* Geant
+*
+*
+*CMZ :  3.21/02 29/03/94  15.41.37  by  S.Giani
+*-- Author :
+C**
+C** IN THE /CONSTS-COMMON ARE SOME PARTICLE CONSTANTS
+C**
+C**  PI        3.1425927
+C**  TWPI      2*PI
+C**  PIBTW     PI/2.
+C**  MP        MASS OF PROTON
+C**  MPI               PION
+C**  MMU               MUON
+C**  MEL               ELECTRON
+C**  MKCH              CHARGED KAON
+C**  MK0               NEUTRAL KAON
+C**  SMP       SQRT(MP)
+C**  SMPI      SQRT(MPI)
+C**  SMU       SQRT(MMU)
+C**  CT        CT OF PIONS
+C**  CTKCH           CHARGED KAON
+C**  CTK0            NEUTRAL KAON
+C**  ML0       MASS OF LAMBDA
+C**  MSP               SIGMA+
+C**  MS0               SIGMA0
+C**  MSM               SIGMA-
+C**  MX0               CHI0
+C**  MXM               CHI-
+C**  CTL0      CT OF LAMBDA
+C**  CTSP            SIGMA+
+C**  CTS0            SIGMA0
+C**  CTSM            SIGMA-
+C**  CTX0            CHI0
+C**  CTXM            CHI-
+C**

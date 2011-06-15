@@ -1,0 +1,61 @@
+cmake_minimum_required(VERSION 2.6)
+
+#check for ENV variables that are needed
+IF(NOT DEFINED ENV{ROOTSYS})
+   MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
+ENDIF(NOT DEFINED ENV{ROOTSYS})
+#IF(NOT DEFINED ENV{GENFIT})
+#   MESSAGE(FATAL_ERROR "You did not set the environment variable GENFIT.") 
+#ENDIF(NOT DEFINED ENV{GENFIT})
+
+INCLUDE_DIRECTORIES($ENV{ROOTSYS}/include ${GENFIT}/core)
+
+set(GENFIT_SRCS GFAbsRecoHit.cxx GFAbsTrackRep.cxx GFBookkeeping.cxx
+GFDetPlane.cxx GFException.cxx GFKalman.cxx GFPlanarHitPolicy.cxx
+GFRecoHitFactory.cxx GFRecoHitProducer.cxx GFSpacepointHitPolicy.cxx
+GFTools.cxx GFTrackCand.cxx GFTrack.cxx GFWireHitPolicy.cxx
+GFWirepointHitPolicy.cxx GFConstField.cxx GFFieldManager.cxx
+GFAbsFinitePlane.cxx GFRectFinitePlane.cxx
+GFDaf.cxx
+GFMaterialEffects.cxx)
+
+set(GENFIT_HEADERS  GFAbsBField.h GFAbsRecoHit.h GFAbsTrackRep.h
+GFBookkeeping.h GFDetPlane.h GFException.h GFKalman.h
+GFPlanarHitPolicy.h GFRecoHitFactory.h GFRecoHitIfc.h
+GFRecoHitProducer.h GFSpacepointHitPolicy.h GFTools.h GFTrackCand.h 
+GFTrack.h GFWireHitPolicy.h GFWirepointHitPolicy.h GFConstField.h
+GFFieldManager.h GFAbsFinitePlane.h GFRectFinitePlane.h
+GFDaf.h
+GFMaterialEffects.h)
+
+set(GENFIT_LINKDEF  genfitLinkDef.h)
+set(GENFIT_DICTIONARY genfitDict.cxx) 
+
+FIND_PROGRAM(ROOT_CINT_EXECUTABLE
+	NAMES rootcint
+	PATHS $ENV{ROOTSYS}/bin
+	NO_DEFAULT_PATH)
+
+ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY}
+	COMMAND ${ROOT_CINT_EXECUTABLE}
+      	ARGS -f ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY} -c -DHAVE_CONFIG_H
+      	 -I${GENFIT}/core ${GENFIT_HEADERS} ${GENFIT_LINKDEF}
+      	DEPENDS ${GENFIT_HEADERS} ${GENFIT_LINKDEF})
+
+SET(GENFIT_SRCS ${GENFIT_SRCS} ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY})
+#SET(GENFIT_SRCS ${GENFIT_SRCS} ${GENFIT_DICTIONARY})
+
+################ install ###################
+
+#add ROOT lib
+Execute_process(COMMAND root-config --glibs --cflags
+	OUTPUT_VARIABLE ROOT_LIBS
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+
+
+ADD_LIBRARY(genfit SHARED ${GENFIT_SRCS})
+TARGET_LINK_LIBRARIES(genfit ${ROOT_LIBS}  -lGeom -lVMC -lEG)
+
+INSTALL(TARGETS genfit DESTINATION ${GENFITLIBINSTALLDIR})
+
