@@ -16,8 +16,8 @@ GFRecoHitFactory.cxx GFRecoHitProducer.cxx GFSpacepointHitPolicy.cxx
 GFTools.cxx GFTrackCand.cxx GFTrack.cxx GFWireHitPolicy.cxx
 GFWirepointHitPolicy.cxx GFConstField.cxx GFFieldManager.cxx
 GFAbsFinitePlane.cxx GFRectFinitePlane.cxx
-GFDaf.cxx
-GFMaterialEffects.cxx)
+GFDaf.cxx GFDafHit.cxx
+GFMaterialEffects.cxx GFTrackProximity.cxx)
 
 set(GENFIT_HEADERS  GFAbsBField.h GFAbsRecoHit.h GFAbsTrackRep.h
 GFBookkeeping.h GFDetPlane.h GFException.h GFKalman.h
@@ -25,8 +25,8 @@ GFPlanarHitPolicy.h GFRecoHitFactory.h GFRecoHitIfc.h
 GFRecoHitProducer.h GFSpacepointHitPolicy.h GFTools.h GFTrackCand.h 
 GFTrack.h GFWireHitPolicy.h GFWirepointHitPolicy.h GFConstField.h
 GFFieldManager.h GFAbsFinitePlane.h GFRectFinitePlane.h
-GFDaf.h
-GFMaterialEffects.h)
+GFDaf.h GFDafHit.h
+GFMaterialEffects.h GFTrackProximity.h)
 
 set(GENFIT_LINKDEF  genfitLinkDef.h)
 set(GENFIT_DICTIONARY genfitDict.cxx) 
@@ -39,7 +39,7 @@ FIND_PROGRAM(ROOT_CINT_EXECUTABLE
 ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY}
 	COMMAND ${ROOT_CINT_EXECUTABLE}
       	ARGS -f ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY} -c -DHAVE_CONFIG_H
-      	 -I${GENFIT}/core ${GENFIT_HEADERS} ${GENFIT_LINKDEF}
+      	-I${GENFIT}/core ${GENFIT_HEADERS} ${GENFIT_LINKDEF}
       	DEPENDS ${GENFIT_HEADERS} ${GENFIT_LINKDEF})
 
 SET(GENFIT_SRCS ${GENFIT_SRCS} ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY})

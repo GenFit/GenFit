@@ -1,27 +1,28 @@
-#ifndef STRIPHIT_HH
-#define STRIPHIT_HH
+#ifndef PIXHIT_HH
+#define PIXHIT_HH
 
 // Base Class Headers ----------------
-#include <assert.h>
-
 #include "GFRecoHitIfc.h"
 #include "GFPlanarHitPolicy.h"
+#include"GFDetPlane.h"
 
 // Collaborating Class Headers -------
 #include <ostream> // remove if you do not need streaming op
+#include"TRandom3.h"
 
 // Collaborating Class Declarations --
 
 typedef GFRecoHitIfc<GFPlanarHitPolicy> PlanarRecoHit;
 
-class StripHit : public PlanarRecoHit {
+class PixHit : public PlanarRecoHit {
 public:
 
   // Constructors/Destructors ---------
-  StripHit();
-  StripHit(TVector3 point,double res,double sigma,int proj,int smearFlag=1);
+  PixHit();
+  PixHit(TVector3 point,double x_res, double y_res);
+  PixHit(const GFDetPlane& pl,double res);
 
-  virtual ~StripHit();
+  virtual ~PixHit();
 
   virtual GFAbsRecoHit* clone();
   
@@ -30,14 +31,14 @@ public:
 
 
 private:
-
+  static TRandom3 rand;
   // Private Data Members ------------
-  static const int NparHitRep = 1;
+  static const int NparHitRep = 2;
 
   // Private Methods -----------------
 
 public:
-  ClassDef(StripHit,1)
+  ClassDef(PixHit,1)
 
 };
 

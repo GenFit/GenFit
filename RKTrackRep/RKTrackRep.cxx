@@ -50,6 +50,7 @@ void RKTrackRep::setData(const TMatrixT<double>& st, const GFDetPlane& pl, const
 	}
   }
   GFAbsTrackRep::setData(st,pl,cov);
+  if (fCharge*fState[0][0] < 0) fCharge *= -1; // set charge accordingly! (fState[0][0] = q/p)
   fSpu=fCacheSpu;
 }
 
@@ -111,6 +112,53 @@ RKTrackRep::RKTrackRep(const TVector3& pos,
                poserr.Y()*poserr.Y() * v.Y()*v.Y() +
                poserr.Z()*poserr.Z() * v.Z()*v.Z();
   fCov[0][0] = fCharge*fCharge/pow(mom.Mag(),6.) * 
+               (mom.X()*mom.X() * momerr.X()*momerr.X()+
+                mom.Y()*mom.Y() * momerr.Y()*momerr.Y()+
+                mom.Z()*mom.Z() * momerr.Z()*momerr.Z());
+  fCov[1][1] = pow((u.X()/pw - w.X()*pu/(pw*pw)),2.)*momerr.X()*momerr.X() +
+               pow((u.Y()/pw - w.Y()*pu/(pw*pw)),2.)*momerr.Y()*momerr.Y() +
+               pow((u.Z()/pw - w.Z()*pu/(pw*pw)),2.)*momerr.Z()*momerr.Z();
+  fCov[2][2] = pow((v.X()/pw - w.X()*pv/(pw*pw)),2.)*momerr.X()*momerr.X() +
+               pow((v.Y()/pw - w.Y()*pv/(pw*pw)),2.)*momerr.Y()*momerr.Y() +
+               pow((v.Z()/pw - w.Z()*pv/(pw*pw)),2.)*momerr.Z()*momerr.Z();
+
+}
+
+
+RKTrackRep::RKTrackRep(const GFTrackCand* aGFTrackCandPtr) :
+                       GFAbsTrackRep(5), fDirection(true), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1) {
+  setPDG(aGFTrackCandPtr->getPdgCode()); // also sets charge and mass
+
+  TVector3 mom = aGFTrackCandPtr->getDirSeed();
+  fRefPlane.setO(aGFTrackCandPtr->getPosSeed());
+  fRefPlane.setNormal(mom);
+  double pw=mom.Mag();
+  fState[0][0]=fCharge/pw;
+  //u' and v'
+  fState[1][0]=0.0;
+  fState[2][0]=0.0;
+  //u and v
+  fState[3][0]=0.0;
+  fState[4][0]=0.0;
+  //spu
+  fSpu=1.;
+
+  TVector3 o=fRefPlane.getO();
+  TVector3 u=fRefPlane.getU();
+  TVector3 v=fRefPlane.getV();
+  TVector3 w=u.Cross(v);
+  double pu=0.;
+  double pv=0.;
+
+  TVector3 poserr = aGFTrackCandPtr->getPosError();
+  TVector3 momerr = aGFTrackCandPtr->getDirError();
+  fCov[3][3] = poserr.X()*poserr.X() * u.X()*u.X() +
+               poserr.Y()*poserr.Y() * u.Y()*u.Y() +
+               poserr.Z()*poserr.Z() * u.Z()*u.Z();
+  fCov[4][4] = poserr.X()*poserr.X() * v.X()*v.X() +
+               poserr.Y()*poserr.Y() * v.Y()*v.Y() +
+               poserr.Z()*poserr.Z() * v.Z()*v.Z();
+  fCov[0][0] = fCharge*fCharge/pow(mom.Mag(),6.) *
                (mom.X()*mom.X() * momerr.X()*momerr.X()+
                 mom.Y()*mom.Y() * momerr.Y()*momerr.Y()+
                 mom.Z()*mom.Z() * momerr.Z()*momerr.Z());
@@ -602,7 +650,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   static const double DLT32  = DLT/32.;         //
   static const double P3     = 1./3.;           // 1/3
   static const double Smax   = 100.;            // max. step allowed > 0 
-  static const double Wmax   = 2000.;           // max. way allowed
+  static const double Wmax   = 3000.;           // max. way allowed
   static const double Pmin   = 4.E-3;           // minimum momentum for propagation [GeV]
   static const int    ND     = 56;              // number of variables for derivatives calculation
   static const int    ND1    = ND-7;            // = 49
@@ -1071,7 +1119,7 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
     }
     
     if(calcCov){ //propagate cov and add noise
-      if(!(oldCov < 1.E300)){
+      if(!(oldCov < 1.E200)){
         GFException exc("RKTrackRep::Extrap ==> covariance matrix exceeds numerical limits",__LINE__,__FILE__);
         exc.setFatal();
         delete[] P;
@@ -1096,5 +1144,106 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
   delete[] P;
   return sumDistance;
 }
+
+void RKTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixT<double>& cov){
+
+  const TVector3 U=pl.getU();
+  const TVector3 V=pl.getV();
+  const TVector3 W=U.Cross(V);
+
+  TMatrixT<double> statePred=fState;
+  TMatrixT<double> covPred=fCov;
+  double spu=fSpu;
+  if(pl!=fRefPlane)
+  {
+    extrapolate(pl, statePred, covPred);
+    spu=fCacheSpu;
+  }
+
+  const double p=fCharge/statePred[0][0]; //Magnitude of the momentum.
+  const TVector3 pTilde=spu*(W+statePred[1][0]*U+statePred[2][0]*V);
+  const double pTildeMagnitude=pTilde.Mag();
+
+  TMatrixT<double> jacobian(6, 5); //Jacobian matrix \frac{\partial\left(x, y, z, p_x, p_y, p_z\right)}{\partial\left(\frac{q}{p}, u^\prime, v^\prime, u, v\right)}
+  jacobian[0][3]=U.X();
+  jacobian[0][4]=V.X();
+  jacobian[1][3]=U.Y();
+  jacobian[1][4]=V.Y();
+  jacobian[2][3]=U.Z();
+  jacobian[2][4]=V.Z();
+  jacobian[3][1]=p*spu/pTildeMagnitude*(U.X()-pTilde.X()*(U*pTilde)/(pTildeMagnitude*pTildeMagnitude));
+  jacobian[3][2]=p*spu/pTildeMagnitude*(V.X()-pTilde.X()*(V*pTilde)/(pTildeMagnitude*pTildeMagnitude));
+  jacobian[4][1]=p*spu/pTildeMagnitude*(U.Y()-pTilde.Y()*(U*pTilde)/(pTildeMagnitude*pTildeMagnitude));
+  jacobian[4][2]=p*spu/pTildeMagnitude*(V.Y()-pTilde.Y()*(V*pTilde)/(pTildeMagnitude*pTildeMagnitude));
+  jacobian[5][1]=p*spu/pTildeMagnitude*(U.Z()-pTilde.Z()*(U*pTilde)/(pTildeMagnitude*pTildeMagnitude));
+  jacobian[5][2]=p*spu/pTildeMagnitude*(V.Z()-pTilde.Z()*(V*pTilde)/(pTildeMagnitude*pTildeMagnitude));
+
+  TMatrixT<double> transposedJacobian=jacobian;
+  transposedJacobian.T();
+
+  cov.ResizeTo(6, 6);
+
+  pos=pl.getO()+statePred[3][0]*U+statePred[4][0]*V;
+  mom=p/pTildeMagnitude*pTilde;
+  cov=jacobian*covPred*transposedJacobian;
+}
+
+
+double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
+
+  TVector3 dest;
+
+  static const int maxIt(30);
+
+  TVector3 o=fRefPlane.getO();
+  TVector3 u=fRefPlane.getU();
+  TVector3 v=fRefPlane.getV();
+  TVector3 w=u.Cross(v);
+
+  TVector3 pTilde = fSpu* (w + fState[1][0] * u + fState[2][0] * v);
+  pTilde.SetMag(1.);
+
+  TVector3 point = o + fState[3][0]*u + fState[4][0]*v;
+
+  TMatrixT<double> state7(7,1);
+  state7[0][0] = point.X();
+  state7[1][0] = point.Y();
+  state7[2][0] = point.Z();
+  state7[3][0] = pTilde.X();
+  state7[4][0] = pTilde.Y();
+  state7[5][0] = pTilde.Z();
+  state7[6][0] = fState[0][0];
+
+  double coveredDistance(0.);
+
+  GFDetPlane pl;
+  int iterations(0);
+
+  while(true){
+    pos.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
+    dir.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
+    dir.SetMag(1.);
+
+    dest = pos + (h - coveredDistance) * dir;
+
+    pl.setON(dest, dir);
+    coveredDistance += this->Extrap(pl,&state7);
+
+    if(fabs(h - coveredDistance)<MINSTEP) break;
+    if(++iterations == maxIt) {
+      GFException exc("RKTrackRep::stepalong ==> maximum number of iterations reached",__LINE__,__FILE__);
+      throw exc;
+    }
+  }
+  
+  pos.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
+  dir.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
+  dir.SetMag(1.);  
+  
+  return coveredDistance;
+
+}
+
+
 
 ClassImp(RKTrackRep)

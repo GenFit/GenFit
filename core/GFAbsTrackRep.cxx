@@ -68,9 +68,12 @@ void GFAbsTrackRep::extrapolateToLine(const TVector3& point1,
 }
   
 
-void GFAbsTrackRep::stepalong(double h){
+double GFAbsTrackRep::stepalong(double h,
+                  TVector3& point,
+                  TVector3& dir){
   Abort("stepalong()");
 }
+
 
 void GFAbsTrackRep::getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mom,TMatrixT<double>& cov){
   Abort("getPosMomCov()");

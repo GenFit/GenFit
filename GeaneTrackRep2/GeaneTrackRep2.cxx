@@ -337,7 +337,7 @@ GeaneTrackRep2::extrapolateToPoint(const TVector3& pos,
   TVector3 poV1(po1);
   TVector3 poV2(po2);
   TVector3 poV3(po3);
-  if(fabs(clen[0])<1.E-8 && fabs(clen[1])<1.E-8 ||
+  if((fabs(clen[0])<1.E-8 && fabs(clen[1])<1.E-8) ||
      fabs(clen[0]-clen[1])<1.E-8){
     poca2Line(poV2,poV3,pos,poca);
     normVec = poV3-poV2;
@@ -532,7 +532,7 @@ GeaneTrackRep2::extrapolateToLine(const TVector3& point1,
   TVector3 poV1(po1);
   TVector3 poV2(po2);
   TVector3 poV3(po3);
-  if(fabs(clen[0])<1.E-8 && fabs(clen[1])<1.E-8 ||
+  if((fabs(clen[0])<1.E-8 && fabs(clen[1])<1.E-8) ||
      fabs(clen[0]-clen[1])<1.E-8){
     pocaLine2Line(poV2,poV3-poV2,point1,point2-point1,poca,poca_onWire);
     normVec = poV3-poV2;

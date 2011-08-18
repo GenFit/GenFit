@@ -169,7 +169,9 @@ class GFAbsTrackRep : public TObject{
       (see one of the extrapolate methods above). This can be overwritten,
       if this feature is needed.
   */
-  virtual void stepalong(double h); 
+  virtual double stepalong(double h,
+           TVector3& point,
+           TVector3& dir);
 
   //! Extrapolates the track to the given detectorplane
   /*! Results are put into statePred and covPred

@@ -26,6 +26,7 @@
 
 
 #pragma link C++ class GFAbsTrackRep+;
+#pragma link C++ class GFDafHit+;
 #pragma link C++ class GFPlanarHitPolicy+;
 #pragma link C++ class GFSpacepointHitPolicy+;
 #pragma link C++ class GFWirepointHitPolicy+;

@@ -33,7 +33,7 @@
 RKTrackRepXY::~RKTrackRepXY(){
 }
 
-RKTrackRepXY::RKTrackRepXY() : GFAbsTrackRep(5),fPdg(0),fMass(0.),fDirection(true){
+RKTrackRepXY::RKTrackRepXY() : GFAbsTrackRep(5),fDirection(true),fPdg(0),fMass(0.){
 }
 
 RKTrackRepXY::RKTrackRepXY(const TVector3& pos,
@@ -280,7 +280,7 @@ double RKTrackRepXY::extrapolate(const GFDetPlane& pl,
   double zFrom(fRefPlane.getO().Z());
   double zExtrap(0.);
   double distance(0.);
-  int counter(0);
+//int counter(0);
   while(true){
     double dz = pl.getO().Z()-zFrom;
     double dist = sqrt(dz*dz*(1.+stateExtrapIn[2][0]*stateExtrapIn[2][0]+stateExtrapIn[3][0]*stateExtrapIn[3][0]));
@@ -440,7 +440,7 @@ bool RKTrackRepXY::RKutta (double* SU,double* VO, double& Path) const {
   double SA[3]        = {0.,0.,0.};                  // Start directions derivatives 
   double  Pinv        = VO[6]*EC;                    // Invert momentum/2.
   double  Way         = 0.;                          // Total way of the trajectory
-  int     Error       = 0;                           // Error of propogation
+  int     error       = 0;                           // Error of propogation
   //
   // Step estimation until surface
   //
@@ -545,7 +545,7 @@ bool RKTrackRepXY::RKutta (double* SU,double* VO, double& Path) const {
     // Step estimation until surface and test conditions for stop propogation
     //
     Dis = SU[3]-R[0]*SU[0]-R[1]*SU[1]-R[2]*SU[2]; An=A[0]*SU[0]+A[1]*SU[1]+A[2]*SU[2];
-    if (An==0 || (Dis*Dist>0 && fabs(Dis)>fabs(Dist))) {Error=1; Step=0; break;}   
+    if (An==0 || (Dis*Dist>0 && fabs(Dis)>fabs(Dist))) {error=1; Step=0; break;}   
     Step = Dis/An; Dist=Dis;
     //
     // Possible current step reduction
@@ -578,7 +578,7 @@ bool RKTrackRepXY::RKutta (double* SU,double* VO, double& Path) const {
     dR[0]-=S*A [0];  dR[1]-=S*A [1]; dR[2]-=S*A [2]; 
     dA[0]-=S*SA[0];  dA[1]-=S*SA[1]; dA[2]-=S*SA[2];
   }
-  if(Error == 1){
+  if(error == 1){
     std::cout<<"PaAlgo::RKutta ==> Do not getting closer. Path = "
 	<<Way<<" cm"<<"  P = "<<1./VO[6]<<" GeV"<<std::endl;
     return(false);

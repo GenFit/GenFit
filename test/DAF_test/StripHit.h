@@ -19,7 +19,7 @@ public:
 
   // Constructors/Destructors ---------
   StripHit();
-  StripHit(TVector3 point,double res,double sigma,int proj,int smearFlag=1);
+  StripHit(TVector3 point,double res,int proj);
 
   virtual ~StripHit();
 

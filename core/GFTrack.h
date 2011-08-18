@@ -167,6 +167,12 @@ public:
    */
   void releaseHits(){fHits.clear();} 
 
+  /** @brief Clear TrackRep vector. Note that the Reps will not be deleted!
+   * 
+   * Be carefull not to create memory leaks here. 
+   */
+  void releaseTrackReps(){ fTrackReps->SetOwner(kFALSE); fTrackReps->Clear();} 
+
   /** @brief Accessor for fNextHitToFit
    */
   unsigned int getNextHitToFit() const {return fNextHitToFit;}
@@ -397,6 +403,11 @@ public:
   /** @brief Read back if smoothing is/was turned on or off for this track.
    */
   bool getSmoothing() { return fSmooth; }
+
+  /** @brief this is needed to blow up the covariance matrix before a fitting pass
+   * drops off-diagonal elements and blows up diagonal by blowUpFactor
+   */
+  void blowUpCovs(double blowUpFactor);
 
 
 public:

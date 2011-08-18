@@ -28,6 +28,8 @@
 #include"math.h"
 #include"assert.h"
 
+#define DEBUG 0
+
 
 GFMaterialEffects* GFMaterialEffects::finstance = NULL;
 
@@ -39,7 +41,20 @@ GFMaterialEffects::GFMaterialEffects():
   fEnergyLossBetheBloch(true), fNoiseBetheBloch(true),
   fNoiseCoulomb(true),
   fEnergyLossBrems(true), fNoiseBrems(true),
-  me(0.510998910E-3){
+  me(0.510998910E-3),
+  fstep(0),
+  fbeta(0),
+  fdedx(0),
+  fgamma(0),
+  fgammaSquare(0),
+  fmatDensity(0),
+  fmatZ(0),
+  fmatA(0),
+  fradiationLength(0),
+  fmEE(0),
+  fpdg(0),
+  fcharge(0),
+  fmass(0) {
 }
 
 GFMaterialEffects::~GFMaterialEffects(){
@@ -68,14 +83,13 @@ double GFMaterialEffects::effects(const std::vector<TVector3>& points,
                                   const TVector3* directionBefore, 
                                   const TVector3* directionAfter){
 
-  assert(points.size()==pointPaths.size());
+  //assert(points.size()==pointPaths.size());
+  fpdg = pdg;
 
   double momLoss=0.;
                      
   for(unsigned int i=1;i<points.size();++i){
-    TVector3 p1=points.at(i-1);
-    TVector3 p2=points.at(i);
-    TVector3 dir=p2-p1;
+    TVector3 dir=points.at(i)-points.at(i-1);
     double dist=dir.Mag();
     double realPath = pointPaths.at(i);
     
@@ -83,42 +97,37 @@ double GFMaterialEffects::effects(const std::vector<TVector3>& points,
       dir*=1./dist; //normalize dir
 
       double X(0.);
-      double matDensity, matZ, matA, radiationLength, mEE;
-      double step;
       
-      gGeoManager->InitTrack(p1.X(),p1.Y(),p1.Z(),dir.X(),dir.Y(),dir.Z());
+      gGeoManager->InitTrack(points.at(i-1).X(),points.at(i-1).Y(),points.at(i-1).Z(),
+                             dir.X(),dir.Y(),dir.Z());
 
       while(X<dist){
+
+        getParameters();
         
         gGeoManager->FindNextBoundaryAndStep(dist-X);
-        step = gGeoManager->GetStep();
+        fstep = gGeoManager->GetStep();
         
-        assert(gGeoManager->GetCurrentVolume()->GetMedium()!=NULL);
-        TGeoMaterial * mat = gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial();
-        
-        matZ = mat->GetZ();
-        
-        if(matZ>1.E-3){ // don't calculate energy loss for vacuum        
 
-          matDensity      = mat->GetDensity();
-          matA            = mat->GetA();
-          radiationLength = mat->GetRadLen();
-          mEE             = MeanExcEnergy_get(mat);
+        
+        if(fmatZ>1.E-3){ // don't calculate energy loss for vacuum
+
+          calcBeta(mom);
 
           if (fEnergyLossBetheBloch)
-            momLoss += realPath/dist * this->energyLossBetheBloch(step, mom, pdg, matDensity, matZ, matA, mEE);
-          if (fEnergyLossBetheBloch && fNoiseBetheBloch)
-            this->noiseBetheBloch(step, mom, pdg, matDensity, matZ, matA, mEE, noise);
+            momLoss += realPath/dist * this->energyLossBetheBloch(mom);
+          if (doNoise && fEnergyLossBetheBloch && fNoiseBetheBloch)
+            this->noiseBetheBloch(mom, noise);
 
-          if (fNoiseCoulomb)
-            this->noiseCoulomb(step, mom, pdg, matZ, radiationLength, noise, jacobian, directionBefore, directionAfter);
+          if (doNoise && fNoiseCoulomb)
+            this->noiseCoulomb(mom, noise, jacobian, directionBefore, directionAfter);
 
           if (fEnergyLossBrems)
-            momLoss += realPath/dist * this->energyLossBrems(step, mom, pdg, matDensity, matZ, matA, radiationLength);
-          if (fEnergyLossBrems && fNoiseBrems)
-            this->noiseBrems(step, mom, pdg, radiationLength, noise);
+            momLoss += realPath/dist * this->energyLossBrems(mom);
+          if (doNoise && fEnergyLossBrems && fNoiseBrems)
+            this->noiseBrems(mom, noise);
         }
-        X += step;
+        X += fstep;
       }
     }
   }
@@ -139,103 +148,94 @@ double GFMaterialEffects::stepper(const double& maxDist,
 
   static const double maxPloss = .005; // maximum relative momentum loss allowed
 
+  fpdg = pdg;
+
   gGeoManager->InitTrack(posx,posy,posz,dirx,diry,dirz);
 
   double X(0.);
   double dP = 0.;
   double momLoss = 0.;
-  double matDensity, matZ, matA, radiationLength, mEE;
-  double step;
 
   while(X<maxDist){
+
+    getParameters();
     
     gGeoManager->FindNextBoundaryAndStep(maxDist-X);
-    step = gGeoManager->GetStep();
+    fstep = gGeoManager->GetStep();
     
-    assert(gGeoManager->GetCurrentVolume()->GetMedium()!=NULL);
-    TGeoMaterial * mat = gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial();
-    
-    matZ = mat->GetZ();
-      
-    if(matZ>1.E-3){ // don't calculate energy loss for vacuum       
- 
-      matDensity      = mat->GetDensity();
-      matA            = mat->GetA();
-      radiationLength = mat->GetRadLen();
-      mEE             = MeanExcEnergy_get(mat);
 
+      
+    if(fmatZ>1.E-3){ // don't calculate energy loss for vacuum
+
+      calcBeta(mom);
+ 
       if (fEnergyLossBetheBloch)
-        momLoss += this->energyLossBetheBloch(step, mom, pdg, matDensity, matZ, matA, mEE);
+        momLoss += this->energyLossBetheBloch(mom);
 
       if (fEnergyLossBrems)
-        momLoss += this->energyLossBrems(step, mom, pdg, matDensity, matZ, matA, radiationLength);
+        momLoss += this->energyLossBrems(mom);
     }
     
     if(dP + momLoss > mom*maxPloss){
       double fraction = (mom*maxPloss-dP)/momLoss;
-      assert(fraction>0.&&fraction<1.);
       dP+=fraction*momLoss;
-      X+=fraction*step;
+      X+=fraction*fstep;
       break;
     }
     
     dP += momLoss;
-    X += step;
+    X += fstep;
   }
 
   return X;                 
 }
 
 
-void GFMaterialEffects::getParticleParameters(const int&    pdg,
-                                            double& charge,
-                                            double& mass){
-  TParticlePDG * part = TDatabasePDG::Instance()->GetParticle(pdg);
-  charge = part->Charge()/(3.);
-  mass = part->Mass();
-};
+void GFMaterialEffects::getParameters(){
+  assert(gGeoManager->GetCurrentVolume()->GetMedium()!=NULL);
+  TGeoMaterial * mat = gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial();
+  fmatDensity      = mat->GetDensity();
+  fmatZ            = mat->GetZ();
+  fmatA            = mat->GetA();
+  fradiationLength = mat->GetRadLen();
+  fmEE             = MeanExcEnergy_get(mat);
 
-double GFMaterialEffects::getParticleMass (const int& pdg){
-  TParticlePDG * part = TDatabasePDG::Instance()->GetParticle(pdg);
-  return part->Mass();
+  TParticlePDG * part = TDatabasePDG::Instance()->GetParticle(fpdg);
+  fcharge = part->Charge()/(3.);
+  fmass = part->Mass();
+}
+
+
+void GFMaterialEffects::calcBeta(double mom){
+  fbeta = mom/sqrt(fmass*fmass+mom*mom);
+
+  //for numerical stability
+  fgammaSquare = 1.-fbeta*fbeta;
+  if(fgammaSquare>1.E-10) fgammaSquare = 1./fgammaSquare;
+  else fgammaSquare = 1.E10;
+  fgamma = sqrt(fgammaSquare);
 }
 
 
 
 //---- Energy-loss and Noise calculations -----------------------------------------
 
-double GFMaterialEffects::energyLossBetheBloch(const double& step,
-                                               const double& mom,
-                                               const int&    pdg,
-                                               const double& matDensity,
-                                               const double& matZ,
-                                               const double& matA,
-                                               const double& meanExcitationEnergy){
+double GFMaterialEffects::energyLossBetheBloch(const double& mom){
 
-  double charge, mass;
-  getParticleParameters(pdg, charge, mass);
-
-  const double beta = mom/sqrt(mass*mass+mom*mom);
-  double dedx = 0.307075*matZ/matA*matDensity/(beta*beta)*charge*charge;
-
-  //for numerical stability
-  double gammaSquare = 1.-beta*beta;
-  if(gammaSquare>1.E-10) gammaSquare = 1./gammaSquare;
-  else gammaSquare = 1.E10;
-  double gamma = sqrt(gammaSquare);
-
-  double massRatio = me/mass;
-  double argument = gammaSquare*beta*beta*me*1.E3*2./((1.E-6*meanExcitationEnergy) * sqrt(1+2*sqrt(gammaSquare)*massRatio + massRatio*massRatio));
-  if (argument <= exp(beta*beta))
-    dedx = 0.;
+  // calc fdedx, also needed in noiseBetheBloch!
+  fdedx = 0.307075*fmatZ/fmatA*fmatDensity/(fbeta*fbeta)*fcharge*fcharge;
+  double massRatio = me/fmass;
+  double argument = fgammaSquare*fbeta*fbeta*me*1.E3*2./((1.E-6*fmEE) * sqrt(1+2*sqrt(fgammaSquare)*massRatio + massRatio*massRatio));
+  if (argument <= exp(fbeta*fbeta))
+    fdedx = 0.;
   else{
-    dedx *= (log(argument)-beta*beta); // Bethe-Bloch [MeV/cm]
-    dedx *= 1.E-3;  // in GeV/cm, hence 1.e-3
-    assert(dedx>0);
+    fdedx *= (log(argument)-fbeta*fbeta); // Bethe-Bloch [MeV/cm]
+    fdedx *= 1.E-3;  // in GeV/cm, hence 1.e-3
+    if (fdedx<0.) fdedx = 0;
   }
 
-  double DE = step * dedx; //always positive
-  double momLoss = sqrt(mom*mom+2.*sqrt(mom*mom+mass*mass)*DE+DE*DE) - mom; //always positive
+  double DE = fstep * fdedx; //always positive
+  double momLoss = sqrt(mom*mom+2.*sqrt(mom*mom+fmass*fmass)*DE+DE*DE) - mom; //always positive
 
   //in vacuum it can numerically happen that momLoss becomes a small negative number. A cut-off at 0.01 eV for momentum loss seems reasonable
   if(fabs(momLoss)<1.E-11)momLoss=1.E-11;
@@ -243,67 +243,40 @@ double GFMaterialEffects::energyLossBetheBloch(const double& step,
 }
 
 
-void GFMaterialEffects::noiseBetheBloch(const double& step,
-                                        const double& mom,
-                                        const int&    pdg,
-                                        const double& matDensity,
-                                        const double& matZ,
-                                        const double& matA,
-                                        const double& meanExcitationEnergy,
-                                        TMatrixT<double>* noise){
+void GFMaterialEffects::noiseBetheBloch(const double& mom,
+                                        TMatrixT<double>* noise) const{
 
-  double charge, mass;
-  getParticleParameters(pdg, charge, mass);
-
-  const double beta = mom/sqrt(mass*mass+mom*mom);
-  double dedx = 0.307075*matZ/matA*matDensity/(beta*beta)*charge*charge;
-
-  //for numerical stability
-  double gammaSquare = 1.-beta*beta;
-  if(gammaSquare>1.E-10) gammaSquare = 1./gammaSquare;
-  else gammaSquare = 1.E10;
-  double gamma = sqrt(gammaSquare);
-
-  double massRatio = me/mass;
-  double argument = gammaSquare*beta*beta*me*1.E3*2./((1.E-6*meanExcitationEnergy) * sqrt(1+2*sqrt(gammaSquare)*massRatio + massRatio*massRatio));
-  if (argument <= exp(beta*beta))
-    dedx = 0.;
-  else{
-    dedx *= (log(argument)-beta*beta); // Bethe-Bloch [MeV/cm]
-    dedx *= 1.E-3;  // in GeV/cm, hence 1.e-3
-    assert(dedx>0);
-  }
 
   // ENERGY LOSS FLUCTUATIONS; calculate sigma^2(E);
   double sigma2E = 0.;
-  double zeta  = 153.4E3 * charge*charge/(beta*beta) * matZ/matA * matDensity * step; // eV
-  double Emax  = 2.E9*me*beta*beta*gammaSquare / (1. + 2.*gamma*me/mass + (me/mass)*(me/mass) ); // eV
+  double zeta  = 153.4E3 * fcharge*fcharge/(fbeta*fbeta) * fmatZ/fmatA * fmatDensity * fstep; // eV
+  double Emax  = 2.E9*me*fbeta*fbeta*fgammaSquare / (1. + 2.*fgamma*me/fmass + (me/fmass)*(me/fmass) ); // eV
   double kappa = zeta/Emax;
 
   if (kappa > 0.01) { // Vavilov-Gaussian regime
-    sigma2E += zeta*Emax*(1.-beta*beta/2.);  // eV^2
+    sigma2E += zeta*Emax*(1.-fbeta*fbeta/2.);  // eV^2
   }
   else { // Urban/Landau approximation
     double alpha = 0.996;
     double sigmaalpha = 15.76;
     // calculate number of collisions Nc
-    double I = 16. * pow(matZ, 0.9); // eV
+    double I = 16. * pow(fmatZ, 0.9); // eV
     double f2 = 0.;
-    if (matZ > 2.) f2 = 2./matZ;
+    if (fmatZ > 2.) f2 = 2./fmatZ;
     double f1 = 1. - f2;
-    double e2 = 10.*matZ*matZ; // eV
+    double e2 = 10.*fmatZ*fmatZ; // eV
     double e1 = pow( (I/pow(e2,f2)), 1./f1);  // eV
 
-    double mbbgg2 = 2.E9*mass*beta*beta*gammaSquare; // eV
-    double Sigma1 = dedx*1.0E9 * f1/e1 * (log(mbbgg2 / e1) - beta*beta) / (log(mbbgg2 / I) - beta*beta) * 0.6; // 1/cm
-    double Sigma2 = dedx*1.0E9 * f2/e2 * (log(mbbgg2 / e2) - beta*beta) / (log(mbbgg2 / I) - beta*beta) * 0.6; // 1/cm
-    double Sigma3 = dedx*1.0E9 * Emax / ( I*(Emax+I)*log((Emax+I)/I) ) * 0.4; // 1/cm
+    double mbbgg2 = 2.E9*fmass*fbeta*fbeta*fgammaSquare; // eV
+    double Sigma1 = fdedx*1.0E9 * f1/e1 * (log(mbbgg2 / e1) - fbeta*fbeta) / (log(mbbgg2 / I) - fbeta*fbeta) * 0.6; // 1/cm
+    double Sigma2 = fdedx*1.0E9 * f2/e2 * (log(mbbgg2 / e2) - fbeta*fbeta) / (log(mbbgg2 / I) - fbeta*fbeta) * 0.6; // 1/cm
+    double Sigma3 = fdedx*1.0E9 * Emax / ( I*(Emax+I)*log((Emax+I)/I) ) * 0.4; // 1/cm
 
-    double Nc = (Sigma1 + Sigma2 + Sigma3)*step;
+    double Nc = (Sigma1 + Sigma2 + Sigma3)*fstep;
 
     if (Nc > 50.) { // truncated Landau distribution
       // calculate sigmaalpha  (see GEANT3 manual W5013)
-      double RLAMED = -0.422784 - beta*beta - log(zeta/Emax);
+      double RLAMED = -0.422784 - fbeta*fbeta - log(zeta/Emax);
       double RLAMAX =  0.60715 + 1.1934*RLAMED +(0.67794 + 0.052382*RLAMED)*exp(0.94753+0.74442*RLAMED);
       // from lambda max to sigmaalpha=sigma (empirical polynomial)
       if(RLAMAX <= 1010.) {
@@ -322,35 +295,26 @@ void GFMaterialEffects::noiseBetheBloch(const double& step,
     else { // Urban model
       double Ealpha  = I / (1.-(alpha*Emax/(Emax+I)));   // eV
       double meanE32 = I*(Emax+I)/Emax * (Ealpha-I);     // eV^2
-      sigma2E += step * (Sigma1*e1*e1 + Sigma2*e2*e2 + Sigma3*meanE32); // eV^2
+      sigma2E += fstep * (Sigma1*e1*e1 + Sigma2*e2*e2 + Sigma3*meanE32); // eV^2
     }
   }
 
   sigma2E*=1.E-18; // eV -> GeV
 
   // update noise matrix
-  (*noise)[6][6] += (mom*mom+mass*mass)/pow(mom,6.)*sigma2E;
+  (*noise)[6][6] += (mom*mom+fmass*fmass)/pow(mom,6.)*sigma2E;
 }
 
 
-void GFMaterialEffects::noiseCoulomb(const double& step,
-                                     const double& mom,
-                                     const int&    pdg,
-                                     const double& matZ,
-                                     const double& radiationLength,
+void GFMaterialEffects::noiseCoulomb(const double& mom,
                                            TMatrixT<double>* noise,
                                      const TMatrixT<double>* jacobian,
                                      const TVector3* directionBefore,
-                                     const TVector3* directionAfter){
-
-  double charge, mass;
-  getParticleParameters(pdg, charge, mass);
-
-  const double beta = mom/sqrt(mass*mass+mom*mom);
+                                     const TVector3* directionAfter) const{
 
   // MULTIPLE SCATTERING; calculate sigma^2
   // PANDA report PV/01-07 eq(43); linear in step length
-  double sigma2 = 225.E-6/(beta*beta*mom*mom) * step/radiationLength * matZ/(matZ+1) * log(159.*pow(matZ,-1./3.))/log(287.*pow(matZ,-0.5)); // sigma^2 = 225E-6/mom^2 * XX0/beta^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
+  double sigma2 = 225.E-6/(fbeta*fbeta*mom*mom) * fstep/fradiationLength * fmatZ/(fmatZ+1) * log(159.*pow(fmatZ,-1./3.))/log(287.*pow(fmatZ,-0.5)); // sigma^2 = 225E-6/mom^2 * XX0/fbeta^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
 
   // noiseBefore
     TMatrixT<double> noiseBefore(7,7);
@@ -436,15 +400,9 @@ void GFMaterialEffects::noiseCoulomb(const double& step,
 }
 
 
-double GFMaterialEffects::energyLossBrems(const double& step,
-                                     const double& mom,
-                                     const int&    pdg,
-                                     const double& matDensity,
-                                     const double& matZ,
-                                     const double& matA,
-                                     const double& radiationLength){
+double GFMaterialEffects::energyLossBrems(const double& mom) const{
 
-  if (fabs(pdg)!=11) return 0; // only for electrons and positrons
+  if (fabs(fpdg)!=11) return 0; // only for electrons and positrons
 
   #if !defined(BETHE)
     static const double C[101]={ 0.0,-0.960613E-01, 0.631029E-01,-0.142819E-01, 0.150437E-02,-0.733286E-04, 0.131404E-05, 0.859343E-01,-0.529023E-01, 0.131899E-01,-0.159201E-02, 0.926958E-04,-0.208439E-05,-0.684096E+01, 0.370364E+01,-0.786752E+00, 0.822670E-01,-0.424710E-02, 0.867980E-04,-0.200856E+01, 0.129573E+01,-0.306533E+00, 0.343682E-01,-0.185931E-02, 0.392432E-04, 0.127538E+01,-0.515705E+00, 0.820644E-01,-0.641997E-02, 0.245913E-03,-0.365789E-05, 0.115792E+00,-0.463143E-01, 0.725442E-02,-0.556266E-03, 0.208049E-04,-0.300895E-06,-0.271082E-01, 0.173949E-01,-0.452531E-02, 0.569405E-03,-0.344856E-04, 0.803964E-06, 0.419855E-02,-0.277188E-02, 0.737658E-03,-0.939463E-04, 0.569748E-05,-0.131737E-06,-0.318752E-03, 0.215144E-03,-0.579787E-04, 0.737972E-05,-0.441485E-06, 0.994726E-08, 0.938233E-05,-0.651642E-05, 0.177303E-05,-0.224680E-06, 0.132080E-07,-0.288593E-09,-0.245667E-03, 0.833406E-04,-0.129217E-04, 0.915099E-06,-0.247179E-07, 0.147696E-03,-0.498793E-04, 0.402375E-05, 0.989281E-07,-0.133378E-07,-0.737702E-02, 0.333057E-02,-0.553141E-03, 0.402464E-04,-0.107977E-05,-0.641533E-02, 0.290113E-02,-0.477641E-03, 0.342008E-04,-0.900582E-06, 0.574303E-05, 0.908521E-04,-0.256900E-04, 0.239921E-05,-0.741271E-07,-0.341260E-04, 0.971711E-05,-0.172031E-06,-0.119455E-06, 0.704166E-08, 0.341740E-05,-0.775867E-06,-0.653231E-07, 0.225605E-07,-0.114860E-08,-0.119391E-06, 0.194885E-07, 0.588959E-08,-0.127589E-08, 0.608247E-10};
@@ -452,13 +410,10 @@ double GFMaterialEffects::energyLossBrems(const double& step,
   #endif
   #if defined(BETHE) // no MIGDAL corrections
     static const double C[101]={ 0.0, 0.834459E-02, 0.443979E-02,-0.101420E-02, 0.963240E-04,-0.409769E-05, 0.642589E-07, 0.464473E-02,-0.290378E-02, 0.547457E-03,-0.426949E-04, 0.137760E-05,-0.131050E-07,-0.547866E-02, 0.156218E-02,-0.167352E-03, 0.101026E-04,-0.427518E-06, 0.949555E-08,-0.406862E-02, 0.208317E-02,-0.374766E-03, 0.317610E-04,-0.130533E-05, 0.211051E-07, 0.158941E-02,-0.385362E-03, 0.315564E-04,-0.734968E-06,-0.230387E-07, 0.971174E-09, 0.467219E-03,-0.154047E-03, 0.202400E-04,-0.132438E-05, 0.431474E-07,-0.559750E-09,-0.220958E-02, 0.100698E-02,-0.596464E-04,-0.124653E-04, 0.142999E-05,-0.394378E-07, 0.477447E-03,-0.184952E-03,-0.152614E-04, 0.848418E-05,-0.736136E-06, 0.190192E-07,-0.552930E-04, 0.209858E-04, 0.290001E-05,-0.133254E-05, 0.116971E-06,-0.309716E-08, 0.212117E-05,-0.103884E-05,-0.110912E-06, 0.655143E-07,-0.613013E-08, 0.169207E-09, 0.301125E-04,-0.461920E-04, 0.871485E-05,-0.622331E-06, 0.151800E-07,-0.478023E-04, 0.247530E-04,-0.381763E-05, 0.232819E-06,-0.494487E-08,-0.336230E-04, 0.223822E-04,-0.384583E-05, 0.252867E-06,-0.572599E-08, 0.105335E-04,-0.567074E-06,-0.216564E-06, 0.237268E-07,-0.658131E-09, 0.282025E-05,-0.671965E-06, 0.565858E-07,-0.193843E-08, 0.211839E-10, 0.157544E-04,-0.304104E-05,-0.624410E-06, 0.120124E-06,-0.457445E-08,-0.188222E-05,-0.407118E-06, 0.375106E-06,-0.466881E-07, 0.158312E-08, 0.945037E-07, 0.564718E-07,-0.319231E-07, 0.371926E-08,-0.123111E-09};
-    static const double xi=2.10, beta=1.00, vl=0.001;
+    static const double xi=2.10, fbeta=1.00, vl=0.001;
   #endif
 
   double BCUT=10000.; // energy up to which soft bremsstrahlung energy loss is calculated
-
-  double charge, mass;
-  getParticleParameters(pdg, charge, mass);
 
   double THIGH=100., CHIGH=50.;
   double dedxBrems=0.;
@@ -535,15 +490,15 @@ double GFMaterialEffects::energyLossBrems(const double& step,
       YY=YY*Y;
     }
 
-    S=S+matZ*SS;
+    S=S+fmatZ*SS;
 
     if(S>0.){
       double CORR=1.;
       #if !defined(BETHE)
-        CORR=1./(1.+0.805485E-10*matDensity*matZ*E*E/(matA*kc*kc)); // MIGDAL correction factor
+        CORR=1./(1.+0.805485E-10*fmatDensity*fmatZ*E*E/(fmatA*kc*kc)); // MIGDAL correction factor
       #endif
 
-      double FAC=matZ*(matZ+xi)*E*E * pow((kc*CORR/T),beta) / (E+me);
+      double FAC=fmatZ*(fmatZ+xi)*E*E * pow((kc*CORR/T),beta) / (E+me);
       if(FAC<=0.) return 0.;
       dedxBrems=FAC*S;
 
@@ -565,20 +520,20 @@ double GFMaterialEffects::energyLossBrems(const double& step,
         dedxBrems=dedxBrems*S; // GeV barn
       }
 
-      dedxBrems = 0.60221367*matDensity*dedxBrems/matA; // energy loss dE/dx [GeV/cm]
+      dedxBrems = 0.60221367*fmatDensity*dedxBrems/fmatA; // energy loss dE/dx [GeV/cm]
     }
   }
 
-  assert(dedxBrems>=0.);
+  if (dedxBrems<0.) dedxBrems = 0;
 
   double factor=1.; // positron correction factor
 
-  if (pdg==-11){
+  if (fpdg==-11){
       static const double AA=7522100., A1=0.415, A3=0.0021, A5=0.00054;
 
       double ETA=0.;
-      if(matZ>0.) {
-        double X=log(AA*mom/matZ*matZ);
+      if(fmatZ>0.) {
+        double X=log(AA*mom/fmatZ*fmatZ);
         if(X>-8.) {
           if(X>=+9.) ETA=1.;
           else {
@@ -600,32 +555,26 @@ double GFMaterialEffects::energyLossBrems(const double& step,
       }
   }
 
-  double DE = step * factor*dedxBrems; //always positive
-  double momLoss = sqrt(mom*mom+2.*sqrt(mom*mom+mass*mass)*DE+DE*DE) - mom; //always positive
+  double DE = fstep * factor*dedxBrems; //always positive
+  double momLoss = sqrt(mom*mom+2.*sqrt(mom*mom+fmass*fmass)*DE+DE*DE) - mom; //always positive
 
   return momLoss;
 }
 
 
-void GFMaterialEffects::noiseBrems(const double& step,
-                                   const double& mom,
-                                   const int&    pdg,
-                                   const double& radiationLength,
-                                   TMatrixT<double>* noise){
+void GFMaterialEffects::noiseBrems(const double& mom,
+                                   TMatrixT<double>* noise) const{
 
-  if (fabs(pdg)!=11) return; // only for electrons and positrons
+  if (fabs(fpdg)!=11) return; // only for electrons and positrons
 
-  double charge, mass;
-  getParticleParameters(pdg, charge, mass);
-
-  double LX  = 1.442695*step/radiationLength;
+  double LX  = 1.442695*fstep/fradiationLength;
   double S2B = mom*mom * ( 1./pow(3.,LX) - 1./pow(4.,LX) );
   double DEDXB  = pow(fabs(S2B),0.5);
   DEDXB = 1.2E9*DEDXB; //eV
   double sigma2E = DEDXB*DEDXB; //eV^2
   sigma2E*=1.E-18; // eV -> GeV
 
-  (*noise)[6][6] += (mom*mom+mass*mass)/pow(mom,6.)*sigma2E;
+  (*noise)[6][6] += (mom*mom+fmass*fmass)/pow(mom,6.)*sigma2E;
 }
 
 //---------------------------------------------------------------------------------

@@ -29,6 +29,9 @@
 #include <GFTrack.h>
 #include <TMath.h>
 #include <TMatrixT.h>
+#include <TDecompSVD.h>
+//#include <TDecompBK.h>
+//#include <TDecompChol.h>
 
 /*! \namespace GFTools
  *  \brief Namespace for various tools, mainly smoothing.
@@ -107,9 +110,20 @@ namespace GFTools {
 	 */
 	TMatrixT<double> getBiasedSmoothedCov(GFTrack* trk, unsigned int irep, unsigned int ihit);
 
-/** @brief Invert a matrix, throwing GFException when inversion fails.
+
+	/** @brief Invert a matrix, throwing GFException when inversion fails.
 	 */
 	void invertMatrix(const TMatrixT<double>& mat, TMatrixT<double>& inv);
+	/** @brief Get smoothed chi2 for a specific hit (ihit).
+	 *
+	 * This function calculates a smoothed chi2 value for a specific hit from the
+	 * the so called "biased" smoothed state vector and covariance matrix.
+	 * If many values from different tracks in the same layer are calculated
+	 * they should be chi2 distributed with dim(m) degree of freedom, where
+	 * m is the measurement vector of the hit. So for a pixel detector that
+	 * measures x and y dim(m) will be 2.
+	 */
+	double getSmoothedChiSqu(GFTrack* const trk, unsigned int irep, unsigned int ihit);
 
 }
 

@@ -44,6 +44,14 @@ void GFKalman::processTrack(GFTrack* trk){
   if(fSmooth) {
 	int nreps = trk->getNumReps();
     for(int i=0; i<nreps; i++) {
+
+		std::vector<std::string> mat_keys = trk->getBK(i)->getMatrixKeys();
+		bool already_there = false;
+		for(unsigned int j=0; j<mat_keys.size(); j++) {
+			if(mat_keys.at(j) == "fUpSt") already_there = true;
+		}
+		if(already_there) continue;
+
 		trk->getBK(i)->setNhits(trk->getNumHits());
 		trk->getBK(i)->bookMatrices("fUpSt");
 		trk->getBK(i)->bookMatrices("fUpCov");
@@ -118,25 +126,7 @@ GFKalman::switchDirection(GFTrack* trk){
 }
 
 void GFKalman::blowUpCovs(GFTrack* trk){
-  int nreps=trk->getNumReps();
-  for(int irep=0; irep<nreps; ++irep){
-    GFAbsTrackRep* arep=trk->getTrackRep(irep);
-    //dont do it for already compromsied reps, since they wont be fitted anyway
-    if(arep->getStatusFlag()==0) { 
-      TMatrixT<double> cov = arep->getCov();
-      for(int i=0;i<cov.GetNrows();++i){
-	for(int j=0;j<cov.GetNcols();++j){
-	  //if(i!=j){//off diagonal
-	  //  cov[i][j]=0.;
-	  //}
-	  //else{//diagonal
-	  cov[i][j] = cov[i][j] * fBlowUpFactor;
-	  //}
-	}
-      }
-      arep->setCov(cov);
-    }
-  }  
+  trk->blowUpCovs(fBlowUpFactor);
 }
 
 void

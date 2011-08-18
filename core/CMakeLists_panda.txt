@@ -23,8 +23,8 @@ GFRecoHitFactory.cxx GFRecoHitProducer.cxx GFSpacepointHitPolicy.cxx
 GFTools.cxx GFTrackCand.cxx GFTrack.cxx GFWireHitPolicy.cxx
 GFWirepointHitPolicy.cxx GFConstField.cxx GFFieldManager.cxx
 GFAbsFinitePlane.cxx GFRectFinitePlane.cxx 
-GFDaf.cxx
-GFMaterialEffects.cxx)
+GFDaf.cxx GFDafHit.cxx
+GFMaterialEffects.cxx GFTrackProximity.cxx)
 
 if(RULE_CHECKER_FOUND)
   CHECK_RULES("${GENFIT_SRCS}" "${INCLUDE_DIRECTORIES}" GENFIT_RULES)

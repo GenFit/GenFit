@@ -43,7 +43,7 @@ GFTrack::~GFTrack() {
     delete fTrackReps;
   }
   for(unsigned int i=0;i<fHits.size();i++) {
-    delete fHits[i];
+    if(fHits.at(i)!=NULL) delete fHits.at(i);
   }
   for(unsigned int i=0;i<fBookkeeping.size();++i){
     if(fBookkeeping.at(i)!=NULL) delete fBookkeeping.at(i);
@@ -116,15 +116,18 @@ void
 GFTrack::reset(){
   if(fTrackReps!=NULL){
     for(unsigned int i=0;i<getNumReps();i++) {
-      delete fTrackReps->At(i);
-      delete fBookkeeping.at(i);
+      if(fTrackReps->At(i)!=NULL) delete fTrackReps->At(i);
     }
   }
+  for(unsigned int i=0;i<fBookkeeping.size();++i){
+    if(fBookkeeping.at(i)!=NULL) delete fBookkeeping.at(i);
+  }
   for(unsigned int i=0;i<fHits.size();i++) {
-    delete fHits[i];
+    if(fHits.at(i)!=NULL) delete fHits.at(i);
   }
   fHits.clear();
   fRepAtHit.clear();
+  fBookkeeping.clear();
 }
 
 void
@@ -248,6 +251,32 @@ void GFTrack::getHitsByPlane(std::vector<std::vector<int>*>& retVal){
     }
   }
 }
+
+
+void
+GFTrack::blowUpCovs(double blowUpFactor){
+  int nreps=getNumReps();
+  for(int irep=0; irep<nreps; ++irep){
+    GFAbsTrackRep* arep=getTrackRep(irep);
+
+    //dont do it for already compromsied reps, since they wont be fitted anyway
+    if(arep->getStatusFlag()==0) {
+      TMatrixT<double> cov = arep->getCov();
+      for(int i=0;i<cov.GetNrows();++i){
+        for(int j=0;j<cov.GetNcols();++j){
+          //if(i!=j){//off diagonal
+          //  cov[i][j]=0.;
+          //}
+          //else{//diagonal
+          cov[i][j] = cov[i][j] * blowUpFactor;
+          //}
+        }
+      }
+      arep->setCov(cov);
+    }
+  }
+}
+
 
 ClassImp(GFTrack)
 

@@ -17,24 +17,24 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "GFTrackCand.h"
-
+#include"TDatabasePDG.h"
 #include <algorithm>
 #include <iostream>
 
 ClassImp(GFTrackCand)
 
-GFTrackCand::GFTrackCand():fCurv(0),fDip(0),fInv(false), fQoverpSeed(0.),fMcTrackId(-1){}
+GFTrackCand::GFTrackCand():fCurv(0),fDip(0),fInv(false), fQoverpSeed(0.),fMcTrackId(-1),fPdg(0){}
 
 GFTrackCand::~GFTrackCand(){}
 
 GFTrackCand::GFTrackCand(double curv, double dip, double inv, std::vector<unsigned int> detIDs, std::vector<unsigned int> hitIDs)
-  : fDetId(detIDs),fHitId(hitIDs),fCurv(curv), fDip(dip), fInv(inv),fQoverpSeed(0.), fMcTrackId(-1)
+  : fDetId(detIDs),fHitId(hitIDs),fCurv(curv), fDip(dip), fInv(inv),fQoverpSeed(0.), fMcTrackId(-1),fPdg(0)
 {
   assert(fDetId.size()==fHitId.size());
   fRho.resize(fDetId.size(),0.);
 }
 GFTrackCand::GFTrackCand(double curv, double dip, double inv, std::vector<unsigned int> detIDs, std::vector<unsigned int> hitIDs,std::vector<double> rhos)
-  : fDetId(detIDs),fHitId(hitIDs),fRho(rhos),fCurv(curv), fDip(dip), fInv(inv),fQoverpSeed(0.), fMcTrackId(-1)
+  : fDetId(detIDs),fHitId(hitIDs),fRho(rhos),fCurv(curv), fDip(dip), fInv(inv),fQoverpSeed(0.), fMcTrackId(-1),fPdg(0)
 {
   assert(fDetId.size()==fHitId.size());
   assert(fDetId.size()==fRho.size());
@@ -112,4 +112,11 @@ void GFTrackCand::append(const GFTrackCand& rhs){
   }
 
 
+}
+
+void GFTrackCand::setComplTrackSeed(const TVector3& pos,const TVector3& mom, const int pdgCode, TVector3 posError, TVector3 dirError){
+  fPosSeed=pos;fDirSeed=mom; fPdg = pdgCode; fPosError = posError; fDirError = dirError;
+  TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(fPdg);
+  double charge = part->Charge()/(3.);
+  fQoverpSeed=charge/mom.Mag();
 }

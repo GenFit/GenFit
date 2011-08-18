@@ -1,112 +1,108 @@
-/* Copyright 2008-2010, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert
+/* Copyright 2011, Technische Universitaet Muenchen,
+Authors: Karl Bicker, Christian Hoeppner
 
-   This file is part of GENFIT.
+This file is part of GENFIT.
 
-   GENFIT is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Lesser General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+GENFIT is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   GENFIT is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Lesser General Public License for more details.
+GENFIT is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU Lesser General Public License
-   along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU Lesser General Public License
+along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
+ */
 /** @addtogroup genfit
  * @{
  */
 
-
 #ifndef GFDAF_H
 #define GFDAF_H
 
-#include <map>
-#include <vector>
-#include <iostream>
+#include<assert.h>
+#include<cmath>
+#include<GFAbsRecoHit.h>
+#include<GFDafHit.h>
+#include<GFKalman.h>
+#include<GFTrack.h>
+#include<stdlib.h>
+#include<vector>
 
-#include "TMatrixT.h"
-
-
-class GFAbsRecoHit;
-class GFAbsTrackRep;
-class GFTrack;
-
-/** @brief Determinstic Annealing Filter (DAF) implementation
+/** @brief Determinstic Annealing Filter (DAF) implementation. 
  *
- *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
- * 
- * The DAF is an iterative Kalman filter with annealing. It is capable of fitting tracks which are
- * contaminated with noise hits. The alogrithm is taken from the references
- * R. Fruehwirth & A. Strandlie, Computer Physics Communications 120 (199) 197-214
- * and CERN thesis: Dissertation by Matthias Winkler.
-
+ * @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
+ * @author Karl Bicker (Technische Universit&auml;t M&uuml;nchen)
+ *
+ * The DAF is an iterative Kalman filter with annealing. It is capable of 
+ * fitting tracks which are contaminated with noise hits. The algorithm is 
+ * taken from the references R. Fruehwirth & A. Strandlie, Computer Physics 
+ * Communications 120 (1999) 197-214 and CERN thesis: Dissertation by Matthias 
+ * Winkler. 
  */
-class GFDaf {
-public:
+class GFDaf: GFKalman {
+	public:
 
+		GFDaf();
+		~GFDaf() { };
 
-  /** @brief Standard CTOR. Sets default values for annealing scheme and probablity cut.
-   */
-  GFDaf();
+		/** @brief Process a track using the DAF.
+		 */
+		void processTrack(GFTrack* trk);
 
+		/** @brief Return the weights present after the track was processed.
+		 *
+		 * The DAF uses special effective hits defined in the class GFDafHit. A
+		 * GFDafHit is a wrappe class and contains all the real hits from one plane.
+		 * The structure of the return vector of getWeights allows to reconstruct in
+		 * what way the hits were grouped: the outermost vector represents the track
+		 * representation, there is one entry per track representation. The middle
+		 * vector represents the effective hits, and the innermost vector contains
+		 * the real hits contained in the corresponding effective hit.
+		 */
+		const std::vector<std::vector<std::vector<double> > > getWeights() { return fWeights; };
 
-  ~GFDaf();
+		/** @brief Set the probabilty cut for the weight calculation for the hits. 
+		 *
+		 * Currently supported are the values 0.01 0.005, and 0.001. The 
+		 * corresponding chi2 cuts for different hits dimensionalities are hardcoded 
+		 * in the implementation because I did not yet figure out how to calculate 
+		 * them. Please feel very welcome to change the implementtion if you know how
+		 * to do it.
+		 */
+		void setProbCut(double prob_cut);
 
-  
-  
-  /** @brief Performs DAF fit on all track representations in a GFTrack.
-   *
-   */
-  void processTrack(GFTrack*);
+		/** @brief Configure the annealing scheme.
+		 *
+		 * In the current implementation you need to provide at least two temperatures. 
+		 * The maximum would ten tempertatures.
+		 */
+		void setBetas(double b1,double b2,double b3=-1.,double b4=-1.,double b5=-1.,double b6=-1.,double b7=-1.,double b8=-1.,double b9=-1.,double b10=-1.);
 
+	private:
 
-  /** @brief Set the blowup factor (see blowUpCovs() )
-   */
-  void setBlowUpFactor(double f){fBlowUpFactor=f;}
+		/** @brief Initialize the GFDafHit and their weights before the fit.
+		 */
+		std::vector<GFDafHit*> initHitsWeights(GFTrack* trk);
 
-  /** @brief Set the probabilty cut for the weight calculation for the hits. Currently 
-   * supported are the values 0.01 0.005, and 0.001. The corresponding chi2 cuts for
-   * different hits dimensionalities are hardcoded in the implementation because I did
-   * not yet figure out how to calculate them. Please feel very welcome to change the
-   * implementtion if you know how to do it.
-   */
-  void setProbCut(double val);
+		/** @brief Calculate the weights for the next fitting pass.
+		  */
+		std::vector<std::vector<double> > calcWeights(GFTrack* trk, double beta);
 
-  /** @brief Configure the annealing scheme.
-   * In the current implementation you need to provide at least two temperatures. The maximum would ten
-   * tempertatures.
-   */
-  void setBetas(double b1,double b2,double b3=-1.,double b4=-1.,double b5=-1.,double b6=-1.,double b7=-1.,double b8=-1.,double b9=-1.,double b10=-1.);
-  // Private Methods -----------------
-private:
+		/** @brief Copy the smoothing matrices from the source track to the target.
+		 */
+		void copySmoothing(GFTrack* source, GFTrack* target, int target_ire);
 
-  /** @brief Calculate Kalman Gain
-   */
-  TMatrixT<double> calcGain(const TMatrixT<double>& cov, 
-                            const TMatrixT<double>& HitCov,
-                            const TMatrixT<double>& H,
-                            const double& p);
+		std::vector<std::vector<std::vector<double> > > fWeights;
+		std::vector<double> fBeta;
+		std::map<int,double>  fchi2Cuts;
 
-
-  /** @brief This is needed to blow up the covariance matrix before a fitting pass.
-   * The method drops off-diagonal elements and blows up diagonal by blowUpFactor.
-   */
-  void blowUpCovs(GFTrack* trk);
-
-  /** @brief invert a matrix. First argument is matrix to be inverted, second is return by ref.
-   */  
-  void invertMatrix(const TMatrixT<double>&,TMatrixT<double>&);
-
-  double fBlowUpFactor;
-  std::vector<double>	fBeta;
-  std::map<int,double>  chi2Cuts;
 };
-
 
 #endif
 
 /** @} */
+

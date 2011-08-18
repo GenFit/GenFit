@@ -31,6 +31,7 @@
 
 #include "GFAbsTrackRep.h"
 #include "GFDetPlane.h"
+#include "GFTrackCand.h"
 #include <TMatrixT.h>
 
 /** @brief Track Representation module based on a Runge-Kutta algorithm including a full material model
@@ -56,6 +57,8 @@ class RKTrackRep : public GFAbsTrackRep {
 	     const TVector3& poserr,
 	     const TVector3& momerr,
 	     const int& PDGCode);
+
+  RKTrackRep(const GFTrackCand* aGFTrackCandPtr);
 
   RKTrackRep(const TVector3& pos,
 	     const TVector3& mom,
@@ -114,6 +117,13 @@ class RKTrackRep : public GFAbsTrackRep {
 				 TVector3& dirInPoca,
 				 TVector3& poca_onwire);
   
+  //! make step of h cm along the track, returns the tracklength spanned in this extrapolation
+  /** Also returns the position and direction by reference.
+  * It does NOT alter the state of the trackrep and starts extrapolating from #fRefPlane.
+  */
+  double stepalong(double h,
+         TVector3& point,
+         TVector3& dir);
 
   //! Returns position of the track in the plane  
   /** If #GFDetPlane equals the reference plane #fRefPlane, returns current position; otherwise it extrapolates 
@@ -132,6 +142,9 @@ class RKTrackRep : public GFAbsTrackRep {
   void getPosMom(const GFDetPlane&,TVector3& pos,TVector3& mom);
   //! Returns charge
   double getCharge()const {return fCharge;}
+
+  int getPDG() {return fPdg;};
+
   //! deprecated
   void switchDirection(){fDirection = (!fDirection);}
   //! Set PDG particle code
@@ -147,6 +160,8 @@ class RKTrackRep : public GFAbsTrackRep {
   const TMatrixT<double>* getAuxInfo(const GFDetPlane& pl);
   
   bool hasAuxInfo() { return true; }
+
+  void getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixT<double>& cov); //to be implemented soon
 
  private:
 
@@ -181,11 +196,6 @@ class RKTrackRep : public GFAbsTrackRep {
   
   // data members
   
-  GFDetPlane fCachePlane;
-  double fCacheSpu;
-  double fSpu;
-  TMatrixT<double> fAuxInfo;
-
   bool fDirection;
     
   //! PDG particle code
@@ -195,8 +205,13 @@ class RKTrackRep : public GFAbsTrackRep {
   //! Charge
   double fCharge;
 
+  GFDetPlane fCachePlane;
+  double fCacheSpu;
+  double fSpu;
+  TMatrixT<double> fAuxInfo;
+
  public:
-  ClassDef(RKTrackRep,3)
+  ClassDef(RKTrackRep,5)
 
 };
 

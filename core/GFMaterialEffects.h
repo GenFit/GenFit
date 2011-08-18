@@ -95,24 +95,19 @@ class GFMaterialEffects : public TObject{
   }
 
  private:
-  //! Gets particle charge and mass (in GeV)
-  void getParticleParameters(const int& pdg,
-                             double& charge,
-                             double& mass);
-  //! Returns particle mass (in GeV)
-  double getParticleMass(const int& pdg);
+  //! sets fmatDensity, fmatZ, fmatA, fradiationLength, fmEE, fcharge, fmass;
+  void getParameters();
+
+  //! sets fbeta, fgamma, fgammasquare; must only be used after calling getParameters()
+  void calcBeta(double mom);
 
   //! Returns energy loss
   /**  Uses Bethe Bloch formula to calculate energy loss.
+    *  Calcuates and sets fdedx which needed also for noiseBetheBloch.
+    *  Therefore it is not a const function!
     *
   */
-  double energyLossBetheBloch(const double& step,
-                              const double& mom,
-                              const int&    pdg,
-                              const double& matDensity,
-                              const double& matZ,
-                              const double& matA,
-                              const double& meanExcitationEnergy);
+  double energyLossBetheBloch(const double& mom);
 
   //! calculation of energy loss straggeling
   /**  For the energy loss straggeling, different formulas are used for different regions:
@@ -121,15 +116,10 @@ class GFMaterialEffects : public TObject{
     *  - truncated Landau distribution
     *  - Urban model
     *
+    *  Needs fdedx, which is calculated in energyLossBetheBloch, so it has to be calles afterwards!
     */
-  void noiseBetheBloch(const double& step,
-                       const double& mom,
-                       const int&    pdg,
-                       const double& matDensity,
-                       const double& matZ,
-                       const double& matA,
-                       const double& meanExcitationEnergy,
-                             TMatrixT<double>* noise);
+  void noiseBetheBloch(const double& mom,
+                             TMatrixT<double>* noise) const;
 
   //! calculation of multiple scattering
   /**  With the calculated multiple scattering angle, two noise matrices are calculated:
@@ -321,38 +311,25 @@ class GFMaterialEffects : public TObject{
     * \n
     * \n
     */
-  void noiseCoulomb(const double& step,
-                    const double& mom,
-                    const int&    pdg,
-                    const double& matZ,
-                    const double& radiationLength,
+  void noiseCoulomb(const double& mom,
                           TMatrixT<double>* noise,
                     const TMatrixT<double>* jacobian,
                     const TVector3* directionBefore,
-                    const TVector3* directionAfter);
+                    const TVector3* directionAfter) const;
 
   //! Returns energy loss
   /** Can be called with any pdg, but only calculates energy loss for electrons and positrons (otherwise returns 0).
     * Uses a gaussian approximation (Bethe-Heitler formula with Migdal corrections).
     * For positrons the energy loss is weighed with a correction factor.
   */
-  double energyLossBrems(const double& step,
-                         const double& mom,
-                         const int&    pdg,
-                         const double& matDensity,
-                         const double& matZ,
-                         const double& matA,
-                         const double& radiationLength);
+  double energyLossBrems(const double& mom) const;
 
   //! calculation of energy loss straggeling
   /** Can be called with any pdg, but only calculates straggeling for electrons and positrons.
    *
    */
-  void noiseBrems(const double& step,
-                  const double& mom,
-                  const int&    pdg,
-                  const double& radiationLength,
-                        TMatrixT<double>* noise);
+  void noiseBrems(const double& mom,
+                        TMatrixT<double>* noise) const;
 
   bool fEnergyLossBetheBloch;
   bool fNoiseBetheBloch;
@@ -361,7 +338,25 @@ class GFMaterialEffects : public TObject{
   bool fNoiseBrems;
 
   const double me; // electron mass (GeV)
- 
+
+  double fstep; // stepsize
+
+  // cached values for energy loss and noise calculations
+  double fbeta;
+  double fdedx;
+  double fgamma;
+  double fgammaSquare;
+
+  double fmatDensity;
+  double fmatZ;
+  double fmatA;
+  double fradiationLength;
+  double fmEE; // mean excitation energy
+
+  int fpdg;
+  double fcharge;
+  double fmass;
+
  public:
   ClassDef(GFMaterialEffects,1)
 

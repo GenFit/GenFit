@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <set>
+#include <iostream>
 #include "assert.h"
 
 #include "TObject.h"
@@ -46,6 +47,7 @@
  *
  * In addition GFTrackCand offers members to store starting values for the fit.
  * However this information is not autmatically used in genfit!!!
+ * But a pointer to a GFTrackCand can be passed to the RKTrackRep to make use of this information.
  *
  * @sa RecoHitFactory
  */
@@ -131,7 +133,12 @@ public:
   TVector3 getDirSeed() const {return fDirSeed;}
   /** @brief get the seed value for track: qoverp */
   double getQoverPseed() const {return fQoverpSeed;}
-
+  /** @brief get the seed value for track: error on pos (standard deviation)*/
+  TVector3 getPosError() const {return fPosError;}
+  /** @brief get the seed value for track: error on direction (standard deviation)*/
+  TVector3 getDirError() const {return fDirError;}
+  /** @brief get the PDG code*/
+  int getPdgCode() const {return fPdg;}
   // Modifiers -----------------------
   void addHit(unsigned int detId, unsigned int hitId, double rho=0., unsigned int planeId=0);
   void setCurv(double c){fCurv=c;}
@@ -145,10 +152,15 @@ public:
   bool HitInTrack(unsigned int detId, unsigned int hitId);
   /** @brief set the seed values for track: pos, direction, q/p
    */
-  void setTrackSeed(const TVector3& p,const TVector3& d,double qop){
-    fPosSeed=p;fDirSeed=d;fQoverpSeed=qop;
+  void setTrackSeed(const TVector3& pos,const TVector3& direction,const double qop){
+    fPosSeed=pos;fDirSeed=direction;fQoverpSeed=qop;
   }
-
+  /** @brief set the seed values for track: pos, momentum, pdgCode, pos error, momentum error (errors are optional and will be set to 1,1,1 if not given)
+   */
+  void setComplTrackSeed(const TVector3& pos,const TVector3& mom, const int pdgCode, TVector3 posError = TVector3(1.0,1.0,1.0), TVector3 dirError = TVector3(1.0,1.0,1.0));
+  /** @brief set a particle hypothesis in form of a PDG code
+   */
+  void setPdgCode(int pdgCode){fPdg=pdgCode;}
   void append(const GFTrackCand&);
 
   // Operations ----------------------
@@ -169,13 +181,17 @@ private:
 
   TVector3 fPosSeed;  //seed value for the track: pos
   TVector3 fDirSeed;  //direction
+  TVector3 fPosError;  //error on position seed given as a standard deviation
+  TVector3 fDirError;  //error on direction seed given as a standard deviation
   double fQoverpSeed; //q/p
-
   int fMcTrackId; //if MC simulation, store the mct track id here
+  int fPdg; // particle data groupe's id for a particle
+
+
   // Private Methods -----------------
 
 public:
-  ClassDef(GFTrackCand,3)
+  ClassDef(GFTrackCand,5)
 };
 
 #endif
