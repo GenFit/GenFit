@@ -1,0 +1,451 @@
+*
+* $Id: v3_21 212 2007-10-04 23:45:50Z rdm $
+*
+* $Log: v3_21,v $
+* Revision 1.1.1.1  2002/06/16 15:18:35  hristov
+* Separate distribution  of Geant3
+*
+* Revision 1.1.1.1  1999/05/18 15:55:15  fca
+* AliRoot sources
+*
+* Revision 1.1.1.1  1995/10/24 10:19:48  cernlib
+* Geant
+*
+*
+*CMZ :  3.21/04 21/03/95  17.58.14  by  S.Giani
+*-- Author :
+*
+*::>          VERSION  3.21/04   21/03/95 17.58.14
+*
+*
+*::>          VERSION  3.21/03   17/10/94 16.00.29
+*
+*
+*::>          VERSION  3.21/02   25/07/94 15.24.16
+*
+*
+*::>          VERSION  3.21/01   28/03/94 16.10.10
+*
+*
+*::>          VERSION  3.21/00   28/02/94 16.32.43
+*
+**********************************************************************
+*                                                                    *
+*                       G E A N T   3 . 2 1                          *
+*                                                                    *
+*                            C E R N                                 *
+*                                                                    *
+*                       15/3/94  Geneva  CH                          *
+*                                                                    *
+**********************************************************************
+*
+* GEANT 3.21 has a new tracking logic to speed up the search over the
+*            volumes positioned inside a given node (Virtual Divisions).
+*            The new tracking is initialized by GGCLOS in a completely
+*            transparent way and in a negligible amount of time.
+*            The GUNEAR and GSORD techniques are automatically disabled
+*            and no change in the user code is needed. Anyway, it is
+*            still possible to get the old Geant tracking recompiling
+*            GEANT and GEANG with the patchy flag OLD.
+*            To implement the new logic, the following routines have
+*            written or deeply modified: GTNEXT, GGCLOS, GTMEDI, GNEXT,
+*            GMEDIA, GINVOL, GVDCAR, GVDRAD, GVDPHI, GVDLIM, GSCVOL.
+*                                                               S.Giani.
+*
+* GEANT 3.21 has a new logic for MANY volumes: the tracking is not
+*            based anymore on a step-search, but relies on a algorithm
+*            similar to the one used for ONLY volumes (giving then
+*            basically the same speed obtained for ONLY). The new logic
+*            of MANY allows boolean operations between volumes, clipping
+*            of protuding objects, divisions along arbitrary axis,
+*            overlaps of 1-D structures to build 2-D or 3-D structures
+*            (like honeycombs, spaghetti, etc.). To implement the new
+*            logic, the following routines have been written or modified:
+*            GTNEXT, GTMEDI, GNEXT, GMEDIA, GTELEC, GTCKOV, GTHADR,
+*            GTHION, GTMUON.
+*                                                             S.Giani.
+*
+* GEANT 3.21 contains modifications to GTELEC, GTGAMA, GDRAY in order
+*            to exploit the e.m. low energy effects introduced in 3.16
+*            without any overhead in performance compared with 3.15.
+*            A bug in the delta ray productions is now fixed.
+*                                                        Thanks to L.Urban.
+*
+* GEANT 3.21 provides a ray-tracing as a new visualization tool. The
+*            ray-tracing is based on the new Geant tracking and allows
+*            the visualization of the boolean operations results.
+*            The following routines have been written or modified:
+*            GDRACK, GDSTEP, GDNINO, GDOPT, GDRAYT, GDRAW, GDINIT,
+*            GTRIG, GTRIGI, GDKINE, GDLUMI, GLIGHT, GFIND, GXDRAW,
+*            CDF.
+*                                                             S.Giani.
+*
+* A new GGPERP has been written to cope with almost all the shapes.
+*            It is now of general utility both for the Cerenkovs
+*            and for the ray-tracing.
+*                                               Thanks to R.Jones.
+*
+* A new set of routines to compute distances to surfaces has been
+*            introduced (GVSAFE, GVGRAD, GVPSQR, GVSIGN, GVLONG).
+*                                               Thanks to V.Perev.
+*
+* Important fix in GPHYSI: user words for media were overwriting
+*            ILABS, ISYNC and ISTRA.
+*                                    Thanks to S.Giani, S.Ravndal.
+*
+* GXOBJ has been improved to handle DETs as objects of a SET directory
+*            in the HITS class.
+*                                    Thanks to S.Giani, A.Dellacqua.
+*
+* GTNINO has been corrected in order to print the mechanism NEXT when
+*            crossing boundaries.
+*                                    Thanks to S.Giani, M.Maire.
+*
+* GFMFIN and GFMDIS are the new names for the 316 routines FMUFIN and
+*        FMDIST to avoid clashes with the program library. GFMFIN has
+*        also been corrected for a 316 bug affecting neutrons.
+*                             Thanks to C.Zeitniz,K.Lassila,S.Ravndal.
+*
+* GINTRP and GINPCO have been corrected to handle sharp edges with no
+*        risk of float exception.
+*                                Thanks to L.Gibbons.
+*
+* GGPERP has been corrected in reading the TRAP parameters and a systematic
+*        consistency of single precision or double precision variables in
+*        the MAX,MIN,MOD operands is provided.
+*                                             Thanks to S.Ravndal.
+*
+* FEREVV and FERHAV are now new from FLUKA.
+*                                             Thanks to A.Ferrari.
+*
+* FEREVV has been adapted to the Geant random numbers generators.
+*                                             Thanks to S.Ravndal.
+*
+* In GRNDMQ the option `SH' is provided to write the seeds ISEED1 and
+*         ISEED2 to the event header bank.
+*                                             Thanks to S.Ravndal.
+*
+* In GMORIN,FLINIT and GHEINI the interface messages are removed.
+*                                             Thanks to S.Ravndal.
+*
+* In GGDPAR now PAR(3) is correctly initialized to 1.for slices of
+*         a PGON.
+*
+*
+* The seq GCNUM has been added to the deck ERTRGO in Geane.
+*
+*
+*
+* G321X and G321M are the new names for the KUIP output of the CDF.
+*                                             Thanks to S.Giani.
+*
+* GMORIN has been modified in order to read correctly xsneut.dat
+*          for MSDOS and WINNT as well.
+*                                         Thanks to V.Fine.
+*
+* GEAMON has been modified in order to print Real and CPU Time longer
+*          than 999 sec.
+*                                         Thanks to R.Brun.
+*
+*
+**********************************************************************
+*                                                                    *
+*                       G E A N T   3 . 2 1                          *
+*                                                                    *
+*                      Correction cradle 0.01                        *
+*                                                                    *
+*                            C E R N                                 *
+*                                                                    *
+*                       29/3/94  Geneva  CH                          *
+*                                                                    *
+**********************************************************************
+*
+* GZINIT and GSCKOV have been corrected (compared with 3.16) in order
+*        to initialize correctly the link area for the Zebra pointers
+*        of the banks relative to straggling, Cerenkovs, Asho, etc.
+*        Four pointers were not seen by Mzlint and, moreover, the link
+*        area (containing pointers for straggling, etc.) was initialized
+*        only if using Cerenkovs.
+*                                   Thanks to M.Verzocchi and R.Brun.
+*
+* FERHAV in Geanf was provoking a float exception due to a negative sqrt.
+*        The problem was fixed thanks to a comparison with the original
+*        Fluka code.
+*                                   Thanks to B.Slater and S.Giani.
+*
+* PREPRE has been deoptimized on HP.
+*                                   Thanks to A.Kulik.
+*
+* In GSKINE a pointer was not saved (in the previous versions as well).
+*                                   Thanks to A.Dellacqua.
+*
+* In GTNEXT and GNEXT precision problems are handled more effectively.
+*                                   Thanks to P.Ward, C.Markou and S.Giani.
+*
+* In GTNEXT the blocking of the volume from which particles are exiting
+*        has been corrected.
+*                                   Thanks to P.Ward.
+*
+* Problems in the interactive materials, mixtures and media definition
+*        have been solved. (Routines GXCONT,GXGEOM). Idem for the 3D
+*        Dspec (routine GXDRAW).
+*
+* In order to handle correctly calls to Gfcoor in phi (for x=0 or y=0)
+*        GTMEDI, GMEDIA and GINVOL have been modified.
+*                                    Thanks to P.Ward.
+*
+* In the ray-tracing, GDNINO has been corrected for precision problems.
+*                                    Thanks to S.Giani.
+*
+*
+**********************************************************************
+*                                                                    *
+*                       G E A N T   3 . 2 1                          *
+*                                                                    *
+*                      Correction cradle 0.02                        *
+*                                                                    *
+*                            C E R N                                 *
+*                                                                    *
+*                       25/7/94  Geneva  CH                          *
+*                                                                    *
+**********************************************************************
+*
+* In GTNEXT precision problems in phi have been solved.
+*                                    Thanks to A.Rosowsky and A.Givernaud.
+*
+* In GDRAY a missing protection for delta ray production was added.
+*                                    Thanks to L.Urban.
+*
+* In GINVOL the variable ingt is corrrectly reset. It was not reset in
+*       all the previous versions of GEANT as well.
+*                                    Thanks to R.Jones.
+*
+* GTCKOV, GTHADR, GTHION, GLISUR have been corrected and extended compared
+*       with the first implementation in 3.16 for Cerenkov tracking.
+*                                    Thanks to R.Jones.
+*
+* GSKPHO has been fixed for Cerenkov physics compared with the previous
+*       version of GEANT (3.16).
+*                                    Thanks to S.Bottai.
+*
+* GFTMAT had a wrong pointer to plot the muon-nucleus cross sections since
+*       version 3.16. Now it is fixed.
+*                                    Thanks to C.Wiebusch and S.Ravndal.
+*
+* GFINDS has been restored to the 3.15 functionality.
+*                                    Thanks to A.Dellacqua and S.Tonse.
+*
+* GFANG has been fixed for a special pathological case.
+*                                    Thanks to C.Zosi.
+*
+* GSROTM  has been fixed for a special pathological case.
+*                                    Thanks to A.Vlassov.
+*
+* GDRAYT does not increment ievent anymore.
+*                                    Thanks to P.Jacobs.
+*
+* GLVOLU has been fixed to recompute the pointers of the geometrical tree
+*       even if the names and numbers were identical.
+*                                    Thanks to R.Jones, T.Noble, S.Ravndal.
+*
+* GVDRAD has been fixed to compute the scope of tubs.
+*                                    Thanks to K.Albiol and S.Giani.
+*
+* GDSPEC has been fixed to print degrees for the 3-rd parameter of sphe.
+*                                    Thanks to S.Ravndal.
+*
+* GVDPHI has been fixed for a special pathological case (only for volumes
+*       with planar surfaces).
+*                                    Thanks to M.Kaspar and S.Giani.
+*
+* GXCONT is changed to handle correctly the variables ievent and nevent.
+*                                    Thanks to P.Jacobs.
+*
+* SVGAM7 in Gheisha has now a protection against the log(0).
+*                                    Thanks to D.Heck.
+*
+* FEREVV and FERHAV have been updated.
+*                                    Thanks to A.Ferrari.
+*
+* In FLUFIN the correct mechanism is given to lmec in case of energy
+*       below cut-off.
+*                                    Thanks to B.Slater and S.Ravndal.
+*
+* In NUDISV the array anpowr is saved.
+*                                    Thanks to S.Ravndal.
+*
+* In GMXSEC imed is used instead of nmed.
+*                                   Thanks to K.L.Perini.
+*
+*
+*
+**********************************************************************
+*                                                                    *
+*                       G E A N T   3 . 2 1                          *
+*                                                                    *
+*                  Correction version 0.03 = 94b release             *
+*                                                                    *
+*                            C E R N                                 *
+*                                                                    *
+*                       18/10/94  Geneva  CH                         *
+*                                                                    *
+**********************************************************************
+*
+* In GDCGVW traslation problems have been fixed (graphics).
+*                                    Thanks to J.Stepanek, S.Giani.
+*
+* In GLTRAC nlevel is now initialized to 0 and GTNEXT has been improved
+*    further for handling precision problems.
+*                                    Thanks to A.Dellacqua.
+*
+* GDRELX and GTELEC have been corrected for energy deposition problems.
+*                                    Thanks to L.Urban.
+*
+* GSDVT2 has been corrected for divisions in phi.
+*                                    Thanks to V.Popov.
+*
+* GPVOLU and GFMOTH are now able to handle cases where copy number = 1
+*    is not defined.
+*                                    Thanks to S.Giani, S.Nowak.
+*
+* GTREVE has been changed in order to avoid the loading of the graphics
+*    package if not desired.
+*                                    Thanks to S.Giani, I.Bird.
+*
+* GUPHAD, GUHADR and FLINIT give warnings and conditions for the use of FLUKA.
+*                                    Thanks to A.Ferrari.
+*
+* GVDPHI and GVDCAR have been further improved to compute the scope of pgon.
+*                                    Thanks to P.Kent.
+*
+* GTELEC now computes cross sections for SYNC only if there is mag. field.
+*                                    Thanks to M.Maire.
+*
+* GPCXYZ printing format can now handle bigger dimensions.
+*                                    Thanks to S.Ravndal.
+*
+* GDRMAT and GPRMAT headers are now consistent with GFTMAT. In GPLMAT `STEP'
+*    and `RANGE' do not belong anymore to `ALL' as physical processes.
+*                                    Thanks to M.Maire, S.Ravndal.
+*
+* GPHYSI is now setting dray=0 if loss=0. Labs, Sync and Stra can be switched
+*    interactively. Decay and Sync are now also defined in vacuum.
+*                                    Thanks to M.Maire, S.Ravndal.
+*
+* In GRNDMQ the ' ' and the 'G' options work now as described in the doc.
+*                                    Thanks to S.ONeale, S.Ravndal.
+*
+* GPART calls GSDK anyhow to give flexibility at run time (for the interactive
+*    version). The values relatives to the particles are now updated to
+*    Phys.Rev. D50 1173 1994.
+*                                    Thanks to S.Ravndal, F.H.Heinsius.
+*
+* In GDEXCA (Cadint) a bug from 316 is now fixed.
+*                                    Thanks to J.Vuoskosky.
+*
+* GBREME and GSYNC (see the new doc for the meaning of sync=0,1,2,3) have
+*    been improved and the two relative mechanism can happen at the same time.
+*                                    Thanks to M.Maire.
+*
+*
+*
+**********************************************************************
+*                                                                    *
+*                       G E A N T   3 . 2 1                          *
+*                                                                    *
+*                  Correction version 0.04 = 95a release             *
+*                                                                    *
+*                            C E R N                                 *
+*                                                                    *
+*                       28/3/95  Geneva  CH                          *
+*                                                                    *
+**********************************************************************
+*
+* In GTCKOV the variable RIN1 is not reset to 0 any longer.
+*                                           Thanks to A.Delpozo
+*
+* In GSTRAC heavy ions have now the correct itrtyp=8.
+*                                           Thanks to Yfwang
+*
+* In GTNEXT the variable SNXT and SNXNEW are compared with BIG1 to cure
+*  precision problems.
+*                                           Thanks to A.Dellacqua, P.Ward.
+*
+* In GPVOLU and GPVOLX the variable MOTHER is now declared as CHARACTER*4.
+*                                           Thanks to V.Tretyak
+*
+* In GGCLOS a test on IQUEST(11).le.0 has been changed into IQUEST(11).lt.0.
+*                                           Thanks to P.Ward
+*
+* In GLTRAC nlevel is reset to 0 only if GONLY(NLEVEL).EQ.0.
+*                                           Thanks to P.Ward, S.Giani
+*
+* In GDCGOB a bug on the unit for the angles of spheres has been fixed.
+*                                           Thanks to J.Allison
+*
+* GPRMAT is now protected against floating point exceptions.
+*                                           Thanks to R.Ruber
+*
+* GRNDMQ has been improved storing the seeds.
+*                                           Thanks to S.Ravndal.
+*
+* In GTNINO the time of flight is now updated.
+*                                           Thanks to S.Ravndal.
+*
+* In GXPHYS, GXCS, the interactive facilities have been extended.
+*                                           Thanks to M.Maire
+*
+* GPCXYZ has a corrected format to print.
+*                                           Thanks to S.Ravndal
+*
+* A GUXCS dummy routine has been created to extend the interactive use of COMIS.
+*                                           Thanks to M.Maire.
+*
+* GDPRTR is now able to recognize b/w Xterminals before drawing the tree.
+*                                           Thanks to S.Giani, B.Lorazo.
+*
+* GLVOLU has been corrected in the computation of GTRAN for the slices of
+*  divided volumes.
+*                                           Thanks to S.Giani.
+*
+* GXGEOM now allows correctly the definition of the basic shapes interactively.
+*                                           Thanks to S.Giani.
+*
+* GETVER and GINIT are improved to extract and print automatically the version.
+*                                           Thanks to M.Maire.
+*
+* GFTMAT and GPLMAT have been corrected in plotting the cross sections.
+*                                           Thanks to S.Ravndal, G.Zholobov.
+*
+* GLANDZ has been protected against floating point exceptions.
+*                                           Thanks to L.Urban, B.Fox.
+*
+* GLUDKY contains now the time of interaction (Lund).
+*                                           Thanks to S.Ravndal, C.Wiebusch.
+*
+* GPAIRG has been protected against undefined values for the variable X.
+*                                           Thanks to L.Urban, H.Ihssen.
+*
+* GINIT, GFFGO and GTELEC are modified in order to include a new data card,
+*  ABAN, which allows to follow the electrons down to the cuts value even
+*  when they are not doing physics (ABAN=0) or to propagate them up to the
+*  end-point with an optimized algorithm (ABAN=2). The default is ABAN=1
+*  (normal 3.21 behaviour).
+*                                           Thanks to L.Urban, S.Ravndal.
+*
+* BRTTP has been protected in case the file flukaaf.dat is not found.
+*                                           Thanks to S.Ravndal.
+*
+* GMORIN has been modified and GMISET has been created in order to interface
+*  to the new version of Micap (from Gcalor 1.03.08) which has been introduced
+*  in GEANM.
+*                                           Thanks to S.Ravndal.
+*
+* GPRSGG and GBRSGE have been modified to assume constant cross sections
+*  above 100 GeV both for pair production and for bremsstrahlung.
+*                                           Thanks to G.Battistoni, L.Urban.
+*
+* GVDPHI has been corrected and improved for the scope computation of tubes,
+*  cons and polycons which are rotated and translated at the same time.
+*                                           Thanks to S.Giani, J.P.Vialle.
+ 

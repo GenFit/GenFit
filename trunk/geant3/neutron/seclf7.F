@@ -1,0 +1,65 @@
+*
+* $Id: seclf7.F 220 2007-11-19 16:08:06Z rdm $
+*
+* $Log: seclf7.F,v $
+* Revision 1.1.1.1  2002/06/16 15:18:43  hristov
+* Separate distribution  of Geant3
+*
+* Revision 1.1.1.1  1999/05/18 15:55:21  fca
+* AliRoot sources
+*
+* Revision 1.1.1.1  1995/10/24 10:21:59  cernlib
+* Geant
+*
+*
+#include "geant321/pilot.h"
+*CMZ :  3.21/04 23/02/95  14.46.01  by  S.Giani
+*-- Author :
+      SUBROUTINE SECLF7(FSE,IFSE,EX,U,E)
+C       THIS ROUTINE SAMPLES AN EXIT ENERGY FROM
+C       A SIMPLE FISSION SPECTRUM
+#include "geant321/minput.inc"
+      DIMENSION FSE(*),IFSE(*)
+      SAVE
+C       DETERMINE THETA
+      IP=1
+      EMAX=E-U
+      NR=IFSE(IP)
+      NE=IFSE(IP+1)
+      IP=2*NR+1
+      DO 10 I=1,NE
+         IP=IP+2
+         IF(E.LE.FSE(IP))GO TO 20
+   10 CONTINUE
+      GO TO 30
+   20 IF(I.EQ.1)GO TO 40
+C       DETERMINE THE INTERPOLATING SCHEME
+      CALL INTSCH(IFSE,I,IS,NR)
+      E1=FSE(IP-2)
+      E2=FSE(IP)
+      CALL INTERP(E,THETA,E1,FSE(IP-1),E2,FSE(IP+1),IS)
+      GO TO 50
+C       INCIDENT ENERGY IS ABOVE THE LAST INCIDENT ENERGY GIVEN
+C       USE THE LAST DISTRIBUTION
+   30 THETA=FSE(IP+1)
+      GO TO 50
+C       INCIDENT ENERGY IS BELOW THE FIRST INCIDENT ENERGY GIVEN
+C       USE THE FIRST DISTRIBUTION
+   40 THETA=FSE(IP+1)
+C       SELECT THE EXIT ENERGY FROM THE FISSION SPECTRUM
+   50 R1=FLTRNF(0)
+      R2=FLTRNF(0)
+      S=R1**2+R2**2
+      IF(S.GT.1.)GO TO 50
+      TAU=(-ALOG(S)/S)*(R1**2)
+      R=FLTRNF(0)
+      W=-ALOG(R)+TAU
+      EX=THETA*W
+      IF(EX.LE.EMAX)RETURN
+#if defined(CERNLIB_MDEBUG)
+      WRITE(IOUT,10000)EX,EMAX
+10000 FORMAT(' MICAP: WARNING-EX,EMAX=',1P2E13.5,' IN SECLF7')
+#endif
+      EX=EMAX
+      RETURN
+      END
