@@ -211,7 +211,7 @@ class RKTrackRep : public GFAbsTrackRep {
   TMatrixT<double> fAuxInfo;
 
  public:
-  ClassDef(RKTrackRep,5)
+  ClassDef(RKTrackRep,4)
 
 };
 
