@@ -5,7 +5,7 @@ GenfitDisplay* GenfitDisplay::eventDisplay = NULL;
 
 GenfitDisplay::GenfitDisplay() {
 
-	if(!gApplication) {
+	if((!gApplication) || (gApplication && gApplication->TestBit(TApplication::kDefaultApplication))) {
 		std::cout << "In GenfitDisplay ctor: gApplication not found, creating..." << std::flush;
 		TApplication* rootApp = new TApplication("ROOT_application", 0, 0);
 		std::cout << "done!" << std::endl;
