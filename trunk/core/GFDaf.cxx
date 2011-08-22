@@ -244,18 +244,19 @@ void GFDaf::copySmoothing(GFTrack* source, GFTrack* target, int target_irep) {
 		for(unsigned int j=0; j<mat_keys.size(); j++) {
 			if(mat_keys.at(j) == "fUpSt") already_there = true;
 		}
-		if(already_there) continue;
 
-		target->getBK(i)->setNhits(target->getNumHits());
-		target->getBK(i)->bookMatrices("fUpSt");
-		target->getBK(i)->bookMatrices("fUpCov");
-		target->getBK(i)->bookMatrices("bUpSt");
-		target->getBK(i)->bookMatrices("bUpCov");
-		target->getBK(i)->bookGFDetPlanes("fPl");
-		target->getBK(i)->bookGFDetPlanes("bPl");
-		if(target->getTrackRep(i)->hasAuxInfo()) {
-			target->getBK(i)->bookMatrices("fAuxInfo");
-			target->getBK(i)->bookMatrices("bAuxInfo");
+		if(!already_there) {
+			target->getBK(i)->setNhits(target->getNumHits());
+			target->getBK(i)->bookMatrices("fUpSt");
+			target->getBK(i)->bookMatrices("fUpCov");
+			target->getBK(i)->bookMatrices("bUpSt");
+			target->getBK(i)->bookMatrices("bUpCov");
+			target->getBK(i)->bookGFDetPlanes("fPl");
+			target->getBK(i)->bookGFDetPlanes("bPl");
+			if(target->getTrackRep(i)->hasAuxInfo()) {
+				target->getBK(i)->bookMatrices("fAuxInfo");
+				target->getBK(i)->bookMatrices("bAuxInfo");
+			}
 		}
 	}
 
@@ -270,16 +271,16 @@ void GFDaf::copySmoothing(GFTrack* source, GFTrack* target, int target_irep) {
 			TMatrixT<double> fUpSt, fUpCov, bUpSt, bUpCov, fAuxInfo, bAuxInfo;
 			GFDetPlane fPl, bPl;
 
-			source->getBK(0)->getMatrix("fUpSt",hit_i,fUpSt);
-			source->getBK(0)->getMatrix("fUpCov",hit_i,fUpCov);
-			source->getBK(0)->getDetPlane("fPl",hit_i,fPl);
-			source->getBK(0)->getMatrix("bUpSt",hit_i,bUpSt);
-			source->getBK(0)->getMatrix("bUpCov",hit_i,bUpCov);
-			source->getBK(0)->getDetPlane("bPl",hit_i,bPl);
+			source->getBK(0)->getMatrix("fUpSt",pl_i,fUpSt);
+			source->getBK(0)->getMatrix("fUpCov",pl_i,fUpCov);
+			source->getBK(0)->getDetPlane("fPl",pl_i,fPl);
+			source->getBK(0)->getMatrix("bUpSt",pl_i,bUpSt);
+			source->getBK(0)->getMatrix("bUpCov",pl_i,bUpCov);
+			source->getBK(0)->getDetPlane("bPl",pl_i,bPl);
 
 			if(source->getTrackRep(0)->hasAuxInfo()) {
-				source->getBK(0)->getMatrix("fAuxInfo",hit_i,fAuxInfo);
-				source->getBK(0)->getMatrix("bAuxInfo",hit_i,bAuxInfo);
+				source->getBK(0)->getMatrix("fAuxInfo",pl_i,fAuxInfo);
+				source->getBK(0)->getMatrix("bAuxInfo",pl_i,bAuxInfo);
 				target->getBK(target_irep)->setMatrix("fAuxInfo",hit_count,fAuxInfo);
 				target->getBK(target_irep)->setMatrix("bAuxInfo",hit_count,bAuxInfo);
 			}
