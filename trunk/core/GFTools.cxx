@@ -336,8 +336,8 @@ void GFTools::invertMatrix(const TMatrixT<double>& mat, TMatrixT<double>& inv){
 	bool status = 0;
 	TDecompSVD invertAlgo(mat);
 
-  // check if numerical limits are reached
-	if (!(mat<1.E100) && !(mat>-1.E100)){
+  // check if numerical limits are reached (i.e at least one entry < 1E-100 and/or at least one entry > 1E100)
+	if (!(mat<1.E100) || !(mat>-1.E100)){
 		GFException e("cannot invert matrix GFTools::invertMatrix(), entries too big (>1E100)",
 				__LINE__,__FILE__);
 		e.setFatal();
