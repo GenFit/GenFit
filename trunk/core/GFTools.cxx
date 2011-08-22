@@ -335,7 +335,17 @@ void GFTools::invertMatrix(const TMatrixT<double>& mat, TMatrixT<double>& inv){
 	inv.ResizeTo(mat);
 	bool status = 0;
 	TDecompSVD invertAlgo(mat);
-	invertAlgo.SetTol(1E-150); //this is a hack because a tolerance of 1E-22 does not make any sense for doubles only for floats
+
+  // check if numerical limits are reached
+	if (!(mat<1.E100) && !(mat>-1.E100)){
+		GFException e("cannot invert matrix GFTools::invertMatrix(), entries too big (>1E100)",
+				__LINE__,__FILE__);
+		e.setFatal();
+		throw e;	
+	}
+	
+	invertAlgo.SetTol(1E-50); //this is a hack because a tolerance of 1E-22 does not make any sense for doubles only for floats
+	
 	inv = invertAlgo.Invert(status);
 	if(status == 0){
 		GFException e("cannot invert matrix GFTools::invertMatrix(), status = 0",
