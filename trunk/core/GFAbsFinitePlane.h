@@ -44,7 +44,7 @@ public:
   //! Returns whether a u,v point is in the active plane or not. Needs to be implemented
   //! in child class.
   virtual bool inActive(const double& u,const double& v)const = 0;
-  virtual void Print() const = 0;
+  virtual void Print(const Option_t* = "") const = 0;
   //! Deep copy ctor for polymorphic class.
   virtual GFAbsFinitePlane* clone() const = 0;
   virtual ~GFAbsFinitePlane();

@@ -113,7 +113,7 @@ public:
   TVector2 straightLineToPlane(const TVector3& point,const TVector3& dir) const;
 
 
-  void Print() const;
+  void Print(const Option_t* = "") const;
 
   //! for poor attempts of making an event display. There is a lot of room for improvements.
   void getGraphics(double mesh, double length, TPolyMarker3D **pl, TPolyLine3D **plLine,TPolyLine3D **u, TPolyLine3D **v, TPolyLine3D **n=NULL);

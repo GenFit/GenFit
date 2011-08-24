@@ -214,10 +214,10 @@ void GFTrack::printBookkeeping(){
 
 }
 
-void GFTrack::Print(){
+void GFTrack::Print(const Option_t* option) const{
   for(unsigned int i=0;i<getNumReps();++i){
-    getTrackRep(i)->Print();
-    fBookkeeping.at(i)->Print();
+    getTrackRep(i)->Print(option);
+    fBookkeeping.at(i)->Print(option);
   }
   std::cout << "GFTrack has " << getNumHits() << " detector hits." << std::endl;
   

@@ -378,7 +378,7 @@ public:
    */
   void printBookkeeping();
 
-  void Print();
+  void Print(const Option_t* = "") const;
 
   void clearBookkeeping(){
     for(unsigned int i=0;i<getNumReps();++i){

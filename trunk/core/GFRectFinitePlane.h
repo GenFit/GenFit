@@ -41,7 +41,7 @@ class GFRectFinitePlane : public GFAbsFinitePlane {
 public:
   //override inActive & Print methods
   bool inActive(const double& u,const double& v) const;
-  void Print() const;
+  void Print(const Option_t* = "") const;
 
   //! give dimensions of finite rectangle: u1,u2,v1,v2
   GFRectFinitePlane(const double&,const double&,const double&,const double&);

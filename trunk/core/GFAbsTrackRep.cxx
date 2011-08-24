@@ -72,6 +72,7 @@ double GFAbsTrackRep::stepalong(double h,
                   TVector3& point,
                   TVector3& dir){
   Abort("stepalong()");
+  return 0.;
 }
 
 
@@ -93,14 +94,14 @@ GFAbsTrackRep::reset(){
 }
 
 void
-GFAbsTrackRep::Print() const {
+GFAbsTrackRep::Print(const Option_t* option) const {
   std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
   std::cout<<"GFAbsTrackRep::Parameters at reference plane ";
-  fRefPlane.Print();
+  fRefPlane.Print(option);
   std::cout<<"GFAbsTrackRep::State"<<std::endl;
-  fState.Print();
+  fState.Print(option);
   std::cout<<"GFAbsTrackRep::Covariances"<<std::endl;
-  fCov.Print();
+  fCov.Print(option);
   std::cout<<"GFAbsTrackRep::chi^2"<<std::endl;
   std::cout<<fChiSqu<<std::endl;
   std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;

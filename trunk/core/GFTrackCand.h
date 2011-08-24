@@ -165,7 +165,7 @@ public:
 
   // Operations ----------------------
   void reset();
-  void Print() const ;
+  void Print(const Option_t* = "") const ;
 
 private:
 

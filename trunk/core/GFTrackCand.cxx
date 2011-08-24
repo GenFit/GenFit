@@ -87,12 +87,12 @@ bool operator== (const GFTrackCand& lhs, const GFTrackCand& rhs){
   return result;
 }
 
-void GFTrackCand::Print() const {
+void GFTrackCand::Print(const Option_t* option) const {
   std::cout << "======== GFTrackCand::print ========" << std::endl;
   if(fMcTrackId>=0) std::cout << "mcTrackId=" << fMcTrackId << std::endl;
   std::cout << "seed values for pos,direction, and q/p: " << std::endl;
-  fPosSeed.Print();
-  fDirSeed.Print();
+  fPosSeed.Print(option);
+  fDirSeed.Print(option);
   std::cout << "q/p=" << fQoverpSeed << std::endl;
   assert(fDetId.size()==fHitId.size());
   std::cout << "detId|hitId|rho ";
