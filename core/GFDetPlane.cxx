@@ -235,7 +235,7 @@ GFDetPlane::sane(){
 
 
 void
-GFDetPlane::Print() const
+GFDetPlane::Print(const Option_t* option) const
 {
   std::cout<<"GFDetPlane: "
 	   <<"O("<<fO.X()<<","<<fO.Y()<<","<<fO.Z()<<") "
@@ -244,7 +244,7 @@ GFDetPlane::Print() const
 	   <<"n("<<getNormal().X()<<","<<getNormal().Y()<<","<<getNormal().Z()<<") "
 		   <<std::endl;
   std::cout << fFinitePlane << std::endl;
-  if(fFinitePlane!=NULL) fFinitePlane->Print();
+  if(fFinitePlane!=NULL) fFinitePlane->Print(option);
     
 }
 

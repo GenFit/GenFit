@@ -190,7 +190,7 @@ class GFAbsTrackRep : public TObject{
   //! returns dimension of state vector
   unsigned int getDim() const {return fDimension;}  
   
-  virtual void Print() const;
+  virtual void Print(const Option_t* = "") const;
 
   inline TMatrixT<double> getState() const {
     return fState;

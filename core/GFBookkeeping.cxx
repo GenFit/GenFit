@@ -301,8 +301,10 @@ void GFBookkeeping::setNumber(std::string key, unsigned int index,
 
 bool GFBookkeeping::getMatrix(std::string key,
 			    unsigned int index,
-			    TMatrixT<double>& mat){
-  if(fMatrices[key] == NULL){
+			    TMatrixT<double>& mat) const {
+  std::map<std::string, TMatrixT<double>* >::const_iterator it;
+  it = fMatrices.find(key);
+  if(it == fMatrices.end()){
     std::ostringstream ostr;
     ostr << "The key " << key << " is unknown in GFBookkeeping::getMatrix()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
@@ -315,15 +317,16 @@ bool GFBookkeeping::getMatrix(std::string key,
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  mat.ResizeTo((fMatrices[key])[index]);
-  mat = (fMatrices[key])[index];
+  mat.ResizeTo(((*it).second)[index]);
+  mat = ((*it).second)[index];
   return true;
 }
 bool GFBookkeeping::getDetPlane(std::string key,
 			      unsigned int index,
-			      GFDetPlane& pl) {
-
-  if(fPlanes[key] == NULL){
+			      GFDetPlane& pl) const {
+  std::map<std::string, GFDetPlane* >::const_iterator it;
+  it = fPlanes.find(key);
+  if(it == fPlanes.end()){
     std::ostringstream ostr;
     ostr << "The key " << key << " is unknown in GFBookkeeping::getGFDetPlane()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
@@ -336,13 +339,15 @@ bool GFBookkeeping::getDetPlane(std::string key,
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  pl = (fPlanes[key])[index];
+  pl = ((*it).second)[index];
   return true;
 }
 bool GFBookkeeping::getNumber(std::string key,
 			    unsigned int index,
-			    double& num) {
-  if(fNumbers[key] == NULL){
+			    double& num) const {
+  std::map<std::string, TMatrixT<double>* >::const_iterator it;
+  it = fNumbers.find(key);
+  if(it == fNumbers.end()){
     std::ostringstream ostr;
     ostr << "The key " << key << " is unknown in GFBookkeeping::getNumber()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
@@ -355,7 +360,7 @@ bool GFBookkeeping::getNumber(std::string key,
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  num = ((fNumbers[key])[index])[0][0];
+  num = (((*it).second)[index])[0][0];
   return true;
 }
 
@@ -419,25 +424,25 @@ void GFBookkeeping::clearAll(){
   fNumbers.clear();
 }
 
-std::vector< std::string > GFBookkeeping::getMatrixKeys() {
+std::vector< std::string > GFBookkeeping::getMatrixKeys() const {
   std::vector< std::string > keys;
-  std::map<std::string, TMatrixT<double>* >::iterator it;
+  std::map<std::string, TMatrixT<double>* >::const_iterator it;
   for(it=fMatrices.begin();it!=fMatrices.end();it++){
     if(it->second!=NULL) keys.push_back(it->first);
   }
   return keys;
 }
-std::vector< std::string > GFBookkeeping::getGFDetPlaneKeys() {
+std::vector< std::string > GFBookkeeping::getGFDetPlaneKeys() const {
   std::vector< std::string > keys;
-  std::map<std::string, GFDetPlane* >::iterator it;
+  std::map<std::string, GFDetPlane* >::const_iterator it;
   for(it=fPlanes.begin();it!=fPlanes.end();it++){
     if(it->second!=NULL) keys.push_back(it->first);
   }
   return keys;
 }
-std::vector< std::string > GFBookkeeping::getNumberKeys() {
+std::vector< std::string > GFBookkeeping::getNumberKeys() const {
   std::vector< std::string > keys;
-  std::map<std::string, TMatrixT<double>* >::iterator it;
+  std::map<std::string, TMatrixT<double>* >::const_iterator it;
   for(it=fNumbers.begin();it!=fNumbers.end();it++){
     if(it->second!=NULL) keys.push_back(it->first);
   }
@@ -445,7 +450,7 @@ std::vector< std::string > GFBookkeeping::getNumberKeys() {
 }
 
 
-void GFBookkeeping::Print()  {
+void GFBookkeeping::Print(const Option_t* option) const {
   std::cout << "=============GFBookkeeping::print()==============" << std::endl;
   std::cout << "-----printing all matrices:------" << std::endl;
   std::vector<std::string> keys = getMatrixKeys();
@@ -455,7 +460,7 @@ void GFBookkeeping::Print()  {
     for(int j=0;j<fNhits;++j){
       TMatrixT<double> m;
       getMatrix(keys.at(i),j,m);
-      m.Print();
+      m.Print(option);
     }
   }
   std::cout << "-----printing all GFDetPlanes:------" << std::endl;
@@ -466,7 +471,7 @@ void GFBookkeeping::Print()  {
     for(int j=0;j<fNhits;++j){
       GFDetPlane p;
       getDetPlane(keys.at(i),j,p);
-      p.Print();
+      p.Print(option);
     }
   }
   std::cout << "-----printing all numbers:------" << std::endl;

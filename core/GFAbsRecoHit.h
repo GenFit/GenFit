@@ -204,7 +204,7 @@ public:
 
   /** @brief Print raw hit coordinates.
    */
-  virtual void Print() {fHitCoord.Print();}
+  virtual void Print(const Option_t* option = "") const {fHitCoord.Print(option);}
 
   virtual const std::string& getPolicyName();
 

@@ -57,13 +57,13 @@ class GFBookkeeping : public TObject {
   void setDetPlane(std::string key,unsigned int index,const GFDetPlane& pl);
   void setNumber(std::string key,unsigned int index, const double& num);
 
-  bool getMatrix(std::string key, unsigned int index, TMatrixT<double>& mat) ;
-  bool getDetPlane(std::string key, unsigned int index, GFDetPlane& pl)  ;
-  bool getNumber(std::string key, unsigned int index, double& num) ;
+  bool getMatrix(std::string key, unsigned int index, TMatrixT<double>& mat) const;
+  bool getDetPlane(std::string key, unsigned int index, GFDetPlane& pl)  const;
+  bool getNumber(std::string key, unsigned int index, double& num) const;
 
-  std::vector< std::string > getMatrixKeys() ;
-  std::vector< std::string > getGFDetPlaneKeys() ;
-  std::vector< std::string > getNumberKeys() ;
+  std::vector< std::string > getMatrixKeys() const;
+  std::vector< std::string > getGFDetPlaneKeys() const;
+  std::vector< std::string > getNumberKeys() const;
 
   void addFailedHit(unsigned int);
   unsigned int hitFailed(unsigned int);
@@ -76,7 +76,7 @@ class GFBookkeeping : public TObject {
   void clearAll();
   void clearFailedHits();
 
-  void Print() ;
+  void Print(const Option_t* = "") const;
 
  private:
   //protect from call of net yet defined assignement operator

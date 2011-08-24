@@ -40,7 +40,7 @@ bool GFRectFinitePlane::inActive(const double& u,const double& v) const{
   return false;
 }
 
-void GFRectFinitePlane::Print() const{
+void GFRectFinitePlane::Print(const Option_t* option) const{
   std::cout << "Rectangular Finite Plane Umin=" << fUmin << ", Umax="
 	    << fUmax << ", Vmin=" << fVmin << ", Vmax=" << fVmax << std::endl;
 };
