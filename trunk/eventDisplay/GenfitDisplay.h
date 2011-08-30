@@ -101,7 +101,7 @@ class GenfitDisplay : public TNamed {
 		void prev(unsigned int stp = 1);
 
 		/** @brief Go to event with index id.*/
-		void gotoEvent(int id);
+		void gotoEvent(unsigned int id);
 
 		/** @brief Get the total number of events stored.*/
 		int getNEvents();

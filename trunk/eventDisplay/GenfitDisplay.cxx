@@ -7,7 +7,7 @@ GenfitDisplay::GenfitDisplay() {
 
 	if((!gApplication) || (gApplication && gApplication->TestBit(TApplication::kDefaultApplication))) {
 		std::cout << "In GenfitDisplay ctor: gApplication not found, creating..." << std::flush;
-		TApplication* rootApp = new TApplication("ROOT_application", 0, 0);
+		new TApplication("ROOT_application", 0, 0);
 		std::cout << "done!" << std::endl;
 	}
 	if(!gEve) {
@@ -41,9 +41,9 @@ GenfitDisplay::~GenfitDisplay() { reset(); }
 
 void GenfitDisplay::reset() { 
 
-	for(int i = 0; i < fEvents.size(); i++) {
+	for(unsigned int i = 0; i < fEvents.size(); i++) {
 
-		for(int j = 0; j < fEvents.at(i)->size(); j++) {
+		for(unsigned int j = 0; j < fEvents.at(i)->size(); j++) {
 
 			delete fEvents.at(i)->at(j);
 			fEvents.at(i)->clear();
@@ -61,7 +61,7 @@ void GenfitDisplay::addEvent(std::vector<GFTrack*>& evts) {
 
 	std::vector<GFTrack*>* vec = new std::vector<GFTrack*>;
 
-	for(int i = 0; i < evts.size(); i++) {
+	for(unsigned int i = 0; i < evts.size(); i++) {
 
 		vec->push_back(new GFTrack(*(evts.at(i))));
 
@@ -73,24 +73,25 @@ void GenfitDisplay::addEvent(std::vector<GFTrack*>& evts) {
 
 void GenfitDisplay::next(unsigned int stp) { 
 
-	fEventId += stp;
-	gotoEvent(fEventId);
+	gotoEvent(fEventId + stp);
 
 }
 
 void GenfitDisplay::prev(unsigned int stp) { 
 
-	fEventId -= stp;
-	gotoEvent(fEventId);
+	if(fEventId < (int)stp) {
+		gotoEvent(0);
+	} else {
+		gotoEvent(fEventId - stp);
+	}
 
 }
 
 int GenfitDisplay::getNEvents() { return fEvents.size(); }
 
-void GenfitDisplay::gotoEvent(int id) {
+void GenfitDisplay::gotoEvent(unsigned int id) {
 
-	if(id < 0) id = 0;
-	else if(id >= fEvents.size()) id = fEvents.size() - 1;
+	if(id >= fEvents.size()) id = fEvents.size() - 1;
 
 	fEventId = id;
 
@@ -184,7 +185,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 
 
-	for(int i = 0; i < fEvents.at(id)->size(); i++) { // loop over all tracks in an event
+	for(unsigned int i = 0; i < fEvents.at(id)->size(); i++) { // loop over all tracks in an event
 
 		GFTrack* track = fEvents.at(id)->at(i);
 
@@ -218,7 +219,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 		TMatrixT<double> initial_auxInfo(*(rep->getAuxInfo(initial_plane)));
 		// saved initial state --------------------------------------------------------------------
 
-		for(int j = 0; j < numhits; j++) { // loop over all hits in the track
+		for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
 
 			GFAbsRecoHit* hit = track->getHit(j);
 			GFDetPlane plane;
@@ -263,7 +264,6 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			double_t plane_size = 4;
 			double_t hit_res_u = 0.5;
 			double_t hit_res_v = 0.5;
-			double_t hit_res_z = 0.5;
 
 			TMatrixT<double> hit_coords(hit->getHitCoord(plane));
 			TMatrixT<double> hit_cov(hit->getHitCov(plane));
