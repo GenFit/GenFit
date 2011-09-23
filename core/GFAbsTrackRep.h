@@ -92,6 +92,7 @@ class GFAbsTrackRep : public TObject{
 
   //! chiSqu of the track fit
   double           fChiSqu;
+  double           fForwardChiSqu;
   unsigned int     fNdf;
 
   //! status of track representation: 0 means everything's OK
@@ -244,6 +245,9 @@ class GFAbsTrackRep : public TObject{
   inline double getChiSqu() const {
     return fChiSqu;
   }
+  inline double getForwardChiSqu() const {
+    return fForwardChiSqu;
+  }
   //! returns chi2/ndf
   inline double getRedChiSqu() const {
     if(getNDF()>0) return getChiSqu()/getNDF();
@@ -296,11 +300,17 @@ class GFAbsTrackRep : public TObject{
   inline void setChiSqu(double aChiSqu) {
     fChiSqu = aChiSqu;
   }
+  inline void setForwardChiSqu(double aChiSqu) {
+    fForwardChiSqu = aChiSqu;
+  }
   inline void setNDF(unsigned int n) {
     fNdf = n;
   }
   inline void addChiSqu(double aChiSqu) {
     fChiSqu += aChiSqu;
+  }
+  inline void addForwardChiSqu(double aChiSqu) {
+    fForwardChiSqu += aChiSqu;
   }
   inline void addNDF(unsigned int n) {
     fNdf += n;
@@ -346,7 +356,7 @@ class GFAbsTrackRep : public TObject{
   void Abort(std::string method);
 
 
-  ClassDef(GFAbsTrackRep,3)
+  ClassDef(GFAbsTrackRep,4)
 
 };
 
