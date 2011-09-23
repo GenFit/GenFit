@@ -142,7 +142,12 @@ GFKalman::fittingPass(GFTrack* trk, int direction){
     GFAbsTrackRep* arep=trk->getTrackRep(irep);
     if(arep->getStatusFlag()==0) {
       //clear chi2 sum and ndf sum in track reps
-      arep->setChiSqu(0.);
+        if (direction == -1){
+      	  arep->setChiSqu(0.);
+        }
+        if (direction == 1){
+      	  arep->setForwardChiSqu(0.);
+        }
       arep->setNDF(0);
       //clear failedHits and outliers
       trk->getBK(irep)->clearFailedHits();
@@ -302,7 +307,12 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   TMatrixT<double> r=hit->residualVector(rep,state,pl);
   double chi2 = chi2Increment(r,H,cov,V);
   int ndf = r.GetNrows();
-  rep->addChiSqu( chi2 );
+  if (direction == -1) {
+	  rep->addChiSqu( chi2 );
+  }
+  if (direction == 1) {
+	  rep->addForwardChiSqu( chi2 );
+  }
   rep->addNDF( ndf );
 
   /*

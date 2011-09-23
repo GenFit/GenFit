@@ -245,11 +245,17 @@ public:
     getCardinalRep()->getPosMomCov(pl,pos,mom,cov);
   }
 
-  /** @brief Get chi2
+  /** @brief Get chi2 from backward filter
    *
    * Cardinal representation is used.
    */
   double getChiSqu() const {return getCardinalRep()->getChiSqu();}
+
+  /** @brief Get chi2 from forward filter
+   *
+   * Cardinal representation is used.
+   */
+  double getForwardChiSqu() const {return getCardinalRep()->getForwardChiSqu();}
 
   /** @brief Get NDF
    *
@@ -411,7 +417,7 @@ public:
 
 
 public:
-  ClassDef(GFTrack,1)
+  ClassDef(GFTrack,2)
 };
 
 #endif 
