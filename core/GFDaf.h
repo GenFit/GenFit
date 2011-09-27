@@ -41,7 +41,12 @@ along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
  * fitting tracks which are contaminated with noise hits. The algorithm is 
  * taken from the references R. Fruehwirth & A. Strandlie, Computer Physics 
  * Communications 120 (1999) 197-214 and CERN thesis: Dissertation by Matthias 
- * Winkler. 
+ * Winkler.
+ *
+ * The weights which were assigned to the hits by the DAF are accessible by using the
+ * bookkeeping object of the fitted track. The weight is stored under the key "dafWeight".
+ * So to retrieve for example the weight of hit 10, fitted with track representation 2,
+ * use GFTrack::getBK(2)->getNumber("dafWeight", 10,  double& wght).
  */
 class GFDaf: GFKalman {
 	public:
@@ -55,15 +60,20 @@ class GFDaf: GFKalman {
 
 		/** @brief Return the weights present after the track was processed.
 		 *
+		 * WARNING: This function is deprecated! Use the bookkeeping instead.
+		 *		
 		 * The DAF uses special effective hits defined in the class GFDafHit. A
-		 * GFDafHit is a wrappe class and contains all the real hits from one plane.
+		 * GFDafHit is a wrapper class and contains all the real hits from one plane.
 		 * The structure of the return vector of getWeights allows to reconstruct in
 		 * what way the hits were grouped: the outermost vector represents the track
 		 * representation, there is one entry per track representation. The middle
 		 * vector represents the effective hits, and the innermost vector contains
 		 * the real hits contained in the corresponding effective hit.
 		 */
-		const std::vector<std::vector<std::vector<double> > > getWeights() { return fWeights; };
+		const std::vector<std::vector<std::vector<double> > > getWeights() { 
+			std::cout<<"Warning: Using deprecated GFDaf::getWeights()! The weights of the hits are accessible in the bookkeeping of the track which was fitted, the key is \"dafWeight\""<<std::endl;
+			return fWeights; 
+		};
 
 		/** @brief Set the probabilty cut for the weight calculation for the hits. 
 		 *
@@ -95,6 +105,8 @@ class GFDaf: GFKalman {
 		/** @brief Copy the smoothing matrices from the source track to the target.
 		 */
 		void copySmoothing(GFTrack* source, GFTrack* target, int target_ire);
+
+		void saveWeights(GFTrack* trk, const std::vector<std::vector<std::vector<double> > >& weights) const;
 
 		std::vector<std::vector<std::vector<double> > > fWeights;
 		std::vector<double> fBeta;
