@@ -17,10 +17,13 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "GFRaveVertexFactory.h"
+#include <rave/VertexFactory.h>
+
 
 void
-GFRaveVertexFactory(){
-  theFactory = VertexFactory(GFRaveMagneticField(), GFRavePropagator()); // todo: add beamspot
+GFRaveVertexFactory::GFRaveVertexFactory(){
+  theFactory = rave::VertexFactory(GFRaveMagneticField(), GFRavePropagator()); // todo: add beamspot
 }
 
 

@@ -1,0 +1,65 @@
+# Create a library called "libgfrave" which includes the source files given in
+# the array .
+# The extension is already found.  Any number of sources could be listed here.
+
+IF(NOT DEFINED ENV{RAVEPATH})
+   MESSAGE(FATAL_ERROR "You did not define the environment variable RAVEPATH which is nedded to find rave. Please set this variable and execute cmake again.") 
+ENDIF(NOT DEFINED ENV{RAVEPATH})
+
+SET(RAVEPATH $ENV{RAVEPATH})
+
+set(INCLUDE_DIRECTORIES
+${ROOT_INCLUDE_DIR} 
+${CLHEP_INCLUDE_DIR}
+${CMAKE_SOURCE_DIR}/genfit
+${CMAKE_SOURCE_DIR}/GenfitTools/GFRave
+
+${RAVEPATH}/include 
+${RAVEPATH}/src
+${RAVEPATH}/src/ROOT/mathcore
+${RAVEPATH}/src/ROOT/smatrix
+${RAVEPATH}/src/ROOT/genvector
+${RAVEPATH}/src/ROOT
+${RAVEPATH}/src/RaveBase/RaveInterface
+)
+
+
+include_directories( ${INCLUDE_DIRECTORIES})
+
+set(LINK_DIRECTORIES
+${ROOT_LIBRARY_DIR}
+)
+
+link_directories( ${LINK_DIRECTORIES})
+
+
+set(GFRAVE_SRCS 
+GFRaveConverters.cxx  
+GFRaveMagneticField.cxx  
+GFRavePropagator.cxx  
+GFRaveVertexFactory.cxx
+)
+
+if(RULE_CHECKER_FOUND)
+  CHECK_RULES("${GFRAVE_SRCS}" "${INCLUDE_DIRECTORIES}" GFRAVE_RULES)
+endif(RULE_CHECKER_FOUND)
+
+# fill list of header files from list of source files
+# by exchanging the file extension
+CHANGE_FILE_EXTENSION(*.cxx *.h GFRAVE_HEADERS "${GFRAVE_SRCS}")
+
+
+set(GFRAVE_LINKDEF  GFRaveLinkDef.h)
+set(GFRAVE_DICTIONARY ${CMAKE_CURRENT_BINARY_DIR}/GFRaveDict.cxx) 
+
+
+ROOT_GENERATE_DICTIONARY("${GFRAVE_HEADERS}" "${GFRAVE_LINKDEF}" "${GFRAVE_DICTIONARY}" "${INCLUDE_DIRECTORIES}")
+
+SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS} ${GFRAVE_DICTIONARY})
+
+
+add_library(GFRAVE SHARED ${GFRAVE_SRCS_ALL})
+target_link_libraries(GFRAVE ${ROOT_LIBRARIES})
+set_target_properties(GFRAVE PROPERTIES ${FAIRROOT_LIBRARY_PROPERTIES})
+################ install ###################
+install(TARGETS GFRAVE DESTINATION ${CMAKE_BINARY_DIR}/lib)

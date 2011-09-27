@@ -17,42 +17,18 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/**
- *  @author Johannes Rauch (Technische Universit&auml;t M&uuml;nchen, original author)
- *
- */
-
-/** @addtogroup GFRave
- * @{
- */
+#ifdef __CINT__
 
 
-#ifndef GFRAVEVERTEXFACTORY_H
-#define GFRAVEVERTEXFACTORY_H
-
-#include<vector>
-
-#include <rave/Vertex.h>
+#pragma link off all globals;
+#pragma link off all classes;
+#pragma link off all functions;
 
 
-
-class GFRaveVertexFactory : public TObject {
- public:
-  GFRaveVertexFactory();
-
-  std::vector < rave::Vertex > create ( const std::vector < GFTrack* > &, bool use_beamspot=false ) const;
-
- private:
-
-
-  // data members
-  rave::VertexFactory theFactory;
-
- public:
-  ClassDef(GFRaveVertexFactory,1)
-};
+#pragma link C++ class GFRaveConverters+;
+#pragma link C++ class GFRaveMagneticField+;
+#pragma link C++ class GFRavePropagator+;
+#pragma link C++ class GFRaveVertexFactory+;
 
 #endif
-
-/** @} */
 

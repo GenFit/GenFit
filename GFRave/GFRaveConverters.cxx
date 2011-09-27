@@ -17,8 +17,21 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <GFTrack.h>
+#include <GFAbsTrackRep.h>
 
-rave::Track RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig) const{
+#include <rave/Plane.h>
+#include <rave/Point3D.h>
+
+#include <iostream>
+
+
+rave::Track RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig) {
+  return gfrave::RepToTrack(rep, orig->id(), orig->originalObject(), orig->tag());
+}
+
+
+rave::Track RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string tag){
 
   GFDetPlane* refPlane(rep->getReferencePlane());
   TVector3 pos, mom;
@@ -39,24 +52,24 @@ rave::Track RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig) const{
                          cov[3][3], cov[4][3], cov[5][3],
                          cov[4][4], cov[5][4], cov[5][5]);
 
-  rave::Track ret(orig->id(), state, cov,
+  rave::Track ret(id, state, cov,
                   rep->getCharge(), rep->getChiSqu(), rep->getNDF(),
-                  orig->originalObject(), orig->tag());
+                  originaltrack, tag);
 
   return ret;
 }
 
 
-GFDetPlane PlaneToGFDetPlane(const ravesurf::Plane & rplane) const{
+GFDetPlane PlaneToGFDetPlane(const ravesurf::Plane & rplane) {
   return GFDetPlane(Point3DToTVector3(rplane.position()),
                     Vector3DToTVector3(rplane.normalVector()) );
 }
 
 
-TVector3 Point3DToTVector3(const rave::Point3D & v) const{
+TVector3 Point3DToTVector3(const rave::Point3D & v) {
   return TVector3(v.x(), v.y(), v.z());
 }
 
-TVector3 Vector3DToTVector3(const rave::Vector3D & v) const{
+TVector3 Vector3DToTVector3(const rave::Vector3D & v) {
   return TVector3(v.x(), v.y(), v.z());
 }

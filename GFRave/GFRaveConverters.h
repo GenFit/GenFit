@@ -28,26 +28,25 @@
 #ifndef GFRAVECONVERTERS_H
 #define GFRAVECONVERTERS_H
 
+#include <rave/Track.h>
 
+#include <GFDetPlane.h>
 
-class GFRaveConverters : public TObject {
+#include <TVector3.h>
 
- public:
+namespace gfrave{
 
-  // Constructors/Destructors ---------
+  rave::Track GFTrackToTrack(GFTrack* orig);
+  rave::Track RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig);
+  rave::Track RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack = 0, std::string tag="");
 
-  rave::Track GFTrackToTrack(GFTrack* orig) const;
+  GFDetPlane PlaneToGFDetPlane(const ravesurf::Plane & rplane);
 
-  rave::Track RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig) const;
-  GFDetPlane PlaneToGFDetPlane(const ravesurf::Plane & rplane) const;
+  TVector3 Point3DToTVector3(const rave::Point3D &);
+  TVector3 Vector3DToTVector3(const rave::Vector3D &);
 
-  TVector3 Point3DToTVector3(const rave::Point3D &) const;
-  TVector3 Vector3DToTVector3(const rave::Vector3D &) const;
+}
 
- public:
-  ClassDef(GFRaveConverters,1)
-
-};
 
 #endif
 

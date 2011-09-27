@@ -30,8 +30,14 @@
 #define GFRAVEPROPAGATOR_H
 
 #include <rave/Propagator.h>
+#include <rave/Track.h>
+#include <rave/Plane.h>
+#include <rave/Cylinder.h>
 
-namespace rave
+#include <GFAbsTrackRep.h>
+#include <GFTrack.h>
+
+namespace gfrave
 {
 
 /** 
