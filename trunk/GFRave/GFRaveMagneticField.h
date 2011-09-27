@@ -31,7 +31,7 @@
 
 #include <rave/MagneticField.h>
 
-namespace rave
+namespace gfrave
 {
 
 /** 

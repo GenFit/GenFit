@@ -51,14 +51,14 @@ rave::Track rave::GFRavePropagator::to ( const rave::Track & orig,
                           const ravesurf::Plane & rplane ) const
 {
   GFAbsTrackRep* rep = checkTrack(orig);
-  rep->extrapolateToPlane(PlaneToGFDetPlane(rplane));
+  rep->extrapolateToPlane(gfrave::PlaneToGFDetPlane(rplane));
 
   if (rep->getStatusFlag() != 0){
     GFException exc("GFRavePropagator::to ==> Extrapolation failed!",__LINE__,__FILE__);
     throw exc;
   }
   
-  return RepToTrack(rep, orig);
+  return gfrave::RepToTrack(rep, orig);
 }
 
 
@@ -68,14 +68,14 @@ rave::Track rave::GFRavePropagator::closestTo ( const rave::Track & orig,
   GFAbsTrackRep* rep = checkTrack(orig);
 
   TVector3 poca, normvec;
-  rep->extrapolateToPoint(Point3DToTVector3(pt), poca, normvec);
+  rep->extrapolateToPoint(gfrave::Point3DToTVector3(pt), poca, normvec);
 
   if (rep->getStatusFlag() != 0){
     GFException exc("GFRavePropagator::to ==> Extrapolation failed!",__LINE__,__FILE__);
     throw exc;
   }
 
-  return RepToTrack(rep, orig);
+  return gfrave::RepToTrack(rep, orig);
 }
 
 
