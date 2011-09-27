@@ -75,6 +75,8 @@ void GFDaf::processTrack(GFTrack* trk) {
 
 	}
 
+	saveWeights(trk, fWeights);
+
 	delete mini_trk;
 
 };
@@ -298,6 +300,26 @@ void GFDaf::copySmoothing(GFTrack* source, GFTrack* target, int target_irep) {
 
 		}
 
+	}
+
+}
+
+void GFDaf::saveWeights(GFTrack* trk, const std::vector<std::vector<std::vector<double> > >& weights) const {
+
+	assert(weights.size() == trk->getNumReps());
+
+	for(unsigned int rep_i = 0; rep_i < weights.size(); rep_i++) {
+		GFBookkeeping* bk = trk->getBK(rep_i);
+		bk->setNhits(trk->getNumHits());
+		bk->bookNumbers("dafWeight");
+		unsigned int hit_i = 0;
+		for(unsigned int dafhit_i = 0; dafhit_i < weights.at(rep_i).size(); dafhit_i++) {
+			for(unsigned int hit_on_pl_i = 0; hit_on_pl_i < weights.at(rep_i).at(dafhit_i).size(); hit_on_pl_i++) {
+				bk->setNumber("dafWeight", hit_i, weights.at(rep_i).at(dafhit_i).at(hit_on_pl_i));
+				hit_i++;
+			}
+		}
+		assert(hit_i == trk->getNumHits());
 	}
 
 }
