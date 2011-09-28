@@ -28,11 +28,20 @@
 #ifndef GFRAVECONVERTERS_H
 #define GFRAVECONVERTERS_H
 
-#include <rave/Track.h>
+// overwrite visual c stuff
+#define RaveDllExport
 
+#include <rave/Track.h>
+#include <rave/Plane.h>
+
+#include <GFAbsTrackRep.h>
 #include <GFDetPlane.h>
+#include <GFTrack.h>
 
 #include <TVector3.h>
+
+#include <iostream>
+
 
 namespace gfrave{
 

@@ -34,10 +34,10 @@ link_directories( ${LINK_DIRECTORIES})
 
 
 set(GFRAVE_SRCS 
-GFRaveConverters.cxx  
-GFRaveMagneticField.cxx  
 GFRavePropagator.cxx  
 GFRaveVertexFactory.cxx
+GFRaveConverters.cxx  
+GFRaveMagneticField.cxx  
 )
 
 if(RULE_CHECKER_FOUND)
@@ -53,13 +53,13 @@ set(GFRAVE_LINKDEF  GFRaveLinkDef.h)
 set(GFRAVE_DICTIONARY ${CMAKE_CURRENT_BINARY_DIR}/GFRaveDict.cxx) 
 
 
-ROOT_GENERATE_DICTIONARY("${GFRAVE_HEADERS}" "${GFRAVE_LINKDEF}" "${GFRAVE_DICTIONARY}" "${INCLUDE_DIRECTORIES}")
+# ROOT_GENERATE_DICTIONARY("${GFRAVE_HEADERS}" "${GFRAVE_LINKDEF}" "${GFRAVE_DICTIONARY}" "${INCLUDE_DIRECTORIES}")
 
-SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS} ${GFRAVE_DICTIONARY})
+# SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS} ${GFRAVE_DICTIONARY})
+SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS})
 
-
-add_library(GFRAVE SHARED ${GFRAVE_SRCS_ALL})
-target_link_libraries(GFRAVE ${ROOT_LIBRARIES})
-set_target_properties(GFRAVE PROPERTIES ${FAIRROOT_LIBRARY_PROPERTIES})
+add_library(gfrave SHARED ${GFRAVE_SRCS_ALL})
+target_link_libraries(gfrave ${ROOT_LIBRARIES})
+set_target_properties(gfrave PROPERTIES ${FAIRROOT_LIBRARY_PROPERTIES})
 ################ install ###################
-install(TARGETS GFRAVE DESTINATION ${CMAKE_BINARY_DIR}/lib)
+install(TARGETS gfrave DESTINATION ${CMAKE_BINARY_DIR}/lib)

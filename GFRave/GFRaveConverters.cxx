@@ -17,42 +17,47 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+#include "GFRaveConverters.h"
+
 #include <GFTrack.h>
 #include <GFAbsTrackRep.h>
 
 #include <rave/Plane.h>
-#include <rave/Point3D.h>
 
 #include <iostream>
 
 
-rave::Track RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig) {
-  return gfrave::RepToTrack(rep, orig->id(), orig->originalObject(), orig->tag());
+
+rave::Track
+gfrave::RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig) {
+  return gfrave::RepToTrack(rep, orig.id(), orig.originalObject(), orig.tag());
 }
 
 
-rave::Track RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string tag){
+rave::Track
+gfrave::RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string tag){
 
-  GFDetPlane* refPlane(rep->getReferencePlane());
+  GFDetPlane refPlane(rep->getReferencePlane());
   TVector3 pos, mom;
   TMatrixT<double> cov;
 
   rep->getPosMomCov(refPlane, pos, mom, cov);
 
   // state
-  rave::Vector6D state(pos.X(), pos.Y(), pos.Z(),
-                       mom.X(), mom.Y(), mom.Z());
+  rave::Vector6D ravestate(pos.X(), pos.Y(), pos.Z(),
+                           mom.X(), mom.Y(), mom.Z());
 
   // covariance
-  rave::Covariance6D cov(cov[0][0], cov[1][0], cov[2][0],
-                         cov[1][1], cov[2][1], cov[2][2],
-                         cov[3][0], cov[4][0], cov[5][0],
-                         cov[3][1], cov[4][1], cov[5][1],
-                         cov[3][2], cov[4][2], cov[5][2],
-                         cov[3][3], cov[4][3], cov[5][3],
-                         cov[4][4], cov[5][4], cov[5][5]);
+  rave::Covariance6D ravecov(cov[0][0], cov[1][0], cov[2][0],
+                             cov[1][1], cov[2][1], cov[2][2],
+                             cov[3][0], cov[4][0], cov[5][0],
+                             cov[3][1], cov[4][1], cov[5][1],
+                             cov[3][2], cov[4][2], cov[5][2],
+                             cov[3][3], cov[4][3], cov[5][3],
+                             cov[4][4], cov[5][4], cov[5][5]);
 
-  rave::Track ret(id, state, cov,
+  rave::Track ret(id, ravestate, ravecov,
                   rep->getCharge(), rep->getChiSqu(), rep->getNDF(),
                   originaltrack, tag);
 
@@ -60,16 +65,22 @@ rave::Track RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::st
 }
 
 
-GFDetPlane PlaneToGFDetPlane(const ravesurf::Plane & rplane) {
-  return GFDetPlane(Point3DToTVector3(rplane.position()),
-                    Vector3DToTVector3(rplane.normalVector()) );
+GFDetPlane
+gfrave::PlaneToGFDetPlane(const ravesurf::Plane & rplane) {
+  return GFDetPlane(gfrave::Point3DToTVector3(rplane.position()),
+                    gfrave::Vector3DToTVector3(rplane.normalVector()) );
 }
 
 
-TVector3 Point3DToTVector3(const rave::Point3D & v) {
+TVector3
+gfrave::Point3DToTVector3(const rave::Point3D & v) {
   return TVector3(v.x(), v.y(), v.z());
 }
 
-TVector3 Vector3DToTVector3(const rave::Vector3D & v) {
+TVector3
+gfrave::Vector3DToTVector3(const rave::Vector3D & v) {
   return TVector3(v.x(), v.y(), v.z());
 }
+
+
+

@@ -17,27 +17,18 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
 #include "GFRaveVertexFactory.h"
-#include <rave/VertexFactory.h>
+#include "GFRaveMagneticField.h"
+#include "GFRavePropagator.h"
 
 
-void
-GFRaveVertexFactory::GFRaveVertexFactory(){
-  theFactory = rave::VertexFactory(GFRaveMagneticField(), GFRavePropagator()); // todo: add beamspot
+gfrave::GFRaveVertexFactory::GFRaveVertexFactory(){
+  theFactory = new rave::VertexFactory(gfrave::GFRaveMagneticField(), gfrave::GFRavePropagator()); // todo: add beamspot
 }
 
 
 std::vector < rave::Vertex >
-GFRaveVertexFactory::create ( const std::vector < GFTrack* > &, bool use_beamspot=false ) const{
+gfrave::GFRaveVertexFactory::create ( const std::vector < GFTrack* > &, bool use_beamspot ) const{
 
 }
-
-
-rave::Track
-GFRaveVertexFactory::GFTrackToTrack(GFTrack* orig) const{
-
-}
-
-
-
-ClassImp(GFRaveVertexFactory)

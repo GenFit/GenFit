@@ -19,50 +19,58 @@
 
 
 #include "GFRavePropagator.h"
+#include "GFRaveConverters.h"
+#include <GFException.h>
 
 #include <iostream>
 
 using namespace std;
 
 
-rave::GFRavePropagator::GFRavePropagator() :
+gfrave::GFRavePropagator::GFRavePropagator() :
   IdGFTrackMap(NULL)
 {}
   
-rave::Propagator * rave::GFRavePropagator::copy() const
+gfrave::GFRavePropagator*
+gfrave::GFRavePropagator::copy() const
 {
-  return new rave::GFRavePropagator ( * this );
+  return new gfrave::GFRavePropagator ( *this );
 }
 
 
-rave::GFRavePropagator::~GFRavePropagator()
+gfrave::GFRavePropagator::~GFRavePropagator()
 {
 
 }
     
     
-rave::Track rave::GFRavePropagator::to ( const rave::Track & orig,
+std::pair < rave::Track, double >
+gfrave::GFRavePropagator::to ( const rave::Track & orig,
                           const ravesurf::Cylinder & rcyl ) const
 {
+  // todo to be implemented!!
 }
 
 
-rave::Track rave::GFRavePropagator::to ( const rave::Track & orig,
+std::pair < rave::Track, double >
+gfrave::GFRavePropagator::to ( const rave::Track & orig,
                           const ravesurf::Plane & rplane ) const
 {
   GFAbsTrackRep* rep = checkTrack(orig);
-  rep->extrapolateToPlane(gfrave::PlaneToGFDetPlane(rplane));
+  double path = rep->extrapolate(gfrave::PlaneToGFDetPlane(rplane));
 
   if (rep->getStatusFlag() != 0){
     GFException exc("GFRavePropagator::to ==> Extrapolation failed!",__LINE__,__FILE__);
     throw exc;
   }
   
-  return gfrave::RepToTrack(rep, orig);
+  std::pair < rave::Track, double > ret(gfrave::RepToTrack(rep, orig), path);
+  return ret;
 }
 
 
-rave::Track rave::GFRavePropagator::closestTo ( const rave::Track & orig,
+rave::Track
+gfrave::GFRavePropagator::closestTo ( const rave::Track & orig,
     const rave::Point3D & pt, bool transverse ) const
 {
   GFAbsTrackRep* rep = checkTrack(orig);
@@ -81,23 +89,24 @@ rave::Track rave::GFRavePropagator::closestTo ( const rave::Track & orig,
 
 
 
-GFAbsTrackRep* checkTrack(const rave::Track & track) const{
+GFAbsTrackRep*
+gfrave::GFRavePropagator::checkTrack(const rave::Track & track) const{
   if (IdGFTrackMap==NULL) {
     GFException exc("GFRavePropagator::checkTrack ==> IdGFTrackMap is not defined, cannot access GFTracks!",__LINE__,__FILE__);
     throw exc;
   }
 
-  if (!(track->isValid())) {
+  if (!(track.isValid())) {
     GFException exc("GFRavePropagator::checkTrack ==> Track is not valid!",__LINE__,__FILE__);
     throw exc;
   }
 
-  if (IdGFTrackMap->count(track->id()) == 0) {
+  if (IdGFTrackMap->count(track.id()) == 0) {
     GFException exc("GFRavePropagator::checkTrack ==> no entry in IdGFTrackMap corresponding to track id, cannot access corresponding GFTrack!",__LINE__,__FILE__);
     throw exc;
   }
 
-  rep = (*IdGFTrackMap)[track->id()];
+  GFAbsTrackRep* rep = (*IdGFTrackMap)[track.id()]->getCardinalRep();
 
   if (rep->getStatusFlag() != 0){
     GFException exc("GFRavePropagator::checkTrack ==> Status flag != 0, cannot extrapolate!",__LINE__,__FILE__);
