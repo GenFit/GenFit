@@ -46,7 +46,7 @@ gfrave::GFRavePropagator::~GFRavePropagator()
     
 std::pair < rave::Track, double >
 gfrave::GFRavePropagator::to ( const rave::Track & orig,
-                          const ravesurf::Cylinder & rcyl ) const
+                               const ravesurf::Cylinder & rcyl ) const
 {
   // todo to be implemented!!
 }
@@ -54,7 +54,7 @@ gfrave::GFRavePropagator::to ( const rave::Track & orig,
 
 std::pair < rave::Track, double >
 gfrave::GFRavePropagator::to ( const rave::Track & orig,
-                          const ravesurf::Plane & rplane ) const
+                               const ravesurf::Plane & rplane ) const
 {
   GFAbsTrackRep* rep = checkTrack(orig);
   double path = rep->extrapolate(gfrave::PlaneToGFDetPlane(rplane));
@@ -71,7 +71,7 @@ gfrave::GFRavePropagator::to ( const rave::Track & orig,
 
 rave::Track
 gfrave::GFRavePropagator::closestTo ( const rave::Track & orig,
-    const rave::Point3D & pt, bool transverse ) const
+                                      const rave::Point3D & pt, bool transverse ) const
 {
   GFAbsTrackRep* rep = checkTrack(orig);
 
@@ -106,7 +106,7 @@ gfrave::GFRavePropagator::checkTrack(const rave::Track & track) const{
     throw exc;
   }
 
-  GFAbsTrackRep* rep = (*IdGFTrackMap)[track.id()]->getCardinalRep();
+  GFAbsTrackRep* rep = IdGFTrackMap->at(track.id())->getCardinalRep();
 
   if (rep->getStatusFlag() != 0){
     GFException exc("GFRavePropagator::checkTrack ==> Status flag != 0, cannot extrapolate!",__LINE__,__FILE__);

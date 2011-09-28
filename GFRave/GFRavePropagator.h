@@ -29,7 +29,7 @@
 #ifndef GFRAVEPROPAGATOR_H
 #define GFRAVEPROPAGATOR_H
 
-// overwrite visual c shit
+// overwrite visual c stuff
 #define RaveDllExport
 
 #include <rave/Propagator.h>
