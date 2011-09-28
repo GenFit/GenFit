@@ -23,7 +23,15 @@
 #include <iostream>
 
 
-rave::Vector3D rave::GFRaveMagneticField::inTesla ( const rave::Point3D & position) const
+
+gfrave::GFRaveMagneticField *
+gfrave::GFRaveMagneticField::copy() const{
+  return new gfrave::GFRaveMagneticField(*this);
+}
+
+
+rave::Vector3D
+gfrave::GFRaveMagneticField::inTesla ( const rave::Point3D & position) const
 {
   TVector3 pos(position.x(), position.y(), position.z());
 

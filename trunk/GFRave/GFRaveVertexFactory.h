@@ -30,27 +30,36 @@
 #ifndef GFRAVEVERTEXFACTORY_H
 #define GFRAVEVERTEXFACTORY_H
 
+// overwrite visual c stuff
+#define RaveDllExport
+
 #include<vector>
 
 #include <rave/Vertex.h>
+#include <rave/VertexFactory.h>
+
+#include <GFTrack.h>
 
 
+namespace gfrave{
 
-class GFRaveVertexFactory : public TObject {
- public:
-  GFRaveVertexFactory();
+  class GFRaveVertexFactory : public TObject {
+   public:
+    GFRaveVertexFactory();
 
-  std::vector < rave::Vertex > create ( const std::vector < GFTrack* > &, bool use_beamspot=false ) const;
+    std::vector < rave::Vertex > create ( const std::vector < GFTrack* > &, bool use_beamspot=false ) const;
 
- private:
+   private:
 
 
-  // data members
-  rave::VertexFactory theFactory;
+    // data members
+    rave::VertexFactory* theFactory;
 
- public:
-  ClassDef(GFRaveVertexFactory,1)
-};
+   //public:
+   // ClassDef(GFRaveVertexFactory,1)
+  };
+
+}
 
 #endif
 

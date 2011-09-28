@@ -29,6 +29,9 @@
 #ifndef GFRAVEMAGNETICFIELD_H
 #define GFRAVEMAGNETICFIELD_H
 
+// overwrite visual c stuff
+#define RaveDllExport
+
 #include <rave/MagneticField.h>
 
 namespace gfrave
@@ -38,16 +41,15 @@ namespace gfrave
  * @brief GFRaveMagneticField class
  */
 
-class RaveDllExport GFRaveMagneticField :
-	public Propagator
+class GFRaveMagneticField : public rave::MagneticField
 {
   public:
-    GFRaveMagneticField();
-    virtual Propagator * copy() const;
+    GFRaveMagneticField(){};
+    GFRaveMagneticField * copy() const;
 
-    virtual Vector3D inTesla ( const Point3D & ) const;
+    rave::Vector3D inTesla ( const rave::Point3D & ) const;
 
-    virtual ~GFRaveMagneticField();
+    //virtual ~GFRaveMagneticField();
 
   private:
 };

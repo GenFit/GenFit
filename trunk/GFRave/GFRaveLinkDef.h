@@ -25,10 +25,9 @@
 #pragma link off all functions;
 
 
-#pragma link C++ class GFRaveConverters+;
-#pragma link C++ class GFRaveMagneticField+;
-#pragma link C++ class GFRavePropagator+;
-#pragma link C++ class GFRaveVertexFactory+;
+//#pragma link C++ class GFRaveMagneticField+;
+//#pragma link C++ class GFRavePropagator+;
+//#pragma link C++ class GFRaveVertexFactory+;
 
 #endif
 

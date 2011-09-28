@@ -29,6 +29,9 @@
 #ifndef GFRAVEPROPAGATOR_H
 #define GFRAVEPROPAGATOR_H
 
+// overwrite visual c shit
+#define RaveDllExport
+
 #include <rave/Propagator.h>
 #include <rave/Track.h>
 #include <rave/Plane.h>
@@ -40,36 +43,35 @@
 namespace gfrave
 {
 
-/** 
- * @brief GFRavePropagator class
- */
+  /**
+   * @brief GFRavePropagator class
+   */
 
-class RaveDllExport GFRavePropagator : 
-	public Propagator
-{
-  public:
-    GFRavePropagator();
-    virtual Propagator * copy() const;
-    virtual rave::Track closestTo ( const rave::Track &,
-        const rave::Point3D &, bool transverse ) const;
-    virtual rave::Track to ( const rave::Track & orig,
-                          const ravesurf::Plane & ) const;
-    virtual rave::Track to ( const rave::Track & orig,
-                          const ravesurf::Cylinder & ) const;
+  class GFRavePropagator : public rave::Propagator
+  {
+    public:
+      GFRavePropagator();
+      virtual gfrave::GFRavePropagator* copy() const;
+      virtual rave::Track closestTo ( const rave::Track &,
+                                      const rave::Point3D &, bool transverse ) const;
+      virtual std::pair < rave::Track, double > to ( const rave::Track & orig,
+                                                     const ravesurf::Plane & ) const;
+      virtual std::pair < rave::Track, double > to ( const rave::Track & orig,
+                                                     const ravesurf::Cylinder & ) const;
 
-    virtual ~GFRavePropagator();
+      virtual ~GFRavePropagator();
 
-    void setIdGFTrackMap(std::map<unsigned int, GFTrack*>* map){IdGFTrackMap = map;}
+      void setIdGFTrackMap(std::map<unsigned int, GFTrack*>* map){IdGFTrackMap = map;}
 
-  private:
+    private:
 
 
-    // check if everything is ok, otherwise throw GFException; return corresponding Cardinal Rep
-    GFAbsTrackRep* checkTrack(const rave::Track & track) const;
+      // check if everything is ok, otherwise throw GFException; return corresponding Cardinal Rep
+      GFAbsTrackRep* checkTrack(const rave::Track & track) const;
 
-    // data members
-    std::map<unsigned int, GFTrack*>* IdGFTrackMap; // pointers to GFTracks via rave track ID
-};
+      // data members
+      std::map<unsigned int, GFTrack*>* IdGFTrackMap; // pointers to GFTracks via rave track ID
+  };
 
 }
 
