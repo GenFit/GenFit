@@ -22,11 +22,45 @@
 
 #include <GFTrack.h>
 #include <GFAbsTrackRep.h>
+#include <GFException.h>
 
 #include <rave/Plane.h>
 
 #include <iostream>
 
+
+
+std::vector < rave::Track >
+gfrave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
+                         std::map<unsigned int, GFTrack*>* IdGFTrackMap,
+                         int startID){
+
+  unsigned int ntracks(GFTracks.size());
+
+  std::vector < rave::Track > ravetracks;
+  ravetracks.reserve(ntracks);
+
+  for (unsigned int i=0; i<ntracks; ++i){
+    ravetracks.push_back(GFTrackToTrack(GFTracks[i], startID++) );
+
+    if (IdGFTrackMap != NULL){
+      if (IdGFTrackMap->count(startID)>0){
+        GFException exc("GFTracksToTracks ==> IdGFTrackMap has already an entry for this id",__LINE__,__FILE__);
+        throw exc;
+      }
+      (*IdGFTrackMap)[startID] = GFTracks[i];
+
+    }
+  }
+
+  return ravetracks;
+}
+
+
+rave::Track
+gfrave::GFTrackToTrack(const GFTrack* orig, int id, std::string tag){
+  return gfrave::RepToTrack(orig->getCardinalRep(), id, orig, tag);
+}
 
 
 rave::Track
@@ -36,7 +70,7 @@ gfrave::RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig) {
 
 
 rave::Track
-gfrave::RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string tag){
+gfrave::RepToTrack(GFAbsTrackRep* rep, int id, const void * originaltrack, std::string tag){
 
   GFDetPlane refPlane(rep->getReferencePlane());
   TVector3 pos, mom;
@@ -59,7 +93,7 @@ gfrave::RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string
 
   rave::Track ret(id, ravestate, ravecov,
                   rep->getCharge(), rep->getChiSqu(), rep->getNDF(),
-                  originaltrack, tag);
+                  0, tag); // todo: originaltrack pointer not passed!
 
   return ret;
 }

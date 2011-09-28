@@ -45,9 +45,18 @@
 
 namespace gfrave{
 
-  rave::Track GFTrackToTrack(GFTrack* orig);
+  /** Convert a vector of GFTracks to rave::Tracks
+   * also builds a map of unique ids to GFTracks; These ids are stored in the rave::tracks. They are counted from startID.
+   * The map has to be passed to the GFRavePropagator, so that it can access the trackreps of the GFTracks corresponding to the
+   * rave::tracks.
+   */
+  std::vector < rave::Track > GFTracksToTracks(const std::vector < GFTrack* > & GFTracks,
+                                               std::map<unsigned int, GFTrack*>* IdGFTrackMap = NULL,
+                                               int startID = 0);
+
+  rave::Track GFTrackToTrack(const GFTrack* orig, int id = -1, std::string tag="");
   rave::Track RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig);
-  rave::Track RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack = 0, std::string tag="");
+  rave::Track RepToTrack(GFAbsTrackRep* rep, int id = -1, const void * originaltrack = 0, std::string tag="");
 
   GFDetPlane PlaneToGFDetPlane(const ravesurf::Plane & rplane);
 
