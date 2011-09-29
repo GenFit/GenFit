@@ -37,6 +37,7 @@
 
 #include "GFRaveMagneticField.h"
 #include "GFRavePropagator.h"
+#include "GFRaveVertex.h"
 
 #include <rave/Vertex.h>
 #include <rave/VertexFactory.h>
@@ -44,27 +45,21 @@
 #include <GFTrack.h>
 
 
-namespace gfrave{
 
-  class GFRaveVertexFactory : public TObject {
-   public:
-    GFRaveVertexFactory(rave::Ellipsoid3D * beamspot = NULL);
+class GFRaveVertexFactory : public TObject {
+ public:
+  GFRaveVertexFactory(rave::Ellipsoid3D * beamspot = NULL);
 
-    std::vector < rave::Vertex > create ( const std::vector < GFTrack* > &, bool use_beamspot=false ) const;
+  std::vector <  GFRaveVertex* > create ( const std::vector < GFTrack* > &, bool use_beamspot=false ) const;
 
-   private:
+ private:
 
+  // data members
+  rave::VertexFactory* fFactory;
+  GFRaveMagneticField* fMagneticField;
+  GFRavePropagator* fPropagator;
 
-    // data members
-    rave::VertexFactory* fFactory;
-    gfrave::GFRaveMagneticField* fMagneticField;
-    gfrave::GFRavePropagator* fPropagator;
-
-   //public:
-   // ClassDef(GFRaveVertexFactory,1)
-  };
-
-}
+};
 
 #endif
 

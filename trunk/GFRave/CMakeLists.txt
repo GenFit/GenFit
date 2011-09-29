@@ -34,9 +34,11 @@ link_directories( ${LINK_DIRECTORIES})
 
 
 set(GFRAVE_SRCS 
-GFRavePropagator.cxx  
 GFRaveVertexFactory.cxx
+GFRaveTrackParameters.cxx
+GFRaveVertex.cxx
 GFRaveConverters.cxx  
+GFRavePropagator.cxx  
 GFRaveMagneticField.cxx  
 )
 
