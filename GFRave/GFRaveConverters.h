@@ -17,8 +17,6 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
- */
 
 /** @addtogroup GFRave
  * @{
@@ -33,17 +31,25 @@
 
 #include <rave/Track.h>
 #include <rave/Plane.h>
+#include <rave/Vertex.h>
 
 #include <GFAbsTrackRep.h>
 #include <GFDetPlane.h>
 #include <GFTrack.h>
+#include "GFRaveVertex.h"
 
 #include <TVector3.h>
+#include <TMatrixT.h>
 
 #include <iostream>
 
 
-namespace gfrave{
+
+namespace GFRave
+{
+
+
+  // GENFIT to RAVE
 
   /** Convert a vector of GFTracks to rave::Tracks
    * also builds a map of unique ids to GFTracks; These ids are stored in the rave::tracks. They are counted from startID.
@@ -51,17 +57,25 @@ namespace gfrave{
    * rave::tracks.
    */
   std::vector < rave::Track > GFTracksToTracks(const std::vector < GFTrack* > & GFTracks,
-                                               std::map<unsigned int, GFTrack*>* IdGFTrackMap = NULL,
+                                               std::map<int, GFTrack*> * IdGFTrackMap = NULL,
+                                               std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap = NULL,
                                                int startID = 0);
 
   rave::Track GFTrackToTrack(const GFTrack* orig, int id = -1, std::string tag="");
   rave::Track RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig);
   rave::Track RepToTrack(GFAbsTrackRep* rep, int id = -1, const void * originaltrack = 0, std::string tag="");
 
+  // RAVE to GENFIT
+  GFRaveVertex* RaveToGFVertex(rave::Vertex &, std::map<int, GFTrack*> * IdGFTrackMap = NULL);
   GFDetPlane PlaneToGFDetPlane(const ravesurf::Plane & rplane);
 
+  // RAVE to ROOT
   TVector3 Point3DToTVector3(const rave::Point3D &);
   TVector3 Vector3DToTVector3(const rave::Vector3D &);
+
+  TMatrixT<double> Covariance3DToTMatrixT(const rave::Covariance3D &);
+  TMatrixT<double> Vector6DToTMatrixT(const rave::Vector6D &);
+  TMatrixT<double> Covariance6DToTMatrixT(const rave::Covariance6D &);
 
 }
 

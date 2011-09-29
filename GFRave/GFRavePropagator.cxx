@@ -27,71 +27,73 @@
 using namespace std;
 
 
-gfrave::GFRavePropagator::GFRavePropagator() :
-  IdGFTrackMap(NULL)
+GFRavePropagator::GFRavePropagator() :
+    IdGFTrackRepMap(NULL)
 {}
   
-gfrave::GFRavePropagator*
-gfrave::GFRavePropagator::copy() const
+GFRavePropagator*
+GFRavePropagator::copy() const
 {
-  return new gfrave::GFRavePropagator ( *this );
+  return new GFRavePropagator ( *this );
 }
 
 
-gfrave::GFRavePropagator::~GFRavePropagator()
+GFRavePropagator::~GFRavePropagator()
 {
 
 }
     
     
 std::pair < rave::Track, double >
-gfrave::GFRavePropagator::to ( const rave::Track & orig,
+GFRavePropagator::to ( const rave::Track & orig,
                                const ravesurf::Cylinder & rcyl ) const
 {
   // todo to be implemented!!
+  GFException exc("GFRavePropagator::to (cylinder) ==> not yet implemented!",__LINE__,__FILE__);
+  throw exc;
 }
 
 
 std::pair < rave::Track, double >
-gfrave::GFRavePropagator::to ( const rave::Track & orig,
+GFRavePropagator::to ( const rave::Track & orig,
                                const ravesurf::Plane & rplane ) const
 {
   GFAbsTrackRep* rep = checkTrack(orig);
-  double path = rep->extrapolate(gfrave::PlaneToGFDetPlane(rplane));
+  double path = rep->extrapolate(GFRave::PlaneToGFDetPlane(rplane));
 
   if (rep->getStatusFlag() != 0){
     GFException exc("GFRavePropagator::to ==> Extrapolation failed!",__LINE__,__FILE__);
     throw exc;
   }
   
-  std::pair < rave::Track, double > ret(gfrave::RepToTrack(rep, orig), path);
+  std::pair < rave::Track, double > ret(GFRave::RepToTrack(rep, orig), path);
   return ret;
 }
 
 
 rave::Track
-gfrave::GFRavePropagator::closestTo ( const rave::Track & orig,
+GFRavePropagator::closestTo ( const rave::Track & orig,
                                       const rave::Point3D & pt, bool transverse ) const
 {
   GFAbsTrackRep* rep = checkTrack(orig);
 
   TVector3 poca, normvec;
-  rep->extrapolateToPoint(gfrave::Point3DToTVector3(pt), poca, normvec);
+  rep->extrapolateToPoint(GFRave::Point3DToTVector3(pt), poca, normvec);
 
   if (rep->getStatusFlag() != 0){
     GFException exc("GFRavePropagator::to ==> Extrapolation failed!",__LINE__,__FILE__);
     throw exc;
   }
 
-  return gfrave::RepToTrack(rep, orig);
+  return GFRave::RepToTrack(rep, orig);
 }
 
 
 
 
 GFAbsTrackRep*
-gfrave::GFRavePropagator::checkTrack(const rave::Track & track) const{
-  if (IdGFTrackMap==NULL) {
+GFRavePropagator::checkTrack(const rave::Track & track) const{
+  if (IdGFTrackRepMap==NULL) {
     GFException exc("GFRavePropagator::checkTrack ==> IdGFTrackMap is not defined, cannot access GFTracks!",__LINE__,__FILE__);
     throw exc;
   }
@@ -101,12 +103,12 @@ gfrave::GFRavePropagator::checkTrack(const rave::Track & track) const{
     throw exc;
   }
 
-  if (IdGFTrackMap->count(track.id()) == 0) {
-    GFException exc("GFRavePropagator::checkTrack ==> no entry in IdGFTrackMap corresponding to track id, cannot access corresponding GFTrack!",__LINE__,__FILE__);
+  if (IdGFTrackRepMap->count(track.id()) == 0) {
+    GFException exc("GFRavePropagator::checkTrack ==> no entry in IdGFTrackRepMap corresponding to track id, cannot access corresponding GFTrack!",__LINE__,__FILE__);
     throw exc;
   }
 
-  GFAbsTrackRep* rep = IdGFTrackMap->at(track.id())->getCardinalRep();
+  GFAbsTrackRep* rep = IdGFTrackRepMap->at(track.id());
 
   if (rep->getStatusFlag() != 0){
     GFException exc("GFRavePropagator::checkTrack ==> Status flag != 0, cannot extrapolate!",__LINE__,__FILE__);

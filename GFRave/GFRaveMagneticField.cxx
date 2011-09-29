@@ -24,14 +24,14 @@
 
 
 
-gfrave::GFRaveMagneticField *
-gfrave::GFRaveMagneticField::copy() const{
-  return new gfrave::GFRaveMagneticField(*this);
+GFRaveMagneticField *
+GFRaveMagneticField::copy() const{
+  return new GFRaveMagneticField(*this);
 }
 
 
 rave::Vector3D
-gfrave::GFRaveMagneticField::inTesla ( const rave::Point3D & position) const
+GFRaveMagneticField::inTesla ( const rave::Point3D & position) const
 {
   TVector3 pos(position.x(), position.y(), position.z());
 

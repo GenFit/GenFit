@@ -26,13 +26,16 @@
 
 #include <rave/Plane.h>
 
+#include "GFRaveTrackParameters.h"
+
 #include <iostream>
 
 
 
 std::vector < rave::Track >
-gfrave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
-                         std::map<unsigned int, GFTrack*>* IdGFTrackMap,
+GFRave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
+                         std::map<int, GFTrack*>* IdGFTrackMap,
+                         std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap,
                          int startID){
 
   unsigned int ntracks(GFTracks.size());
@@ -49,8 +52,16 @@ gfrave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
         throw exc;
       }
       (*IdGFTrackMap)[startID] = GFTracks[i];
-
     }
+
+    if (IdGFTrackRepMap != NULL){
+      if (IdGFTrackRepMap->count(startID)>0){
+        GFException exc("GFTracksToTracks ==> IdGFTrackRepMap has already an entry for this id",__LINE__,__FILE__);
+        throw exc;
+      }
+      (*IdGFTrackRepMap)[startID] = GFTracks[i]->getCardinalRep()->clone(); // here clones are made so that the state of the original GFTracks and their TrackReps will not be altered by the vertexing process
+    }
+
   }
 
   return ravetracks;
@@ -58,19 +69,19 @@ gfrave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
 
 
 rave::Track
-gfrave::GFTrackToTrack(const GFTrack* orig, int id, std::string tag){
-  return gfrave::RepToTrack(orig->getCardinalRep(), id, orig, tag);
+GFRave::GFTrackToTrack(const GFTrack* orig, int id, std::string tag){
+  return GFRave::RepToTrack(orig->getCardinalRep(), id, orig, tag);
 }
 
 
 rave::Track
-gfrave::RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig) {
-  return gfrave::RepToTrack(rep, orig.id(), orig.originalObject(), orig.tag());
+GFRave::RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig) {
+  return GFRave::RepToTrack(rep, orig.id(), orig.originalObject(), orig.tag());
 }
 
 
 rave::Track
-gfrave::RepToTrack(GFAbsTrackRep* rep, int id, const void * originaltrack, std::string tag){
+GFRave::RepToTrack(GFAbsTrackRep* rep, int id, const void * originaltrack, std::string tag){
 
   GFDetPlane refPlane(rep->getReferencePlane());
   TVector3 pos, mom;
@@ -99,22 +110,167 @@ gfrave::RepToTrack(GFAbsTrackRep* rep, int id, const void * originaltrack, std::
 }
 
 
+GFRaveVertex*
+GFRave::RaveToGFVertex(rave::Vertex & ravevertex, std::map<int, GFTrack*> * IdGFTrackMap){
+
+  if (!(ravevertex.isValid())) {
+    GFException exc("RaveToGFVertex ==> rave Vertex is not valid!",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  std::vector < std::pair < double, GFTrack* > > originalTracks;
+  std::vector < std::pair < double, GFRaveTrackParameters > > smoothedTracks;
+
+  if (IdGFTrackMap!=NULL){
+    std::vector < std::pair < float, rave::Track > > raveweightedtracks = ravevertex.weightedTracks();
+    std::vector < std::pair < float, rave::Track > > ravesmoothedtracks = ravevertex.weightedRefittedTracks();
+
+    for (unsigned int i=0; i<raveweightedtracks.size(); ++i){
+      GFTrack* origtrack = IdGFTrackMap->at(raveweightedtracks[i].second.id());
+      originalTracks.push_back(std::pair< double, GFTrack* > (raveweightedtracks[i].first, origtrack) );
+
+    }
+
+    for (unsigned int i=0; i<ravesmoothedtracks.size(); ++i){
+      GFTrack* origtrack = IdGFTrackMap->at(raveweightedtracks[i].second.id());
+
+      GFRaveTrackParameters trackparams(GFRave::Vector6DToTMatrixT(raveweightedtracks[i].second.state()),
+                                        GFRave::Covariance6DToTMatrixT(raveweightedtracks[i].second.error()),
+                                        origtrack->getCardinalRep()->getCharge(),
+                                        0); // todo: pdg code
+
+      smoothedTracks.push_back(std::pair < double, GFRaveTrackParameters > (ravesmoothedtracks[i].first, trackparams) );
+
+    }
+
+  }
+
+  return new GFRaveVertex(GFRave::Point3DToTVector3(ravevertex.position()),
+                          GFRave::Covariance3DToTMatrixT(ravevertex.error()),
+                          originalTracks,
+                          smoothedTracks,
+                          ravevertex.ndf(), ravevertex.chiSquared(), ravevertex.id());
+}
+
+
 GFDetPlane
-gfrave::PlaneToGFDetPlane(const ravesurf::Plane & rplane) {
-  return GFDetPlane(gfrave::Point3DToTVector3(rplane.position()),
-                    gfrave::Vector3DToTVector3(rplane.normalVector()) );
+GFRave::PlaneToGFDetPlane(const ravesurf::Plane & rplane) {
+  return GFDetPlane(GFRave::Point3DToTVector3(rplane.position()),
+                    GFRave::Vector3DToTVector3(rplane.normalVector()) );
 }
 
 
 TVector3
-gfrave::Point3DToTVector3(const rave::Point3D & v) {
+GFRave::Point3DToTVector3(const rave::Point3D & v) {
   return TVector3(v.x(), v.y(), v.z());
 }
 
 TVector3
-gfrave::Vector3DToTVector3(const rave::Vector3D & v) {
+GFRave::Vector3DToTVector3(const rave::Vector3D & v) {
   return TVector3(v.x(), v.y(), v.z());
 }
 
+
+TMatrixT<double>
+GFRave::Covariance3DToTMatrixT(const rave::Covariance3D & ravecov){
+  TMatrixT<double> cov(3,3);
+
+  cov[0][0] = ravecov.dxx();
+  cov[1][1] = ravecov.dyy();
+  cov[2][2] = ravecov.dzz();
+
+  cov[0][1] = ravecov.dxy();
+  cov[1][0] = ravecov.dxy();
+
+  cov[0][2] = ravecov.dxz();
+  cov[2][0] = ravecov.dxz();
+
+  cov[1][2] = ravecov.dyz();
+  cov[2][1] = ravecov.dyz();
+
+  assert (cov.IsSymmetric()==true); // todo: for QA reasons
+
+  return cov;
+}
+
+
+TMatrixT<double>
+GFRave::Vector6DToTMatrixT(const rave::Vector6D & ravevec){
+  TMatrixT<double> vec(1,6);
+
+  vec[0][0] = ravevec.x();
+  vec[0][1] = ravevec.y();
+  vec[0][2] = ravevec.z();
+
+  vec[0][3] = ravevec.px();
+  vec[0][4] = ravevec.py();
+  vec[0][5] = ravevec.pz();
+
+  return vec;
+}
+
+
+TMatrixT<double>
+GFRave::Covariance6DToTMatrixT(const rave::Covariance6D & ravecov){
+  TMatrixT<double> cov(6,6);
+
+  cov[0][0] = ravecov.dxx();
+  cov[1][1] = ravecov.dyy();
+  cov[2][2] = ravecov.dzz();
+
+  cov[0][1] = ravecov.dxy();
+  cov[1][0] = ravecov.dxy();
+
+  cov[0][2] = ravecov.dxz();
+  cov[2][0] = ravecov.dxz();
+
+  cov[1][2] = ravecov.dyz();
+  cov[2][1] = ravecov.dyz();
+
+
+  cov[3][3] = ravecov.dpxpx();
+  cov[4][4] = ravecov.dpypy();
+  cov[5][5] = ravecov.dpzpz();
+
+  cov[3][4] = ravecov.dpxpy();
+  cov[4][3] = ravecov.dpxpy();
+
+  cov[3][5] = ravecov.dpxpz();
+  cov[5][3] = ravecov.dpxpz();
+
+  cov[4][5] = ravecov.dpypz();
+  cov[5][4] = ravecov.dpypz();
+
+
+
+  cov[3][0] = ravecov.dxpx();
+  cov[0][3] = ravecov.dxpx();
+  cov[4][1] = ravecov.dypy();
+  cov[1][4] = ravecov.dypy();
+  cov[5][2] = ravecov.dzpz();
+  cov[2][5] = ravecov.dzpz();
+
+  cov[4][0] = ravecov.dxpy();
+  cov[0][4] = ravecov.dxpy();
+
+  cov[5][0] = ravecov.dxpz();
+  cov[0][5] = ravecov.dxpz();
+
+  cov[3][1] = ravecov.dypx();
+  cov[1][3] = ravecov.dypx();
+
+  cov[5][1] = ravecov.dypz();
+  cov[1][5] = ravecov.dypz();
+
+  cov[4][2] = ravecov.dzpy();
+  cov[2][4] = ravecov.dzpy();
+
+  cov[5][2] = ravecov.dzpz();
+  cov[2][5] = ravecov.dzpz();
+
+  assert (cov.IsSymmetric()==true); // todo: for QA reasons
+
+  return cov;
+}
 
 

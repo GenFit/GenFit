@@ -35,24 +35,22 @@
 #include <rave/MagneticField.h>
 
 
-namespace gfrave
+
+/**
+ * @brief GFRaveMagneticField class
+ */
+
+class GFRaveMagneticField : public rave::MagneticField
 {
+  public:
+    GFRaveMagneticField(){};
+    GFRaveMagneticField * copy() const;
 
-  /**
-   * @brief GFRaveMagneticField class
-   */
+    rave::Vector3D inTesla ( const rave::Point3D & ) const;
 
-  class GFRaveMagneticField : public rave::MagneticField
-  {
-    public:
-      GFRaveMagneticField(){};
-      GFRaveMagneticField * copy() const;
+  private:
 
-      rave::Vector3D inTesla ( const rave::Point3D & ) const;
+};
 
-    private:
-  };
-
-}
 
 #endif
