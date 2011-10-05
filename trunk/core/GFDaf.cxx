@@ -41,6 +41,7 @@ void GFDaf::processTrack(GFTrack* trk) {
 
 	for(unsigned int i=0; i<trk->getNumReps(); i++) {
 
+		trk->getBK(i)->setNhits(trk->getNumHits());
 		if(trk->getTrackRep(i)->getStatusFlag()!=0) continue;
 
 		mini_trk->addTrackRep(trk->getTrackRep(i));
@@ -250,7 +251,6 @@ void GFDaf::copySmoothing(GFTrack* source, GFTrack* target, int target_irep) {
 		}
 
 		if(!already_there) {
-			target->getBK(i)->setNhits(target->getNumHits());
 			target->getBK(i)->bookMatrices("fUpSt");
 			target->getBK(i)->bookMatrices("fUpCov");
 			target->getBK(i)->bookMatrices("bUpSt");
@@ -310,7 +310,6 @@ void GFDaf::saveWeights(GFTrack* trk, const std::vector<std::vector<std::vector<
 
 	for(unsigned int rep_i = 0; rep_i < weights.size(); rep_i++) {
 		GFBookkeeping* bk = trk->getBK(rep_i);
-		bk->setNhits(trk->getNumHits());
 		bk->bookNumbers("dafWeight");
 		unsigned int hit_i = 0;
 		for(unsigned int dafhit_i = 0; dafhit_i < weights.at(rep_i).size(); dafhit_i++) {
