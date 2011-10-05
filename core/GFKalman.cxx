@@ -41,28 +41,26 @@ void GFKalman::processTrack(GFTrack* trk){
 
   fSmooth = trk->getSmoothing();
 
-  if(fSmooth) {
-	int nreps = trk->getNumReps();
-    for(int i=0; i<nreps; i++) {
-
-		std::vector<std::string> mat_keys = trk->getBK(i)->getMatrixKeys();
-		bool already_there = false;
-		for(unsigned int j=0; j<mat_keys.size(); j++) {
-			if(mat_keys.at(j) == "fUpSt") already_there = true;
-		}
-		if(already_there) continue;
-
-		trk->getBK(i)->setNhits(trk->getNumHits());
-		trk->getBK(i)->bookMatrices("fUpSt");
-		trk->getBK(i)->bookMatrices("fUpCov");
-		trk->getBK(i)->bookMatrices("bUpSt");
-		trk->getBK(i)->bookMatrices("bUpCov");
-		trk->getBK(i)->bookGFDetPlanes("fPl");
-		trk->getBK(i)->bookGFDetPlanes("bPl");
-		if(trk->getTrackRep(i)->hasAuxInfo()) {
-			trk->getBK(i)->bookMatrices("fAuxInfo");
-			trk->getBK(i)->bookMatrices("bAuxInfo");
-		}
+  int nreps = trk->getNumReps();
+  for(int i=0; i<nreps; i++) {
+    trk->getBK(i)->setNhits(trk->getNumHits());
+    if(fSmooth) {
+      std::vector<std::string> mat_keys = trk->getBK(i)->getMatrixKeys();
+      bool already_there = false;
+      for(unsigned int j=0; j<mat_keys.size(); j++) {
+      	if(mat_keys.at(j) == "fUpSt") already_there = true;
+      }
+      if(already_there) continue;
+      trk->getBK(i)->bookMatrices("fUpSt");
+      trk->getBK(i)->bookMatrices("fUpCov");
+      trk->getBK(i)->bookMatrices("bUpSt");
+      trk->getBK(i)->bookMatrices("bUpCov");
+      trk->getBK(i)->bookGFDetPlanes("fPl");
+      trk->getBK(i)->bookGFDetPlanes("bPl");
+      if(trk->getTrackRep(i)->hasAuxInfo()) {
+      	trk->getBK(i)->bookMatrices("fAuxInfo");
+      	trk->getBK(i)->bookMatrices("bAuxInfo");
+      }
     }
   }
 
@@ -86,7 +84,6 @@ void GFKalman::processTrack(GFTrack* trk){
     
     //save first and last plane,state&cov after the fitting pass
     if(direction==1){//forward at last hit
-      int nreps=trk->getNumReps();
       for(int i=0; i<nreps; ++i){
 	trk->getTrackRep(i)->
 	  setLastPlane( trk->getTrackRep(i)->getReferencePlane() );
@@ -97,7 +94,6 @@ void GFKalman::processTrack(GFTrack* trk){
       }
     }
     else{//backward at first hit
-      int nreps=trk->getNumReps();
       for(int i=0; i<nreps; ++i){
 	trk->getTrackRep(i)->
 	  setFirstPlane( trk->getTrackRep(i)->getReferencePlane() );
