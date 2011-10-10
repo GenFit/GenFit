@@ -76,8 +76,17 @@ double GFAbsTrackRep::stepalong(double h,
 }
 
 
+int GFAbsTrackRep::getPDG(){
+  Abort("getPDG()");
+}
+
+
 void GFAbsTrackRep::getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mom,TMatrixT<double>& cov){
   Abort("getPosMomCov()");
+}
+
+void GFAbsTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixT<double>& cov){
+  Abort("setPosMomCov()");
 }
 
 void

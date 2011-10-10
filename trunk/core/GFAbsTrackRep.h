@@ -218,6 +218,12 @@ class GFAbsTrackRep : public TObject{
 
   virtual double getCharge()const =0;
 
+  //! method which gets pdg particle code
+  /*!
+   * default implementation in cxx; should be implemented in a ConcreteTrackRep
+   */
+  virtual int getPDG();
+
   TVector3 getPos() {return getPos(fRefPlane);}
   TVector3 getMom() {return getMom(fRefPlane);}
   void getPosMomCov(TVector3& pos,TVector3& mom,TMatrixT<double>& c){
@@ -294,6 +300,13 @@ class GFAbsTrackRep : public TObject{
   inline void setLastPlane(const GFDetPlane& aPlane) {
     fLastPlane = aPlane;;
   }
+
+  //! method which sets position, momentum and 6x6 covariance matrix
+  /*!
+   * default implementation in cxx file, if a ConcreteTrackRep can
+   * not implement this functionality
+   */
+  virtual void setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixT<double>& cov);
 
   const GFDetPlane& getReferencePlane() const {return fRefPlane;}
 
