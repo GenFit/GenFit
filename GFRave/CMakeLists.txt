@@ -2,18 +2,27 @@
 # the array .
 # The extension is already found.  Any number of sources could be listed here.
 
+cmake_minimum_required(VERSION 2.6)
+
 IF(NOT DEFINED ENV{RAVEPATH})
    MESSAGE(FATAL_ERROR "You did not define the environment variable RAVEPATH which is nedded to find rave. Please set this variable and execute cmake again.") 
 ENDIF(NOT DEFINED ENV{RAVEPATH})
 
+#check for ENV variables that are needed
+IF(NOT DEFINED ENV{ROOTSYS})
+   MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
+ENDIF(NOT DEFINED ENV{ROOTSYS})
+#IF(NOT DEFINED ENV{GENFIT})
+#   MESSAGE(FATAL_ERROR "You did not set the environment variable GENFIT.") 
+#ENDIF(NOT DEFINED ENV{GENFIT})
+
 SET(RAVEPATH $ENV{RAVEPATH})
 
-set(INCLUDE_DIRECTORIES
-${ROOT_INCLUDE_DIR} 
+INCLUDE_DIRECTORIES(
+$ENV{ROOTSYS}/include  
+$ENV{GENFIT}/core 
+$ENV{GENFIT}/GFRave
 ${CLHEP_INCLUDE_DIR}
-${CMAKE_SOURCE_DIR}/genfit
-${CMAKE_SOURCE_DIR}/GenfitTools/GFRave
-
 ${RAVEPATH}/include 
 ${RAVEPATH}/src
 ${RAVEPATH}/src/ROOT/mathcore
@@ -54,8 +63,6 @@ CHANGE_FILE_EXTENSION(*.cxx *.h GFRAVE_HEADERS "${GFRAVE_SRCS}")
 set(GFRAVE_LINKDEF  GFRaveLinkDef.h)
 set(GFRAVE_DICTIONARY ${CMAKE_CURRENT_BINARY_DIR}/GFRaveDict.cxx) 
 
-
-# ROOT_GENERATE_DICTIONARY("${GFRAVE_HEADERS}" "${GFRAVE_LINKDEF}" "${GFRAVE_DICTIONARY}" "${INCLUDE_DIRECTORIES}")
 
 # SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS} ${GFRAVE_DICTIONARY})
 SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS})

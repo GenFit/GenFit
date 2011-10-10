@@ -69,7 +69,7 @@ GFRave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
 
 
 rave::Track
-GFRave::GFTrackToTrack(const GFTrack* orig, int id, std::string tag){
+GFRave::GFTrackToTrack(GFTrack* orig, int id, std::string tag){
   return GFRave::RepToTrack(orig->getCardinalRep(), id, orig, tag);
 }
 
@@ -81,7 +81,7 @@ GFRave::RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig) {
 
 
 rave::Track
-GFRave::RepToTrack(GFAbsTrackRep* rep, int id, const void * originaltrack, std::string tag){
+GFRave::RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string tag){
 
   GFDetPlane refPlane(rep->getReferencePlane());
   TVector3 pos, mom;
@@ -104,9 +104,19 @@ GFRave::RepToTrack(GFAbsTrackRep* rep, int id, const void * originaltrack, std::
 
   rave::Track ret(id, ravestate, ravecov,
                   rep->getCharge(), rep->getChiSqu(), rep->getNDF(),
-                  0, tag); // todo: originaltrack pointer not passed!
+                  originaltrack, tag);
 
   return ret;
+}
+
+
+void
+GFRave::setTrackRepData(const rave::Track & orig, GFAbsTrackRep* rep){
+
+  rep->setPosMomCov(TVector3(orig.state().x(), orig.state().y(), orig.state().z()),
+                    TVector3(orig.state().px(), orig.state().py(), orig.state().pz()),
+                    Covariance6DToTMatrixT(orig.error()));
+
 }
 
 
@@ -137,7 +147,7 @@ GFRave::RaveToGFVertex(rave::Vertex & ravevertex, std::map<int, GFTrack*> * IdGF
       GFRaveTrackParameters trackparams(GFRave::Vector6DToTMatrixT(raveweightedtracks[i].second.state()),
                                         GFRave::Covariance6DToTMatrixT(raveweightedtracks[i].second.error()),
                                         origtrack->getCardinalRep()->getCharge(),
-                                        0); // todo: pdg code
+                                        origtrack->getCardinalRep()->getPDG());
 
       smoothedTracks.push_back(std::pair < double, GFRaveTrackParameters > (ravesmoothedtracks[i].first, trackparams) );
 
