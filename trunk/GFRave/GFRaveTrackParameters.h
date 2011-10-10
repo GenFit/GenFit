@@ -40,6 +40,7 @@
 
 /**
  * @brief GFRaveTrackParameters class
+ * Contains state and covariance of the tracks, smoothed with the vertex information
  */
 
 class GFRaveTrackParameters : public TObject

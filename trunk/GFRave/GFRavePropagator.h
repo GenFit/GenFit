@@ -66,8 +66,9 @@ class GFRavePropagator : public rave::Propagator
   private:
 
 
-    // check if everything is ok, otherwise throw GFException; return corresponding track Rep from IdGFTrackRepMap
-    GFAbsTrackRep* checkTrack(const rave::Track & track) const;
+    // check if everything is ok, otherwise throw GFException;
+    // get trackrep from IdGFTrackRepMap and set track Rep state and cov from track
+    GFAbsTrackRep* getTrackRep(const rave::Track & track) const;
 
     // data members
     std::map < int, GFAbsTrackRep* > * IdGFTrackRepMap; // pointers to GFAbsTracksReps via rave track ID
