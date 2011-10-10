@@ -78,6 +78,7 @@ double GFAbsTrackRep::stepalong(double h,
 
 int GFAbsTrackRep::getPDG(){
   Abort("getPDG()");
+  return 0;
 }
 
 
