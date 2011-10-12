@@ -51,8 +51,10 @@ void RKTrackRep::setData(const TMatrixT<double>& st, const GFDetPlane& pl, const
   }
   GFAbsTrackRep::setData(st,pl,cov);
   if (fCharge*fState[0][0] < 0) fCharge *= -1; // set charge accordingly! (fState[0][0] = q/p)
-  fSpu=fCacheSpu;
+  fSpu = fCacheSpu;
+
 }
+
 
 const TMatrixT<double>* RKTrackRep::getAuxInfo(const GFDetPlane& pl) {
 
@@ -66,8 +68,8 @@ const TMatrixT<double>* RKTrackRep::getAuxInfo(const GFDetPlane& pl) {
 
 }
 
+
 RKTrackRep::~RKTrackRep(){
-  //GFMaterialEffects is now a Singleton
 }
 
 
@@ -81,192 +83,280 @@ RKTrackRep::RKTrackRep(const TVector3& pos,
                        const TVector3& momerr,
                        const int& PDGCode) :
                        GFAbsTrackRep(5), fDirection(true), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1) {
+
   setPDG(PDGCode); // also sets charge and mass
-                         
 
-  fRefPlane.setO(pos);
-  fRefPlane.setNormal(mom);
-
-  fState[0][0]=fCharge/mom.Mag();
-  //u' and v'
-  fState[1][0]=0.0;
-  fState[2][0]=0.0;
-  //u and v
-  fState[3][0]=0.0;
-  fState[4][0]=0.0;
-  //spu
-  fSpu=1.;
-
-  TVector3 o=fRefPlane.getO();
-  TVector3 u=fRefPlane.getU();
-  TVector3 v=fRefPlane.getV();
-  TVector3 w=u.Cross(v);
-  double pu=0.;
-  double pv=0.;
-  double pw=mom.Mag();
-
-  fCov[3][3] = poserr.X()*poserr.X() * u.X()*u.X() +
-               poserr.Y()*poserr.Y() * u.Y()*u.Y() +
-               poserr.Z()*poserr.Z() * u.Z()*u.Z();
-  fCov[4][4] = poserr.X()*poserr.X() * v.X()*v.X() +
-               poserr.Y()*poserr.Y() * v.Y()*v.Y() +
-               poserr.Z()*poserr.Z() * v.Z()*v.Z();
-  fCov[0][0] = fCharge*fCharge/pow(mom.Mag(),6.) * 
-               (mom.X()*mom.X() * momerr.X()*momerr.X()+
-                mom.Y()*mom.Y() * momerr.Y()*momerr.Y()+
-                mom.Z()*mom.Z() * momerr.Z()*momerr.Z());
-  fCov[1][1] = pow((u.X()/pw - w.X()*pu/(pw*pw)),2.)*momerr.X()*momerr.X() +
-               pow((u.Y()/pw - w.Y()*pu/(pw*pw)),2.)*momerr.Y()*momerr.Y() +
-               pow((u.Z()/pw - w.Z()*pu/(pw*pw)),2.)*momerr.Z()*momerr.Z();
-  fCov[2][2] = pow((v.X()/pw - w.X()*pv/(pw*pw)),2.)*momerr.X()*momerr.X() +
-               pow((v.Y()/pw - w.Y()*pv/(pw*pw)),2.)*momerr.Y()*momerr.Y() +
-               pow((v.Z()/pw - w.Z()*pv/(pw*pw)),2.)*momerr.Z()*momerr.Z();
+  calcStateCov(pos, mom, poserr, momerr);
 
 }
 
 
 RKTrackRep::RKTrackRep(const GFTrackCand* aGFTrackCandPtr) :
                        GFAbsTrackRep(5), fDirection(true), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1) {
+
   setPDG(aGFTrackCandPtr->getPdgCode()); // also sets charge and mass
 
+  TVector3 pos = aGFTrackCandPtr->getPosSeed();
   TVector3 mom = aGFTrackCandPtr->getDirSeed();
-  fRefPlane.setO(aGFTrackCandPtr->getPosSeed());
-  fRefPlane.setNormal(mom);
-  double pw=mom.Mag();
-  fState[0][0]=fCharge/pw;
-  //u' and v'
-  fState[1][0]=0.0;
-  fState[2][0]=0.0;
-  //u and v
-  fState[3][0]=0.0;
-  fState[4][0]=0.0;
-  //spu
-  fSpu=1.;
-
-  TVector3 o=fRefPlane.getO();
-  TVector3 u=fRefPlane.getU();
-  TVector3 v=fRefPlane.getV();
-  TVector3 w=u.Cross(v);
-  double pu=0.;
-  double pv=0.;
 
   TVector3 poserr = aGFTrackCandPtr->getPosError();
   TVector3 momerr = aGFTrackCandPtr->getDirError();
-  fCov[3][3] = poserr.X()*poserr.X() * u.X()*u.X() +
-               poserr.Y()*poserr.Y() * u.Y()*u.Y() +
-               poserr.Z()*poserr.Z() * u.Z()*u.Z();
-  fCov[4][4] = poserr.X()*poserr.X() * v.X()*v.X() +
-               poserr.Y()*poserr.Y() * v.Y()*v.Y() +
-               poserr.Z()*poserr.Z() * v.Z()*v.Z();
-  fCov[0][0] = fCharge*fCharge/pow(mom.Mag(),6.) *
-               (mom.X()*mom.X() * momerr.X()*momerr.X()+
-                mom.Y()*mom.Y() * momerr.Y()*momerr.Y()+
-                mom.Z()*mom.Z() * momerr.Z()*momerr.Z());
-  fCov[1][1] = pow((u.X()/pw - w.X()*pu/(pw*pw)),2.)*momerr.X()*momerr.X() +
-               pow((u.Y()/pw - w.Y()*pu/(pw*pw)),2.)*momerr.Y()*momerr.Y() +
-               pow((u.Z()/pw - w.Z()*pu/(pw*pw)),2.)*momerr.Z()*momerr.Z();
-  fCov[2][2] = pow((v.X()/pw - w.X()*pv/(pw*pw)),2.)*momerr.X()*momerr.X() +
-               pow((v.Y()/pw - w.Y()*pv/(pw*pw)),2.)*momerr.Y()*momerr.Y() +
-               pow((v.Z()/pw - w.Z()*pv/(pw*pw)),2.)*momerr.Z()*momerr.Z();
+
+  calcStateCov(pos, mom, poserr, momerr);
 
 }
+
 
 RKTrackRep::RKTrackRep(const TVector3& pos,
                        const TVector3& mom,
                        const int& PDGCode) :
                        GFAbsTrackRep(5),fDirection(true), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1){
+
   setPDG(PDGCode); // also sets charge and mass
-                         
 
-  fRefPlane.setO(pos);
-  fRefPlane.setNormal(mom);
+  static const TVector3 stdPosErr(0,0,0);
+  static const TVector3 stdMomErr(0,0,0);
 
-  fState[0][0]=fCharge/mom.Mag();
-  //u' and v'
-  fState[1][0]=0.0;
-  fState[2][0]=0.0;
-  //u and v
-  fState[3][0]=0.0;
-  fState[4][0]=0.0;
-  //spu
-  fSpu=1.;
+  calcStateCov(pos, mom, stdPosErr, stdMomErr);
 
-  TVector3 o=fRefPlane.getO();
-  TVector3 u=fRefPlane.getU();
-  TVector3 v=fRefPlane.getV();
-  TVector3 w=u.Cross(v);
-  double pu=0.;
-  double pv=0.;
-  double pw=mom.Mag();
+  // reset covariance diagonal elements to large number
+  static const double value(1.E6);
 
-  static const TVector3 stdPosErr(1.,1.,1.);
-  static const TVector3 stdMomErr(1.,1.,1.);
-
-  fCov[3][3] = stdPosErr.X()*stdPosErr.X() * u.X()*u.X() +
-               stdPosErr.Y()*stdPosErr.Y() * u.Y()*u.Y() +
-               stdPosErr.Z()*stdPosErr.Z() * u.Z()*u.Z();
-  fCov[4][4] = stdPosErr.X()*stdPosErr.X() * v.X()*v.X() +
-               stdPosErr.Y()*stdPosErr.Y() * v.Y()*v.Y() +
-               stdPosErr.Z()*stdPosErr.Z() * v.Z()*v.Z();
-  fCov[0][0] = fCharge*fCharge/pow(mom.Mag(),6.) * 
-               (mom.X()*mom.X() * stdMomErr.X()*stdMomErr.X()+
-                mom.Y()*mom.Y() * stdMomErr.Y()*stdMomErr.Y()+
-                mom.Z()*mom.Z() * stdMomErr.Z()*stdMomErr.Z());
-  fCov[1][1] = pow((u.X()/pw - w.X()*pu/(pw*pw)),2.)*stdMomErr.X()*stdMomErr.X() +
-               pow((u.Y()/pw - w.Y()*pu/(pw*pw)),2.)*stdMomErr.Y()*stdMomErr.Y() +
-               pow((u.Z()/pw - w.Z()*pu/(pw*pw)),2.)*stdMomErr.Z()*stdMomErr.Z();
-  fCov[2][2] = pow((v.X()/pw - w.X()*pv/(pw*pw)),2.)*stdMomErr.X()*stdMomErr.X() +
-               pow((v.Y()/pw - w.Y()*pv/(pw*pw)),2.)*stdMomErr.Y()*stdMomErr.Y() +
-               pow((v.Z()/pw - w.Z()*pv/(pw*pw)),2.)*stdMomErr.Z()*stdMomErr.Z();
+  fCov[0][0] = value;
+  fCov[1][1] = value;
+  fCov[2][2] = value;
+  fCov[3][3] = value;
+  fCov[4][4] = value;
 
 }
 
-RKTrackRep::RKTrackRep(const GFDetPlane& pl,
-                       const TVector3& mom,
-                       const int& PDGCode) :
-                       GFAbsTrackRep(5),fDirection(true), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1){
-  setPDG(PDGCode); // also sets charge and mass
-                         
 
-  fRefPlane = pl;
-  TVector3 o=fRefPlane.getO();
-  TVector3 u=fRefPlane.getU();
-  TVector3 v=fRefPlane.getV();
-  TVector3 w=u.Cross(v);
+void RKTrackRep::calcStateCov(const TVector3& pos,
+                              const TVector3& mom,
+                              const TVector3& poserr,
+                              const TVector3& momerr){
 
-  double pu=mom*u;
-  double pv=mom*v;
-  double pw=mom*w;
+  fRefPlane.setON(pos, mom);
 
-  fState[0][0]=fCharge/mom.Mag();
-  //u' and v'
-  fState[1][0]=pu/pw;
-  fState[2][0]=pv/pw;
-  //u and v
-  fState[3][0]=0.0;
-  fState[4][0]=0.0;
   //spu
   fSpu=1.;
 
-  static const TVector3 stdPosErr2(1.,1.,1.);
-  static const TVector3 stdMomErr2(1.,1.,1.);
+  calcState(pos, mom);
 
-  fCov[3][3] = stdPosErr2.X()*stdPosErr2.X() * u.X()*u.X() +
-               stdPosErr2.Y()*stdPosErr2.Y() * u.Y()*u.Y() +
-               stdPosErr2.Z()*stdPosErr2.Z() * u.Z()*u.Z();
-  fCov[4][4] = stdPosErr2.X()*stdPosErr2.X() * v.X()*v.X() +
-               stdPosErr2.Y()*stdPosErr2.Y() * v.Y()*v.Y() +
-               stdPosErr2.Z()*stdPosErr2.Z() * v.Z()*v.Z();
-  fCov[0][0] = fCharge*fCharge/pow(mom.Mag(),6.) * 
-               (mom.X()*mom.X() * stdMomErr2.X()*stdMomErr2.X()+
-                mom.Y()*mom.Y() * stdMomErr2.Y()*stdMomErr2.Y()+
-                mom.Z()*mom.Z() * stdMomErr2.Z()*stdMomErr2.Z());
-  fCov[1][1] = pow((u.X()/pw - w.X()*pu/(pw*pw)),2.)*stdMomErr2.X()*stdMomErr2.X() +
-               pow((u.Y()/pw - w.Y()*pu/(pw*pw)),2.)*stdMomErr2.Y()*stdMomErr2.Y() +
-               pow((u.Z()/pw - w.Z()*pu/(pw*pw)),2.)*stdMomErr2.Z()*stdMomErr2.Z();
-  fCov[2][2] = pow((v.X()/pw - w.X()*pv/(pw*pw)),2.)*stdMomErr2.X()*stdMomErr2.X() +
-               pow((v.Y()/pw - w.Y()*pv/(pw*pw)),2.)*stdMomErr2.Y()*stdMomErr2.Y() +
-               pow((v.Z()/pw - w.Z()*pv/(pw*pw)),2.)*stdMomErr2.Z()*stdMomErr2.Z();
+  double pw = mom.Mag();
+  double pu = 0.;
+  double pv = 0.;
+
+  TVector3 u = fRefPlane.getU();
+  TVector3 v = fRefPlane.getV();
+  TVector3 w = fRefPlane.getNormal();
+
+
+  fCov[3][3] = poserr.X()*poserr.X() * u.X()*u.X() +
+               poserr.Y()*poserr.Y() * u.Y()*u.Y() +
+               poserr.Z()*poserr.Z() * u.Z()*u.Z();
+
+  fCov[4][4] = poserr.X()*poserr.X() * v.X()*v.X() +
+               poserr.Y()*poserr.Y() * v.Y()*v.Y() +
+               poserr.Z()*poserr.Z() * v.Z()*v.Z();
+
+  fCov[0][0] = fCharge*fCharge/pow(mom.Mag(),6.) *
+               (mom.X()*mom.X() * momerr.X()*momerr.X()+
+                mom.Y()*mom.Y() * momerr.Y()*momerr.Y()+
+                mom.Z()*mom.Z() * momerr.Z()*momerr.Z());
+
+  fCov[1][1] = pow((u.X()/pw - w.X()*pu/(pw*pw)),2.) * momerr.X()*momerr.X() +
+               pow((u.Y()/pw - w.Y()*pu/(pw*pw)),2.) * momerr.Y()*momerr.Y() +
+               pow((u.Z()/pw - w.Z()*pu/(pw*pw)),2.) * momerr.Z()*momerr.Z();
+
+  fCov[2][2] = pow((v.X()/pw - w.X()*pv/(pw*pw)),2.) * momerr.X()*momerr.X() +
+               pow((v.Y()/pw - w.Y()*pv/(pw*pw)),2.) * momerr.Y()*momerr.Y() +
+               pow((v.Z()/pw - w.Z()*pv/(pw*pw)),2.) * momerr.Z()*momerr.Z();
+
+}
+
+
+void RKTrackRep::calcState(const TVector3& pos,
+                           const TVector3& mom){
+
+  fState[0][0] = fCharge/mom.Mag();
+
+  //u' and v'
+  fState[1][0] = 0.;
+  fState[2][0] = 0.;
+
+  //u and v
+  fState[3][0] = 0.;
+  fState[4][0] = 0.;
+
+}
+
+
+TMatrixT<double>* RKTrackRep::getState7() const{
+
+  TVector3 o = fRefPlane.getO();
+  TVector3 u = fRefPlane.getU();
+  TVector3 v = fRefPlane.getV();
+  TVector3 w = fRefPlane.getNormal();
+
+  TVector3 pTilde = fSpu * (w + fState[1][0] * u + fState[2][0] * v);
+  pTilde.SetMag(1.);
+
+  TVector3 point = o + fState[3][0]*u + fState[4][0]*v;
+
+  TMatrixT<double>* state7 = new TMatrixT<double>(7,1);
+
+  (*state7)[0][0] = point.X();
+  (*state7)[1][0] = point.Y();
+  (*state7)[2][0] = point.Z();
+  (*state7)[3][0] = pTilde.X();
+  (*state7)[4][0] = pTilde.Y();
+  (*state7)[5][0] = pTilde.Z();
+  (*state7)[6][0] = fState[0][0];
+
+  return state7;
+}
+
+
+void RKTrackRep::transformPM(const TMatrixT<double>& in5x5, TMatrixT<double>& out,
+                             const GFDetPlane& pl, const TMatrixT<double>& state5, double spu) const{
+
+  // check if out is 6x6 or 7x7
+  bool sixD(false);
+  if (out.GetNcols() == 6) sixD = true;
+
+  const TVector3 u = pl.getU();
+  const TVector3 v = pl.getV();
+  const TVector3 w = pl.getNormal();
+
+
+  TVector3 pTilde = spu * (w + state5[1][0] * u + state5[2][0] * v);
+  double pTildeMag = pTilde.Mag();
+  pTilde.SetMag(1.);
+
+  const double utpTilde = u*pTilde;
+  const double vtpTilde = v*pTilde;
+
+  //J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)   (out is 7x7)
+  //J_pM matrix is d(x,y,z,px,py,pz) / d(q/p,u',v',u,v)       (out is 6x6)
+  TMatrixT<double> J_pM(7,5);
+  if (sixD) J_pM.ResizeTo(6,5);
+
+   // dx/du
+  J_pM[0][3] = u.X();
+  J_pM[1][3] = u.Y();
+  J_pM[2][3] = u.Z();
+  // dx/dv
+  J_pM[0][4] = v.X();
+  J_pM[1][4] = v.Y();
+  J_pM[2][4] = v.Z();
+
+  spu /= pTildeMag;
+  if (!sixD) {
+    // dax/du'
+    J_pM[3][1] = spu * ( u.X() - pTilde.X()*utpTilde );
+    J_pM[4][1] = spu * ( u.Y() - pTilde.Y()*utpTilde );
+    J_pM[5][1] = spu * ( u.Z() - pTilde.Z()*utpTilde );
+    // dax/dv'
+    J_pM[3][2] = spu * ( v.X() - pTilde.X()*vtpTilde );
+    J_pM[4][2] = spu * ( v.Y() - pTilde.Y()*vtpTilde );
+    J_pM[5][2] = spu * ( v.Z() - pTilde.Z()*vtpTilde );
+    // dqop/dqop
+    J_pM[6][0] = 1.;
+  }
+  else {
+    const double qop = state5[0][0];
+    const double p = fCharge/qop; // momentum
+    spu *= p;
+    // dpx/dqop
+    J_pM[3][0] = (-1.) * spu / qop * ( w.X() + state5[1][0]*u.X() + state5[2][0]*v.X());
+    J_pM[4][0] = (-1.) * spu / qop * ( w.Y() + state5[1][0]*u.Y() + state5[2][0]*v.Y());
+    J_pM[5][0] = (-1.) * spu / qop * ( w.Z() + state5[1][0]*u.Z() + state5[2][0]*v.Z());
+    // dpx/du'
+    J_pM[3][1] = spu * u.X();
+    J_pM[4][1] = spu * u.Y();
+    J_pM[5][1] = spu * u.Z();
+    // dpx/dv'
+    J_pM[3][2] = spu * v.X();
+    J_pM[4][2] = spu * v.Y();
+    J_pM[5][2] = spu * v.Z();
+  }
+
+
+  TMatrixT<double> J_pM_transp(J_pM);
+  J_pM_transp.T();
+
+  out = J_pM*(in5x5*J_pM_transp);
+
+}
+
+
+void RKTrackRep::transformMP(const TMatrixT<double>& in, TMatrixT<double>& out5x5,
+                             const GFDetPlane& pl, const TMatrixT<double>& state7) {
+
+  // check if in is 6x6 or 7x7
+  bool sixD(false);
+  if (in.GetNcols() == 6) sixD = true;
+
+  const TVector3 u = pl.getU();
+  const TVector3 v = pl.getV();
+  const TVector3 w = pl.getNormal();
+
+  const TVector3 A(state7[3][0], state7[4][0], state7[5][0]);
+
+  const double AtW = A*w;
+  const double AtU = A*u;
+  const double AtV = A*v;
+  const double AtW2 = AtW*AtW;
+
+  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)   (out is 7x7)
+  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,px,py,pz)       (out is 6x6)
+  TMatrixT<double> J_Mp(5,7);
+  if (sixD) J_Mp.ResizeTo(5,6);
+
+  if (!sixD) {
+    J_Mp[0][6] = 1.;
+    //du'/dax
+    J_Mp[1][3] = (u.X()*AtW - w.X()*AtU) / AtW2;
+    J_Mp[1][4] = (u.Y()*AtW - w.Y()*AtU) / AtW2;
+    J_Mp[1][5] = (u.Z()*AtW - w.Z()*AtU) / AtW2;
+    //dv'/dax
+    J_Mp[2][3] = (v.X()*AtW - w.X()*AtV) / AtW2;
+    J_Mp[2][4] = (v.Y()*AtW - w.Y()*AtV) / AtW2;
+    J_Mp[2][5] = (v.Z()*AtW - w.Z()*AtV) / AtW2;
+  }
+  else {
+    const double qop = state7[6][0];
+    const double p = fCharge/qop; // momentum
+    //dqop/dpx
+    J_Mp[0][3] = (-1.) * qop * A.X() / p;
+    J_Mp[0][4] = (-1.) * qop * A.Y() / p;
+    J_Mp[0][5] = (-1.) * qop * A.Z() / p;
+    //du'/dpx
+    J_Mp[1][3] = (u.X() - w.X()*AtU/AtW) / (p*AtW);
+    J_Mp[1][4] = (u.Y() - w.Y()*AtU/AtW) / (p*AtW);
+    J_Mp[1][5] = (u.Z() - w.Z()*AtU/AtW) / (p*AtW);
+    //dv'/dax
+    J_Mp[2][3] = (v.X() - w.X()*AtU/AtW) / (p*AtW);
+    J_Mp[2][4] = (v.Y() - w.Y()*AtU/AtW) / (p*AtW);
+    J_Mp[2][5] = (v.Z() - w.Z()*AtU/AtW) / (p*AtW);
+  }
+  //du/dx
+  J_Mp[3][0] = u.X();
+  J_Mp[3][1] = u.Y();
+  J_Mp[3][2] = u.Z();
+  //dv/dx
+  J_Mp[4][0] = v.X();
+  J_Mp[4][1] = v.Y();
+  J_Mp[4][2] = v.Z();
+
+
+  TMatrixT<double> J_Mp_transp(J_Mp);
+  J_Mp_transp.T();
+
+  out5x5.ResizeTo(5, 5);
+
+  out5x5 = J_Mp*(in*J_Mp_transp);
 
 }
 
@@ -275,9 +365,8 @@ void RKTrackRep::setPDG(int i){
   fPdg = i;
   TParticlePDG * part = TDatabasePDG::Instance()->GetParticle(fPdg);
   if(part == 0){
-    std::cerr << "RKTrackRep::setPDG particle " << i 
-              << " not known to TDatabasePDG -> abort" << std::endl;
-    exit(1);
+    GFException exc("RKTrackRep::setPDG ==> particle id not known to TDatabasePDG",__LINE__,__FILE__);
+    throw exc;
   }
   fMass = part->Mass();
   fCharge = part->Charge()/(3.);
@@ -290,7 +379,7 @@ TVector3 RKTrackRep::getPos(const GFDetPlane& pl){
     extrapolate(pl,s);
     return pl.getO()+s[3][0]*pl.getU()+s[4][0]*pl.getV();
   }
-  return fRefPlane.getO()+fState[3][0]*fRefPlane.getU()+fState[4][0]*fRefPlane.getV();
+  return fRefPlane.getO() + fState[3][0]*fRefPlane.getU() + fState[4][0]*fRefPlane.getV();
 }
 
 
@@ -312,7 +401,7 @@ TVector3 RKTrackRep::getMom(const GFDetPlane& pl){
 void RKTrackRep::getPosMom(const GFDetPlane& pl,TVector3& pos,
                            TVector3& mom){
   TMatrixT<double> statePred(fState);
-  if(pl!=fRefPlane) {
+  if(pl != fRefPlane) {
     extrapolate(pl,statePred);
     mom = fCacheSpu*(pl.getNormal()+statePred[1][0]*pl.getU()+statePred[2][0]*pl.getV());
   }
@@ -332,24 +421,7 @@ void RKTrackRep::extrapolateToPoint(const TVector3& pos,
 
   static const int maxIt(30);
 
-  TVector3 o=fRefPlane.getO();
-  TVector3 u=fRefPlane.getU();
-  TVector3 v=fRefPlane.getV();
-  TVector3 w=u.Cross(v);
-
-  TVector3 pTilde = fSpu* (w + fState[1][0] * u + fState[2][0] * v);
-  pTilde.SetMag(1.);
-
-  TVector3 point = o + fState[3][0]*u + fState[4][0]*v;
-
-  TMatrixT<double> state7(7,1);
-  state7[0][0] = point.X();
-  state7[1][0] = point.Y();
-  state7[2][0] = point.Z();
-  state7[3][0] = pTilde.X();
-  state7[4][0] = pTilde.Y();
-  state7[5][0] = pTilde.Z();
-  state7[6][0] = fState[0][0];
+  TMatrixT<double>* state7 = getState7();
 
   double coveredDistance(0.);
 
@@ -357,8 +429,8 @@ void RKTrackRep::extrapolateToPoint(const TVector3& pos,
   int iterations(0);
 
   while(true){
-    pl.setON(pos,TVector3(state7[3][0],state7[4][0],state7[5][0]));
-    coveredDistance =  this->Extrap(pl,&state7);
+    pl.setON(pos,TVector3((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]));
+    coveredDistance =  this->Extrap(pl, state7);
 
     if(fabs(coveredDistance)<MINSTEP) break;
     if(++iterations == maxIt) {
@@ -366,8 +438,10 @@ void RKTrackRep::extrapolateToPoint(const TVector3& pos,
       throw exc;
     }
   }
-  poca.SetXYZ(state7[0][0],state7[1][0],state7[2][0]);
-  dirInPoca.SetXYZ(state7[3][0],state7[4][0],state7[5][0]);
+  poca.SetXYZ((*state7)[0][0], (*state7)[1][0], (*state7)[2][0]);
+  dirInPoca.SetXYZ((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
+
+  delete state7;
 }
 
 
@@ -380,6 +454,7 @@ TVector3 RKTrackRep::poca2Line(const TVector3& extr1,const TVector3& extr2,const
     GFException exc("RKTrackRep::poca2Line ==> try to find poca between line and point, but the line is really just a point",__LINE__,__FILE__);
     throw exc;
   }
+
   double t = 1./(theWire*theWire)*(point*theWire+extr1*extr1-extr1*extr2);
   return (extr1+t*theWire);
 }
@@ -394,24 +469,7 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
                                    TVector3& poca_onwire){
   static const int maxIt(30);
 
-  TVector3 o=fRefPlane.getO();
-  TVector3 u=fRefPlane.getU();
-  TVector3 v=fRefPlane.getV();
-  TVector3 w=u.Cross(v);
-
-  TVector3 pTilde = fSpu* (w + fState[1][0] * u + fState[2][0] * v);
-  pTilde.SetMag(1.);
-
-  TVector3 point = o + fState[3][0]*u + fState[4][0]*v;
-
-  TMatrixT<double> state7(7,1);
-  state7[0][0] = point.X();
-  state7[1][0] = point.Y();
-  state7[2][0] = point.Z();
-  state7[3][0] = pTilde.X();
-  state7[4][0] = pTilde.Y();
-  state7[5][0] = pTilde.Z();
-  state7[6][0] = fState[0][0];
+  TMatrixT<double>* state7 = getState7();
 
   double coveredDistance(0.);
 
@@ -420,10 +478,10 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
 
   while(true){
     pl.setO(point1);
-    TVector3 currentDir(state7[3][0],state7[4][0],state7[5][0]);
+    TVector3 currentDir((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
     pl.setU(currentDir.Cross(point2-point1));
     pl.setV(point2-point1);
-    coveredDistance = this->Extrap(pl,&state7);
+    coveredDistance = this->Extrap(pl, state7);
 
     if(fabs(coveredDistance)<MINSTEP) break;
     if(++iterations == maxIt) {
@@ -431,9 +489,12 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
       throw exc;
     }
   }
-  poca.SetXYZ(state7[0][0],state7[1][0],state7[2][0]);
-  dirInPoca.SetXYZ(state7[3][0],state7[4][0],state7[5][0]);
+
+  poca.SetXYZ((*state7)[0][0], (*state7)[1][0], (*state7)[2][0]);
+  dirInPoca.SetXYZ((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
   poca_onwire = poca2Line(point1,point2,poca);
+
+  delete state7;
 }
 
 
@@ -444,102 +505,39 @@ double RKTrackRep::extrapolate(const GFDetPlane& pl,
                                TMatrixT<double>& covPred){
   
   TMatrixT<double> cov7x7(7,7);
-  TMatrixT<double> J_pM(7,5);
+  TMatrixT<double>* state7 = getState7();
 
-  TVector3 o=fRefPlane.getO();
-  TVector3 u=fRefPlane.getU();
-  TVector3 v=fRefPlane.getV();
-  TVector3 w=u.Cross(v);
+  transformPM(fCov, cov7x7, fRefPlane, fState, fSpu);
 
-  J_pM[0][3] = u.X();J_pM[0][4]=v.X(); // dx/du
-  J_pM[1][3] = u.Y();J_pM[1][4]=v.Y();
-  J_pM[2][3] = u.Z();J_pM[2][4]=v.Z();
-
-  TVector3 pTilde = fSpu * (w + fState[1][0] * u + fState[2][0] * v);
-  double pTildeMag = pTilde.Mag();
-
-  //J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)
-
-  // da_x/du'
-  J_pM[3][1] = fSpu/pTildeMag*(u.X()-pTilde.X()/(pTildeMag*pTildeMag)*u*pTilde);
-  J_pM[4][1] = fSpu/pTildeMag*(u.Y()-pTilde.Y()/(pTildeMag*pTildeMag)*u*pTilde);
-  J_pM[5][1] = fSpu/pTildeMag*(u.Z()-pTilde.Z()/(pTildeMag*pTildeMag)*u*pTilde);
-  // da_x/dv'
-  J_pM[3][2] = fSpu/pTildeMag*(v.X()-pTilde.X()/(pTildeMag*pTildeMag)*v*pTilde);
-  J_pM[4][2] = fSpu/pTildeMag*(v.Y()-pTilde.Y()/(pTildeMag*pTildeMag)*v*pTilde);
-  J_pM[5][2] = fSpu/pTildeMag*(v.Z()-pTilde.Z()/(pTildeMag*pTildeMag)*v*pTilde);
-  // dqOp/dqOp
-  J_pM[6][0] = 1.;
-
-  TMatrixT<double> J_pM_transp(J_pM);
-  J_pM_transp.T();
-
-  cov7x7 = J_pM*(fCov*J_pM_transp);
-
-  TVector3 pos = o + fState[3][0]*u + fState[4][0]*v;
-  TMatrixT<double> state7(7,1);
-  state7[0][0] = pos.X();
-  state7[1][0] = pos.Y();
-  state7[2][0] = pos.Z();
-  state7[3][0] = pTilde.X()/pTildeMag;;
-  state7[4][0] = pTilde.Y()/pTildeMag;;
-  state7[5][0] = pTilde.Z()/pTildeMag;;
-  state7[6][0] = fState[0][0];
-
-  double coveredDistance = this->Extrap(pl,&state7,&cov7x7);
-
-  TVector3 O = pl.getO();
-  TVector3 U = pl.getU();
-  TVector3 V = pl.getV();
-  TVector3 W = pl.getNormal();
-
-  double X = state7[0][0];
-  double Y = state7[1][0];
-  double Z = state7[2][0];
-  double AX = state7[3][0];
-  double AY = state7[4][0];
-  double AZ = state7[5][0];
-  double QOP = state7[6][0];
-  TVector3 A(AX,AY,AZ);
-  TVector3 Point(X,Y,Z);
-  TMatrixT<double> J_Mp(5,7);
-  
-  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)
-  J_Mp[0][6] = 1.;
-  //du'/da_x
-  double AtW = A*W;
-  J_Mp[1][3] = (U.X()*(AtW)-W.X()*(A*U))/(AtW*AtW);
-  J_Mp[1][4] = (U.Y()*(AtW)-W.Y()*(A*U))/(AtW*AtW);
-  J_Mp[1][5] = (U.Z()*(AtW)-W.Z()*(A*U))/(AtW*AtW);
-  //dv'/da_x
-  J_Mp[2][3] = (V.X()*(AtW)-W.X()*(A*V))/(AtW*AtW);
-  J_Mp[2][4] = (V.Y()*(AtW)-W.Y()*(A*V))/(AtW*AtW);
-  J_Mp[2][5] = (V.Z()*(AtW)-W.Z()*(A*V))/(AtW*AtW);
-  //du/dx
-  J_Mp[3][0] = U.X();
-  J_Mp[3][1] = U.Y();
-  J_Mp[3][2] = U.Z();
-  //dv/dx
-  J_Mp[4][0] = V.X();
-  J_Mp[4][1] = V.Y();
-  J_Mp[4][2] = V.Z();
-  
-  TMatrixT<double> J_Mp_transp(J_Mp);
-  J_Mp_transp.T();
+  double coveredDistance = this->Extrap(pl, state7, &cov7x7);
 
   covPred.ResizeTo(5,5);
 
-  covPred = J_Mp*(cov7x7*J_Mp_transp);
+  transformMP(cov7x7, covPred, pl, (*state7));
+
+  const TVector3 O = pl.getO();
+  const TVector3 U = pl.getU();
+  const TVector3 V = pl.getV();
+  const TVector3 W = pl.getNormal();
+
+  const TVector3 Point((*state7)[0][0], (*state7)[1][0], (*state7)[2][0]);
+  const TVector3 A((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
+  
+  double AtW = A*W;
 
   statePred.ResizeTo(5,1);
-  statePred[0][0] = QOP;
-  statePred[1][0] = (A*U)/(A*W);
-  statePred[2][0] = (A*V)/(A*W);
+  statePred[0][0] = (*state7)[6][0];
+  statePred[1][0] = (A*U)/(AtW);
+  statePred[2][0] = (A*V)/(AtW);
   statePred[3][0] = (Point-O)*U;
   statePred[4][0] = (Point-O)*V;
   
   fCachePlane = pl;
-  fCacheSpu = (A*W)/fabs(A*W);
+
+  if (AtW >=0 ) fCacheSpu = 1.;
+  else fCacheSpu = -1.;
+
+  delete state7;
 
   return coveredDistance;
 }
@@ -550,49 +548,26 @@ double RKTrackRep::extrapolate(const GFDetPlane& pl,
 double RKTrackRep::extrapolate(const GFDetPlane& pl, 
                                TMatrixT<double>& statePred){
 
-  TVector3 o=fRefPlane.getO();
-  TVector3 u=fRefPlane.getU();
-  TVector3 v=fRefPlane.getV();
-  TVector3 w=u.Cross(v);
+  TMatrixT<double>* state7 = getState7();
 
+  double coveredDistance = this->Extrap(pl, state7);
 
-  TVector3 pTilde = fSpu* (w + fState[1][0] * u + fState[2][0] * v);
-  double pTildeMag = pTilde.Mag();
+  const TVector3 O = pl.getO();
+  const TVector3 U = pl.getU();
+  const TVector3 V = pl.getV();
+  const TVector3 W = pl.getNormal();
 
-  TVector3 pos = o + fState[3][0]*u + fState[4][0]*v;
-
-  TMatrixT<double> state7(7,1);
-  state7[0][0] = pos.X();
-  state7[1][0] = pos.Y();
-  state7[2][0] = pos.Z();
-  state7[3][0] = pTilde.X()/pTildeMag;
-  state7[4][0] = pTilde.Y()/pTildeMag;
-  state7[5][0] = pTilde.Z()/pTildeMag;
-  state7[6][0] = fState[0][0];
-
-  TVector3 O = pl.getO();
-  TVector3 U = pl.getU();
-  TVector3 V = pl.getV();
-  TVector3 W = pl.getNormal();
-
-  double coveredDistance = this->Extrap(pl,&state7);
-
-  double X = state7[0][0];
-  double Y = state7[1][0];
-  double Z = state7[2][0];
-  double AX = state7[3][0];
-  double AY = state7[4][0];
-  double AZ = state7[5][0];
-  double QOP = state7[6][0];
-  TVector3 A(AX,AY,AZ);
-  TVector3 Point(X,Y,Z);
+  const TVector3 Point((*state7)[0][0], (*state7)[1][0], (*state7)[2][0]);
+  const TVector3 A((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
 
   statePred.ResizeTo(5,1);
-  statePred[0][0] = QOP;
+  statePred[0][0] = (*state7)[6][0];
   statePred[1][0] = (A*U)/(A*W);
   statePred[2][0] = (A*V)/(A*W);
   statePred[3][0] = (Point-O)*U;
   statePred[4][0] = (Point-O)*V;
+
+  delete state7;
 
   return coveredDistance;
 }
@@ -665,17 +640,16 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
 
   points.clear();
   pointPaths.clear();
-  //std::cout<<"coords  "<<R[0]<<"  "<<R[1]<<"   "<<R[2]<<  std::endl;
-  //std::cout<<"R       "<<sqrt(pow(R[0],2)+pow(R[1],2))<<  std::endl;  
-  //std::cout<<"momentum "<<fabs(fCharge/P[6])<< std::endl;
+
   if(fabs(fCharge/P[6])<Pmin){
     std::cerr << "RKTrackRep::RKutta ==> momentum too low: " << fabs(fCharge/P[6])*1000. << " MeV" << std::endl;
     return (false);
   }
   
   double SU[4];
-  TVector3 O = plane.getO();
-  TVector3 W = plane.getNormal(); 
+  const TVector3 O = plane.getO();
+  const TVector3 W = plane.getNormal();
+
   if(W*O > 0){ 		// make SU vector point away from origin
     SU[0] = W.X();
     SU[1] = W.Y();
@@ -954,9 +928,9 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   
   double CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);
   
-  P[3]      = A[0]*CBA;	// normalize A
-  P[4]      = A[1]*CBA;
-  P[5]      = A[2]*CBA;
+  P[3] = A[0]*CBA;	// normalize A
+  P[4] = A[1]*CBA;
+  P[5] = A[2]*CBA;
    
   //
   // Output derivatives of track parameters preparation 
@@ -983,6 +957,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   else coveredDistance=Way2;
 
   return(true);
+
 }
 
 
@@ -996,7 +971,10 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
   if(cov==NULL) calcCov=false;  
 
   double *P;
-  if(calcCov) {P = new double[56]; memset(P,0x00,56*sizeof(double));}
+  if(calcCov) {
+    P = new double[56];
+    memset(P,0x00,56*sizeof(double));
+  }
   else {P = new double[7];} // not needed memset(P,0x00,7*sizeof(double));};
 
   for(int i=0;i<7;++i){
@@ -1136,56 +1114,69 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
       if(plane.distance(P[0],P[1],P[2])<MINSTEP) break;
     }
   }
-  (*state)[0][0] = P[0];  (*state)[1][0] = P[1];
-  (*state)[2][0] = P[2];  (*state)[3][0] = P[3];
-  (*state)[4][0] = P[4];  (*state)[5][0] = P[5];
+
+  (*state)[0][0] = P[0];  (*state)[1][0] = P[1];  (*state)[2][0] = P[2];
+  (*state)[3][0] = P[3];  (*state)[4][0] = P[4];  (*state)[5][0] = P[5];
   (*state)[6][0] = P[6];
     
   delete[] P;
   return sumDistance;
 }
 
-void RKTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixT<double>& cov){
 
-  const TVector3 U=pl.getU();
-  const TVector3 V=pl.getV();
-  const TVector3 W=U.Cross(V);
+void RKTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixT<double>& cov6x6){
 
-  TMatrixT<double> statePred=fState;
-  TMatrixT<double> covPred=fCov;
-  double spu=fSpu;
-  if(pl!=fRefPlane)
-  {
+  TMatrixT<double> statePred(fState);
+  TMatrixT<double> covPred(fCov);
+  double spu(fSpu);
+
+  if(pl != fRefPlane) {
     extrapolate(pl, statePred, covPred);
-    spu=fCacheSpu;
+    spu = fCacheSpu;
   }
 
-  const double p=fCharge/statePred[0][0]; //Magnitude of the momentum.
-  const TVector3 pTilde=spu*(W+statePred[1][0]*U+statePred[2][0]*V);
+  // cov
+  cov6x6.ResizeTo(6, 6); // make sure cov has correct dimensions
+  transformPM(covPred, cov6x6, pl, statePred, spu);
+
+  // pos and mom
+  const TVector3 u = pl.getU();
+  const TVector3 v = pl.getV();
+  const TVector3 w = u.Cross(v);
+
+  const double p = fCharge/statePred[0][0]; //Magnitude of the momentum.
+  TVector3 pTilde = spu * (w + statePred[1][0]*u + statePred[2][0]*v);
   const double pTildeMagnitude=pTilde.Mag();
 
-  TMatrixT<double> jacobian(6, 5); //Jacobian matrix \frac{\partial\left(x, y, z, p_x, p_y, p_z\right)}{\partial\left(\frac{q}{p}, u^\prime, v^\prime, u, v\right)}
-  jacobian[0][3]=U.X();
-  jacobian[0][4]=V.X();
-  jacobian[1][3]=U.Y();
-  jacobian[1][4]=V.Y();
-  jacobian[2][3]=U.Z();
-  jacobian[2][4]=V.Z();
-  jacobian[3][1]=p*spu/pTildeMagnitude*(U.X()-pTilde.X()*(U*pTilde)/(pTildeMagnitude*pTildeMagnitude));
-  jacobian[3][2]=p*spu/pTildeMagnitude*(V.X()-pTilde.X()*(V*pTilde)/(pTildeMagnitude*pTildeMagnitude));
-  jacobian[4][1]=p*spu/pTildeMagnitude*(U.Y()-pTilde.Y()*(U*pTilde)/(pTildeMagnitude*pTildeMagnitude));
-  jacobian[4][2]=p*spu/pTildeMagnitude*(V.Y()-pTilde.Y()*(V*pTilde)/(pTildeMagnitude*pTildeMagnitude));
-  jacobian[5][1]=p*spu/pTildeMagnitude*(U.Z()-pTilde.Z()*(U*pTilde)/(pTildeMagnitude*pTildeMagnitude));
-  jacobian[5][2]=p*spu/pTildeMagnitude*(V.Z()-pTilde.Z()*(V*pTilde)/(pTildeMagnitude*pTildeMagnitude));
+  pos = pl.getO() + statePred[3][0]*u + statePred[4][0]*v;
+  mom = p/pTildeMagnitude * pTilde;
 
-  TMatrixT<double> transposedJacobian=jacobian;
-  transposedJacobian.T();
+}
 
-  cov.ResizeTo(6, 6);
 
-  pos=pl.getO()+statePred[3][0]*U+statePred[4][0]*V;
-  mom=p/pTildeMagnitude*pTilde;
-  cov=jacobian*covPred*transposedJacobian;
+void RKTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixT<double>& cov6x6){
+
+  if (cov6x6.GetNcols()!=6 || cov6x6.GetNrows()!=6){
+    GFException exc("RKTrackRep::setPosMomCov ==> cov has to be 6x6 (x, y, z, px, py, pz)",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  fRefPlane.setON(pos, mom);
+
+  fCachePlane = fRefPlane;
+  fSpu = 1.;
+  fCacheSpu = 1.;
+
+  calcState(pos, mom);
+
+  TMatrixT<double>* state7 = getState7();
+
+  TMatrixT<double> covcopy6x6(cov6x6);
+
+  transformMP(covcopy6x6, fCov, fRefPlane, *state7);
+
+  delete state7;
+
 }
 
 
@@ -1195,24 +1186,7 @@ double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
 
   static const int maxIt(30);
 
-  TVector3 o=fRefPlane.getO();
-  TVector3 u=fRefPlane.getU();
-  TVector3 v=fRefPlane.getV();
-  TVector3 w=u.Cross(v);
-
-  TVector3 pTilde = fSpu* (w + fState[1][0] * u + fState[2][0] * v);
-  pTilde.SetMag(1.);
-
-  TVector3 point = o + fState[3][0]*u + fState[4][0]*v;
-
-  TMatrixT<double> state7(7,1);
-  state7[0][0] = point.X();
-  state7[1][0] = point.Y();
-  state7[2][0] = point.Z();
-  state7[3][0] = pTilde.X();
-  state7[4][0] = pTilde.Y();
-  state7[5][0] = pTilde.Z();
-  state7[6][0] = fState[0][0];
+  TMatrixT<double>* state7 = getState7();
 
   double coveredDistance(0.);
 
@@ -1220,14 +1194,14 @@ double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
   int iterations(0);
 
   while(true){
-    pos.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
-    dir.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
+    pos.SetXYZ((*state7)[0][0], (*state7)[1][0], (*state7)[2][0]);
+    dir.SetXYZ((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
     dir.SetMag(1.);
 
     dest = pos + (h - coveredDistance) * dir;
 
     pl.setON(dest, dir);
-    coveredDistance += this->Extrap(pl,&state7);
+    coveredDistance += this->Extrap(pl, state7);
 
     if(fabs(h - coveredDistance)<MINSTEP) break;
     if(++iterations == maxIt) {
@@ -1236,10 +1210,12 @@ double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
     }
   }
   
-  pos.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
-  dir.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
+  pos.SetXYZ((*state7)[0][0], (*state7)[1][0], (*state7)[2][0]);
+  dir.SetXYZ((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
   dir.SetMag(1.);  
   
+  delete state7;
+
   return coveredDistance;
 
 }
