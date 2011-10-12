@@ -53,20 +53,16 @@ class RKTrackRep : public GFAbsTrackRep {
   // Constructors/Destructors ---------
   RKTrackRep();
   RKTrackRep(const TVector3& pos,
-	     const TVector3& mom,
-	     const TVector3& poserr,
-	     const TVector3& momerr,
-	     const int& PDGCode);
+       const TVector3& mom,
+       const TVector3& poserr,
+       const TVector3& momerr,
+       const int& PDGCode);
 
   RKTrackRep(const GFTrackCand* aGFTrackCandPtr);
 
   RKTrackRep(const TVector3& pos,
-	     const TVector3& mom,
-	     const int& PDGCode);
-
-  RKTrackRep(const GFDetPlane& pl,
-	     const TVector3& mom,
-	     const int& PDGCode);
+       const TVector3& mom,
+       const int& PDGCode);
 
   virtual ~RKTrackRep();
 
@@ -82,7 +78,7 @@ class RKTrackRep : public GFAbsTrackRep {
     * Master reference system (MARS):
     * \f{eqnarray*}x & = & O_{x}+uU_{x}+vV_{x}\\y & = & O_{y}+uU_{y}+vV_{y}\\z & = & O_{z}+uU_{z}+vV_{z}\\a_{x} & = & \frac{\mbox{spu}}{\widetilde{p}}\left(N_{x}+u\prime U_{x}+v\prime V_{x}\right)\\a_{y} & = & \frac{\mbox{spu}}{\widetilde{p}}\left(N_{y}+u\prime U_{y}+v\prime V_{y}\right)\\a_{z} & = & \frac{\mbox{spu}}{\widetilde{p}}\left(N_{z}+u\prime U_{z}+v\prime V_{z}\right)\\\frac{q}{p} & = & \frac{q}{p}\f}
     * Plane coordinate system:
-    * \f{eqnarray*}u & = & \left(x-O_{x}\right)U_{x}+\left(y-O_{y}\right)U_{y}+\left(z-O_{z}\right)U_{z}\\v & = & \left(x-O_{x}\right)U_{x}+\left(y-O_{y}\right)U_{y}+\left(z-O_{z}\right)U_{z}\\u\prime & = & \frac{a_{x}U_{x}+a_{y}U_{y}+a_{z}U_{z}}{a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}}\\v\prime & = & \frac{a_{x}V_{x}+a_{y}V_{y}+a_{z}V_{z}}{a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}}\\\frac{q}{p} & = & \frac{q}{p}\\\mbox{spu} & = & \frac{a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}}{|a_{x}^{2}N_{x}^{2}+a_{y}^{2}N_{y}^{2}+a_{z}^{2}N_{z}^{2}|}=\pm1\f}
+    * \f{eqnarray*}u & = & \left(x-O_{x}\right)U_{x}+\left(y-O_{y}\right)U_{y}+\left(z-O_{z}\right)U_{z}\\v & = & \left(x-O_{x}\right)V_{x}+\left(y-O_{y}\right)V_{y}+\left(z-O_{z}\right)V_{z}\\u\prime & = & \frac{a_{x}U_{x}+a_{y}U_{y}+a_{z}U_{z}}{a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}}\\v\prime & = & \frac{a_{x}V_{x}+a_{y}V_{y}+a_{z}V_{z}}{a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}}\\\frac{q}{p} & = & \frac{q}{p}\\\mbox{spu} & = & \frac{a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}}{|a_{x}^{2}N_{x}^{2}+a_{y}^{2}N_{y}^{2}+a_{z}^{2}N_{z}^{2}|}=\pm1\f}
     *
     * Jacobians:\n
     * \f$J_{p,M}=\left(\begin{array}{ccccc}\frac{\partial x}{\partial u} & \frac{\partial x}{\partial v} & \frac{\partial x}{\partial u\prime} & \frac{\partial x}{\partial v\prime} & \frac{\partial x}{\partial\frac{q}{p}}\\\frac{\partial y}{\partial u} & \frac{\partial y}{\partial v} & \frac{\partial y}{\partial u\prime} & \frac{\partial y}{\partial v\prime} & \frac{\partial y}{\partial\frac{q}{p}}\\\frac{\partial z}{\partial u} & \frac{\partial z}{\partial v} & \frac{\partial z}{\partial u\prime} & \frac{\partial z}{\partial v\prime} & \frac{\partial z}{\partial\frac{q}{p}}\\\frac{\partial a_{x}}{\partial u} & \frac{\partial a_{x}}{\partial v} & \frac{\partial a_{x}}{\partial u\prime} & \frac{\partial a_{x}}{\partial v\prime} & \frac{\partial a_{x}}{\partial\frac{q}{p}}\\\frac{\partial a_{y}}{\partial u} & \frac{\partial a_{y}}{\partial v} & \frac{\partial a_{y}}{\partial u\prime} & \frac{\partial a_{y}}{\partial v\prime} & \frac{\partial a_{y}}{\partial\frac{q}{p}}\\\frac{\partial a_{z}}{\partial u} & \frac{\partial a_{z}}{\partial v} & \frac{\partial a_{z}}{\partial u\prime} & \frac{\partial a_{z}}{\partial v\prime} & \frac{\partial a_{z}}{\partial\frac{q}{p}}\\\frac{\partial\frac{q}{p}}{\partial u} & \frac{\partial\frac{q}{p}}{\partial v} & \frac{\partial\frac{q}{p}}{\partial u\prime} & \frac{\partial\frac{q}{p}}{\partial v\prime} & \frac{\partial\frac{q}{p}}{\partial\frac{q}{p}}\end{array}\right)\f$
@@ -98,24 +94,24 @@ class RKTrackRep : public GFAbsTrackRep {
     *
     */
   double extrapolate(const GFDetPlane&, 
-			   TMatrixT<double>& statePred,
-			   TMatrixT<double>& covPred);
+         TMatrixT<double>& statePred,
+         TMatrixT<double>& covPred);
 
   //! returns the tracklength spanned in this extrapolation
   double extrapolate(const GFDetPlane&, 
-			   TMatrixT<double>& statePred);
+         TMatrixT<double>& statePred);
 
   //! This method is to extrapolate the track to point of closest approach to a point in space
   void extrapolateToPoint(const TVector3& pos,
-				 TVector3& poca,
-				 TVector3& dirInPoca);
+         TVector3& poca,
+         TVector3& dirInPoca);
   
   //! This method extrapolates to the point of closest approach to a line
   void extrapolateToLine(const TVector3& point1,
-				 const TVector3& point2,
-				 TVector3& poca,
-				 TVector3& dirInPoca,
-				 TVector3& poca_onwire);
+         const TVector3& point2,
+         TVector3& poca,
+         TVector3& dirInPoca,
+         TVector3& poca_onwire);
   
   //! make step of h cm along the track, returns the tracklength spanned in this extrapolation
   /** Also returns the position and direction by reference.
@@ -140,6 +136,11 @@ class RKTrackRep : public GFAbsTrackRep {
     * the track to the plane and gets the position and momentum.
     */
   void getPosMom(const GFDetPlane&,TVector3& pos,TVector3& mom);
+
+  void getPosMomCov(const GFDetPlane& pl,
+                    TVector3& pos, TVector3& mom,
+                    TMatrixT<double>& cov);
+
   //! Returns charge
   double getCharge()const {return fCharge;}
 
@@ -155,15 +156,46 @@ class RKTrackRep : public GFAbsTrackRep {
     * the plane #pl is the same as the plane of the last extrapolation (i.e. #fCachePlane), where #fCacheSpu was calculated.
     * Hence, if the argument #pl is not equal to #fCachePlane, an error message is shown an an exception is thrown.
     */
-  void setData(const TMatrixT<double>& st, const GFDetPlane& pl, const TMatrixT<double>* cov=NULL, const TMatrixT<double>* aux=NULL);
+  void setData(const TMatrixT<double>& st,
+               const GFDetPlane& pl,
+               const TMatrixT<double>* cov=NULL,
+               const TMatrixT<double>* aux=NULL);
+
+  //! Sets state, plane and covariance from position, momentum and 6x6 covariance
+  /** Also sets the reference plane at position
+    */
+  void setPosMomCov(const TVector3& pos,
+                    const TVector3& mom,
+                    const TMatrixT<double>& cov);
 
   const TMatrixT<double>* getAuxInfo(const GFDetPlane& pl);
   
   bool hasAuxInfo() { return true; }
 
-  void getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixT<double>& cov); //to be implemented soon
+
 
  private:
+
+  void calcStateCov(const TVector3& pos,
+                    const TVector3& mom,
+                    const TVector3& poserr,
+                    const TVector3& momerr);
+
+  void calcState(const TVector3& pos,
+                 const TVector3& mom);
+
+  TMatrixT<double>* getState7() const;
+
+  void transformPM(const TMatrixT<double>& in5x5,
+                   TMatrixT<double>& out7x7,
+                   const GFDetPlane& pl,
+                   const TMatrixT<double>& state5,
+                   double spu) const;
+
+  void transformMP(const TMatrixT<double>& in7x7,
+                   TMatrixT<double>& out5x5,
+                   const GFDetPlane& pl,
+                   const TMatrixT<double>& state7);
 
   RKTrackRep& operator=(const RKTrackRep* rhs){return *this;};
 
@@ -178,9 +210,17 @@ class RKTrackRep : public GFAbsTrackRep {
     * material effects, which are calculated after the propagation, are taken into account properly.
     * 
     */
-  bool RKutta (const GFDetPlane& plane,double* P, double& coveredDistance, std::vector<TVector3>& points, std::vector<double>& pointLengths, const double& maxLen=-1, bool calcCov=true) const;
+  bool RKutta (const GFDetPlane& plane,
+               double* P,
+               double& coveredDistance,
+               std::vector<TVector3>& points,
+               std::vector<double>& pointLengths,
+               const double& maxLen=-1,
+               bool calcCov=true) const;
 
-  TVector3 poca2Line(const TVector3& extr1,const TVector3& extr2,const TVector3& point) const;
+  TVector3 poca2Line(const TVector3& extr1,
+                     const TVector3& extr2,
+                     const TVector3& point) const;
     
   //! Handles propagation and material effects
   /** extrapolate(), extrapolateToPoint() and extrapolateToLine() call this function.
@@ -190,7 +230,9 @@ class RKTrackRep : public GFAbsTrackRep {
     * Extrap() will loop until the plane is reached, unless the propagation fails or the maximum number of 
     * iterations is exceeded.
     */
-  double Extrap(const GFDetPlane& plane, TMatrixT<double>* state, TMatrixT<double>* cov=NULL) const;
+  double Extrap(const GFDetPlane& plane,
+                TMatrixT<double>* state,
+                TMatrixT<double>* cov=NULL) const;
   
   //RKTrackRep(const RKTrackRep& rhs){};
   
