@@ -25,17 +25,16 @@
 #include <GFException.h>
 
 
-GFRaveVertexFactory::GFRaveVertexFactory(rave::Ellipsoid3D * beamspot)
+GFRaveVertexFactory::GFRaveVertexFactory()
 {
   fMagneticField = new GFRaveMagneticField();
   fPropagator = new GFRavePropagator();
 
-  if (beamspot==NULL) fFactory = new rave::VertexFactory(*fMagneticField, *fPropagator);
-  else fFactory = new rave::VertexFactory(*fMagneticField, *fPropagator, *beamspot);
+  fFactory = new rave::VertexFactory(*fMagneticField, *fPropagator);
 }
 
 
-std::vector < GFRaveVertex* >
+std::vector < GFRaveVertex* > *
 GFRaveVertexFactory::create ( const std::vector < GFTrack* > & GFTracks, bool use_beamspot ) const{
 
   std::map<int, GFTrack*>* IdGFTrackMap; // bookkeeping of original GFTracks for later assignment to GFVertices
@@ -53,5 +52,5 @@ GFRaveVertexFactory::create ( const std::vector < GFTrack* > & GFTracks, bool us
     std::cerr << e.what();
   }
 
-  //return ravevertices;
+  return GFRave::RaveToGFVertices(ravevertices, IdGFTrackMap);
 }
