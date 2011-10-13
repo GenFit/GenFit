@@ -32,16 +32,6 @@ ${RAVEPATH}/src/ROOT
 ${RAVEPATH}/src/RaveBase/RaveInterface
 )
 
-
-include_directories( ${INCLUDE_DIRECTORIES})
-
-set(LINK_DIRECTORIES
-${ROOT_LIBRARY_DIR}
-)
-
-link_directories( ${LINK_DIRECTORIES})
-
-
 set(GFRAVE_SRCS 
 GFRaveVertexFactory.cxx
 GFRaveTrackParameters.cxx
@@ -51,24 +41,44 @@ GFRavePropagator.cxx
 GFRaveMagneticField.cxx  
 )
 
-if(RULE_CHECKER_FOUND)
-  CHECK_RULES("${GFRAVE_SRCS}" "${INCLUDE_DIRECTORIES}" GFRAVE_RULES)
-endif(RULE_CHECKER_FOUND)
+set(GFRAVE_HEADERS 
+GFRaveVertexFactory.h
+GFRaveTrackParameters.h
+GFRaveVertex.h
+GFRaveConverters.h  
+GFRavePropagator.h  
+GFRaveMagneticField.h  
+)
 
-# fill list of header files from list of source files
-# by exchanging the file extension
-CHANGE_FILE_EXTENSION(*.cxx *.h GFRAVE_HEADERS "${GFRAVE_SRCS}")
 
 
 set(GFRAVE_LINKDEF  GFRaveLinkDef.h)
-set(GFRAVE_DICTIONARY ${CMAKE_CURRENT_BINARY_DIR}/GFRaveDict.cxx) 
+set(GFRAVE_DICTIONARY GFRaveDict.cxx) 
 
+FIND_PROGRAM(ROOT_CINT_EXECUTABLE
+	NAMES rootcint
+	PATHS $ENV{ROOTSYS}/bin
+	NO_DEFAULT_PATH)
 
-# SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS} ${GFRAVE_DICTIONARY})
+ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${GFRAVE_DICTIONARY}
+	COMMAND ${ROOT_CINT_EXECUTABLE}
+      	ARGS -f ${CMAKE_BINARY_DIR}/${GFRAVE_DICTIONARY} -c -DHAVE_CONFIG_H
+      	-I${GENFIT}/core ${GFRAVE_HEADERS} ${GFRAVE_LINKDEF}
+      	DEPENDS ${GFRAVE_HEADERS} ${GFRAVE_LINKDEF})
+
+# SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS} ${CMAKE_BINARY_DIR}/${GFRAVE_DICTIONARY})
 SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS})
 
-add_library(gfrave SHARED ${GFRAVE_SRCS_ALL})
-target_link_libraries(gfrave ${ROOT_LIBRARIES})
-set_target_properties(gfrave PROPERTIES ${FAIRROOT_LIBRARY_PROPERTIES})
+
 ################ install ###################
-install(TARGETS gfrave DESTINATION ${CMAKE_BINARY_DIR}/lib)
+
+#add ROOT lib
+Execute_process(COMMAND root-config --glibs --cflags
+	OUTPUT_VARIABLE ROOT_LIBS
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+add_library(gfrave SHARED ${GFRAVE_SRCS_ALL})
+target_link_libraries(gfrave ${ROOT_LIBS})
+
+install(TARGETS gfrave DESTINATION $ENV{GENFIT}/lib)
+
