@@ -46,11 +46,11 @@
 
 
 
-class GFRaveVertexFactory : public TObject {
+class GFRaveVertexFactory {
  public:
-  GFRaveVertexFactory(rave::Ellipsoid3D * beamspot = NULL);
+  GFRaveVertexFactory();
 
-  std::vector <  GFRaveVertex* > create ( const std::vector < GFTrack* > &, bool use_beamspot=false ) const;
+  std::vector <  GFRaveVertex* > * create ( const std::vector < GFTrack* > &, bool use_beamspot=false ) const;
 
  private:
 

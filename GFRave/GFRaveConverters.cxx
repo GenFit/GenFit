@@ -121,7 +121,7 @@ GFRave::setTrackRepData(const rave::Track & orig, GFAbsTrackRep* rep){
 
 
 GFRaveVertex*
-GFRave::RaveToGFVertex(rave::Vertex & ravevertex, std::map<int, GFTrack*> * IdGFTrackMap){
+GFRave::RaveToGFVertex(const rave::Vertex & ravevertex, const std::map<int, GFTrack*> * IdGFTrackMap){
 
   if (!(ravevertex.isValid())) {
     GFException exc("RaveToGFVertex ==> rave Vertex is not valid!",__LINE__,__FILE__);
@@ -160,6 +160,22 @@ GFRave::RaveToGFVertex(rave::Vertex & ravevertex, std::map<int, GFTrack*> * IdGF
                           originalTracks,
                           smoothedTracks,
                           ravevertex.ndf(), ravevertex.chiSquared(), ravevertex.id());
+}
+
+
+std::vector<GFRaveVertex*> *
+GFRave::RaveToGFVertices(const std::vector<rave::Vertex> & raveVertices, const std::map<int, GFTrack*> * IdGFTrackMap){
+
+  unsigned int nVert(raveVertices.size());
+
+  std::vector<GFRaveVertex*> * GFVertices = new std::vector<GFRaveVertex*>;
+  GFVertices->reserve(nVert);
+
+  for (unsigned int i=0; i<nVert; ++i){
+    GFVertices->push_back(RaveToGFVertex(raveVertices[i], IdGFTrackMap));
+  }
+
+  return GFVertices;
 }
 
 
