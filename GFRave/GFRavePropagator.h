@@ -29,9 +29,6 @@
 #ifndef GFRAVEPROPAGATOR_H
 #define GFRAVEPROPAGATOR_H
 
-// overwrite visual c stuff
-#define RaveDllExport
-
 #include <rave/Propagator.h>
 #include <rave/Track.h>
 #include <rave/Plane.h>

@@ -30,9 +30,6 @@
 #ifndef GFRAVEVERTEXFACTORY_H
 #define GFRAVEVERTEXFACTORY_H
 
-// overwrite visual c stuff
-#define RaveDllExport
-
 #include<vector>
 
 #include "GFRaveMagneticField.h"

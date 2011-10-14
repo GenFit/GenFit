@@ -29,9 +29,6 @@
 #ifndef GFRAVEMAGNETICFIELD_H
 #define GFRAVEMAGNETICFIELD_H
 
-// overwrite visual c stuff
-#define RaveDllExport
-
 #include <rave/MagneticField.h>
 
 

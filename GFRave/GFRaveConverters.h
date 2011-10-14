@@ -26,9 +26,6 @@
 #ifndef GFRAVECONVERTERS_H
 #define GFRAVECONVERTERS_H
 
-// overwrite visual c stuff
-#define RaveDllExport
-
 #include <rave/Track.h>
 #include <rave/Plane.h>
 #include <rave/Vertex.h>
