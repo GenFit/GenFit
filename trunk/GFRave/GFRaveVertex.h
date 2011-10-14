@@ -29,9 +29,6 @@
 #ifndef GFRAVEVERTEX_H
 #define GFRAVEVERTEX_H
 
-// overwrite visual c stuff
-#define RaveDllExport
-
 #include <GFAbsTrackRep.h>
 #include <GFTrack.h>
 #include "GFRaveTrackParameters.h"

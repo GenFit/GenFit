@@ -29,9 +29,6 @@
 #ifndef GFRAVETRACKPARAMETERS_H
 #define GFRAVETRACKPARAMETERS_H
 
-// overwrite visual c stuff
-#define RaveDllExport
-
 #include <TObject.h>
 #include <TMatrixT.h>
 
