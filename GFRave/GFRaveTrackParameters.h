@@ -29,8 +29,9 @@
 #ifndef GFRAVETRACKPARAMETERS_H
 #define GFRAVETRACKPARAMETERS_H
 
-#include <TObject.h>
-#include <TMatrixT.h>
+#include "TObject.h"
+#include "TMatrixT.h"
+#include "TVector3.h"
 
 #include <iostream>
 
@@ -44,9 +45,18 @@ class GFRaveTrackParameters : public TObject
 {
   public:
     // constructors, destructors
-    GFRaveTrackParameters(TMatrixT<double> state, TMatrixT<double> cov, double charge, int pdg);
+    GFRaveTrackParameters(TMatrixT<double> state6, TMatrixT<double> cov6x6, double charge, int pdg);
 
     // member functions
+
+    // Accessors
+    TMatrixT<double> getState() const {return fState;}
+    TVector3 getPos() const;
+    TVector3 getMom() const;
+
+    const TMatrixT<double> & getCov() const {return fCov;}
+    double getCharge() const {return fCharge;}
+    double getPdg() const {return fPdg;}
 
   private:
 

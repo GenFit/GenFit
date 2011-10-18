@@ -20,11 +20,11 @@
 
 #include "GFRaveConverters.h"
 
-#include <GFTrack.h>
-#include <GFAbsTrackRep.h>
-#include <GFException.h>
+#include "GFTrack.h"
+#include "GFAbsTrackRep.h"
+#include "GFException.h"
 
-#include <rave/Plane.h>
+#include "rave/Plane.h"
 
 #include "GFRaveTrackParameters.h"
 
@@ -297,6 +297,29 @@ GFRave::Covariance6DToTMatrixT(const rave::Covariance6D & ravecov){
   assert (cov.IsSymmetric()==true); // todo: for QA reasons
 
   return cov;
+}
+
+
+rave::Point3D
+GFRave::TVector3ToPoint3D(const TVector3 & vec){
+  return rave::Point3D(vec.X(), vec.Y(), vec.Z());
+}
+
+
+rave::Covariance3D
+GFRave::TMatrixTToCovariance3D(const TMatrixT<double> & matrix){
+  if (matrix.GetNrows()!=3 || matrix.GetNcols()!=3) {
+    GFException exc("TMatrixTToCovariance3D ==> TMatrixT is not 3x3!",__LINE__,__FILE__);
+    throw exc;
+  }
+  if (!(matrix.IsSymmetric())) {
+    GFException exc("TMatrixTToCovariance3D ==> TMatrixT is not symmetric!",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  return rave::Covariance3D(matrix[0][0], matrix[0][1], matrix[0][2],
+                            matrix[1][1], matrix[1][2], matrix[2][2]);
+
 }
 
 

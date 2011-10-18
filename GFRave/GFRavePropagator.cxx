@@ -20,7 +20,7 @@
 
 #include "GFRavePropagator.h"
 #include "GFRaveConverters.h"
-#include <GFException.h>
+#include "GFException.h"
 
 #include <iostream>
 
