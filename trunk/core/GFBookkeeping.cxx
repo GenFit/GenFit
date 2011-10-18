@@ -231,7 +231,7 @@ void GFBookkeeping::bookNumbers(std::string key,double val){
     GFException exc("fNhits not defined",__LINE__,__FILE__);
     throw exc;
   }
-  if(fPlanes[key] != NULL){
+  if(fNumbers[key] != NULL){
     std::ostringstream ostr;
     ostr << "The key " << key 
 	 << " is already occupied in GFBookkeeping::bookNumbers()";
