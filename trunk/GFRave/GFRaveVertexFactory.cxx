@@ -22,10 +22,11 @@
 #include "GFRaveConverters.h"
 #include "GFRaveVertex.h"
 
-#include <GFException.h>
+#include "GFException.h"
 
 
-GFRaveVertexFactory::GFRaveVertexFactory()
+GFRaveVertexFactory::GFRaveVertexFactory() :
+  fMethod("default")
 {
   fMagneticField = new GFRaveMagneticField();
   fPropagator = new GFRavePropagator();
@@ -37,6 +38,9 @@ GFRaveVertexFactory::GFRaveVertexFactory()
 std::vector < GFRaveVertex* > *
 GFRaveVertexFactory::create ( const std::vector < GFTrack* > & GFTracks, bool use_beamspot ) const{
 
+  fFactory->setDefaultMethod(fMethod);
+  fFactory->setBeamSpot(fBeamspot);
+
   std::map<int, GFTrack*>* IdGFTrackMap; // bookkeeping of original GFTracks for later assignment to GFVertices
   std::map<int, GFAbsTrackRep*>* IdGFTrackRepMap; // map of copies of the cardinal reps for the GFRavePropagator; ownership of trackrep clones is HERE!!!
 
@@ -46,11 +50,20 @@ GFRaveVertexFactory::create ( const std::vector < GFTrack* > & GFTracks, bool us
     std::vector<rave::Track> ravetracks = GFRave::GFTracksToTracks(GFTracks, IdGFTrackMap, IdGFTrackRepMap, 0);
     fPropagator->setIdGFTrackMap(IdGFTrackRepMap);
 
-    ravevertices = fFactory->create(ravetracks);
+    ravevertices = fFactory->create(ravetracks, use_beamspot);
   }
   catch(GFException & e){
     std::cerr << e.what();
   }
 
   return GFRave::RaveToGFVertices(ravevertices, IdGFTrackMap);
+}
+
+
+void
+GFRaveVertexFactory::setBeamspot(const TVector3 & pos, const TMatrixT<double> & cov){
+
+  fBeamspot = rave::Ellipsoid3D(GFRave::TVector3ToPoint3D(pos),
+                                GFRave::TMatrixTToCovariance3D(cov));
+
 }

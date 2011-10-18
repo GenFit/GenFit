@@ -26,17 +26,17 @@
 #ifndef GFRAVECONVERTERS_H
 #define GFRAVECONVERTERS_H
 
-#include <rave/Track.h>
-#include <rave/Plane.h>
-#include <rave/Vertex.h>
+#include "rave/Track.h"
+#include "rave/Plane.h"
+#include "rave/Vertex.h"
 
-#include <GFAbsTrackRep.h>
-#include <GFDetPlane.h>
-#include <GFTrack.h>
+#include "GFAbsTrackRep.h"
+#include "GFDetPlane.h"
+#include "GFTrack.h"
 #include "GFRaveVertex.h"
 
-#include <TVector3.h>
-#include <TMatrixT.h>
+#include "TVector3.h"
+#include "TMatrixT.h"
 
 #include <iostream>
 
@@ -77,6 +77,10 @@ namespace GFRave
   TMatrixT<double> Covariance3DToTMatrixT(const rave::Covariance3D &);
   TMatrixT<double> Vector6DToTMatrixT(const rave::Vector6D &);
   TMatrixT<double> Covariance6DToTMatrixT(const rave::Covariance6D &);
+
+  // ROOT to RAVE
+  rave::Point3D TVector3ToPoint3D(const TVector3 &);
+  rave::Covariance3D TMatrixTToCovariance3D(const TMatrixT<double> &);
 
 }
 

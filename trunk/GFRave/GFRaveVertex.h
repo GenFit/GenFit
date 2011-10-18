@@ -29,8 +29,8 @@
 #ifndef GFRAVEVERTEX_H
 #define GFRAVEVERTEX_H
 
-#include <GFAbsTrackRep.h>
-#include <GFTrack.h>
+#include "GFAbsTrackRep.h"
+#include "GFTrack.h"
 #include "GFRaveTrackParameters.h"
 
 #include <iostream>
@@ -50,6 +50,23 @@ class GFRaveVertex : public TObject
                  double ndf, double chi2, int id = -1);
 
     ~GFRaveVertex(){};
+
+    // Accessors
+    std::vector < std::pair < double, GFRaveVertex > >  getComponents() const {return fComponents;}
+
+    TVector3 getPos() const {return fPos;}
+    TMatrixT<double> getCov() const {return fCov;}
+    unsigned int getNTracks() const {return fOriginalTracks.size();}
+
+    std::vector < std::pair < double, GFTrack* > > getTracks() const {return fOriginalTracks;}
+    std::pair < double, GFTrack* > getTrack(unsigned int i) const {return fOriginalTracks[i];}
+
+    std::vector < std::pair < double, GFRaveTrackParameters > > getSmoothedParameters() const {return fSmoothedTracks;}
+    std::pair < double, GFRaveTrackParameters > getSmoothedParameters(unsigned int i) const {return fSmoothedTracks[i];}
+
+    double getNdf() const {return fNdf;}
+    double getChi2() const {return fChi2;}
+
 
   private:
 

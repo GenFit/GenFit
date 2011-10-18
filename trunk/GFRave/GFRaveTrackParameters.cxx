@@ -20,7 +20,7 @@
 
 #include "GFRaveTrackParameters.h"
 #include "GFRaveConverters.h"
-#include <GFException.h>
+#include "GFException.h"
 
 #include <iostream>
 
@@ -32,5 +32,24 @@ GFRaveTrackParameters::GFRaveTrackParameters(TMatrixT<double> state, TMatrixT<do
   fCharge(charge),
   fPdg(pdg)
 {
+  if (fState.GetNrows()!=1 || fState.GetNcols()!=5) {
+    GFException exc("GFRaveTrackParameters ==> State is not 1x5!",__LINE__,__FILE__);
+    throw exc;
+  }
+  if (fCov.GetNrows()!=5 || fCov.GetNcols()!=5) {
+    GFException exc("GFRaveTrackParameters ==> Covariance is not 5x5!",__LINE__,__FILE__);
+    throw exc;
+  }
+}
 
+
+TVector3
+GFRaveTrackParameters::getPos() const {
+  return TVector3(fState[0][0], fState[0][1], fState[0][2]);
+}
+
+
+TVector3
+GFRaveTrackParameters::getMom() const {
+  return TVector3(fState[0][3], fState[0][4], fState[0][5]);
 }
