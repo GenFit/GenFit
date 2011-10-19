@@ -25,8 +25,8 @@
 #pragma link off all functions;
 
 
-#pragma link C++ class GFRaveVertex+;
 #pragma link C++ class GFRaveTrackParameters+;
+#pragma link C++ class GFRaveVertex+;
 
 #endif
 

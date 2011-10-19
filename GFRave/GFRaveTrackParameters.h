@@ -45,6 +45,7 @@ class GFRaveTrackParameters : public TObject
 {
   public:
     // constructors, destructors
+    GFRaveTrackParameters();
     GFRaveTrackParameters(TMatrixT<double> state6, TMatrixT<double> cov6x6, double charge, int pdg);
 
     // member functions

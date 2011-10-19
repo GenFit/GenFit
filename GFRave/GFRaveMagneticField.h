@@ -32,7 +32,6 @@
 #include "rave/MagneticField.h"
 
 
-
 /**
  * @brief GFRaveMagneticField class
  */

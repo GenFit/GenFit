@@ -36,9 +36,7 @@
 #include "GFRavePropagator.h"
 #include "GFRaveVertex.h"
 
-#include "rave/Vertex.h"
 #include "rave/VertexFactory.h"
-#include "rave/Ellipsoid3D.h"
 
 #include "GFTrack.h"
 
@@ -51,7 +49,7 @@ class GFRaveVertexFactory {
   std::vector <  GFRaveVertex* > * create ( const std::vector < GFTrack* > &, bool use_beamspot=false ) const;
 
   void setBeamspot(const TVector3 & pos, const TMatrixT<double> & cov);
-  void setMethod(const std::string & method) {fMethod = method;}
+  void setMethod(const std::string & method);
 
  private:
 
@@ -59,9 +57,6 @@ class GFRaveVertexFactory {
   rave::VertexFactory* fFactory;
   GFRaveMagneticField* fMagneticField;
   GFRavePropagator* fPropagator;
-
-  rave::Ellipsoid3D fBeamspot;
-  std::string fMethod;
 
 };
 

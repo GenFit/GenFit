@@ -26,6 +26,14 @@
 
 using namespace std;
 
+GFRaveTrackParameters::GFRaveTrackParameters() :
+  fCharge(0),
+  fPdg(0)
+{
+
+}
+
+
 GFRaveTrackParameters::GFRaveTrackParameters(TMatrixT<double> state, TMatrixT<double> cov, double charge, int pdg) :
   fState(state),
   fCov(cov),
