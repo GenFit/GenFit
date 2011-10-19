@@ -24,9 +24,11 @@
 
 #include "GFException.h"
 
+#include "rave/Vertex.h"
+#include "rave/Ellipsoid3D.h"
 
-GFRaveVertexFactory::GFRaveVertexFactory() :
-  fMethod("default")
+
+GFRaveVertexFactory::GFRaveVertexFactory()
 {
   fMagneticField = new GFRaveMagneticField();
   fPropagator = new GFRavePropagator();
@@ -37,9 +39,6 @@ GFRaveVertexFactory::GFRaveVertexFactory() :
 
 std::vector < GFRaveVertex* > *
 GFRaveVertexFactory::create ( const std::vector < GFTrack* > & GFTracks, bool use_beamspot ) const{
-
-  fFactory->setDefaultMethod(fMethod);
-  fFactory->setBeamSpot(fBeamspot);
 
   std::map<int, GFTrack*>* IdGFTrackMap; // bookkeeping of original GFTracks for later assignment to GFVertices
   std::map<int, GFAbsTrackRep*>* IdGFTrackRepMap; // map of copies of the cardinal reps for the GFRavePropagator; ownership of trackrep clones is HERE!!!
@@ -62,8 +61,12 @@ GFRaveVertexFactory::create ( const std::vector < GFTrack* > & GFTracks, bool us
 
 void
 GFRaveVertexFactory::setBeamspot(const TVector3 & pos, const TMatrixT<double> & cov){
+  fFactory->setBeamSpot(rave::Ellipsoid3D(GFRave::TVector3ToPoint3D(pos),
+                        GFRave::TMatrixTToCovariance3D(cov)));
+}
 
-  fBeamspot = rave::Ellipsoid3D(GFRave::TVector3ToPoint3D(pos),
-                                GFRave::TMatrixTToCovariance3D(cov));
 
+void
+GFRaveVertexFactory::setMethod(const std::string & method){
+  fFactory->setDefaultMethod(method);
 }

@@ -44,6 +44,7 @@ class GFRaveVertex : public TObject
 {
   public:
     // constructors, destructors
+    GFRaveVertex();
     GFRaveVertex(TVector3 pos, TMatrixT<double> cov,
                  std::vector < std::pair < double, GFTrack* > > originalTracks,
                  std::vector < std::pair < double, GFRaveTrackParameters > > smoothedTracks,
