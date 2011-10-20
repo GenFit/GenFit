@@ -44,7 +44,7 @@
 
 class GFRaveVertexFactory {
  public:
-  GFRaveVertexFactory();
+  GFRaveVertexFactory(int verbosity = 0);
 
   std::vector <  GFRaveVertex* > * create ( const std::vector < GFTrack* > &, bool use_beamspot=false ) const;
 

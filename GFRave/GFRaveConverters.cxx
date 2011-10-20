@@ -44,6 +44,10 @@ GFRave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
   ravetracks.reserve(ntracks);
 
   for (unsigned int i=0; i<ntracks; ++i){
+
+    // only convert successfully fitted tracks!
+    if (GFTracks[i]->getCardinalRep()->getStatusFlag()!=0) continue;
+
     ravetracks.push_back(GFTrackToTrack(GFTracks[i], startID++) );
 
     if (IdGFTrackMap != NULL){
@@ -82,6 +86,11 @@ GFRave::RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig) {
 
 rave::Track
 GFRave::RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string tag){
+
+  if (rep->getStatusFlag()!=0) {
+    GFException exc("RepToTrack ==> GFTrack has status flag != 0!",__LINE__,__FILE__);
+    throw exc;
+  }
 
   GFDetPlane refPlane(rep->getReferencePlane());
   TVector3 pos, mom;
