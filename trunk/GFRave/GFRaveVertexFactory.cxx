@@ -28,12 +28,14 @@
 #include "rave/Ellipsoid3D.h"
 
 
-GFRaveVertexFactory::GFRaveVertexFactory()
+GFRaveVertexFactory::GFRaveVertexFactory(int verbosity)
 {
   fMagneticField = new GFRaveMagneticField();
   fPropagator = new GFRavePropagator();
 
-  fFactory = new rave::VertexFactory(*fMagneticField, *fPropagator);
+  if (verbosity > 0) ++verbosity;
+
+  fFactory = new rave::VertexFactory(*fMagneticField, *fPropagator, "default", verbosity);
 }
 
 
