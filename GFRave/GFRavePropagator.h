@@ -59,7 +59,7 @@ class GFRavePropagator : public rave::Propagator
 
     virtual ~GFRavePropagator();
 
-    void setIdGFTrackMap(std::map < int, GFAbsTrackRep* > * map){IdGFTrackRepMap = map;}
+    void setIdGFTrackRepMap(std::map < int, GFAbsTrackRep* > * map);
 
   private:
 
