@@ -89,12 +89,11 @@ GFRavePropagator::closestTo ( const rave::Track & orig,
 }
 
 
-
-
 GFAbsTrackRep*
 GFRavePropagator::getTrackRep(const rave::Track & track) const{
+
   if (IdGFTrackRepMap==NULL) {
-    GFException exc("GFRavePropagator::getTrackRep ==> IdGFTrackMap is not defined, cannot access GFTracks!",__LINE__,__FILE__);
+    GFException exc("GFRavePropagator::getTrackRep ==> IdGFTrackRepMap is NULL, cannot access GFTracks!",__LINE__,__FILE__);
     throw exc;
   }
 
@@ -103,21 +102,41 @@ GFRavePropagator::getTrackRep(const rave::Track & track) const{
     throw exc;
   }
 
+  std::cerr<<"GFRavePropagator::getTrackRep track id: "<<track.id()<<std::endl;
+  std::cerr<<"  pos: "; GFRave::Point3DToTVector3(track.state().position()).Print();
+  std::cerr<<"  mom: "; GFRave::Vector3DToTVector3(track.state().momentum()).Print();
+
   if (IdGFTrackRepMap->count(track.id()) == 0) {
-    GFException exc("GFRavePropagator::getTrackRep ==> no entry in IdGFTrackRepMap corresponding to track id, cannot access corresponding GFTrack!",__LINE__,__FILE__);
+    GFException exc("GFRavePropagator::getTrackRep ==> no entry in IdGFTrackRepMap corresponding to track id, cannot access corresponding track representation!",__LINE__,__FILE__);
     throw exc;
   }
 
   GFAbsTrackRep* rep = IdGFTrackRepMap->at(track.id());
 
+  if (rep->getStatusFlag() != 0){
+    GFException exc("GFRavePropagator::getTrackRep ==> Status flag != 0, cannot extrapolate!",__LINE__,__FILE__);
+    throw exc;
+  }
+
   GFRave::setTrackRepData(track, rep); // set trackrep state and cov
 
   rep->setStatusFlag(0);
-  /*if (rep->getStatusFlag() != 0){
-    GFException exc("GFRavePropagator::getTrackRep ==> Status flag != 0, cannot extrapolate!",__LINE__,__FILE__);
-    throw exc;
-  }*/
 
   return rep;
+}
+
+
+void
+GFRavePropagator::setIdGFTrackRepMap(std::map < int, GFAbsTrackRep* > * map){
+  if (map==NULL) {
+    GFException exc("GFRavePropagator::setIdGFTrackRepMap ==> map is NULL!",__LINE__,__FILE__);
+    throw exc;
+  }
+  IdGFTrackRepMap = map;
+  if (IdGFTrackRepMap==NULL) {
+    GFException exc("GFRavePropagator::setIdGFTrackRepMap ==> IdGFTrackMap is NULL!",__LINE__,__FILE__);
+    throw exc;
+  }
+  std::cout<<"IdGFTrackRepMap: " << (int)IdGFTrackRepMap << std::endl;
 }
 

@@ -34,7 +34,7 @@
 
 std::vector < rave::Track >
 GFRave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
-                         std::map<int, GFTrack*>* IdGFTrackMap,
+                         std::map<int, GFTrack*> * IdGFTrackMap,
                          std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap,
                          int startID){
 
@@ -48,26 +48,36 @@ GFRave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
     // only convert successfully fitted tracks!
     if (GFTracks[i]->getCardinalRep()->getStatusFlag()!=0) continue;
 
-    ravetracks.push_back(GFTrackToTrack(GFTracks[i], startID++) );
+    ravetracks.push_back(GFTrackToTrack(GFTracks[i], startID) );
 
     if (IdGFTrackMap != NULL){
-      if (IdGFTrackMap->count(startID)>0){
+      if (IdGFTrackMap->count(startID) > 0){
         GFException exc("GFTracksToTracks ==> IdGFTrackMap has already an entry for this id",__LINE__,__FILE__);
         throw exc;
       }
       (*IdGFTrackMap)[startID] = GFTracks[i];
     }
+    else {
+      GFException exc("GFTracksToTracks ==> IdGFTrackMap is NULL",__LINE__,__FILE__);
+      throw exc;
+    }
 
     if (IdGFTrackRepMap != NULL){
-      if (IdGFTrackRepMap->count(startID)>0){
+      if (IdGFTrackRepMap->count(startID) > 0){
         GFException exc("GFTracksToTracks ==> IdGFTrackRepMap has already an entry for this id",__LINE__,__FILE__);
         throw exc;
       }
       (*IdGFTrackRepMap)[startID] = GFTracks[i]->getCardinalRep()->clone(); // here clones are made so that the state of the original GFTracks and their TrackReps will not be altered by the vertexing process
     }
+    else {
+      GFException exc("GFTracksToTracks ==> IdGFTrackRepMap is NULL",__LINE__,__FILE__);
+      throw exc;
+    }
 
+    ++startID;
   }
 
+  std::cout << "IdGFTrackMap size " << IdGFTrackMap->size() <<"     IdGFTrackRepMap size " << IdGFTrackRepMap->size() << std::endl;
   return ravetracks;
 }
 
@@ -110,6 +120,10 @@ GFRave::RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string
                              cov[3][2], cov[4][2], cov[5][2],
                              cov[3][3], cov[4][3], cov[5][3],
                              cov[4][4], cov[5][4], cov[5][5]);
+
+  std::cerr<<"create rave track with id " << id << std::endl;
+  std::cerr<<"  pos: "; GFRave::Point3DToTVector3(ravestate.position()).Print();
+  std::cerr<<"  mom: "; GFRave::Vector3DToTVector3(ravestate.momentum()).Print();
 
   rave::Track ret(id, ravestate, ravecov,
                   rep->getCharge(), rep->getChiSqu(), rep->getNDF(),

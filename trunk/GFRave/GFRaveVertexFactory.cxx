@@ -30,34 +30,49 @@
 
 GFRaveVertexFactory::GFRaveVertexFactory(int verbosity)
 {
+  fIdGFTrackMap = new std::map<int, GFTrack*>;
+  fIdGFTrackRepMap = new std::map<int, GFAbsTrackRep*>;
+
   fMagneticField = new GFRaveMagneticField();
   fPropagator = new GFRavePropagator();
+  fPropagator->setIdGFTrackRepMap(fIdGFTrackRepMap);
 
   if (verbosity > 0) ++verbosity;
 
-  fFactory = new rave::VertexFactory(*fMagneticField, *fPropagator, "default", verbosity);
+  fFactory = new rave::VertexFactory(*fMagneticField, *fPropagator, "default", verbosity); // here copies of fMagneticField and fPropagator are made!
+}
+
+
+GFRaveVertexFactory::~GFRaveVertexFactory(){
+  clearMaps();
+  delete fIdGFTrackMap;
+  delete fIdGFTrackRepMap;
+
+  delete fMagneticField;
+  delete fPropagator;
+  delete fFactory;
 }
 
 
 std::vector < GFRaveVertex* > *
-GFRaveVertexFactory::create ( const std::vector < GFTrack* > & GFTracks, bool use_beamspot ) const{
-
-  std::map<int, GFTrack*>* IdGFTrackMap; // bookkeeping of original GFTracks for later assignment to GFVertices
-  std::map<int, GFAbsTrackRep*>* IdGFTrackRepMap; // map of copies of the cardinal reps for the GFRavePropagator; ownership of trackrep clones is HERE!!!
+GFRaveVertexFactory::create ( const std::vector < GFTrack* > & GFTracks, bool use_beamspot ){
 
   std::vector < rave::Vertex > ravevertices;
+  std::vector < GFRaveVertex* > * GFvertices;
 
   try{
-    std::vector<rave::Track> ravetracks = GFRave::GFTracksToTracks(GFTracks, IdGFTrackMap, IdGFTrackRepMap, 0);
-    fPropagator->setIdGFTrackMap(IdGFTrackRepMap);
-
+    std::vector<rave::Track> ravetracks = GFRave::GFTracksToTracks(GFTracks, fIdGFTrackMap, fIdGFTrackRepMap, 0);
     ravevertices = fFactory->create(ravetracks, use_beamspot);
+    GFvertices = GFRave::RaveToGFVertices(ravevertices, fIdGFTrackMap);
   }
   catch(GFException & e){
+    clearMaps();
     std::cerr << e.what();
   }
 
-  return GFRave::RaveToGFVertices(ravevertices, IdGFTrackMap);
+  clearMaps();
+
+  return GFvertices;
 }
 
 
@@ -71,4 +86,16 @@ GFRaveVertexFactory::setBeamspot(const TVector3 & pos, const TMatrixT<double> & 
 void
 GFRaveVertexFactory::setMethod(const std::string & method){
   fFactory->setDefaultMethod(method);
+}
+
+
+void
+GFRaveVertexFactory::clearMaps(){
+  fIdGFTrackMap->clear();
+
+  for (unsigned int i=0; i<fIdGFTrackRepMap->size(); ++i){
+    // in here are copies or trackreps -> we have ownership
+    delete (*fIdGFTrackRepMap)[i];
+  }
+  fIdGFTrackRepMap->clear();
 }
