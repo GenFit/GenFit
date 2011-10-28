@@ -18,7 +18,7 @@ ${ROOT_LIBRARY_DIR}
 link_directories( ${LINK_DIRECTORIES})
 
 set(GENFIT_SRCS GFAbsRecoHit.cxx GFAbsTrackRep.cxx GFBookkeeping.cxx
-GFDetPlane.cxx GFException.cxx GFKalman.cxx GFPlanarHitPolicy.cxx
+GFDetPlane.cxx GFException.cxx GFKalman.cxx GFPlanarHitPolicy.cxx GFPseudoSpacepointWireHitPolicy.cxx
 GFRecoHitFactory.cxx GFRecoHitProducer.cxx GFSpacepointHitPolicy.cxx
 GFTools.cxx GFTrackCand.cxx GFTrack.cxx GFWireHitPolicy.cxx
 GFWirepointHitPolicy.cxx GFConstField.cxx GFFieldManager.cxx
