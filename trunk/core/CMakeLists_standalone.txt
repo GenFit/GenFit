@@ -11,7 +11,7 @@ ENDIF(NOT DEFINED ENV{ROOTSYS})
 INCLUDE_DIRECTORIES($ENV{ROOTSYS}/include ${GENFIT}/core)
 
 set(GENFIT_SRCS GFAbsRecoHit.cxx GFAbsTrackRep.cxx GFBookkeeping.cxx
-GFDetPlane.cxx GFException.cxx GFKalman.cxx GFPlanarHitPolicy.cxx
+GFDetPlane.cxx GFException.cxx GFKalman.cxx GFPlanarHitPolicy.cxx GFPseudoSpacepointWireHitPolicy.cxx
 GFRecoHitFactory.cxx GFRecoHitProducer.cxx GFSpacepointHitPolicy.cxx
 GFTools.cxx GFTrackCand.cxx GFTrack.cxx GFWireHitPolicy.cxx
 GFWirepointHitPolicy.cxx GFConstField.cxx GFFieldManager.cxx
@@ -21,7 +21,7 @@ GFMaterialEffects.cxx GFTrackProximity.cxx)
 
 set(GENFIT_HEADERS  GFAbsBField.h GFAbsRecoHit.h GFAbsTrackRep.h
 GFBookkeeping.h GFDetPlane.h GFException.h GFKalman.h
-GFPlanarHitPolicy.h GFRecoHitFactory.h GFRecoHitIfc.h
+GFPlanarHitPolicy.h GFPseudoSpacepointWireHitPolicy.h GFRecoHitFactory.h GFRecoHitIfc.h
 GFRecoHitProducer.h GFSpacepointHitPolicy.h GFTools.h GFTrackCand.h 
 GFTrack.h GFWireHitPolicy.h GFWirepointHitPolicy.h GFConstField.h
 GFFieldManager.h GFAbsFinitePlane.h GFRectFinitePlane.h
@@ -41,6 +41,8 @@ ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY}
       	ARGS -f ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY} -c -DHAVE_CONFIG_H
       	-I${GENFIT}/core ${GENFIT_HEADERS} ${GENFIT_LINKDEF}
       	DEPENDS ${GENFIT_HEADERS} ${GENFIT_LINKDEF})
+      	
+message(${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY})
 
 SET(GENFIT_SRCS ${GENFIT_SRCS} ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY})
 #SET(GENFIT_SRCS ${GENFIT_SRCS} ${GENFIT_DICTIONARY})
