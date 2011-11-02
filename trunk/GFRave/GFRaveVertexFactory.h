@@ -32,10 +32,10 @@
 
 #include<vector>
 
-#include "GFRaveMagneticField.h"
-#include "GFRavePropagator.h"
 #include "GFRaveVertex.h"
 
+#include "rave/Propagator.h"
+#include "rave/MagneticField.h"
 #include "rave/VertexFactory.h"
 
 #include "GFTrack.h"
@@ -60,8 +60,8 @@ class GFRaveVertexFactory {
 
   // data members
   rave::VertexFactory* fFactory;
-  GFRaveMagneticField* fMagneticField;
-  GFRavePropagator* fPropagator;
+  rave::MagneticField* fMagneticField;
+  rave::Propagator* fPropagator;
 
   std::map<int, GFTrack*> * fIdGFTrackMap; // bookkeeping of original GFTracks for later assignment to GFVertices
   std::map<int, GFAbsTrackRep*> * fIdGFTrackRepMap; // map of copies of the cardinal reps for the GFRavePropagator; ownership of trackrep clones is HERE!!!

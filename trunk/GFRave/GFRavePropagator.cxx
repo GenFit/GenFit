@@ -34,7 +34,7 @@ GFRavePropagator::GFRavePropagator() :
 GFRavePropagator*
 GFRavePropagator::copy() const
 {
-  return new GFRavePropagator ( *this );
+  return new GFRavePropagator(*this);
 }
 
 
@@ -75,10 +75,17 @@ rave::Track
 GFRavePropagator::closestTo ( const rave::Track & orig,
                               const rave::Point3D & pt, bool transverse ) const
 {
+
+  if (transverse){
+    GFException exc("GFRavePropagator::closestTo ==> transverse is true, not implemented!",__LINE__,__FILE__);
+    throw exc;
+  }
+
   GFAbsTrackRep* rep = getTrackRep(orig);
 
   TVector3 poca, normvec;
-  rep->extrapolateToPoint(GFRave::Point3DToTVector3(pt), poca, normvec);
+  TVector3 point(GFRave::Point3DToTVector3(pt));
+  rep->extrapolateToPoint(point, poca, normvec);
 
   if (rep->getStatusFlag() != 0){
     GFException exc("GFRavePropagator::to ==> Extrapolation failed!",__LINE__,__FILE__);

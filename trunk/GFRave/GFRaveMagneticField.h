@@ -40,9 +40,10 @@ class GFRaveMagneticField : public rave::MagneticField
 {
   public:
     GFRaveMagneticField(){};
-    GFRaveMagneticField * copy() const;
+    virtual GFRaveMagneticField * copy() const;
+    virtual ~GFRaveMagneticField(){};
 
-    rave::Vector3D inTesla ( const rave::Point3D & ) const;
+    virtual rave::Vector3D inTesla ( const rave::Point3D & ) const;
 
   private:
 
