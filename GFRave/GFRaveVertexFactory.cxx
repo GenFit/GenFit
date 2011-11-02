@@ -22,10 +22,15 @@
 #include "GFRaveConverters.h"
 #include "GFRaveVertex.h"
 
+#include "GFRaveMagneticField.h"
+#include "GFRavePropagator.h"
+
 #include "GFException.h"
 
 #include "rave/Vertex.h"
 #include "rave/Ellipsoid3D.h"
+
+//#define RAVEONLY // use rave vacuum propagator and rave constant mag. field
 
 
 GFRaveVertexFactory::GFRaveVertexFactory(int verbosity)
@@ -33,9 +38,15 @@ GFRaveVertexFactory::GFRaveVertexFactory(int verbosity)
   fIdGFTrackMap = new std::map<int, GFTrack*>;
   fIdGFTrackRepMap = new std::map<int, GFAbsTrackRep*>;
 
+#ifdef RAVEONLY
+  fMagneticField = new rave::ConstantMagneticField(2.);
+  fPropagator = new rave::VacuumPropagator();
+#endif
+#ifndef RAVEONLY
   fMagneticField = new GFRaveMagneticField();
   fPropagator = new GFRavePropagator();
-  fPropagator->setIdGFTrackRepMap(fIdGFTrackRepMap);
+  ((GFRavePropagator*)fPropagator)->setIdGFTrackRepMap(fIdGFTrackRepMap);
+#endif
 
   if (verbosity > 0) ++verbosity;
 

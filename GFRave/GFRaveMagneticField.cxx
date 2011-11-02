@@ -36,8 +36,8 @@ GFRaveMagneticField::inTesla ( const rave::Point3D & position) const
 {
   TVector3 pos(position.x(), position.y(), position.z());
 
-  TVector3 B = GFFieldManager::getFieldVal(pos); // magnetic field in 10^-4 T = kGauss
-  B *= 1.E4;
+  TVector3 B = GFFieldManager::getFieldVal(pos); // magnetic field in kGauss
+  B *= 1.E-1;
 
   return rave::Vector3D (B.X(), B.Y(), B.Z());
 }
