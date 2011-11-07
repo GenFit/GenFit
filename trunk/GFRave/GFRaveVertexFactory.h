@@ -45,7 +45,7 @@
 class GFRaveVertexFactory {
  public:
   // constructors, destructors
-  GFRaveVertexFactory(int verbosity = 0);
+  GFRaveVertexFactory(int verbosity = 0, bool useVacuumPropagator = false);
   ~GFRaveVertexFactory();
 
   // functions
