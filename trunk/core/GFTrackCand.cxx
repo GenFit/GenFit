@@ -50,7 +50,7 @@ GFTrackCand::addHit(unsigned int detId, unsigned int hitId, double rho, unsigned
 }
 
 std::vector<unsigned int> 
-GFTrackCand::GetHitIDs(int detId){
+GFTrackCand::GetHitIDs(int detId) const {
   if(detId<0){ // return hits from all detectors
     return fHitId;
   }
@@ -70,7 +70,7 @@ GFTrackCand::reset()
   fDetId.clear();fHitId.clear();
 }
 
-bool GFTrackCand::HitInTrack(unsigned int detId, unsigned int hitId)
+bool GFTrackCand::HitInTrack(unsigned int detId, unsigned int hitId) const
 {
 	for (unsigned int i = 0; i < fDetId.size(); i++){
 		if (detId == fDetId[i])

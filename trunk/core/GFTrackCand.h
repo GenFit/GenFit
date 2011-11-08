@@ -114,7 +114,7 @@ public:
   double getCurv() const {return fCurv;}
   double getDip() const {return fDip;}
   bool inverted() const {return fInv;}
-  std::vector<unsigned int> GetHitIDs(int detId=-1);
+  std::vector<unsigned int> GetHitIDs(int detId=-1) const;
   std::vector<unsigned int> GetDetIDs() const {return fDetId;}
   std::vector<double>       GetRhos() const {return fRho;}
   std::set<unsigned int> GetUniqueDetIDs() const {
@@ -149,7 +149,7 @@ public:
   void setMcTrackId(int i){fMcTrackId=i;}
   /** @brief Test if hit already is part of this track candidate
    */
-  bool HitInTrack(unsigned int detId, unsigned int hitId);
+  bool HitInTrack(unsigned int detId, unsigned int hitId) const;
   /** @brief set the seed values for track: pos, direction, q/p
    */
   void setTrackSeed(const TVector3& pos,const TVector3& direction,const double qop){
