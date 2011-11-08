@@ -55,11 +55,13 @@ class GFMaterialEffects : public TObject{
   static GFMaterialEffects* getInstance();
   static void destruct();
 
-  void setEnergyLossBetheBloch(bool opt = true){fEnergyLossBetheBloch=opt;}
-  void setNoiseBetheBloch(bool opt = true){fNoiseBetheBloch=opt;}
-  void setNoiseCoulomb(bool opt = true){fNoiseCoulomb=opt;}
-  void setEnergyLossBrems(bool opt = true){fEnergyLossBrems=opt;}
-  void setNoiseBrems(bool opt = true){fNoiseBrems=opt;}
+  void setNoEffects(bool opt = true){fNoEffects = opt;}
+
+  void setEnergyLossBetheBloch(bool opt = true){fEnergyLossBetheBloch=opt; fNoEffects = false;}
+  void setNoiseBetheBloch(bool opt = true){fNoiseBetheBloch=opt; fNoEffects = false;}
+  void setNoiseCoulomb(bool opt = true){fNoiseCoulomb=opt; fNoEffects = false;}
+  void setEnergyLossBrems(bool opt = true){fEnergyLossBrems=opt; fNoEffects = false;}
+  void setNoiseBrems(bool opt = true){fNoiseBrems=opt; fNoEffects = false;}
 
 
   //! Calculates energy loss in the travelled path, optional calculation of noise matrix
@@ -330,6 +332,9 @@ class GFMaterialEffects : public TObject{
    */
   void noiseBrems(const double& mom,
                         TMatrixT<double>* noise) const;
+
+
+  bool fNoEffects;
 
   bool fEnergyLossBetheBloch;
   bool fNoiseBetheBloch;
