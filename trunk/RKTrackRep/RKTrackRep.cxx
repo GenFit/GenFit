@@ -1080,20 +1080,23 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
     TMatrixT<double> noise(7,7); // zero everywhere by default
     
     // call MatEffects
-    double momLoss; // momLoss has a sign - negative loss means momentum gain
+    if (!fNoMaterial){
+      double momLoss; // momLoss has a sign - negative loss means momentum gain
+
+      momLoss = GFMaterialEffects::getInstance()->effects(pointsFilt,
+                                 pointPathsFilt,
+                                 fabs(fCharge/P[6]), // momentum
+                                 fPdg,
+                                 calcCov,
+                                 &noise,
+                                 &jac,
+                                 &directionBefore,
+                                 &directionAfter);
     
-    momLoss = GFMaterialEffects::getInstance()->effects(pointsFilt,
-                               pointPathsFilt,
-                               fabs(fCharge/P[6]), // momentum
-                               fPdg,
-                               calcCov,
-                               &noise,
-                               &jac,
-                               &directionBefore,
-                               &directionAfter);
-  
-    if(fabs(P[6])>1.E-10){ // do momLoss only for defined 1/momentum .ne.0      
-	    P[6] = fCharge/(fabs(fCharge/P[6])-momLoss);
+      if(fabs(P[6])>1.E-10){ // do momLoss only for defined 1/momentum .ne.0
+        P[6] = fCharge/(fabs(fCharge/P[6])-momLoss);
+      }
+
     }
     
     if(calcCov){ //propagate cov and add noise

@@ -168,6 +168,8 @@ class RKTrackRep : public GFAbsTrackRep {
                     const TVector3& mom,
                     const TMatrixT<double>& cov);
 
+  void disableMaterialEffects(bool opt = true){fNoMaterial = opt;}
+
   const TMatrixT<double>* getAuxInfo(const GFDetPlane& pl);
   
   bool hasAuxInfo() { return true; }
@@ -239,6 +241,7 @@ class RKTrackRep : public GFAbsTrackRep {
   // data members
   
   bool fDirection;
+  bool fNoMaterial; // don't calculate material effects if true
     
   //! PDG particle code
   int fPdg;
