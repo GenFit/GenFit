@@ -38,6 +38,7 @@ float MeanExcEnergy_get(TGeoMaterial*);
 
 
 GFMaterialEffects::GFMaterialEffects():
+  fNoEffects(false),
   fEnergyLossBetheBloch(true), fNoiseBetheBloch(true),
   fNoiseCoulomb(true),
   fEnergyLossBrems(true), fNoiseBrems(true),
@@ -84,6 +85,8 @@ double GFMaterialEffects::effects(const std::vector<TVector3>& points,
                                   const TVector3* directionAfter){
 
   //assert(points.size()==pointPaths.size());
+  if(fNoEffects) return 0.;
+
   fpdg = pdg;
 
   double momLoss=0.;
@@ -147,6 +150,8 @@ double GFMaterialEffects::stepper(const double& maxDist,
                                   const int& pdg){
 
   static const double maxPloss = .005; // maximum relative momentum loss allowed
+
+  if(fNoEffects) return maxDist;
 
   fpdg = pdg;
 
