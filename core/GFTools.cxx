@@ -19,6 +19,38 @@ TMatrixT<double> GFTools::getSmoothedPos(GFTrack* trk, unsigned int irep, unsign
 
 }
 
+
+TVector3 GFTools::getSmoothedPosXYZ(GFTrack* trk, unsigned int irep, unsigned int ihit){
+
+  TMatrixT<double> smoothed_state;
+  TMatrixT<double> smoothed_cov;
+  TMatrixT<double> pos;
+  GFDetPlane plane;
+
+  if(GFTools::getSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, plane)) {
+
+    TMatrixT<double> H = trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep));
+    TMatrixT<double> pos_tmp(H * smoothed_state);
+    pos.ResizeTo(pos_tmp);
+    pos = pos_tmp;
+
+  }
+
+  // check dimension
+  if (pos.GetNrows() != 2 || pos.GetNcols() != 1){
+    GFException exc("GFTools::getSmoothedPosXYZ ==> dimension of hit in plane is not 2, cannot calculate (x,y,z) hit position",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  // calc 3D position
+  TVector3 pos3D(plane.getO());
+  pos3D += pos[0][0] * plane.getU();
+  pos3D += pos[1][0] * plane.getV();
+
+  return pos3D;
+}
+
+
 TMatrixT<double> GFTools::getBiasedSmoothedPos(GFTrack* trk, unsigned int irep, unsigned int ihit) {
 
 TMatrixT<double> smoothed_state;

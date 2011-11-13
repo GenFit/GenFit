@@ -47,6 +47,10 @@ namespace GFTools {
 	 */
 	TMatrixT<double> getSmoothedPos(GFTrack* trk, unsigned int irep, unsigned int ihit);
 
+	 /** @brief Get smoothed track position in global coordinates
+	   */
+	TVector3 getSmoothedPosXYZ(GFTrack* trk, unsigned int irep, unsigned int ihit);
+
 	/** @brief Get smoothed track covariance in plane coordinates
 	 */
 	TMatrixT<double> getSmoothedCov(GFTrack* trk, unsigned int irep, unsigned int ihit);
