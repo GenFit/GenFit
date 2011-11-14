@@ -40,12 +40,12 @@ GFRaveTrackParameters::GFRaveTrackParameters(TMatrixT<double> state, TMatrixT<do
   fCharge(charge),
   fPdg(pdg)
 {
-  if (fState.GetNrows()!=1 || fState.GetNcols()!=5) {
-    GFException exc("GFRaveTrackParameters ==> State is not 1x5!",__LINE__,__FILE__);
+  if (fState.GetNrows()!=1 || fState.GetNcols()!=6) {
+    GFException exc("GFRaveTrackParameters ==> State is not 1x6!",__LINE__,__FILE__);
     throw exc;
   }
-  if (fCov.GetNrows()!=5 || fCov.GetNcols()!=5) {
-    GFException exc("GFRaveTrackParameters ==> Covariance is not 5x5!",__LINE__,__FILE__);
+  if (fCov.GetNrows()!=6 || fCov.GetNcols()!=6) {
+    GFException exc("GFRaveTrackParameters ==> Covariance is not 6x6!",__LINE__,__FILE__);
     throw exc;
   }
 }

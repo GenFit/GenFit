@@ -72,6 +72,7 @@ GFRaveVertexFactory::create ( const std::vector < GFTrack* > & GFTracks, bool us
 
   try{
     std::vector<rave::Track> ravetracks = GFRave::GFTracksToTracks(GFTracks, fIdGFTrackMap, fIdGFTrackRepMap, 0);
+    //std::cout << "GFRaveVertexFactory::create with method " << fFactory->method() << std::endl;
     ravevertices = fFactory->create(ravetracks, use_beamspot);
     GFvertices = GFRave::RaveToGFVertices(ravevertices, fIdGFTrackMap);
   }
@@ -96,6 +97,7 @@ GFRaveVertexFactory::setBeamspot(const TVector3 & pos, const TMatrixT<double> & 
 void
 GFRaveVertexFactory::setMethod(const std::string & method){
   fFactory->setDefaultMethod(method);
+  std::cout << "GFRaveVertexFactory::setMethod ==> set method to " << fFactory->method() << std::endl;
 }
 
 

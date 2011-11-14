@@ -48,3 +48,63 @@ GFRaveVertex::GFRaveVertex(TVector3 pos, TMatrixT<double> cov,
 {
 
 }
+
+
+std::vector < double >
+GFRaveVertex::getTrackWeights() const {
+  std::vector < double > weights;
+  unsigned int nTracks(getNTracks());
+
+  weights.reserve(nTracks);
+
+  for (unsigned int i=0; i<nTracks; ++i){
+    weights.push_back(fOriginalTracks[i].first);
+  }
+
+  return weights;
+}
+
+
+std::vector < GFTrack* >
+GFRaveVertex::getTracks() const {
+  std::vector < GFTrack* > tracks;
+  unsigned int nTracks(getNTracks());
+
+  tracks.reserve(nTracks);
+
+  for (unsigned int i=0; i<nTracks; ++i){
+    tracks.push_back(fOriginalTracks[i].second);
+  }
+
+  return tracks;
+}
+
+
+std::vector < double >
+GFRaveVertex::getSmoothedParametersWeights() const{
+  std::vector < double > weights;
+  unsigned int nTracks(getNSmoothedTracks());
+
+  weights.reserve(nTracks);
+
+  for (unsigned int i=0; i<nTracks; ++i){
+    weights.push_back(fSmoothedTracks[i].first);
+  }
+
+  return weights;
+}
+
+
+std::vector < GFRaveTrackParameters >
+GFRaveVertex::getSmoothedParameters() const {
+  std::vector < GFRaveTrackParameters > params;
+  unsigned int nTracks(getNSmoothedTracks());
+
+  params.reserve(nTracks);
+
+  for (unsigned int i=0; i<nTracks; ++i){
+    params.push_back(fSmoothedTracks[i].second);
+  }
+
+  return params;
+}

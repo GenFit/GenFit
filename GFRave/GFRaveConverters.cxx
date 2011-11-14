@@ -144,9 +144,9 @@ GFRave::setTrackRepData(const rave::Track & orig, GFAbsTrackRep* rep){
 
 
 GFRaveVertex*
-GFRave::RaveToGFVertex(const rave::Vertex & ravevertex, const std::map<int, GFTrack*> * IdGFTrackMap){
+GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTrack*> * IdGFTrackMap){
 
-  if (!(ravevertex.isValid())) {
+  if (!(raveVertex.isValid())) {
     GFException exc("RaveToGFVertex ==> rave Vertex is not valid!",__LINE__,__FILE__);
     throw exc;
   }
@@ -155,34 +155,52 @@ GFRave::RaveToGFVertex(const rave::Vertex & ravevertex, const std::map<int, GFTr
   std::vector < std::pair < double, GFRaveTrackParameters > > smoothedTracks;
 
   if (IdGFTrackMap!=NULL){
-    std::vector < std::pair < float, rave::Track > > raveweightedtracks = ravevertex.weightedTracks();
-    std::vector < std::pair < float, rave::Track > > ravesmoothedtracks = ravevertex.weightedRefittedTracks();
+    std::vector < std::pair < float, rave::Track > > raveWeightedTracks(raveVertex.weightedTracks());
+    std::vector < std::pair < float, rave::Track > > raveSmoothedTracks(raveVertex.weightedRefittedTracks());
 
-    for (unsigned int i=0; i<raveweightedtracks.size(); ++i){
-      GFTrack* origtrack = IdGFTrackMap->at(raveweightedtracks[i].second.id());
-      originalTracks.push_back(std::pair< double, GFTrack* > (raveweightedtracks[i].first, origtrack) );
+    int id;
+    unsigned int nTrks(raveWeightedTracks.size());
+
+    // check numbers of tracks and smoothed tracks
+    if (raveVertex.hasRefittedTracks() && nTrks != raveSmoothedTracks.size()){
+      GFException exc("RaveToGFVertex ==> number of smoothed tracks != number of tracks",__LINE__,__FILE__);
+      throw exc;
+    }
+
+    std::cerr<<" number of tracks: "<< nTrks <<std::endl;
+    if (raveVertex.hasRefittedTracks()) std::cerr<<" number of smoothed tracks: "<< raveSmoothedTracks.size() <<std::endl;
+
+    // convert tracks
+    for (unsigned int i=0; i<nTrks; ++i){
+      id = raveWeightedTracks[i].second.id();
+
+      if (IdGFTrackMap->count(id) == 0){
+        GFException exc("RaveToGFVertex ==> rave track id is not present in IdGFTrackMap",__LINE__,__FILE__);
+        throw exc;
+      }
+
+      GFTrack* origtrack = IdGFTrackMap->at(id);
+      originalTracks.push_back(std::pair< double, GFTrack* > (raveWeightedTracks[i].first, origtrack) );
+
+      // convert smoothed track parameters
+      if (raveVertex.hasRefittedTracks()) {
+        GFRaveTrackParameters trackparams(GFRave::Vector6DToTMatrixT(raveSmoothedTracks[i].second.state()),
+                                          GFRave::Covariance6DToTMatrixT(raveSmoothedTracks[i].second.error()),
+                                          origtrack->getCardinalRep()->getCharge(),
+                                          origtrack->getCardinalRep()->getPDG());
+
+        smoothedTracks.push_back(std::pair < double, GFRaveTrackParameters > (raveSmoothedTracks[i].first, trackparams) );
+      }
 
     }
 
-    for (unsigned int i=0; i<ravesmoothedtracks.size(); ++i){
-      GFTrack* origtrack = IdGFTrackMap->at(raveweightedtracks[i].second.id());
+  } // end if (IdGFTrackMap!=NULL)
 
-      GFRaveTrackParameters trackparams(GFRave::Vector6DToTMatrixT(raveweightedtracks[i].second.state()),
-                                        GFRave::Covariance6DToTMatrixT(raveweightedtracks[i].second.error()),
-                                        origtrack->getCardinalRep()->getCharge(),
-                                        origtrack->getCardinalRep()->getPDG());
-
-      smoothedTracks.push_back(std::pair < double, GFRaveTrackParameters > (ravesmoothedtracks[i].first, trackparams) );
-
-    }
-
-  }
-
-  return new GFRaveVertex(GFRave::Point3DToTVector3(ravevertex.position()),
-                          GFRave::Covariance3DToTMatrixT(ravevertex.error()),
+  return new GFRaveVertex(GFRave::Point3DToTVector3(raveVertex.position()),
+                          GFRave::Covariance3DToTMatrixT(raveVertex.error()),
                           originalTracks,
                           smoothedTracks,
-                          ravevertex.ndf(), ravevertex.chiSquared(), ravevertex.id());
+                          raveVertex.ndf(), raveVertex.chiSquared(), raveVertex.id());
 }
 
 
