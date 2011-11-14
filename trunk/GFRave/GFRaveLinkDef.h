@@ -30,6 +30,7 @@
 
 #pragma link C++ class pair<double, GFTrack* >;
 #pragma link C++ class pair<double, GFRaveTrackParameters>;
+#pragma link C++ class pair<double,GFRaveVertex>;
 
 #endif
 
