@@ -276,6 +276,7 @@ bool GFTools::getBiasedSmoothedData(GFTrack* trk, unsigned int irep, unsigned in
 		trk->getBK(irep)->getMatrix("bUpSt",ihit,smoothed_state);
 		trk->getBK(irep)->getMatrix("bUpCov",ihit,smoothed_cov);
 		trk->getBK(irep)->getDetPlane("bPl",ihit,smoothing_plane);
+		delete rep;
 		return true;
 	}
 
@@ -283,6 +284,7 @@ bool GFTools::getBiasedSmoothedData(GFTrack* trk, unsigned int irep, unsigned in
 		trk->getBK(irep)->getMatrix("fUpSt",ihit,smoothed_state);
 		trk->getBK(irep)->getMatrix("fUpCov",ihit,smoothed_cov);
 		trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
+		delete rep;
 		return true;
 	}
 
@@ -306,7 +308,10 @@ bool GFTools::getBiasedSmoothedData(GFTrack* trk, unsigned int irep, unsigned in
 	TMatrixT<double> bSt;
 	TMatrixT<double> bCov;
 
-	if(bUpSt.GetNrows() == 0) return false;
+	if(bUpSt.GetNrows() == 0) {
+	  delete rep;
+	  return false;
+	}
 
 	rep->setData(bUpSt,bPl,&bUpCov,bAuxInfoP);
 	rep->extrapolate(smoothing_plane,bSt,bCov);
