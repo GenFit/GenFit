@@ -35,76 +35,28 @@ GFRaveVertex::GFRaveVertex() :
 }
 
 GFRaveVertex::GFRaveVertex(TVector3 pos, TMatrixT<double> cov,
-                           std::vector < std::pair < double, GFTrack* > > originalTracks,
-                           std::vector < std::pair < double, GFRaveTrackParameters > > smoothedTracks,
+                           std::vector < GFRaveTrackParameters > smoothedTracks,
                            double ndf, double chi2, int id) :
   fPos(pos),
   fCov(cov),
-  fOriginalTracks(originalTracks),
   fSmoothedTracks(smoothedTracks),
   fNdf(ndf),
   fChi2(chi2),
   fId(id)
 {
-
+  ;
 }
 
 
-std::vector < double >
-GFRaveVertex::getTrackWeights() const {
-  std::vector < double > weights;
-  unsigned int nTracks(getNTracks());
-
-  weights.reserve(nTracks);
-
-  for (unsigned int i=0; i<nTracks; ++i){
-    weights.push_back(fOriginalTracks[i].first);
+void
+GFRaveVertex::Print(const Option_t*) const {
+  std::cout << "GFRaveVertex\n";
+  std::cout << "Position: "; getPos().Print();
+  std::cout << "Covariance: "; getCov().Print();
+  std::cout << "Ndf: " << getNdf() << ", Chi2: " << getChi2() << ", Id: " << getId() << "\n";
+  std::cout << "Number of tracks: " << getNTracks() << "\n";
+  for (unsigned int i=0;  i<getNTracks(); ++i) {
+    std::cout << " track " << i << ":\n"; getParameters(i).Print();
   }
-
-  return weights;
 }
 
-
-std::vector < GFTrack* >
-GFRaveVertex::getTracks() const {
-  std::vector < GFTrack* > tracks;
-  unsigned int nTracks(getNTracks());
-
-  tracks.reserve(nTracks);
-
-  for (unsigned int i=0; i<nTracks; ++i){
-    tracks.push_back(fOriginalTracks[i].second);
-  }
-
-  return tracks;
-}
-
-
-std::vector < double >
-GFRaveVertex::getSmoothedParametersWeights() const{
-  std::vector < double > weights;
-  unsigned int nTracks(getNSmoothedTracks());
-
-  weights.reserve(nTracks);
-
-  for (unsigned int i=0; i<nTracks; ++i){
-    weights.push_back(fSmoothedTracks[i].first);
-  }
-
-  return weights;
-}
-
-
-std::vector < GFRaveTrackParameters >
-GFRaveVertex::getSmoothedParameters() const {
-  std::vector < GFRaveTrackParameters > params;
-  unsigned int nTracks(getNSmoothedTracks());
-
-  params.reserve(nTracks);
-
-  for (unsigned int i=0; i<nTracks; ++i){
-    params.push_back(fSmoothedTracks[i].second);
-  }
-
-  return params;
-}

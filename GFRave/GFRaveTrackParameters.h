@@ -33,12 +33,15 @@
 #include "TMatrixT.h"
 #include "TVector3.h"
 
+#include "GFTrack.h"
+
 #include <iostream>
 
 
 /**
  * @brief GFRaveTrackParameters class
- * Contains state and covariance of the tracks, smoothed with the vertex information
+ * Contains a pointer to the original GFTrack, the weight of the track in the vertex,
+ * and smoothed (with the vertex information) state and covariance of the track.
  */
 
 class GFRaveTrackParameters : public TObject
@@ -46,25 +49,30 @@ class GFRaveTrackParameters : public TObject
   public:
     // constructors, destructors
     GFRaveTrackParameters();
-    GFRaveTrackParameters(TMatrixT<double> state6, TMatrixT<double> cov6x6, double charge, int pdg);
+    GFRaveTrackParameters(GFTrack* track, double weight, TMatrixT<double> state6, TMatrixT<double> cov6x6);
 
     // member functions
 
     // Accessors
+    double getWeight() const {return fWeight;}
+    GFTrack* getTrack() const {return fOriginalTrack;}
+
     TMatrixT<double> getState() const {return fState;}
     TVector3 getPos() const;
     TVector3 getMom() const;
-
     const TMatrixT<double> & getCov() const {return fCov;}
-    double getCharge() const {return fCharge;}
-    double getPdg() const {return fPdg;}
+
+    double getCharge() const;
+    double getPdg() const;
+
+    void Print(const Option_t* = "") const;
 
   private:
 
+    GFTrack* fOriginalTrack; //->
+    double fWeight;
     TMatrixT<double> fState; // x, y, z, px, py, pz
     TMatrixT<double> fCov; // 6x6 covariance matrix
-    double fCharge;
-    double fPdg;
 
   private:
     ClassDef(GFRaveTrackParameters, 1)

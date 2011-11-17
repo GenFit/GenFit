@@ -66,7 +66,7 @@ namespace GFRave
   void setTrackRepData(const rave::Track & orig, GFAbsTrackRep* rep); // set state and cov of trackrep according to rave track
 
   GFRaveVertex* RaveToGFVertex(const rave::Vertex &, const std::map<int, GFTrack*> * IdGFTrackMap = NULL);
-  std::vector<GFRaveVertex*> * RaveToGFVertices(const std::vector<rave::Vertex> &, const std::map<int, GFTrack*> * IdGFTrackMap = NULL);
+  std::vector<GFRaveVertex*> * RaveToGFVertices(const std::vector<rave::Vertex> &, const std::map<int, GFTrack*> * IdGFTrackMap);
 
   GFDetPlane PlaneToGFDetPlane(const ravesurf::Plane & rplane);
 

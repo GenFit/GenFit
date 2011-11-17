@@ -27,18 +27,20 @@
 using namespace std;
 
 GFRaveTrackParameters::GFRaveTrackParameters() :
-  fCharge(0),
-  fPdg(0)
+  fOriginalTrack(NULL),
+  fWeight(0),
+  fState(1,6),
+  fCov(6,6)
 {
-
+  //std::cerr << "GFRaveTrackParameters::GFRaveTrackParameters() => calling default constructor\n";
 }
 
 
-GFRaveTrackParameters::GFRaveTrackParameters(TMatrixT<double> state, TMatrixT<double> cov, double charge, int pdg) :
-  fState(state),
-  fCov(cov),
-  fCharge(charge),
-  fPdg(pdg)
+GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, double weight, TMatrixT<double> state6, TMatrixT<double> cov6x6) :
+  fOriginalTrack(track),
+  fWeight(weight),
+  fState(state6),
+  fCov(cov6x6)
 {
   if (fState.GetNrows()!=1 || fState.GetNcols()!=6) {
     GFException exc("GFRaveTrackParameters ==> State is not 1x6!",__LINE__,__FILE__);
@@ -60,4 +62,25 @@ GFRaveTrackParameters::getPos() const {
 TVector3
 GFRaveTrackParameters::getMom() const {
   return TVector3(fState[0][3], fState[0][4], fState[0][5]);
+}
+
+
+double
+GFRaveTrackParameters::getCharge() const {
+  return fOriginalTrack->getCardinalRep()->getCharge();
+}
+
+
+double
+GFRaveTrackParameters::getPdg() const{
+  return fOriginalTrack->getCardinalRep()->getPDG();
+}
+
+
+void
+GFRaveTrackParameters::Print(const Option_t*) const {
+  std::cout << "weight: " << getWeight() << "\n";
+  std::cout << "state: "; getState().Print();
+  std::cout << "cov: "; getCov().Print();
+  std::cout << "GFTrack: "; getTrack()->Print();
 }

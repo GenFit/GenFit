@@ -46,8 +46,7 @@ class GFRaveVertex : public TObject
     // constructors, destructors
     GFRaveVertex();
     GFRaveVertex(TVector3 pos, TMatrixT<double> cov,
-                 std::vector < std::pair < double, GFTrack* > > originalTracks,
-                 std::vector < std::pair < double, GFRaveTrackParameters > > smoothedTracks,
+                 std::vector < GFRaveTrackParameters > smoothedTracks,
                  double ndf, double chi2, int id = -1);
 
     ~GFRaveVertex(){};
@@ -56,52 +55,35 @@ class GFRaveVertex : public TObject
 
 
     // Accessors
-    std::vector < std::pair < double, GFRaveVertex > >  getWeightedComponents() const {return fComponents;}
-    std::pair < double, GFRaveVertex >  getWeightedComponents(unsigned int i) const {return fComponents[i];}
-
-    unsigned int getNTracks() const {return fOriginalTracks.size();}
-    unsigned int getNSmoothedTracks() const {return fSmoothedTracks.size();}
-    unsigned int getNComponents() const {return fComponents.size();}
+    //std::vector < std::pair < double, GFRaveVertex > >  getWeightedComponents() const {return fComponents;}
+    //std::pair < double, GFRaveVertex >  getWeightedComponents(unsigned int i) const {return fComponents[i];}
 
     TVector3 getPos() const {return fPos;}
     TMatrixT<double> getCov() const {return fCov;}
 
-    std::vector < std::pair < double, GFTrack* > > getWeightedTracks() const {return fOriginalTracks;}
-    std::pair < double, GFTrack* > getWeightedTracks(unsigned int i) const {return fOriginalTracks[i];}
-
-    std::vector < double > getTrackWeights() const;
-    double getTrackWeights(unsigned int i) const {return fOriginalTracks[i].first;}
-
-    std::vector < GFTrack* > getTracks() const;
-    GFTrack* getTracks(unsigned int i) const {return fOriginalTracks[i].second;}
-
-    std::vector < std::pair < double, GFRaveTrackParameters > > getWeightedSmoothedParameters() const {return fSmoothedTracks;}
-    std::pair < double, GFRaveTrackParameters > getWeightedSmoothedParameters(unsigned int i) const {return fSmoothedTracks[i];}
-
-    std::vector < double > getSmoothedParametersWeights() const;
-    double getSmoothedParametersWeights(unsigned int i) const {return fSmoothedTracks[i].first;}
-
-    std::vector < GFRaveTrackParameters > getSmoothedParameters() const;
-    GFRaveTrackParameters getSmoothedParameters(unsigned int i) const {return fSmoothedTracks[i].second;}
-
-
     double getNdf() const {return fNdf;}
     double getChi2() const {return fChi2;}
 
+    unsigned int getNTracks() const {return fSmoothedTracks.size();}
+    std::vector < GFRaveTrackParameters > getParameters() const {return fSmoothedTracks;}
+    GFRaveTrackParameters getParameters(unsigned int i) const {return fSmoothedTracks[i];}
+
     int getId() const {return fId;}
+
+    void Print(const Option_t* = "") const;
 
 
   private:
 
-    std::vector < std::pair < double, GFRaveVertex > > fComponents; // The vertex components - only used in the Gaussian algorithm.
+    //std::vector < std::pair < double, GFRaveVertex > > fComponents; // The vertex components - only used in the Gaussian algorithm.
 
     TVector3 fPos; // position of the vertex
     TMatrixT<double> fCov; // error of the vertex position
-    std::vector < std::pair < double, GFTrack* > > fOriginalTracks; // original unaltered GFTracks with weights
-    std::vector < std::pair < double, GFRaveTrackParameters > > fSmoothedTracks; // track parameters of smoothed (with the vertex information) tracks
     double fNdf;
     double fChi2;
     int fId; // id of the rave::vertex the GFVertex is created from
+
+    std::vector < GFRaveTrackParameters > fSmoothedTracks; // track parameters of smoothed (with the vertex information) tracks, weights and original tracks
 
   private:
     ClassDef(GFRaveVertex,1)
