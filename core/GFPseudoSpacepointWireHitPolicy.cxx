@@ -32,7 +32,7 @@ GFPseudoSpacepointWireHitPolicy::GFPseudoSpacepointWireHitPolicy() :
     fMaxdistance(1.E50),
     fWireDirection(0, 0, 1)
 {
-  fWireDirection.SetMag(1.);
+  ;
 }
 
 
