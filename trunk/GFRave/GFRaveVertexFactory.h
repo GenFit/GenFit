@@ -49,6 +49,10 @@ class GFRaveVertexFactory {
   ~GFRaveVertexFactory();
 
   // functions
+
+  /**
+   *  reconstruct vertices. call it in a try-catch block!
+   */
   std::vector <  GFRaveVertex* > * create ( const std::vector < GFTrack* > &, bool use_beamspot=false );
 
   void setBeamspot(const TVector3 & pos, const TMatrixT<double> & cov);

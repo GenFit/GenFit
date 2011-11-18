@@ -69,7 +69,7 @@ class GFRaveTrackParameters : public TObject
 
   private:
 
-    GFTrack* fOriginalTrack; //->
+    GFTrack* fOriginalTrack; //
     double fWeight;
     TMatrixT<double> fState; // x, y, z, px, py, pz
     TMatrixT<double> fCov; // 6x6 covariance matrix

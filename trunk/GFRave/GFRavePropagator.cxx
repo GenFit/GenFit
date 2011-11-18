@@ -109,9 +109,9 @@ GFRavePropagator::getTrackRep(const rave::Track & track) const{
     throw exc;
   }
 
-  std::cerr<<"GFRavePropagator::getTrackRep track id: "<<track.id()<<std::endl;
-  std::cerr<<"  pos: "; GFRave::Point3DToTVector3(track.state().position()).Print();
-  std::cerr<<"  mom: "; GFRave::Vector3DToTVector3(track.state().momentum()).Print();
+  //std::cerr<<"GFRavePropagator::getTrackRep track id: "<<track.id()<<std::endl;
+  //std::cerr<<"  pos: "; GFRave::Point3DToTVector3(track.state().position()).Print();
+  //std::cerr<<"  mom: "; GFRave::Vector3DToTVector3(track.state().momentum()).Print();
 
   if (IdGFTrackRepMap->count(track.id()) == 0) {
     GFException exc("GFRavePropagator::getTrackRep ==> no entry in IdGFTrackRepMap corresponding to track id, cannot access corresponding track representation!",__LINE__,__FILE__);
@@ -144,6 +144,6 @@ GFRavePropagator::setIdGFTrackRepMap(std::map < int, GFAbsTrackRep* > * map){
     GFException exc("GFRavePropagator::setIdGFTrackRepMap ==> IdGFTrackMap is NULL!",__LINE__,__FILE__);
     throw exc;
   }
-  std::cout<<"IdGFTrackRepMap: " << (int)IdGFTrackRepMap << std::endl;
+  //std::cout<<"IdGFTrackRepMap: " << (int)IdGFTrackRepMap << std::endl;
 }
 

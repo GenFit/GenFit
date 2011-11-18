@@ -25,12 +25,10 @@
 #pragma link off all functions;
 
 
-#pragma link C++ class GFRaveTrackParameters+;
 #pragma link C++ class GFRaveVertex+;
+#pragma link C++ class GFRaveTrackParameters+;
 
-#pragma link C++ class pair<double, GFTrack* >;
-#pragma link C++ class pair<double, GFRaveTrackParameters>;
-#pragma link C++ class pair<double,GFRaveVertex>;
+//#pragma link C++ class std::vector < GFRaveTrackParameters >+;
 
 #endif
 

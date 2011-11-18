@@ -77,7 +77,7 @@ GFRave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
     ++startID;
   }
 
-  std::cout << "IdGFTrackMap size " << IdGFTrackMap->size() <<"     IdGFTrackRepMap size " << IdGFTrackRepMap->size() << std::endl;
+  //std::cout << "IdGFTrackMap size " << IdGFTrackMap->size() <<"     IdGFTrackRepMap size " << IdGFTrackRepMap->size() << std::endl;
   return ravetracks;
 }
 
@@ -121,9 +121,9 @@ GFRave::RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string
                              cov[3][3], cov[4][3], cov[5][3],
                              cov[4][4], cov[5][4], cov[5][5]);
 
-  std::cerr<<"create rave track with id " << id << std::endl;
-  std::cerr<<"  pos: "; GFRave::Point3DToTVector3(ravestate.position()).Print();
-  std::cerr<<"  mom: "; GFRave::Vector3DToTVector3(ravestate.momentum()).Print();
+  //std::cerr<<"create rave track with id " << id << std::endl;
+  //std::cerr<<"  pos: "; GFRave::Point3DToTVector3(ravestate.position()).Print();
+  //std::cerr<<"  mom: "; GFRave::Vector3DToTVector3(ravestate.momentum()).Print();
 
   rave::Track ret(id, ravestate, ravecov,
                   rep->getCharge(), rep->getChiSqu(), rep->getNDF(),
@@ -160,6 +160,10 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
 
   // if rave vertex has no refitted tracks, refit them!
   if (! (raveVertex.hasRefittedTracks()) ) {
+
+    GFException exc("RaveToGFVertex ==> rave Vertex has no refitted tracks!",__LINE__,__FILE__);
+    throw exc;
+
     raveSmoothedTracks.reserve(nTrks);
     for (unsigned int i=0; i<nTrks; ++i){
       raveSmoothedTracks.push_back( std::pair < float, rave::Track > (raveWeightedTracks[i].first, raveVertex.refittedTrack(raveWeightedTracks[i].second) ) );
@@ -185,10 +189,8 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
       throw exc;
     }
 
-    GFTrack* origtrack = IdGFTrackMap->at(id);
-
     // convert smoothed track parameters
-    GFRaveTrackParameters trackparams(origtrack,
+    GFRaveTrackParameters trackparams(IdGFTrackMap->at(id),
                                       raveSmoothedTracks[i].first,
                                       GFRave::Vector6DToTMatrixT(raveSmoothedTracks[i].second.state()),
                                       GFRave::Covariance6DToTMatrixT(raveSmoothedTracks[i].second.error()) );
