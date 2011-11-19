@@ -67,13 +67,13 @@ GFRaveTrackParameters::getMom() const {
 
 double
 GFRaveTrackParameters::getCharge() const {
-  return fOriginalTrack->getCardinalRep()->getCharge();
+  return getTrack()->getCardinalRep()->getCharge();
 }
 
 
 double
 GFRaveTrackParameters::getPdg() const{
-  return fOriginalTrack->getCardinalRep()->getPDG();
+  return getTrack()->getCardinalRep()->getPDG();
 }
 
 
