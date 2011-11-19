@@ -29,8 +29,6 @@
 #ifndef GFRAVEVERTEX_H
 #define GFRAVEVERTEX_H
 
-#include "TObjArray.h"
-
 #include "GFAbsTrackRep.h"
 #include "GFTrack.h"
 #include "GFRaveTrackParameters.h"
@@ -47,13 +45,13 @@ class GFRaveVertex : public TObject
   public:
     // constructors, destructors
     GFRaveVertex();
-    GFRaveVertex(TVector3 pos, TMatrixT<double> cov,
-                 std::vector < GFRaveTrackParameters* > smoothedTracks,
+    GFRaveVertex(const TVector3 & pos, const TMatrixT<double> & cov,
+                 const std::vector < GFRaveTrackParameters* > & smoothedTracks,
                  double ndf, double chi2, int id = -1);
 
     GFRaveVertex(const GFRaveVertex &);
 
-    GFRaveVertex& operator=(const GFRaveVertex & vertex);
+    GFRaveVertex& operator=(const GFRaveVertex &);
 
     ~GFRaveVertex();
 
@@ -68,8 +66,8 @@ class GFRaveVertex : public TObject
     double getNdf() const {return fNdf;}
     double getChi2() const {return fChi2;}
 
-    unsigned int getNTracks() const {return fSmoothedTracks->GetEntriesFast();}
-    GFRaveTrackParameters* getParameters(unsigned int i) const {return (GFRaveTrackParameters*)fSmoothedTracks->At(i);}
+    unsigned int getNTracks() const {return fSmoothedTracks.size();}
+    GFRaveTrackParameters* getParameters(unsigned int i) const {return fSmoothedTracks[i];}
 
     int getId() const {return fId;}
 
@@ -84,7 +82,7 @@ class GFRaveVertex : public TObject
     double fChi2;
     int fId; // id of the rave::vertex the GFVertex is created from
 
-    TObjArray* fSmoothedTracks; //-> track parameters of smoothed (with the vertex information) tracks, weights and original tracks
+    std::vector < GFRaveTrackParameters* > fSmoothedTracks; // track parameters of smoothed (with the vertex information) tracks, weights and original tracks
 
   private:
     ClassDef(GFRaveVertex,1)

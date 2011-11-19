@@ -50,10 +50,7 @@ class GFRaveVertexFactory {
 
   // functions
 
-  /**
-   *  reconstruct vertices. call it in a try-catch block!
-   */
-  void create ( std::vector <  GFRaveVertex* > *, const std::vector < GFTrack* > &, bool use_beamspot=false );
+  void findVertices ( std::vector <  GFRaveVertex* > *, const std::vector < GFTrack* > &, bool use_beamspot=false );
 
   void setBeamspot(const TVector3 & pos, const TMatrixT<double> & cov);
   void setMethod(const std::string & method);

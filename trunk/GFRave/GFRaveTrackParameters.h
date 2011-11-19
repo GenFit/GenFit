@@ -49,15 +49,11 @@ class GFRaveTrackParameters : public TObject
   public:
     // constructors, destructors
     GFRaveTrackParameters();
-    GFRaveTrackParameters(GFTrack* track, double weight, TMatrixT<double> state6, TMatrixT<double> cov6x6);
-
-    ~GFRaveTrackParameters(){};
-
-    // member functions
+    GFRaveTrackParameters(GFTrack* track, double weight, const TMatrixT<double>& state6, const TMatrixT<double>& cov6x6);
 
     // Accessors
     double getWeight() const {return fWeight;}
-    GFTrack* getTrack() const {return fOriginalTrack;}
+    GFTrack* getTrack() const {return  fOriginalTrack;}
 
     TMatrixT<double> getState() const {return fState;}
     TVector3 getPos() const;
@@ -71,7 +67,7 @@ class GFRaveTrackParameters : public TObject
 
   private:
 
-    GFTrack* fOriginalTrack; //->
+    GFTrack* fOriginalTrack; //
     double fWeight;
     TMatrixT<double> fState; // x, y, z, px, py, pz
     TMatrixT<double> fCov; // 6x6 covariance matrix

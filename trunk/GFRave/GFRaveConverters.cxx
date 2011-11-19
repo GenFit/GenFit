@@ -253,8 +253,6 @@ GFRave::Covariance3DToTMatrixT(const rave::Covariance3D & ravecov){
   cov[1][2] = ravecov.dyz();
   cov[2][1] = ravecov.dyz();
 
-  assert (cov.IsSymmetric()==true); // todo: for QA reasons
-
   return cov;
 }
 
@@ -332,8 +330,6 @@ GFRave::Covariance6DToTMatrixT(const rave::Covariance6D & ravecov){
 
   cov[5][2] = ravecov.dzpz();
   cov[2][5] = ravecov.dzpz();
-
-  assert (cov.IsSymmetric()==true); // todo: for QA reasons
 
   return cov;
 }
