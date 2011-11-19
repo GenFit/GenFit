@@ -29,6 +29,8 @@
 #ifndef GFRAVEVERTEX_H
 #define GFRAVEVERTEX_H
 
+#include "TObjArray.h"
+
 #include "GFAbsTrackRep.h"
 #include "GFTrack.h"
 #include "GFRaveTrackParameters.h"
@@ -46,27 +48,28 @@ class GFRaveVertex : public TObject
     // constructors, destructors
     GFRaveVertex();
     GFRaveVertex(TVector3 pos, TMatrixT<double> cov,
-                 std::vector < GFRaveTrackParameters > smoothedTracks,
+                 std::vector < GFRaveTrackParameters* > smoothedTracks,
                  double ndf, double chi2, int id = -1);
 
-    ~GFRaveVertex(){};
+    GFRaveVertex(const GFRaveVertex &);
+
+    GFRaveVertex& operator=(const GFRaveVertex & vertex);
+
+    ~GFRaveVertex();
+
 
     // Modifiers
 
 
     // Accessors
-    //std::vector < std::pair < double, GFRaveVertex > >  getWeightedComponents() const {return fComponents;}
-    //std::pair < double, GFRaveVertex >  getWeightedComponents(unsigned int i) const {return fComponents[i];}
-
     TVector3 getPos() const {return fPos;}
     TMatrixT<double> getCov() const {return fCov;}
 
     double getNdf() const {return fNdf;}
     double getChi2() const {return fChi2;}
 
-    unsigned int getNTracks() const {return fSmoothedTracks.size();}
-    std::vector < GFRaveTrackParameters > getParameters() const {return fSmoothedTracks;}
-    GFRaveTrackParameters getParameters(unsigned int i) const {return fSmoothedTracks[i];}
+    unsigned int getNTracks() const {return fSmoothedTracks->GetEntriesFast();}
+    GFRaveTrackParameters* getParameters(unsigned int i) const {return (GFRaveTrackParameters*)fSmoothedTracks->At(i);}
 
     int getId() const {return fId;}
 
@@ -75,15 +78,13 @@ class GFRaveVertex : public TObject
 
   private:
 
-    //std::vector < std::pair < double, GFRaveVertex > > fComponents; // The vertex components - only used in the Gaussian algorithm.
-
     TVector3 fPos; // position of the vertex
     TMatrixT<double> fCov; // error of the vertex position
     double fNdf;
     double fChi2;
     int fId; // id of the rave::vertex the GFVertex is created from
 
-    std::vector < GFRaveTrackParameters > fSmoothedTracks; // track parameters of smoothed (with the vertex information) tracks, weights and original tracks
+    TObjArray* fSmoothedTracks; //-> track parameters of smoothed (with the vertex information) tracks, weights and original tracks
 
   private:
     ClassDef(GFRaveVertex,1)

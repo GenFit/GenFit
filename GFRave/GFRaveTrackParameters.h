@@ -51,6 +51,8 @@ class GFRaveTrackParameters : public TObject
     GFRaveTrackParameters();
     GFRaveTrackParameters(GFTrack* track, double weight, TMatrixT<double> state6, TMatrixT<double> cov6x6);
 
+    ~GFRaveTrackParameters(){};
+
     // member functions
 
     // Accessors
@@ -69,7 +71,7 @@ class GFRaveTrackParameters : public TObject
 
   private:
 
-    GFTrack* fOriginalTrack; //
+    GFTrack* fOriginalTrack; //->
     double fWeight;
     TMatrixT<double> fState; // x, y, z, px, py, pz
     TMatrixT<double> fCov; // 6x6 covariance matrix

@@ -177,7 +177,7 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
   }
 
   // smoothed track parameters
-  std::vector < GFRaveTrackParameters > smoothedTracks;
+  std::vector < GFRaveTrackParameters* > smoothedTracks;
   smoothedTracks.reserve(nTrks);
 
   // convert tracks
@@ -190,7 +190,7 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
     }
 
     // convert smoothed track parameters
-    GFRaveTrackParameters trackparams(IdGFTrackMap->at(id),
+    GFRaveTrackParameters* trackparams = new GFRaveTrackParameters(IdGFTrackMap->at(id),
                                       raveSmoothedTracks[i].first,
                                       GFRave::Vector6DToTMatrixT(raveSmoothedTracks[i].second.state()),
                                       GFRave::Covariance6DToTMatrixT(raveSmoothedTracks[i].second.error()) );
@@ -205,20 +205,16 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
                           raveVertex.ndf(), raveVertex.chiSquared(), raveVertex.id());
 }
 
-
-std::vector<GFRaveVertex*> *
-GFRave::RaveToGFVertices(const std::vector<rave::Vertex> & raveVertices, const std::map<int, GFTrack*> * IdGFTrackMap){
+void
+GFRave::RaveToGFVertices(std::vector<GFRaveVertex*> * GFVertices, const std::vector<rave::Vertex> & raveVertices, const std::map<int, GFTrack*> * IdGFTrackMap){
 
   unsigned int nVert(raveVertices.size());
 
-  std::vector<GFRaveVertex*> * GFVertices = new std::vector<GFRaveVertex*>;
   GFVertices->reserve(nVert);
 
   for (unsigned int i=0; i<nVert; ++i){
     GFVertices->push_back(RaveToGFVertex(raveVertices[i], IdGFTrackMap));
   }
-
-  return GFVertices;
 }
 
 
