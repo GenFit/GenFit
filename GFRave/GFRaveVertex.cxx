@@ -26,6 +26,11 @@
 
 using namespace std;
 
+//#define COUNT
+
+#ifdef COUNT
+static int instCount(0);
+#endif
 
 GFRaveVertex::GFRaveVertex() :
   fCov(3,3),
@@ -33,64 +38,80 @@ GFRaveVertex::GFRaveVertex() :
   fChi2(0),
   fId(-1)
 {
-  fSmoothedTracks = new TObjArray();
+#ifdef COUNT
+  std::cerr << "GFRaveVertex::GFRaveVertex() - Number of objects: " << ++instCount << std::endl;
+#endif
 }
 
 
-GFRaveVertex::GFRaveVertex(TVector3 pos, TMatrixT<double> cov,
-                           std::vector < GFRaveTrackParameters* > smoothedTracks,
+GFRaveVertex::GFRaveVertex(const TVector3 & pos, const TMatrixT<double> & cov,
+                           const std::vector < GFRaveTrackParameters* > & smoothedTracks,
                            double ndf, double chi2, int id) :
   fPos(pos),
   fCov(cov),
   fNdf(ndf),
   fChi2(chi2),
-  fId(id)
+  fId(id),
+  fSmoothedTracks(smoothedTracks)
 {
   if (fCov.GetNrows()!=3 || fCov.GetNcols()!=3) {
     GFException exc("GFRaveVertex ==> Covariance is not 3x3!",__LINE__,__FILE__);
     throw exc;
   }
 
-  unsigned int nTrks(smoothedTracks.size());
-  fSmoothedTracks = new TObjArray(nTrks);
-  for (unsigned int i=0; i<nTrks; ++i){
-    fSmoothedTracks->Add(smoothedTracks[i]);
-  }
+#ifdef COUNT
+  std::cerr << "GFRaveVertex::GFRaveVertex(...) - Number of objects: " << ++instCount << std::endl;
+#endif
 }
 
 
-GFRaveVertex::GFRaveVertex(const GFRaveVertex & vertex){
-  fPos = vertex.fPos;
-  fCov.ResizeTo(vertex.fCov);
-  fCov = vertex.fCov;
-  fNdf = vertex.fNdf;
-  fChi2 = vertex.fChi2;
-  fId = vertex.fId;
-  fSmoothedTracks = (TObjArray*)(vertex.fSmoothedTracks->Clone());
+GFRaveVertex::GFRaveVertex(const GFRaveVertex & vertex) :
+  fPos(vertex.fPos),
+  fCov(vertex.fCov),
+  fNdf(vertex.fNdf),
+  fChi2(vertex.fChi2),
+  fId(vertex.fId)
+{
+  unsigned int nPar =  vertex.fSmoothedTracks.size();
+  fSmoothedTracks.reserve(nPar);
+  for (unsigned int i=0; i<nPar; ++i) {
+    fSmoothedTracks.push_back(new GFRaveTrackParameters(*(vertex.fSmoothedTracks[i])));
+  }
+
+#ifdef COUNT
+  std::cerr << "GFRaveVertex::GFRaveVertex(GFRaveVertex) - Number of objects: " << ++instCount << std::endl;
+#endif
 }
 
 
 GFRaveVertex& GFRaveVertex::operator=(const GFRaveVertex & vertex) {
-  if(fSmoothedTracks!=NULL){
-    fSmoothedTracks->Delete();
-    delete fSmoothedTracks;
-  }
-
   fPos = vertex.fPos;
-  fCov.ResizeTo(vertex.fCov);
   fCov = vertex.fCov;
   fNdf = vertex.fNdf;
   fChi2 = vertex.fChi2;
   fId = vertex.fId;
-  fSmoothedTracks = (TObjArray*)(vertex.fSmoothedTracks->Clone());
+
+  unsigned int nPar =  fSmoothedTracks.size();
+  for (unsigned int i=0; i<nPar; ++i) {
+    delete fSmoothedTracks[i];
+  }
+  nPar =  vertex.fSmoothedTracks.size();
+  fSmoothedTracks.reserve(nPar);
+  for (unsigned int i=0; i<nPar; ++i) {
+    fSmoothedTracks.push_back(new GFRaveTrackParameters(*(vertex.fSmoothedTracks[i])));
+  }
 }
 
 
 GFRaveVertex::~GFRaveVertex(){
-  if(fSmoothedTracks!=NULL){
-    fSmoothedTracks->Delete();
-    delete fSmoothedTracks;
+  unsigned int nPar =  fSmoothedTracks.size();
+  for (unsigned int i=0; i<nPar; ++i) {
+    delete fSmoothedTracks[i];
   }
+
+#ifdef COUNT
+  std::cerr << "GFRaveVertex::~GFRaveVertex() - Number of objects: " << --instCount << std::endl;
+#endif
 }
 
 

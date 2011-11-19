@@ -65,15 +65,14 @@ GFRaveVertexFactory::~GFRaveVertexFactory(){
 
 
 void
-GFRaveVertexFactory::create ( std::vector <  GFRaveVertex* > * GFvertices, const std::vector < GFTrack* > & GFTracks, bool use_beamspot ){
+GFRaveVertexFactory::findVertices ( std::vector <  GFRaveVertex* > * GFvertices, const std::vector < GFTrack* > & GFTracks, bool use_beamspot ){
   clearMaps();
 
-  std::vector < rave::Vertex > ravevertices;
-
   try{
-    std::vector<rave::Track> ravetracks = GFRave::GFTracksToTracks(GFTracks, fIdGFTrackMap, fIdGFTrackRepMap, 0);
-    ravevertices = fFactory->create(ravetracks, use_beamspot);
-    GFRave::RaveToGFVertices(GFvertices, ravevertices, fIdGFTrackMap);
+    GFRave::RaveToGFVertices(GFvertices,
+                             fFactory->create(GFRave::GFTracksToTracks(GFTracks, fIdGFTrackMap, fIdGFTrackRepMap, 0),
+                                              use_beamspot),
+                             fIdGFTrackMap);
   }
   catch(GFException & e){
     std::cerr << e.what();

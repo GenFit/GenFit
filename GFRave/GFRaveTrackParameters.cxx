@@ -26,17 +26,18 @@
 
 using namespace std;
 
+
 GFRaveTrackParameters::GFRaveTrackParameters() :
   fOriginalTrack(NULL),
   fWeight(0),
   fState(1,6),
   fCov(6,6)
 {
-  //std::cerr << "GFRaveTrackParameters::GFRaveTrackParameters() => calling default constructor\n";
+  ;
 }
 
 
-GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, double weight, TMatrixT<double> state6, TMatrixT<double> cov6x6) :
+GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, double weight, const TMatrixT<double>& state6, const TMatrixT<double>& cov6x6) :
   fOriginalTrack(track),
   fWeight(weight),
   fState(state6),
