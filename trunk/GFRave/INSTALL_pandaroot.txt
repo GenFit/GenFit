@@ -7,7 +7,7 @@
     cd $PANDAPATH/GenfitTools/GFRave
     . install_rave.sh
     
-- now comes the more complicated part, but this will become easier as soon as we have our own repository. The following files have to be changed, if you are at TUM E18, please take a look at my pandaroot and copy the changes: /nfs/hicran/project/panda/SIM/jrauch/clean 
+- now comes the more complicated part, but this will become easier in the near future. The following files have to be changed, if you are at TUM E18, please take a look at my pandaroot and copy the changes: /nfs/hicran/project/panda/SIM/jrauch/clean 
 - tpc/tpcreco/CMakeLists.txt
 - tpc/tpcreco/tpcrecoLinkDef.h
 - GenfitTools/CMakeLists.txt
