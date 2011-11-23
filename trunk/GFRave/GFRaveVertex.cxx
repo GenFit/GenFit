@@ -100,6 +100,8 @@ GFRaveVertex& GFRaveVertex::operator=(const GFRaveVertex & vertex) {
   for (unsigned int i=0; i<nPar; ++i) {
     fSmoothedTracks.push_back(new GFRaveTrackParameters(*(vertex.fSmoothedTracks[i])));
   }
+
+  return *this;
 }
 
 
