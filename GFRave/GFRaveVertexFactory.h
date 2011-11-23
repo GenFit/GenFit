@@ -53,6 +53,10 @@ class GFRaveVertexFactory {
   void findVertices ( std::vector <  GFRaveVertex* > *, const std::vector < GFTrack* > &, bool use_beamspot=false );
 
   void setBeamspot(const TVector3 & pos, const TMatrixT<double> & cov);
+
+  /**
+   * Set the reconstruction method. See http://projects.hepforge.org/rave/trac/wiki/RaveMethods
+   */
   void setMethod(const std::string & method);
 
  private:
