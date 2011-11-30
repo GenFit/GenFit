@@ -963,7 +963,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
 
 
 
-double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMatrixT<double>* cov) const {
+double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMatrixT<double>* cov) {
 
   static const int maxNumIt(2000);
   int numIt(0);
@@ -1087,6 +1087,7 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
                                  pointPathsFilt,
                                  fabs(fCharge/P[6]), // momentum
                                  fPdg,
+                                 fXX0,
                                  calcCov,
                                  &noise,
                                  &jac,
