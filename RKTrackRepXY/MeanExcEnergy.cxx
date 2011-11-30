@@ -33,7 +33,7 @@ float MeanExcEnergy::get(TGeoMaterial* mat){
     double denom  = 0.;
     TGeoMixture *mix = (TGeoMixture*)mat;
     for(int i=0;i<mix->GetNelements();++i){
-      int index = floor((mix->GetZmixt())[i]);
+      int index = (int)floor((mix->GetZmixt())[i]);
       //check whether the floor command worked
       assert(fabs(index-((mix->GetZmixt())[i]))<1.e-3);
       logMEE += 1./(mix->GetAmixt())[i]*(mix->GetWmixt())[i]*(mix->GetZmixt())[i]*log(MeanExcEnergy::get(index));
@@ -43,7 +43,7 @@ float MeanExcEnergy::get(TGeoMaterial* mat){
     return exp(logMEE);
   }
   else{// not a mixture
-    int index = floor(mat->GetZ());
+    int index = (int)floor(mat->GetZ());
     //check whether the floor command worked
     assert(fabs(index-mat->GetZ())<1.e-3);
     return MeanExcEnergy::get(index);
