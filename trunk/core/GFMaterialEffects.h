@@ -69,6 +69,7 @@ class GFMaterialEffects : public TObject{
                  const std::vector<double>& pointPaths, 
                  const double& mom,
                  const int& pdg,
+                       double& xx0,
                  const bool& doNoise = false,
                        TMatrixT<double>* noise = NULL,
                  const TMatrixT<double>* jacobian = NULL,

@@ -111,7 +111,8 @@ class GFAbsTrackRep : public TObject{
 
   // detector plane where the track parameters are given
   GFDetPlane         fRefPlane;
-  
+
+  double fXX0;
 
 
  public:
@@ -263,6 +264,12 @@ class GFAbsTrackRep : public TObject{
     if(fNdf>getDim())  return fNdf-getDim();
     return 0;
   }
+  /** @brief  X/X0 (total fraction of radiation length passed), cumulated during last extrapolation.
+   *  The fitter has to reset XX0 via resetXX0()
+   */
+  inline double getXX0() const {
+    return fXX0;
+  }
   /** @brief Puts the track representation in a given state.
    * 
    * This is used to update the track representation after the update of the 
@@ -363,6 +370,11 @@ class GFAbsTrackRep : public TObject{
    */
   virtual const TMatrixT<double>* getAuxInfo(const GFDetPlane& pl) {
 	  return NULL;
+  }
+
+
+  void resetXX0() {
+	  fXX0 = 0.;
   }
 
  private:

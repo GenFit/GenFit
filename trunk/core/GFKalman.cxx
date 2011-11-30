@@ -74,6 +74,14 @@ void GFKalman::processTrack(GFTrack* trk){
     one forth fitting pass */
   for(int ipass=0; ipass<2*fNumIt; ipass++){
     if(ipass>0) blowUpCovs(trk);
+
+    // reset X/X0 before last fitting pass
+    if(ipass==(2*fNumIt)-1) {
+      for(int i=0; i<nreps; ++i) {
+        trk->getTrackRep(i)->resetXX0();
+      }
+    }
+
     if(direction==1){
       trk->setNextHitToFit(0);
     }
@@ -85,22 +93,22 @@ void GFKalman::processTrack(GFTrack* trk){
     //save first and last plane,state&cov after the fitting pass
     if(direction==1){//forward at last hit
       for(int i=0; i<nreps; ++i){
-	trk->getTrackRep(i)->
-	  setLastPlane( trk->getTrackRep(i)->getReferencePlane() );
-	trk->getTrackRep(i)->
-	  setLastState( trk->getTrackRep(i)->getState() );
-	trk->getTrackRep(i)->
-	  setLastCov( trk->getTrackRep(i)->getCov() );
+        trk->getTrackRep(i)->
+          setLastPlane( trk->getTrackRep(i)->getReferencePlane() );
+        trk->getTrackRep(i)->
+          setLastState( trk->getTrackRep(i)->getState() );
+        trk->getTrackRep(i)->
+          setLastCov( trk->getTrackRep(i)->getCov() );
       }
     }
     else{//backward at first hit
       for(int i=0; i<nreps; ++i){
-	trk->getTrackRep(i)->
-	  setFirstPlane( trk->getTrackRep(i)->getReferencePlane() );
-	trk->getTrackRep(i)->
-	  setFirstState( trk->getTrackRep(i)->getState() );
-	trk->getTrackRep(i)->
-	  setFirstCov( trk->getTrackRep(i)->getCov() );
+        trk->getTrackRep(i)->
+          setFirstPlane( trk->getTrackRep(i)->getReferencePlane() );
+        trk->getTrackRep(i)->
+          setFirstState( trk->getTrackRep(i)->getState() );
+        trk->getTrackRep(i)->
+          setFirstCov( trk->getTrackRep(i)->getCov() );
       }
     }
 
