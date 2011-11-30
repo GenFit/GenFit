@@ -20,11 +20,11 @@
 #include <iostream>
 #include <assert.h>
 
-GFAbsTrackRep::GFAbsTrackRep() : fDimension(5),fState(5,1), fCov(5,5), fChiSqu(0), fNdf(0), fStatusFlag(0), fInverted(false), fFirstState(5,1), fFirstCov(5,5), fLastState(5,1), fLastCov(5,5)
+GFAbsTrackRep::GFAbsTrackRep() : fDimension(5),fState(5,1), fCov(5,5), fChiSqu(0), fNdf(0), fStatusFlag(0), fInverted(false), fFirstState(5,1), fFirstCov(5,5), fLastState(5,1), fLastCov(5,5), fXX0(-1.)
 {
 }
 
-GFAbsTrackRep::GFAbsTrackRep(int dim) : fDimension(dim), fState(dim,1), fCov(dim,dim), fChiSqu(0), fNdf(0), fStatusFlag(0), fInverted(false), fFirstState(dim,1), fFirstCov(dim,dim), fLastState(dim,1), fLastCov(dim,dim)
+GFAbsTrackRep::GFAbsTrackRep(int dim) : fDimension(dim), fState(dim,1), fCov(dim,dim), fChiSqu(0), fNdf(0), fStatusFlag(0), fInverted(false), fFirstState(dim,1), fFirstCov(dim,dim), fLastState(dim,1), fLastCov(dim,dim), fXX0(-1.)
 {
 }
 

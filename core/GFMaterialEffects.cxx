@@ -78,6 +78,7 @@ double GFMaterialEffects::effects(const std::vector<TVector3>& points,
                                   const std::vector<double>& pointPaths, 
                                   const double& mom,
                                   const int& pdg,
+                                        double& xx0,
                                   const bool& doNoise,
                                         TMatrixT<double>* noise,
                                   const TMatrixT<double>* jacobian,
@@ -129,6 +130,8 @@ double GFMaterialEffects::effects(const std::vector<TVector3>& points,
             momLoss += realPath/dist * this->energyLossBrems(mom);
           if (doNoise && fEnergyLossBrems && fNoiseBrems)
             this->noiseBrems(mom, noise);
+
+          xx0 += fstep/fradiationLength;
         }
         X += fstep;
       }
