@@ -228,13 +228,14 @@ class RKTrackRep : public GFAbsTrackRep {
   /** extrapolate(), extrapolateToPoint() and extrapolateToLine() call this function.
     * Extrap() needs a plane as an argument, hence extrapolateToPoint() and extrapolateToLine() create virtual detector planes.
     * In this function, RKutta() is called and the resulting points and point paths are filtered 
-    * so that the direction doesn't change and tiny steps are filtered out. After the propagation the material effects in #fEffect are called.
+    * so that the direction doesn't change and tiny steps are filtered out. After the propagation the material effects are called via the GFMaterialEffects singleton.
     * Extrap() will loop until the plane is reached, unless the propagation fails or the maximum number of 
     * iterations is exceeded.
+    * fXX0 is also updated here.
     */
   double Extrap(const GFDetPlane& plane,
                 TMatrixT<double>* state,
-                TMatrixT<double>* cov=NULL) const;
+                TMatrixT<double>* cov=NULL);
   
   //RKTrackRep(const RKTrackRep& rhs){};
   
@@ -256,7 +257,7 @@ class RKTrackRep : public GFAbsTrackRep {
   TMatrixT<double> fAuxInfo;
 
  public:
-  ClassDef(RKTrackRep,4)
+  ClassDef(RKTrackRep,5)
 
 };
 
