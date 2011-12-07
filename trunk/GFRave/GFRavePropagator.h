@@ -43,6 +43,13 @@
 
 /**
  * @brief GFRavePropagator class
+ * Inherits from rave::Propagator. A map has to be provided,
+ * containing pointers to clones of the Cardinal Reps of the GFtracks.
+ * The GFRavePropagator uses the information of the rave track to set
+ * the state and covariance of the corresponding GFAbsTrackRep,
+ * extrapolates and then returns a new rave track with the
+ * extrapolated state and covariance.
+ *
  */
 
 class GFRavePropagator : public rave::Propagator

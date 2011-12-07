@@ -40,7 +40,12 @@
 
 #include "GFTrack.h"
 
-
+/**
+ * @brief GFRaveVertexFactory
+ *  The GFRaveVertexFactory is basically a wrapper around the rave::VertexFactory.
+ *  It takes care of initializing the rave::VertexFactory, building the necessary maps,
+ *  convert GENFIT to rave objects and vice versa.
+ **/
 
 class GFRaveVertexFactory {
  public:
@@ -68,8 +73,14 @@ class GFRaveVertexFactory {
   rave::MagneticField* fMagneticField;
   rave::Propagator* fPropagator;
 
-  std::map<int, GFTrack*> * fIdGFTrackMap; // bookkeeping of original GFTracks for later assignment to GFVertices
-  std::map<int, GFAbsTrackRep*> * fIdGFTrackRepMap; // map of copies of the cardinal reps for the GFRavePropagator; ownership of trackrep clones is HERE!!!
+  /**
+   * bookkeeping of original GFTracks for later assignment to GFVertices
+   */
+  std::map<int, GFTrack*> * fIdGFTrackMap;
+  /**
+   * map of copies of the cardinal reps for the GFRavePropagator; ownership of trackrep clones is HERE!!!
+   */
+  std::map<int, GFAbsTrackRep*> * fIdGFTrackRepMap;
 
 
 };

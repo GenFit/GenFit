@@ -38,6 +38,11 @@
 
 /**
  * @brief GFRaveVertex class
+ * A Vertex contains information about its position and covariance.
+ * The tracks the vertex is consisting of are stored in fSmoothedTracks.
+ * These GFRaveTrackParameters contain the weight of the corresponding track
+ * in the vertex, smoothed track parameters and a pointer to the original
+ * unaltered GFTrack.
  */
 
 class GFRaveVertex : public TObject
@@ -60,12 +65,22 @@ class GFRaveVertex : public TObject
 
 
     // Accessors
+    /**
+     * get Position
+     */
     TVector3 getPos() const {return fPos;}
+
+    /**
+     * get 3x3 covariance (error) of position.
+     */
     TMatrixT<double> getCov() const {return fCov;}
 
     double getNdf() const {return fNdf;}
     double getChi2() const {return fChi2;}
 
+    /**
+     * Number of tracks the vertex is made of
+     */
     unsigned int getNTracks() const {return fSmoothedTracks.size();}
     GFRaveTrackParameters* getParameters(unsigned int i) const {return fSmoothedTracks[i];}
 

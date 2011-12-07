@@ -34,6 +34,7 @@
 
 /**
  * @brief GFRaveMagneticField class
+ * Uses the GFFieldManager to provide a magnetic field to rave.
  */
 
 class GFRaveMagneticField : public rave::MagneticField
