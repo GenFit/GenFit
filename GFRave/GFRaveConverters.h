@@ -17,6 +17,10 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ *  @author Johannes Rauch (Technische Universit&auml;t M&uuml;nchen, original author)
+ *
+ */
 
 /** @addtogroup GFRave
  * @{
@@ -40,7 +44,9 @@
 
 #include <iostream>
 
-
+/**
+ * @brief Collection of converter functions
+ **/
 
 namespace GFRave
 {
@@ -63,7 +69,9 @@ namespace GFRave
   rave::Track RepToTrack(GFAbsTrackRep* rep, int id = -1, void * originaltrack = 0, std::string tag="");
 
   // RAVE to GENFIT
-  void setTrackRepData(const rave::Track & orig, GFAbsTrackRep* rep); // set state and cov of trackrep according to rave track
+  /** sets state and cov of a trackrep according to rave track
+   */
+  void setTrackRepData(const rave::Track & orig, GFAbsTrackRep* rep);
 
   GFRaveVertex* RaveToGFVertex(const rave::Vertex &, const std::map<int, GFTrack*> * IdGFTrackMap = NULL);
   void RaveToGFVertices(std::vector<GFRaveVertex*> *, const std::vector<rave::Vertex> &, const std::map<int, GFTrack*> * IdGFTrackMap);
