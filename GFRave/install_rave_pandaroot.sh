@@ -22,6 +22,7 @@ cd $RAVEPATH
 
 buildRave=false
 
+echo "make rave:"
 
 if [ ! -f configure ] # bootstrap rave if necessary
 then
@@ -33,28 +34,27 @@ then
     echo "build rave for the first time"
     buildRave=true
 else # check for new or modified files
-  for file in find -maxdepth 3 -cnewer installTimeCheck
-  do
-    if [ file -nt installTimeCheck ]
-    then
-        echo "found file newer than last build -> rebuild rave"
-        buildRave=true
-        break
-    fi
-  done
+  echo "checking for new/modified files"
+  NEWFILES=`find . -path '*\.svn*' -prune -o -newer installTimeCheck -print`
+  if [ ${#NEWFILES} != 0 ]
+  then
+    #echo $NEWFILES
+    echo "found file newer than last build -> rebuild rave"
+    buildRave=true
+  fi
 fi
 
 
 if $buildRave
 then
-  # make rave
+  # configure make make install rave
   ./configure --prefix=$PANDABUILD
   make
   make install
   
-  touch installTimeCheck # create empty installTimeCheck file
+  touch installTimeCheck # create (or update) installTimeCheck file
 else
-  echo "rave: nothing to build"
+  echo "nothing to be done"
 fi
 
 cd -
