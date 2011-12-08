@@ -61,6 +61,7 @@ class GFRaveVertexFactory {
 
   /**
    * Set the reconstruction method. See http://projects.hepforge.org/rave/trac/wiki/RaveMethods
+   * Smoothing has to be turned on! e.g. kalman-smoothing:1
    */
   void setMethod(const std::string & method);
 

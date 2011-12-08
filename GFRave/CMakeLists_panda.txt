@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 IF(NOT DEFINED ENV{RAVEPATH})
-   MESSAGE(FATAL_ERROR "You did not define the environment variable RAVEPATH which is nedded to find rave. Please set this variable and execute cmake again.") 
+   MESSAGE(FATAL_ERROR "You did not define the environment variable RAVEPATH which is needed to find rave. Please set this variable and execute cmake again.") 
 ENDIF(NOT DEFINED ENV{RAVEPATH})
 
 #check for ENV variables that are needed
@@ -17,6 +17,10 @@ ENDIF(NOT DEFINED ENV{ROOTSYS})
 #ENDIF(NOT DEFINED ENV{GENFIT})
 
 SET(RAVEPATH $ENV{RAVEPATH})
+
+# compile rave
+cmake_policy(SET CMP0011 NEW)
+execute_process(COMMAND ${CMAKE_SOURCE_DIR}/GenfitTools/GFRave/install_rave_pandaroot.sh)
 
 # get compiler flags from rave
 SET(ENV{PKG_CONFIG_PATH} ${RAVEPATH})
