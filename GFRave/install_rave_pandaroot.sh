@@ -33,7 +33,7 @@ then
     echo "build rave for the first time"
     buildRave=true
 else # check for new or modified files
-  for file in $RAVEPATH/*
+  for file in find -maxdepth 3 -cnewer installTimeCheck
   do
     if [ file -nt installTimeCheck ]
     then
