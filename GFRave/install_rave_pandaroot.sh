@@ -3,7 +3,7 @@
 # check if necessary environment variables are set
 : ${SIMPATH:?"SIMPATH is not set!"}
 : ${PANDABUILD:?"PANDABUILD is not set!"}
-: ${RAVEPATH:?"RAVEPATH is not set!"}
+: ${1:?"please give path to rave as argument!"}
 
 # set important variables for rave installation
 export CLHEPPATH=$SIMPATH/cern/clhep 
@@ -17,7 +17,7 @@ export CLHEP_MATRIXLIBPATH=$SIMPATH/cern/clhep/lib
 
 
 
-cd $RAVEPATH
+cd $1
 
 
 buildRave=false
