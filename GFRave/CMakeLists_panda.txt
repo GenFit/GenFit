@@ -5,18 +5,16 @@
 cmake_minimum_required(VERSION 2.6)
 
 
-
-
-# check if RAVEPATH is set
-IF(NOT DEFINED ENV{RAVEPATH})
-   MESSAGE(FATAL_ERROR "You did not define the environment variable RAVEPATH which is needed to find rave. Please set this variable and execute cmake again.") 
-ELSE(NOT DEFINED ENV{RAVEPATH})  
-   SET(RAVEPATH $ENV{RAVEPATH})
-ENDIF(NOT DEFINED ENV{RAVEPATH})
-
 # check if rave is included as an external; RAVEPPATH is not used in that case
 if(EXISTS ${CMAKE_SOURCE_DIR}/rave)
   SET(RAVEPATH ${CMAKE_SOURCE_DIR}/rave)
+else(EXISTS ${CMAKE_SOURCE_DIR}/rave)
+  # check if RAVEPATH is set
+  IF(NOT DEFINED ENV{RAVEPATH})
+     MESSAGE(FATAL_ERROR "Did not find rave as an external and RAVEPATH is not set!") 
+  ELSE(NOT DEFINED ENV{RAVEPATH})  
+     SET(RAVEPATH $ENV{RAVEPATH})
+  ENDIF(NOT DEFINED ENV{RAVEPATH})
 endif(EXISTS ${CMAKE_SOURCE_DIR}/rave)
 
 MESSAGE("found rave in " ${RAVEPATH})
