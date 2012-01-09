@@ -192,7 +192,7 @@ void RKTrackRep::calcState(const TVector3& pos,
 }
 
 
-TMatrixT<double>* RKTrackRep::getState7() const{
+void RKTrackRep::getState7(TMatrixT<double>& state7) const{
 
   TVector3 o = fRefPlane.getO();
   TVector3 u = fRefPlane.getU();
@@ -204,17 +204,15 @@ TMatrixT<double>* RKTrackRep::getState7() const{
 
   TVector3 point = o + fState[3][0]*u + fState[4][0]*v;
 
-  TMatrixT<double>* state7 = new TMatrixT<double>(7,1);
+  state7.ResizeTo(7,1);
 
-  (*state7)[0][0] = point.X();
-  (*state7)[1][0] = point.Y();
-  (*state7)[2][0] = point.Z();
-  (*state7)[3][0] = pTilde.X();
-  (*state7)[4][0] = pTilde.Y();
-  (*state7)[5][0] = pTilde.Z();
-  (*state7)[6][0] = fState[0][0];
-
-  return state7;
+  state7[0][0] = point.X();
+  state7[1][0] = point.Y();
+  state7[2][0] = point.Z();
+  state7[3][0] = pTilde.X();
+  state7[4][0] = pTilde.Y();
+  state7[5][0] = pTilde.Z();
+  state7[6][0] = fState[0][0];
 }
 
 
@@ -357,7 +355,6 @@ void RKTrackRep::transformMP(const TMatrixT<double>& in, TMatrixT<double>& out5x
   out5x5.ResizeTo(5, 5);
 
   out5x5 = J_Mp*(in*J_Mp_transp);
-
 }
 
 
@@ -421,7 +418,8 @@ void RKTrackRep::extrapolateToPoint(const TVector3& pos,
 
   static const int maxIt(30);
 
-  TMatrixT<double>* state7 = getState7();
+  TMatrixT<double> state7;
+  getState7(state7);
 
   double coveredDistance(0.);
 
@@ -429,8 +427,8 @@ void RKTrackRep::extrapolateToPoint(const TVector3& pos,
   int iterations(0);
 
   while(true){
-    pl.setON(pos,TVector3((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]));
-    coveredDistance =  this->Extrap(pl, state7);
+    pl.setON(pos,TVector3(state7[3][0], state7[4][0], state7[5][0]));
+    coveredDistance =  this->Extrap(pl, &state7);
 
     if(fabs(coveredDistance)<MINSTEP) break;
     if(++iterations == maxIt) {
@@ -438,10 +436,8 @@ void RKTrackRep::extrapolateToPoint(const TVector3& pos,
       throw exc;
     }
   }
-  poca.SetXYZ((*state7)[0][0], (*state7)[1][0], (*state7)[2][0]);
-  dirInPoca.SetXYZ((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
-
-  delete state7;
+  poca.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
+  dirInPoca.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
 }
 
 
@@ -469,7 +465,8 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
                                    TVector3& poca_onwire){
   static const int maxIt(30);
 
-  TMatrixT<double>* state7 = getState7();
+  TMatrixT<double> state7;
+  getState7(state7);
 
   double coveredDistance(0.);
 
@@ -478,10 +475,10 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
 
   while(true){
     pl.setO(point1);
-    TVector3 currentDir((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
+    TVector3 currentDir(state7[3][0], state7[4][0], state7[5][0]);
     pl.setU(currentDir.Cross(point2-point1));
     pl.setV(point2-point1);
-    coveredDistance = this->Extrap(pl, state7);
+    coveredDistance = this->Extrap(pl, &state7);
 
     if(fabs(coveredDistance)<MINSTEP) break;
     if(++iterations == maxIt) {
@@ -490,11 +487,9 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
     }
   }
 
-  poca.SetXYZ((*state7)[0][0], (*state7)[1][0], (*state7)[2][0]);
-  dirInPoca.SetXYZ((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
+  poca.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
+  dirInPoca.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
   poca_onwire = poca2Line(point1,point2,poca);
-
-  delete state7;
 }
 
 
@@ -505,28 +500,30 @@ double RKTrackRep::extrapolate(const GFDetPlane& pl,
                                TMatrixT<double>& covPred){
   
   TMatrixT<double> cov7x7(7,7);
-  TMatrixT<double>* state7 = getState7();
+
+  TMatrixT<double> state7;
+  getState7(state7);
 
   transformPM(fCov, cov7x7, fRefPlane, fState, fSpu);
 
-  double coveredDistance = this->Extrap(pl, state7, &cov7x7);
+  double coveredDistance = this->Extrap(pl, &state7, &cov7x7);
 
   covPred.ResizeTo(5,5);
 
-  transformMP(cov7x7, covPred, pl, (*state7));
+  transformMP(cov7x7, covPred, pl, state7);
 
   const TVector3 O = pl.getO();
   const TVector3 U = pl.getU();
   const TVector3 V = pl.getV();
   const TVector3 W = pl.getNormal();
 
-  const TVector3 Point((*state7)[0][0], (*state7)[1][0], (*state7)[2][0]);
-  const TVector3 A((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
+  const TVector3 Point(state7[0][0], state7[1][0], state7[2][0]);
+  const TVector3 A(state7[3][0], state7[4][0], state7[5][0]);
   
   double AtW = A*W;
 
   statePred.ResizeTo(5,1);
-  statePred[0][0] = (*state7)[6][0];
+  statePred[0][0] = state7[6][0];
   statePred[1][0] = (A*U)/(AtW);
   statePred[2][0] = (A*V)/(AtW);
   statePred[3][0] = (Point-O)*U;
@@ -537,8 +534,6 @@ double RKTrackRep::extrapolate(const GFDetPlane& pl,
   if (AtW >=0 ) fCacheSpu = 1.;
   else fCacheSpu = -1.;
 
-  delete state7;
-
   return coveredDistance;
 }
 
@@ -548,26 +543,25 @@ double RKTrackRep::extrapolate(const GFDetPlane& pl,
 double RKTrackRep::extrapolate(const GFDetPlane& pl, 
                                TMatrixT<double>& statePred){
 
-  TMatrixT<double>* state7 = getState7();
+  TMatrixT<double> state7;
+  getState7(state7);
 
-  double coveredDistance = this->Extrap(pl, state7);
+  double coveredDistance = this->Extrap(pl, &state7);
 
   const TVector3 O = pl.getO();
   const TVector3 U = pl.getU();
   const TVector3 V = pl.getV();
   const TVector3 W = pl.getNormal();
 
-  const TVector3 Point((*state7)[0][0], (*state7)[1][0], (*state7)[2][0]);
-  const TVector3 A((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
+  const TVector3 Point(state7[0][0], state7[1][0], state7[2][0]);
+  const TVector3 A(state7[3][0], state7[4][0], state7[5][0]);
 
   statePred.ResizeTo(5,1);
-  statePred[0][0] = (*state7)[6][0];
+  statePred[0][0] = state7[6][0];
   statePred[1][0] = (A*U)/(A*W);
   statePred[2][0] = (A*V)/(A*W);
   statePred[3][0] = (Point-O)*U;
   statePred[4][0] = (Point-O)*V;
-
-  delete state7;
 
   return coveredDistance;
 }
@@ -1173,14 +1167,12 @@ void RKTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TM
 
   calcState(pos, mom);
 
-  TMatrixT<double>* state7 = getState7();
+  TMatrixT<double> state7;
+  getState7(state7);
 
   TMatrixT<double> covcopy6x6(cov6x6);
 
-  transformMP(covcopy6x6, fCov, fRefPlane, *state7);
-
-  delete state7;
-
+  transformMP(covcopy6x6, fCov, fRefPlane, state7);
 }
 
 
@@ -1190,7 +1182,8 @@ double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
 
   static const int maxIt(30);
 
-  TMatrixT<double>* state7 = getState7();
+  TMatrixT<double> state7;
+  getState7(state7);
 
   double coveredDistance(0.);
 
@@ -1198,14 +1191,14 @@ double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
   int iterations(0);
 
   while(true){
-    pos.SetXYZ((*state7)[0][0], (*state7)[1][0], (*state7)[2][0]);
-    dir.SetXYZ((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
+    pos.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
+    dir.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
     dir.SetMag(1.);
 
     dest = pos + (h - coveredDistance) * dir;
 
     pl.setON(dest, dir);
-    coveredDistance += this->Extrap(pl, state7);
+    coveredDistance += this->Extrap(pl, &state7);
 
     if(fabs(h - coveredDistance)<MINSTEP) break;
     if(++iterations == maxIt) {
@@ -1214,14 +1207,11 @@ double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
     }
   }
   
-  pos.SetXYZ((*state7)[0][0], (*state7)[1][0], (*state7)[2][0]);
-  dir.SetXYZ((*state7)[3][0], (*state7)[4][0], (*state7)[5][0]);
+  pos.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
+  dir.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
   dir.SetMag(1.);  
   
-  delete state7;
-
   return coveredDistance;
-
 }
 
 

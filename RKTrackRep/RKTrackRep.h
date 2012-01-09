@@ -186,7 +186,7 @@ class RKTrackRep : public GFAbsTrackRep {
   void calcState(const TVector3& pos,
                  const TVector3& mom);
 
-  TMatrixT<double>* getState7() const;
+  void getState7(TMatrixT<double>& state7) const;
 
   void transformPM(const TMatrixT<double>& in5x5,
                    TMatrixT<double>& out7x7,
