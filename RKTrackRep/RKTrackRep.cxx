@@ -702,7 +702,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   // Main cycle of Runge-Kutta method
   //
 
-  //for saving points only when the direction didnt change
+  //for saving points only when the direction didn't change
   int Ssign=1;
   if(S<0) Ssign = -1;
 
@@ -908,13 +908,13 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   
   if (!stopBecauseOfMaterial) { // linear extrapolation to surface
     if(fabs(Sl) > 1.E-12) Sl=1./Sl;	      // Sl = inverted last Stepsize Sl
-    A [0]+=(SA[0]*=Sl)*Step; 	// Step  = distance to surface
-    A [1]+=(SA[1]*=Sl)*Step; 	// SA*Sl = delta A / delta way; local derivative of A with respect to the length of the way
-    A [2]+=(SA[2]*=Sl)*Step;	// A = A + Step * SA*Sl
+    A[0]+=(SA[0]*=Sl)*Step; 	// Step  = distance to surface
+    A[1]+=(SA[1]*=Sl)*Step; 	// SA*Sl = delta A / delta way; local derivative of A with respect to the length of the way
+    A[2]+=(SA[2]*=Sl)*Step;	// A = A + Step * SA*Sl
 
-    P[0]      = R[0]+Step*(A[0]-.5*Step*SA[0]);    // P = R + Step*(A - 1/2*Step*SA); approximation for final point on surface                           
-    P[1]      = R[1]+Step*(A[1]-.5*Step*SA[1]);
-    P[2]      = R[2]+Step*(A[2]-.5*Step*SA[2]);
+    P[0] = R[0]+Step*(A[0]-.5*Step*SA[0]);    // P = R + Step*(A - 1/2*Step*SA); approximation for final point on surface
+    P[1] = R[1]+Step*(A[1]-.5*Step*SA[1]);
+    P[2] = R[2]+Step*(A[2]-.5*Step*SA[2]);
       
     points.push_back(TVector3(P[0],P[1],P[2]));
     pointPaths.push_back(Step);
@@ -961,15 +961,13 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
 
   static const int maxNumIt(2000);
   int numIt(0);
+
   bool calcCov(true);
   if(cov==NULL) calcCov=false;  
 
   double *P;
-  if(calcCov) {
-    P = new double[56];
-    memset(P,0x00,56*sizeof(double));
-  }
-  else {P = new double[7];} // not needed memset(P,0x00,7*sizeof(double));};
+  if(calcCov) {P = new double[56];}
+  else {P = new double[7];}
 
   for(int i=0;i<7;++i){
     P[i] = (*state)[i][0];
@@ -999,13 +997,6 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
       P[55] =  (*state)[6][0];
     }
 
-    double dir(1.);
-    {
-      TVector3 Pvect(P[0],P[1],P[2]); //position
-      TVector3 Avect(P[3],P[4],P[5]); //direction
-      TVector3 dist = plane.dist(Pvect); //from point to plane
-      if(dist*Avect<0.) dir=-1.;
-    }
 
     TVector3 directionBefore(P[3],P[4],P[5]); // direction before propagation
     directionBefore.SetMag(1.);
@@ -1091,12 +1082,14 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
       if(fabs(P[6])>1.E-10){ // do momLoss only for defined 1/momentum .ne.0
         P[6] = fCharge/(fabs(fCharge/P[6])-momLoss);
       }
-
     }
     
     if(calcCov){ //propagate cov and add noise
-      if(!(oldCov < 1.E200)){
+      TMatrixT<double> absCov(oldCov);
+      absCov.Abs();
+      if(!(absCov < 1.E200)){
         GFException exc("RKTrackRep::Extrap ==> covariance matrix exceeds numerical limits",__LINE__,__FILE__);
+        oldCov.Print();
         exc.setFatal();
         delete[] P;
         throw exc;
