@@ -73,7 +73,7 @@ RKTrackRep::~RKTrackRep(){
 }
 
 
-RKTrackRep::RKTrackRep() : GFAbsTrackRep(5), fDirection(true), fPdg(0), fMass(0.), fCharge(-1), fCachePlane(), fCacheSpu(1), fSpu(1), fAuxInfo(1,1) {
+RKTrackRep::RKTrackRep() : GFAbsTrackRep(5), fDirection(true), fPdg(0), fMass(0.), fCharge(-1), fCachePlane(), fCacheSpu(1), fSpu(1), fAuxInfo(1,1), fNoMaterial(false) {
 }
 
 
@@ -82,7 +82,7 @@ RKTrackRep::RKTrackRep(const TVector3& pos,
                        const TVector3& poserr,
                        const TVector3& momerr,
                        const int& PDGCode) :
-                       GFAbsTrackRep(5), fDirection(true), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1) {
+                       GFAbsTrackRep(5), fDirection(true), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1), fNoMaterial(false) {
 
   setPDG(PDGCode); // also sets charge and mass
 
@@ -92,7 +92,7 @@ RKTrackRep::RKTrackRep(const TVector3& pos,
 
 
 RKTrackRep::RKTrackRep(const GFTrackCand* aGFTrackCandPtr) :
-                       GFAbsTrackRep(5), fDirection(true), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1) {
+                       GFAbsTrackRep(5), fDirection(true), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1), fNoMaterial(false) {
 
   setPDG(aGFTrackCandPtr->getPdgCode()); // also sets charge and mass
 
@@ -110,7 +110,7 @@ RKTrackRep::RKTrackRep(const GFTrackCand* aGFTrackCandPtr) :
 RKTrackRep::RKTrackRep(const TVector3& pos,
                        const TVector3& mom,
                        const int& PDGCode) :
-                       GFAbsTrackRep(5),fDirection(true), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1){
+                       GFAbsTrackRep(5),fDirection(true), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1), fNoMaterial(false) {
 
   setPDG(PDGCode); // also sets charge and mass
 
