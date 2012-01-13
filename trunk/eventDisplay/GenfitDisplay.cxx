@@ -1,6 +1,41 @@
 
 #include "GenfitDisplay.h"
 
+#include <assert.h>
+#include <cmath>
+#include <exception>
+#include <iostream>
+#include <GFAbsRecoHit.h>
+#include <GFAbsTrackRep.h>
+#include <GFConstField.h>
+#include <GFDetPlane.h>
+#include <GFException.h>
+#include <GFFieldManager.h>
+#include <GFTools.h>
+#include <TApplication.h>
+#include <TEveBrowser.h>
+#include <TEveManager.h>
+#include <TEveEventManager.h>
+#include <TEveGeoNode.h>
+#include <TEveGeoShape.h>
+#include <TEveStraightLineSet.h>
+#include <TDecompSVD.h>
+#include <TGButton.h>
+#include <TGeoEltu.h>
+#include <TGeoManager.h>
+#include <TGeoMatrix.h>
+#include <TGeoNode.h>
+#include <TGeoSphere.h>
+#include <TGeoTube.h>
+#include <TMath.h>
+#include <TMatrixT.h>
+#include <TMatrixDEigen.h>
+#include <TROOT.h>
+#include <TVector2.h>
+#include <TVectorD.h>
+#include <TSystem.h>
+
+
 GenfitDisplay* GenfitDisplay::eventDisplay = NULL;
 
 GenfitDisplay::GenfitDisplay() {
