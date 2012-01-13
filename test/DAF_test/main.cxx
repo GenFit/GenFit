@@ -243,8 +243,6 @@ int main() {
 		GFDaf daf;
 		GFKalman kal;
 		daf.processTrack(track);
-		std::vector<std::vector<std::vector<double> > > weights = daf.getWeights();
-
 		kal.processTrack(true_track);
 
 		for(int j=0; j<track->getNumReps(); j++) {
@@ -253,34 +251,31 @@ int main() {
 			int real_hits_found = 0;
 
 			hit_count += track->getNumHits();
-			int hit_in_ev = 0;
 
-			for(int k=0; k<weights.at(j).size(); k++) {
-
-				for(int l=0; l<weights.at(j).at(k).size(); l++) {
-//					std::vector<GFTrack*> event;
-					if(weights.at(j).at(k).at(l) < 0.1 && noise_hits.at(i).at(hit_in_ev) == 1) {
-						noise_hits_found++;
-					} else if(weights.at(j).at(k).at(l) > 0.1 && noise_hits.at(i).at(hit_in_ev) == 0) {
-						real_hits_found++;
-					} else if(weights.at(j).at(k).at(l) > 0.1 && noise_hits.at(i).at(hit_in_ev) == 1){
-//						std::cout<<"NOISE HIT MISSED! Event: "<<i<<", Plane: "<<k<<" Hit: "<<hit_in_ev<<std::endl;
-						missident_noise++;
-						missident_event = i;
-/*						event.push_back(true_track);
-						event.push_back(track);*/
-					} else if(weights.at(j).at(k).at(l) < 0.1 && noise_hits.at(i).at(hit_in_ev) == 0){
-//						std::cout<<"REAL HIT NOISED! Event: "<<i<<", Plane: "<<k<<" Hit: "<<hit_in_ev<<std::endl;
-						missident_hit++;
-						missident_event = i;
-/*				event.push_back(true_track);
-				event.push_back(track);*/
-					} else {
-						std::cout<<"This should not have happened?!"<<std::endl;
-					}
-					hit_in_ev++;
-//					display->addEvent(event);
+			for(int k=0; k<track->getNumHits(); ++k) {
+				double weight;
+				track->getBK(j)->getNumber("dafWeight", k, weight);
+//				std::vector<GFTrack*> event;
+				if(weight < 0.1 && noise_hits.at(i).at(k) == 1) {
+					noise_hits_found++;
+				} else if(weight > 0.1 && noise_hits.at(i).at(k) == 0) {
+					real_hits_found++;
+				} else if(weight > 0.1 && noise_hits.at(i).at(k) == 1){
+//					std::cout<<"NOISE HIT MISSED! Event: "<<i<<", Plane: "<<k<<" Hit: "<<k<<std::endl;
+					missident_noise++;
+					missident_event = i;
+/*					event.push_back(true_track);
+					event.push_back(track);*/
+				} else if(weight < 0.1 && noise_hits.at(i).at(k) == 0){
+//					std::cout<<"REAL HIT NOISED! Event: "<<i<<", Plane: "<<k<<" Hit: "<<k<<std::endl;
+					missident_hit++;
+					missident_event = i;
+/*			event.push_back(true_track);
+			event.push_back(track);*/
+				} else {
+					std::cout<<"This should not have happened?!"<<std::endl;
 				}
+//				display->addEvent(event);
 			}
 
 //			std::cout<<"Noise hits found: " << noise_hits_found << ". Real hits found: " << real_hits_found <<std::endl;
