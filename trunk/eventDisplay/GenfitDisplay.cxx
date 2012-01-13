@@ -154,6 +154,16 @@ void GenfitDisplay::open() {
 	if(drawGeometry) {
 		TGeoNode* top_node = gGeoManager->GetTopNode();
 		assert(top_node != NULL);
+
+		//Set transparency & color of geometry
+		TObjArray* volumes = gGeoManager->GetListOfVolumes();
+		for(int i = 0; i < volumes->GetEntries(); i++) {
+			TGeoVolume* volume = dynamic_cast<TGeoVolume*>(volumes->At(i));
+			assert(volume != NULL);
+			volume->SetLineColor(12);
+			volume->SetTransparency(50);
+		}*/
+
 		TEveGeoTopNode* eve_top_node = new TEveGeoTopNode(gGeoManager, top_node);
 		gEve->AddGlobalElement(eve_top_node);
 	}
