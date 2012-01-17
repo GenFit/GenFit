@@ -162,7 +162,7 @@ void GenfitDisplay::open() {
 			assert(volume != NULL);
 			volume->SetLineColor(12);
 			volume->SetTransparency(50);
-		}*/
+		}
 
 		TEveGeoTopNode* eve_top_node = new TEveGeoTopNode(gGeoManager, top_node);
 		gEve->AddGlobalElement(eve_top_node);

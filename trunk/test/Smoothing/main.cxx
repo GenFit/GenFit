@@ -10,6 +10,7 @@
 #include <RKTrackRep.h>
 #include <TApplication.h>
 #include <TCanvas.h>
+#include <TEveManager.h>
 #include <TGeoManager.h>
 #include <TH1D.h>
 #include <TRandom.h>
@@ -26,7 +27,6 @@ int main() {
 	TApplication* rootapp = new TApplication("rootapp", 0, 0);
 	TEveManager::Create();
 
-	TEveStraightLineSet* lines = new TEveStraightLineSet;
 	TVector3 old_point(0,0,0);
 
 	double x_res = 0.03;
