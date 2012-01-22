@@ -30,6 +30,9 @@
 #include "TObject.h"
 #include "TVector3.h"
 
+
+
+
 /** @brief Track candidate -- a list of cluster indices
  *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
@@ -85,7 +88,8 @@ public:
 	      unsigned int& detId,
 	      unsigned int& hitId) const {
 	assert(i<getNHits());
-	detId=fDetId.at(i);hitId=fHitId.at(i);
+	detId = fTrackCandHits[i].fDetId;
+	hitId = fTrackCandHits[i].fHitId;
   }
   /** @brief Get detector ID and cluster index (hitId) for 
    * hit number i with ordering parameter rho 
@@ -95,8 +99,9 @@ public:
 	      unsigned int& hitId,
 	      double &rho) const {
 	assert(i<getNHits());
-	detId=fDetId.at(i);hitId=fHitId.at(i);
-	rho=fRho.at(i);
+	detId = fTrackCandHits[i].fDetId;
+	hitId = fTrackCandHits[i].fHitId;
+	rho = fTrackCandHits[i].fRho;
   }
   /** @brief Get detector ID and cluster index (hitId) for 
    * hit number i with plane id
@@ -106,21 +111,31 @@ public:
 	      unsigned int& hitId,
 	      unsigned int& planeId) const {
 	assert(i<getNHits());
-	detId=fDetId.at(i);hitId=fHitId.at(i);
-	planeId=fPlaneId.at(i);
+	detId=fTrackCandHits[i].fDetId;
+	hitId=fTrackCandHits[i].fHitId;
+	planeId=fTrackCandHits[i].fPlaneId;
   }
 
-  unsigned int getNHits() const {return fDetId.size();}
+  unsigned int getNHits() const {return fTrackCandHits.size();}
   double getCurv() const {return fCurv;}
   double getDip() const {return fDip;}
   bool inverted() const {return fInv;}
   std::vector<unsigned int> GetHitIDs(int detId=-1) const;
-  std::vector<unsigned int> GetDetIDs() const {return fDetId;}
-  std::vector<double>       GetRhos() const {return fRho;}
+  std::vector<unsigned int> GetDetIDs() const {
+	  std::vector<unsigned int> result;
+	  int n=fTrackCandHits.size();
+	    for(int i = 0; i != n; ++i){
+	    	  result.push_back(fTrackCandHits[i].fDetId);
+	    }
+	    return result;
+  }
+  std::vector<double> GetRhos(int detId=-1) const;
+
   std::set<unsigned int> GetUniqueDetIDs() const {
     std::set<unsigned int> retVal;
-    for(unsigned int i=0;i<fDetId.size();++i){
-      retVal.insert(fDetId.at(i));
+    int n = fTrackCandHits.size();
+    for(int i = 0; i != n; ++i){
+      retVal.insert(fTrackCandHits[i].fDetId);
     }
     return retVal;
   }
@@ -162,18 +177,26 @@ public:
    */
   void setPdgCode(int pdgCode){fPdg=pdgCode;}
   void append(const GFTrackCand&);
-
+  /** @brief sort the hits that were already added to the trackCand using the rho parameter.
+   * After this function was called rho will determine the order of propagation not the order of the addHit calls
+   */
+  void sortHits();
   // Operations ----------------------
   void reset();
   void Print(const Option_t* = "") const ;
-
+  
 private:
+  // Private Data Members, data types and functions
+  struct TrackCandHit {
+	  // attention because the assignment operator is used to fill this struct in the .cxx file the order of the following variables matters!
+	  unsigned int fDetId;
+	  unsigned int fHitId;
+	  double fRho;
+	  unsigned int fPlaneId;
+  };
+  static bool compareRho( const TrackCandHit& lhs, const TrackCandHit& rhs);
 
-  // Private Data Members ------------
-  std::vector<unsigned int> fDetId;
-  std::vector<unsigned int> fHitId;
-  std::vector<unsigned int> fPlaneId;
-  std::vector<double>       fRho;
+  std::vector<TrackCandHit> fTrackCandHits;
 
   double fCurv; // curvature from pattern reco
   double fDip;  // dip angle from pattern reco
@@ -191,7 +214,7 @@ private:
   // Private Methods -----------------
 
 public:
-  ClassDef(GFTrackCand,5)
+  ClassDef(GFTrackCand,6)
 };
 
 #endif

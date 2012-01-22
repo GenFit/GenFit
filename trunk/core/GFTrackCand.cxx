@@ -17,7 +17,7 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "GFTrackCand.h"
-#include"TDatabasePDG.h"
+#include "TDatabasePDG.h"
 #include <algorithm>
 #include <iostream>
 
@@ -28,63 +28,100 @@ GFTrackCand::GFTrackCand():fCurv(0),fDip(0),fInv(false), fQoverpSeed(0.),fMcTrac
 GFTrackCand::~GFTrackCand(){}
 
 GFTrackCand::GFTrackCand(double curv, double dip, double inv, std::vector<unsigned int> detIDs, std::vector<unsigned int> hitIDs)
-  : fDetId(detIDs),fHitId(hitIDs),fCurv(curv), fDip(dip), fInv(inv),fQoverpSeed(0.), fMcTrackId(-1),fPdg(0)
+  : fCurv(curv), fDip(dip), fInv(inv),fQoverpSeed(0.), fMcTrackId(-1),fPdg(0)
 {
-  assert(fDetId.size()==fHitId.size());
-  fRho.resize(fDetId.size(),0.);
+  assert(detIDs.size()==hitIDs.size());
+  int n = detIDs.size();
+  for ( int i; i != n; i++){
+	  TrackCandHit aNewHit = {detIDs[i], hitIDs[i], 0.0, 0};
+	  fTrackCandHits.push_back(aNewHit);
+  }
 }
 GFTrackCand::GFTrackCand(double curv, double dip, double inv, std::vector<unsigned int> detIDs, std::vector<unsigned int> hitIDs,std::vector<double> rhos)
-  : fDetId(detIDs),fHitId(hitIDs),fRho(rhos),fCurv(curv), fDip(dip), fInv(inv),fQoverpSeed(0.), fMcTrackId(-1),fPdg(0)
+  : fCurv(curv), fDip(dip), fInv(inv),fQoverpSeed(0.), fMcTrackId(-1),fPdg(0)
 {
-  assert(fDetId.size()==fHitId.size());
-  assert(fDetId.size()==fRho.size());
+  assert(detIDs.size()==hitIDs.size());
+  assert(detIDs.size()==rhos.size());
+  int n = detIDs.size();
+  for ( int i; i != n; i++){
+	  TrackCandHit aNewHit = {detIDs[i], hitIDs[i], 0.0, 0};
+	  fTrackCandHits.push_back(aNewHit);
+  }
 }
 
 void 
 GFTrackCand::addHit(unsigned int detId, unsigned int hitId, double rho, unsigned int planeId)
 {
-  fDetId.push_back(detId);
-  fHitId.push_back(hitId);
-  fPlaneId.push_back(planeId);
-  fRho.push_back(rho);
+  TrackCandHit aNewHit = {detId, hitId, rho, planeId};
+  fTrackCandHits.push_back(aNewHit);
 }
 
-std::vector<unsigned int> 
+std::vector<unsigned int>
 GFTrackCand::GetHitIDs(int detId) const {
+	std::vector<unsigned int> result;
+	int n=fTrackCandHits.size();
   if(detId<0){ // return hits from all detectors
-    return fHitId;
+	    for(int i = 0; i != n; ++i){
+	    	  result.push_back(fTrackCandHits[i].fHitId);
+	    }
   }
   else {
-    std::vector<unsigned int> result;
-    unsigned int n=fHitId.size();
-    for(unsigned int i=0;i<n;++i){
-      if(fDetId[i]==(unsigned int)detId)result.push_back(fHitId[i]);
+    for(int i = 0; i != n; ++i){
+      if(fTrackCandHits[i].fDetId == unsigned(detId)){
+    	  result.push_back(fTrackCandHits[i].fHitId);
+      }
     }
-    return result;
   }
+  return result;
+}
+
+std::vector<double>
+GFTrackCand::GetRhos(int detId) const {
+	std::vector<double> result;
+	int n=fTrackCandHits.size();
+  if(detId<0){ // return hits from all detectors
+	    for(int i = 0; i != n; ++i){
+	    	  result.push_back(fTrackCandHits[i].fRho);
+	    }
+  }
+  else {
+    for(int i = 0; i != n; ++i){
+      if(fTrackCandHits[i].fDetId == unsigned(detId)){
+    	  result.push_back(fTrackCandHits[i].fRho);
+      }
+    }
+  }
+  return result;
 }
 
 void
 GFTrackCand::reset()
 {
-  fDetId.clear();fHitId.clear();
+	fTrackCandHits.clear();
 }
 
 bool GFTrackCand::HitInTrack(unsigned int detId, unsigned int hitId) const
 {
-	for (unsigned int i = 0; i < fDetId.size(); i++){
-		if (detId == fDetId[i])
-			if (hitId == fHitId[i])
-				return true;
+	int nHits = fTrackCandHits.size();
+	for (int i = 0; i != nHits; i++){
+		if (detId == fTrackCandHits[i].fDetId && hitId == fTrackCandHits[i].fHitId){
+			return true;
+		}
 	}
 	return false;	
 }
 
 bool operator== (const GFTrackCand& lhs, const GFTrackCand& rhs){
-  if(lhs.getNHits()!=rhs.getNHits()) return false;
-  bool result=std::equal(lhs.fDetId.begin(),lhs.fDetId.end(),rhs.fDetId.begin());
-  result &=std::equal(lhs.fHitId.begin(),lhs.fHitId.end(),rhs.fHitId.begin());
-  return result;
+  if(lhs.getNHits() != rhs.getNHits()){
+	  return false;
+  }
+  int n = lhs.getNHits();
+  for (int i = 0; i != n; ++i){
+	  if ( lhs.fTrackCandHits[i].fDetId != rhs.fTrackCandHits[i].fDetId || lhs.fTrackCandHits[i].fHitId !=  rhs.fTrackCandHits[i].fHitId ){
+		  return false;
+	  }
+  }
+  return true;
 }
 
 void GFTrackCand::Print(const Option_t* option) const {
@@ -94,24 +131,24 @@ void GFTrackCand::Print(const Option_t* option) const {
   fPosSeed.Print(option);
   fDirSeed.Print(option);
   std::cout << "q/p=" << fQoverpSeed << std::endl;
-  assert(fDetId.size()==fHitId.size());
   std::cout << "detId|hitId|rho ";
-  for(unsigned int i=0;i<fDetId.size();++i){
-    std::cout << fDetId.at(i) << "|" << fHitId.at(i) 
-	      << "|" << fRho.at(i) << " ";
+  int n = getNHits();
+  for( int i = 0; i != n; ++i){
+    std::cout << fTrackCandHits[i].fDetId << "|" << fTrackCandHits[i].fHitId
+	      << "|" << fTrackCandHits[i].fRho << " ";
   }
   std::cout << std::endl;
 }
 
 void GFTrackCand::append(const GFTrackCand& rhs){
-  unsigned int detId,hitId;
+  unsigned int detId;
+  unsigned int hitId;
   double rho;
-  for(unsigned int i=0;i<rhs.getNHits();++i){
+  int n = rhs.getNHits();
+  for ( int i=0; i != n ;++i){
     rhs.getHit(i,detId,hitId,rho);
     addHit(detId,hitId,rho);
   }
-
-
 }
 
 void GFTrackCand::setComplTrackSeed(const TVector3& pos,const TVector3& mom, const int pdgCode, TVector3 posError, TVector3 dirError){
@@ -119,4 +156,12 @@ void GFTrackCand::setComplTrackSeed(const TVector3& pos,const TVector3& mom, con
   TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(fPdg);
   double charge = part->Charge()/(3.);
   fQoverpSeed=charge/mom.Mag();
+}
+
+void GFTrackCand::sortHits(){
+	std::sort(fTrackCandHits.begin(), fTrackCandHits.end(), compareRho );
+}
+
+bool GFTrackCand::compareRho( const TrackCandHit& lhs, const TrackCandHit& rhs){
+  	return lhs.fRho < rhs.fRho;
 }
