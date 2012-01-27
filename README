@@ -18,7 +18,7 @@ you now all libs in $GENFIT/lib, which is in your LD_LIBRARY_PATH
 
 You can run the two examples in the examples directory. There is no more documentation on the usage of the code than just those examples. Please ask me if anything is unclear. The basic idea of the examples is to use one trackrep to generate hits along a track, which are then smeared and reconstructed. In your real application you will of course get the hits from an external simulation.
 
-go to the directory $GENFIT/example/XX
+go to the directory $GENFIT/test/XX
 
 cmake .
 
@@ -38,3 +38,4 @@ pulls p
 p.Loop()
 
 Please feel free to add to this very rudimentary readme file
+
