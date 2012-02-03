@@ -32,6 +32,12 @@ void GFDaf::processTrack(GFTrack* trk) {
   fWeights.clear();
 
 	std::vector<GFDafHit*> eff_hits = initHitsWeights(trk);
+	if(eff_hits.size() == 0) {
+		for(unsigned int i=0; i<trk->getNumReps(); i++) {
+			trk->getTrackRep(i)->setStatusFlag(1);
+		}
+		return;
+	}
 
 	GFTrack* mini_trk = new GFTrack();
 
@@ -207,11 +213,11 @@ void GFDaf::setBetas(double b1,double b2,double b3,double b4,double b5,double b6
 
 std::vector<GFDafHit*> GFDaf::initHitsWeights(GFTrack* trk) {
 
-	std::vector< std::vector<int>* > planes;
-	trk->getHitsByPlane(planes);
-	int nPlanes = planes.size();
-
 	std::vector<GFDafHit*> eff_hits;
+
+	std::vector< std::vector<int>* > planes;
+	if(not trk->getHitsByPlane(planes)) return eff_hits;
+	int nPlanes = planes.size();
 
 	for(int i=0; i<nPlanes; i++) {
 

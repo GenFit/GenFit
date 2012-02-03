@@ -224,14 +224,14 @@ void GFTrack::Print(const Option_t* option) const{
 }
 
 
-void GFTrack::getHitsByPlane(std::vector<std::vector<int>*>& retVal){
+bool GFTrack::getHitsByPlane(std::vector<std::vector<int>*>& retVal){
   for(int i=0;retVal.size();++i){
     delete retVal.at(i);
   }
   retVal.clear();
   //this method can only be called when all hits have been loaded
   assert(fHits.size()==fCand.getNHits());
-  assert(fHits.size()>1);
+  if(fHits.size() <= 1) return false;
   unsigned int detId,hitId,planeId;
   fCand.getHitWithPlane(0,detId,hitId,planeId);
   //  std::cout << "$$$ " << 0 << " " << detId << " " << hitId << " " << planeId << std::endl;
@@ -250,6 +250,7 @@ void GFTrack::getHitsByPlane(std::vector<std::vector<int>*>& retVal){
       retVal.at(retVal.size()-1)->push_back(i);
     }
   }
+  return true;
 }
 
 
