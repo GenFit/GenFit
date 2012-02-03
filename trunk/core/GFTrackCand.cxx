@@ -32,7 +32,7 @@ GFTrackCand::GFTrackCand(double curv, double dip, double inv, std::vector<unsign
 {
   assert(detIDs.size()==hitIDs.size());
   int n = detIDs.size();
-  for ( int i; i != n; i++){
+  for(int i = 0; i != n; i++){
 	  TrackCandHit aNewHit = {detIDs[i], hitIDs[i], 0.0, 0};
 	  fTrackCandHits.push_back(aNewHit);
   }
@@ -43,7 +43,7 @@ GFTrackCand::GFTrackCand(double curv, double dip, double inv, std::vector<unsign
   assert(detIDs.size()==hitIDs.size());
   assert(detIDs.size()==rhos.size());
   int n = detIDs.size();
-  for ( int i; i != n; i++){
+  for(int i = 0; i != n; i++){
 	  TrackCandHit aNewHit = {detIDs[i], hitIDs[i], 0.0, 0};
 	  fTrackCandHits.push_back(aNewHit);
   }
@@ -103,7 +103,7 @@ GFTrackCand::reset()
 bool GFTrackCand::HitInTrack(unsigned int detId, unsigned int hitId) const
 {
 	int nHits = fTrackCandHits.size();
-	for (int i = 0; i != nHits; i++){
+	for(int i = 0; i != nHits; i++){
 		if (detId == fTrackCandHits[i].fDetId && hitId == fTrackCandHits[i].fHitId){
 			return true;
 		}
@@ -116,7 +116,7 @@ bool operator== (const GFTrackCand& lhs, const GFTrackCand& rhs){
 	  return false;
   }
   int n = lhs.getNHits();
-  for (int i = 0; i != n; ++i){
+  for(int i = 0; i != n; ++i){
 	  if ( lhs.fTrackCandHits[i].fDetId != rhs.fTrackCandHits[i].fDetId || lhs.fTrackCandHits[i].fHitId !=  rhs.fTrackCandHits[i].fHitId ){
 		  return false;
 	  }
@@ -133,7 +133,7 @@ void GFTrackCand::Print(const Option_t* option) const {
   std::cout << "q/p=" << fQoverpSeed << std::endl;
   std::cout << "detId|hitId|rho ";
   int n = getNHits();
-  for( int i = 0; i != n; ++i){
+  for(int i = 0; i != n; ++i){
     std::cout << fTrackCandHits[i].fDetId << "|" << fTrackCandHits[i].fHitId
 	      << "|" << fTrackCandHits[i].fRho << " ";
   }
@@ -145,7 +145,7 @@ void GFTrackCand::append(const GFTrackCand& rhs){
   unsigned int hitId;
   double rho;
   int n = rhs.getNHits();
-  for ( int i=0; i != n ;++i){
+  for(int i=0; i != n ;++i){
     rhs.getHit(i,detId,hitId,rho);
     addHit(detId,hitId,rho);
   }
