@@ -129,6 +129,8 @@ namespace GFTools {
 	 */
 	double getSmoothedChiSqu(GFTrack* const trk, unsigned int irep, unsigned int ihit);
 
+	void updateRepSmoothed(GFTrack* const trk, unsigned int irep, unsigned int ihit);
+
 }
 
 #endif

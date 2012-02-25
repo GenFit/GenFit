@@ -365,6 +365,22 @@ void GFTools::invertMatrix(const TMatrixT<double>& mat, TMatrixT<double>& inv){
 	}
 }
 
+void GFTools::updateRepSmoothed(GFTrack* trk, unsigned int irep, unsigned int ihit) {
+
+	TMatrixT<double> smoothed_state, smoothed_cov, auxInfo;
+	GFDetPlane smoothing_plane;
+
+	getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
+
+	GFAbsTrackRep* rep = trk->getTrackRep(irep);
+	if(rep->hasAuxInfo()) {
+		rep->setData(smoothed_state, smoothing_plane, &smoothed_cov, &auxInfo);
+	} else {
+		rep->setData(smoothed_state, smoothing_plane, &smoothed_cov);
+	}
+
+}
+
 double GFTools::getSmoothedChiSqu(GFTrack* const trk, unsigned int irep, unsigned int ihit){
 	TMatrixT<double> smoothed_state;
 	TMatrixT<double> smoothed_cov;
