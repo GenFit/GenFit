@@ -341,33 +341,6 @@ GFDetPlane GFTools::getSmoothingPlane(GFTrack* trk, unsigned int irep, unsigned 
 
 }
 
-
-/*
-void GFTools::invertMatrix(const TMatrixT<double>& mat, TMatrixT<double>& inv){
-	inv.ResizeTo(mat);
-	// since ROOT has issues with absolute matrix entries that are below 10**-16 we force the 11 element to be one
-	//double factor = 1./mat[0][0];
-	//inv = (factor*mat);
-	inv = mat;
-	inv.SetTol(1E-150);
-	double det=0.;
-	inv.Invert(&det);
-	if(TMath::IsNaN(det)) {
-		GFException e("GFTools::invertMatrix(): det of matrix is nan",__LINE__,__FILE__);
-		e.setFatal();
-		throw e;
-	}
-	if(det==0){
-		GFException e("cannot invert matrix GFTools::invertMatrix() - det=0",
-				__LINE__,__FILE__);
-		e.setFatal();
-		throw e;
-	}
-	//recover multiplication with factor at the beginning
-	//inv *= factor;
-}
-*/
-
 void GFTools::invertMatrix(const TMatrixT<double>& mat, TMatrixT<double>& inv){
 	inv.ResizeTo(mat);
 	bool status = 0;
@@ -409,3 +382,4 @@ double GFTools::getSmoothedChiSqu(GFTrack* const trk, unsigned int irep, unsigne
 	TMatrixT<double> smoothedChiSqu = resT*invR*res;
 	return smoothedChiSqu[0][0];
 }
+
