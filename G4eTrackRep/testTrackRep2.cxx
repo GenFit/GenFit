@@ -23,7 +23,7 @@
    (Sergei Gerrassimov @ CERN)
 */
 
-#include "testTrackRep2.hh"
+#include "testTrackRep2.h"
 #include <iostream>
 #include <sstream>
 #include <iomanip>
