@@ -35,18 +35,10 @@
 #include <TMatrixT.h>
 
 
-#include "G4Globals.hh"
-#include "G4ParticleDefinition.hh"
-#include "G4ErrorSurfaceTrajState.hh"
-#include "G4ThreeVector.hh"
-#include "G4ErrorPlaneSurfaceTarget.hh"
-#include "G4ErrorPropagator.hh"
-#include "G4ErrorPropagatorData.hh"
-#include "G4ErrorPropagatorManager.hh"
-#include "G4ErrorPlaneSurfaceTarget.hh"
-#include "G4ErrorGeomVolumeTarget.hh"
-#include "G4ErrorTrackLengthTarget.hh"
-#include "G4ErrorFreeTrajState.hh"
+class G4ErrorPropagatorManager;
+class G4ErrorPropagatorData;
+class G4FieldManager;
+class G4ErrorMode;
 
 
 /** @brief Track Representation module based on a Runge-Kutta algorithm including a full material model
@@ -258,12 +250,13 @@ class G4eTrackRep : public GFAbsTrackRep {
                 TMatrixT<double>* cov=NULL) ;
   
     //G4eTrackRep(const G4eTrackRep& rhs){};
-  G4ErrorPropagatorManager* g4eMgr;
-  G4ErrorPropagatorData* g4eData;
-  G4FieldManager* fieldMgr;
-  G4ErrorMode theG4ErrorMode;
+
   
   // data members
+  G4ErrorPropagatorManager* g4eMgr; //!
+  G4ErrorPropagatorData* g4eData; //!
+  G4FieldManager* fieldMgr; //!
+  G4ErrorMode theG4ErrorMode; //!
   
   bool fDirection;
     
