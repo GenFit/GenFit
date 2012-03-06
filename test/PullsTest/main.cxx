@@ -21,6 +21,7 @@
 
 #include "PixHit.h"
 #include "PointHit.h"
+#include <G4eTrackRep.h>
 
 int main() {
 
@@ -49,14 +50,14 @@ int main() {
   
   // init geometry and mag. field
   TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
-  TGeoManager::Import("genfitGeom.root");
+  TGeoManager::Import("argon_tube.root");
   GFFieldManager::getInstance()->init(new GFConstField(0.,0.,15));
   
   // init rootapp (for drawing histograms)
   TApplication* rootapp = new TApplication("rootapp", 0, 0);
   
   // create histograms
-	gROOT->SetStyle("Plain");
+//	gROOT->SetStyle("Plain");
 	gStyle->SetPalette(1);
 	gStyle->SetOptFit(1111);
   
@@ -98,7 +99,7 @@ int main() {
         
       // trackrep for creating hits
       GFAbsTrackRep* rephits;
-      if (!GEANE) rephits = new RKTrackRep(pos, mom, posErr, momErr, 211);
+      if (!GEANE) rephits = new G4eTrackRep(pos, mom, posErr, momErr, 211);
       else rephits = new GeaneTrackRep2(GFDetPlane(pos, mom), mom, posErr, momErr, 211);
       					      
       // remember original initial plane and state					  
