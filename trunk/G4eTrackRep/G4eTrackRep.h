@@ -20,7 +20,7 @@
 /*
  */
 
-/** @addtogroup testTrackRep2
+/** @addtogroup G4eTrackRep
  * @{
  */
 
@@ -61,29 +61,29 @@
  */
 
 
-class testTrackRep2 : public GFAbsTrackRep {
+class G4eTrackRep : public GFAbsTrackRep {
 
  public:
 
   // Constructors/Destructors ---------
-  testTrackRep2();
-  testTrackRep2(const TVector3& pos,
+  G4eTrackRep();
+  G4eTrackRep(const TVector3& pos,
        const TVector3& mom,
        const TVector3& poserr,
        const TVector3& momerr,
        const int& PDGCode);
 
-  testTrackRep2(const GFTrackCand* aGFTrackCandPtr);
+  G4eTrackRep(const GFTrackCand* aGFTrackCandPtr);
 
-  testTrackRep2(const TVector3& pos,
+  G4eTrackRep(const TVector3& pos,
        const TVector3& mom,
        const int& PDGCode);
 
-  virtual ~testTrackRep2();
+  virtual ~G4eTrackRep();
 
 
-  virtual GFAbsTrackRep* clone() const {return new testTrackRep2(*this);}
-  virtual GFAbsTrackRep* prototype()const{return new testTrackRep2();}
+  virtual GFAbsTrackRep* clone() const {return new G4eTrackRep(*this);}
+  virtual GFAbsTrackRep* prototype()const{return new G4eTrackRep();}
 
   //! returns the tracklength spanned in this extrapolation
   /** The covariance matrix is transformed from the plane coordinate system to the master reference system (for the propagation) and, after propagation, back to the plane coordinate system.\n
@@ -220,7 +220,7 @@ class testTrackRep2 : public GFAbsTrackRep {
                    const GFDetPlane& pl,
                    const TMatrixT<double>& state7);
 
-  testTrackRep2& operator=(const testTrackRep2* rhs){return *this;};
+  G4eTrackRep& operator=(const G4eTrackRep* rhs){return *this;};
 
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successfull and the plane is reached, the function returns true.
@@ -257,7 +257,7 @@ class testTrackRep2 : public GFAbsTrackRep {
                 TMatrixT<double>* state,
                 TMatrixT<double>* cov=NULL) ;
   
-    //testTrackRep2(const testTrackRep2& rhs){};
+    //G4eTrackRep(const G4eTrackRep& rhs){};
   G4ErrorPropagatorManager* g4eMgr;
   G4ErrorPropagatorData* g4eData;
   G4FieldManager* fieldMgr;
