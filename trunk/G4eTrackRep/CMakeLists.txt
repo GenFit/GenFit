@@ -34,7 +34,9 @@ AUX_SOURCE_DIRECTORY(
   GENFIT_G4e_SRCS
 )
 
-SET(GENFIT_G4e_HEADERS G4eTrackRep.h)
+SET(GENFIT_G4e_HEADERS 
+  G4eTrackRep.h
+)
 
 set(GENFIT_G4e_LINKDEF  genfitG4eLinkDef.h)
 set(GENFIT_G4e_DICTIONARY genfitG4eDict.cxx) 
@@ -73,6 +75,20 @@ Execute_process(COMMAND root-config --glibs --cflags
 
 
 ADD_LIBRARY(genfitG4e SHARED ${GENFIT_G4e_SRCS})
-TARGET_LINK_LIBRARIES(genfitG4e ${ROOT_LIBS} -L${GENFITLIBDIR} -lgenfit   -lGeom -lVMC -lEG)
+TARGET_LINK_LIBRARIES(
+  genfitG4e 
+  ${ROOT_LIBS} 
+  -L${GENFITLIBDIR} 
+  -lgenfit
+  -lGeom 
+  -lVMC 
+  -lEG
+  -L$ENV{G4LIB}
+  -lG4FR             -lG4intercoms   -lG4particles     -lG4readout   -lG4visHepRep
+  -lG3toG4               -lG4geometry       -lG4interfaces  -lG4persistency   -lG4run       -lG4vis_management
+  -lG4digits_hits        -lG4global         -lG4materials   -lG4physicslists  -lG4tracking  -lG4visXXX
+  -lG4error_propagation  -lG4GMocren        -lG4modeling    -lG4processes     -lG4track     -lG4VRML
+  -lG4event              -lG4graphics_reps  -lG4parmodels   -lG4RayTracer     -lG4Tree      -lG4zlib
+)
 INSTALL(TARGETS genfitG4e DESTINATION ${GENFITLIBINSTALLDIR} )
 
