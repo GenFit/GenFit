@@ -8,7 +8,7 @@
 #ifndef MAGFIELD_HH_
 #define MAGFIELD_HH_
 
-#include "MagField.hh"
+#include "MagField.h"
 #include "G4UniformMagField.hh"
 #include "G4FieldManager.hh"
 #include "G4TransportationManager.hh"

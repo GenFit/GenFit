@@ -5,7 +5,7 @@
  *      Author: poehler
  */
 
-#include "G4GFConv.hh"
+#include "G4GFConv.h"
 
 #include "G4Vector3D.hh"
 #include "TVector3.h"
