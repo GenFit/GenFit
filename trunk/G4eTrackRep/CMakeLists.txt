@@ -84,6 +84,7 @@ TARGET_LINK_LIBRARIES(
   -lVMC 
   -lEG
   -L$ENV{G4LIB}
+  -L$ENV{G4LIB}/$ENV{G4SYSTEM}
   -lG4FR             -lG4intercoms   -lG4particles     -lG4readout   -lG4visHepRep
   -lG3toG4               -lG4geometry       -lG4interfaces  -lG4persistency   -lG4run       -lG4vis_management
   -lG4digits_hits        -lG4global         -lG4materials   -lG4physicslists  -lG4tracking  -lG4visXXX
