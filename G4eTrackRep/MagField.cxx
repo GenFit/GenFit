@@ -5,7 +5,7 @@
  *      Author: poehler
  */
 
-#include "MagField.hh"
+#include "MagField.h"
 #include "G4UniformMagField.hh"
 #include "G4FieldManager.hh"
 #include "G4TransportationManager.hh"
