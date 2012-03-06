@@ -245,8 +245,8 @@ void G4eTrackRep::Initialize(){
 	//G4UniformMagField* magField = new MagField(G4ThreeVector(0.,0.,0.));
 
 
-	if(fDirection) theG4ErrorMode = G4ErrorMode_PropForwards;
-	else theG4ErrorMode = G4ErrorMode_PropBackwards;
+	//if(fDirection) theG4ErrorMode = G4ErrorMode_PropForwards;
+	//else theG4ErrorMode = G4ErrorMode_PropBackwards;
 	//G4UImanager::GetUIpointer()->ApplyCommand("/exerror/setField -10. kilogauss");
 	g4eMgr->InitGeant4e();
 
@@ -288,8 +288,6 @@ TMatrixT<double>* G4eTrackRep::getState7() const{
 
 void G4eTrackRep::switchDirection(){
 	fDirection = (!fDirection);
-	if(fDirection) theG4ErrorMode = G4ErrorMode_PropForwards;
-	else theG4ErrorMode = G4ErrorMode_PropBackwards;
 }
 
 void G4eTrackRep::transformPM(const TMatrixT<double>& in5x5, TMatrixT<double>& out,

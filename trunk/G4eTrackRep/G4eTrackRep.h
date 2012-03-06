@@ -38,7 +38,7 @@
 class G4ErrorPropagatorManager;
 class G4ErrorPropagatorData;
 class G4FieldManager;
-class G4ErrorMode;
+//class G4ErrorMode;
 
 
 /** @brief Track Representation module based on a Runge-Kutta algorithm including a full material model
@@ -256,7 +256,7 @@ class G4eTrackRep : public GFAbsTrackRep {
   G4ErrorPropagatorManager* g4eMgr; //!
   G4ErrorPropagatorData* g4eData; //!
   G4FieldManager* fieldMgr; //!
-  G4ErrorMode theG4ErrorMode; //!
+  //G4ErrorMode* theG4ErrorMode; //!
   
   bool fDirection;
     
