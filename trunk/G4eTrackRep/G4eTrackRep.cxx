@@ -58,9 +58,9 @@
 #include "G4FieldManager.hh"
 
 
-#include "DetectorConstruction.hh"
-#include "MagField.hh"
-#include "G4GFConv.hh"
+#include "DetectorConstruction.h"
+#include "MagField.h"
+#include "G4GFConv.h"
 
 #include <math.h>
 
