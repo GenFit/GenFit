@@ -25,8 +25,8 @@
  */
 
 
-//#ifndef RKTRACKREP_H
-//#define RKTRACKREP_H
+#ifndef G4ETRACKREP_H
+#define G4ETRACKREP_H
 
 
 #include "GFAbsTrackRep.h"
@@ -280,13 +280,11 @@ class G4eTrackRep : public GFAbsTrackRep {
   TMatrixT<double> fAuxInfo;
 
 
+ public:
+  ClassDef(G4eTrackRep,1)
 
 };
 
-
-
-
-
-//#endif
+#endif
 
 /** @} */
