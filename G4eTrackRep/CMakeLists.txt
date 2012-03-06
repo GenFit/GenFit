@@ -90,6 +90,10 @@ TARGET_LINK_LIBRARIES(
   -lG4digits_hits        -lG4global         -lG4materials   -lG4physicslists  -lG4tracking  -lG4visXXX
   -lG4error_propagation  -lG4GMocren        -lG4modeling    -lG4processes     -lG4track     -lG4VRML
   -lG4event              -lG4graphics_reps  -lG4parmodels   -lG4RayTracer     -lG4Tree      -lG4zlib
+  -L$ENV{CLHEP_LIB_DIR}
+  -lCLHEP-Evaluator-2.1.0.1     -lCLHEP-Geometry-2.1.0.1           -lCLHEP-RandomObjects-2.1.0.1
+  -lCLHEP-2.1.0.1               -lCLHEP-Exceptions-2.1.0.1         -lCLHEP-Matrix-2.1.0.1           -lCLHEP-RefCount-2.1.0.1
+  -lCLHEP-Cast-2.1.0.1          -lCLHEP-GenericFunctions-2.1.0.1   -lCLHEP-Random-2.1.0.1           -lCLHEP-Vector-2.1.0.1
 )
 INSTALL(TARGETS genfitG4e DESTINATION ${GENFITLIBINSTALLDIR} )
 
