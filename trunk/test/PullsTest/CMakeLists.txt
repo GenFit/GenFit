@@ -20,7 +20,14 @@ Execute_process(COMMAND root-config --glibs --cflags --evelibs
 	OUTPUT_VARIABLE ROOT_LIBS
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-INCLUDE_DIRECTORIES($ENV{ROOTSYS}/include $ENV{GENFIT}/core $ENV{GENFIT}/RKTrackRep $ENV{GENFIT}/GeaneTrackRep2 $ENV{GENFIT}/eventDisplay)
+INCLUDE_DIRECTORIES(
+  $ENV{ROOTSYS}/include 
+  $ENV{GENFIT}/core 
+  $ENV{GENFIT}/RKTrackRep 
+  $ENV{GENFIT}/G4eTrackRep 
+  $ENV{GENFIT}/GeaneTrackRep2 
+  $ENV{GENFIT}/eventDisplay
+)
 
 SET(MYDICT myDict.cxx)
 SET(MYLINKDEF linkdef.h)
@@ -37,6 +44,14 @@ ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${MYDICT}
       	DEPENDS ${DICTHEADERS} ${MYLINKDEF})
 
 ADD_EXECUTABLE(main main.cxx PointHit.cxx PixHit.cxx StripHit.cxx $ENV{GENFIT}/eventDisplay/GenfitDisplay.h $ENV{GENFIT}/eventDisplay/GenfitDisplay.cxx ${MYDICT})
-TARGET_LINK_LIBRARIES(main ${ROOT_LIBS} -lGeom -L$ENV{GENFIT}/lib
--lgenfit -lgenfitRK -lgenfitGeane)
+TARGET_LINK_LIBRARIES(
+  main 
+  ${ROOT_LIBS} 
+  -lGeom 
+  -L$ENV{GENFIT}/lib
+  -lgenfit 
+  -lgenfitRK 
+  -lgenfitGeane
+  -lgenfitG4e
+)
 
