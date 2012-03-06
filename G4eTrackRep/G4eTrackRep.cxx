@@ -1375,3 +1375,6 @@ double G4eTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
   return coveredDistance;
 
 }
+
+ClassImp(G4eTrackRep)
+
