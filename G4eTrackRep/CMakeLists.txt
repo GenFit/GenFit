@@ -62,7 +62,10 @@ ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${GENFIT_G4e_DICTIONARY}
       ${GENFIT_G4e_LINKDEF}
 )
 
-SET(GENFIT_G4e_SRCS ${GENFIT_G4e_SRCS} ${CMAKE_BINARY_DIR}/${GENFIT_G4e_DICTIONARY})
+SET(GENFIT_G4e_SRCS 
+  ${GENFIT_G4e_SRCS} 
+  ${CMAKE_BINARY_DIR}/${GENFIT_G4e_DICTIONARY}
+)
 
 
 ################ install ###################
@@ -70,8 +73,11 @@ SET(GENFIT_G4e_SRCS ${GENFIT_G4e_SRCS} ${CMAKE_BINARY_DIR}/${GENFIT_G4e_DICTIONA
 #add ROOT lib
 Execute_process(COMMAND root-config --glibs --cflags
 	OUTPUT_VARIABLE ROOT_LIBS
-    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+#Execute_process(COMMAND $ENV{G4INSTALL}/Configure -ldlibs
+#	OUTPUT_VARIABLE G4_LIBS
+#    OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 
 ADD_LIBRARY(genfitG4e SHARED ${GENFIT_G4e_SRCS})
@@ -85,15 +91,27 @@ TARGET_LINK_LIBRARIES(
   -lEG
   -L$ENV{G4LIB}
   -L$ENV{G4LIB}/$ENV{G4SYSTEM}
-  -lG4FR             -lG4intercoms   -lG4particles     -lG4readout   -lG4visHepRep
+  -lG4FR                 -lG4intercoms      -lG4particles   -lG4readout       -lG4visHepRep
   -lG3toG4               -lG4geometry       -lG4interfaces  -lG4persistency   -lG4run       -lG4vis_management
   -lG4digits_hits        -lG4global         -lG4materials   -lG4physicslists  -lG4tracking  -lG4visXXX
   -lG4error_propagation  -lG4GMocren        -lG4modeling    -lG4processes     -lG4track     -lG4VRML
   -lG4event              -lG4graphics_reps  -lG4parmodels   -lG4RayTracer     -lG4Tree      -lG4zlib
   -L$ENV{CLHEP_LIB_DIR}
-  -lCLHEP-Evaluator-2.1.0.1     -lCLHEP-Geometry-2.1.0.1           -lCLHEP-RandomObjects-2.1.0.1
-  -lCLHEP-2.1.0.1               -lCLHEP-Exceptions-2.1.0.1         -lCLHEP-Matrix-2.1.0.1           -lCLHEP-RefCount-2.1.0.1
-  -lCLHEP-Cast-2.1.0.1          -lCLHEP-GenericFunctions-2.1.0.1   -lCLHEP-Random-2.1.0.1           -lCLHEP-Vector-2.1.0.1
+  -lCLHEP-2.1.0.1
+  -lCLHEP-Cast-2.1.0.1
+  -lCLHEP-Evaluator-2.1.0.1
+  -lCLHEP-Exceptions-2.1.0.1
+  -lCLHEP-GenericFunctions-2.1.0.1
+  -lCLHEP-Geometry-2.1.0.1
+  -lCLHEP-Matrix-2.1.0.1
+  -lCLHEP-Random-2.1.0.1
+  -lCLHEP-RandomObjects-2.1.0.1
+  -lCLHEP-RefCount-2.1.0.1
+  -lCLHEP
+  -lCLHEP-Vector-2.1.0.1
 )
+
+MESSAGE(${GENFIT_G4e_SRCS})
+
 INSTALL(TARGETS genfitG4e DESTINATION ${GENFITLIBINSTALLDIR} )
 

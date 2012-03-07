@@ -26,4 +26,4 @@ G4Vector3D GFtoG4Vec (const TVector3&) ;
 void GFcov7toG4cov5 (const TMatrixT<double>&, G4ErrorTrajErr& , const TVector3&, const TVector3&,const TMatrixT<double>&, const double&);
 void G4cov5toGFcov7 (const TMatrixT<double>&, G4ErrorTrajErr& , const TVector3&, const TVector3&,const TMatrixT<double>&, const double&);
 
-#endif /* G4GFCONV_HH_ */
+#endif
