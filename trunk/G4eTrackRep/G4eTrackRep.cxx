@@ -1094,17 +1094,16 @@ double G4eTrackRep::Extrap( const GFDetPlane& fPlane, TMatrixT<double>* state, T
 
 	G4ErrorTrajErr error(5,0);
 
-	if(calcCov)
-	{
-		for(int i = 0; i<5;i++){ for(int j = i; j<5;j++)
-			{
-	/*		if(fabs((*cov)[i][j]) >= 1.e-10)error [i][j] = (*cov)[i][j];
-			else error[i][j] = 0;*/
-			}}
+	if(calcCov)	{
+		for(int i = 0; i<5;i++){ 
+		  for(int j = i; j<5;j++){
+			  if(fabs((*cov)[i][j]) >= 1.e-10)error [i][j] = (*cov)[i][j];
+			  else error[i][j] = 0;
+			}
+		}
 		for(int i = 1; i<5;i++) error[i][0] *= fCharge;
 	}
-	else
-	{
+	else{
 		for(int i = 0; i<5;i++) for(int j = 0; j<5;j++) error [i][j] = 0;
 	}
 
@@ -1143,8 +1142,8 @@ double G4eTrackRep::Extrap( const GFDetPlane& fPlane, TMatrixT<double>* state, T
 	G4ThreeVector g4w(GFtoG4Vec(V));
 	G4UImanager::GetUIpointer()->ApplyCommand("/control/verbose 2");
 //	const G4ErrorTrajErr& error = G4ErrorTrajErr(5,0);
-	G4ErrorSurfaceTrajState* g4state = new G4ErrorSurfaceTrajState( "mu-", g4pos, g4mom, g4v, g4w, error );
-	G4ErrorFreeTrajState* g4freestate = new G4ErrorFreeTrajState(*g4state);
+	G4ErrorSurfaceTrajState* g4state = new G4ErrorSurfaceTrajState( "pi+", g4pos, g4mom, g4v, g4w, error );
+//	G4ErrorFreeTrajState* g4freestate = new G4ErrorFreeTrajState(*g4state);
 	//delete(g4state);
 
 	double coveredDistance(0.);
@@ -1158,23 +1157,23 @@ double G4eTrackRep::Extrap( const GFDetPlane& fPlane, TMatrixT<double>* state, T
 	while( moreEvt ){
 
 	//	std::cerr << "### Extrap Test"<< count << "\n";
-		int ierr = g4eMgr->PropagateOneStep( g4freestate, currentG4ErrorMode );
+		int ierr = g4eMgr->PropagateOneStep( g4state, currentG4ErrorMode );
 	//	std::cerr << "### Extrap Test"<< count << " + x\n";
 
-		coveredDistance += g4freestate->GetG4Track()->GetStepLength()/10;
+		coveredDistance += g4state->GetG4Track()->GetStepLength()/10.;
 
 		//if(count <130 && count>-1) std::cerr << "######## PROCESSING (step " << count <<") g4freestate->GetError() : " <<  g4freestate->GetError() << "\n";
 
 		  //---- Check if target is reached
-		if( g4eMgr->GetPropagator()->CheckIfLastStep(g4freestate->GetG4Track() )) {
-			g4eMgr->GetPropagator()->InvokePostUserTrackingAction(g4freestate->GetG4Track() );
+		if( g4eMgr->GetPropagator()->CheckIfLastStep(g4state->GetG4Track() )) {
+			g4eMgr->GetPropagator()->InvokePostUserTrackingAction(g4state->GetG4Track() );
 		moreEvt = 0;
 		G4cout << "STEP_BY_STEP propagation: Last Step " << G4endl;
 		 }
 		count++;
 	}
 	G4UImanager::GetUIpointer()->ApplyCommand("/control/verbose 1");
-	g4state = new G4ErrorSurfaceTrajState( *g4freestate, g4v,g4w);
+//	g4state = new G4ErrorSurfaceTrajState( *g4freestate, g4v,g4w);
 
 
 
