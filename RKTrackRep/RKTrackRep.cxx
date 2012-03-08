@@ -618,17 +618,17 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   static const double DLT    = .0002;           // max. deviation for approximation-quality test
   static const double DLT32  = DLT/32.;         //
   static const double P3     = 1./3.;           // 1/3
-  static const double Smax   = 100.;            // max. step allowed > 0 
-  static const double Wmax   = 3000.;           // max. way allowed
+  static const double Smax   = 100.;            // max. step allowed > 0 [cm]
+  static const double Wmax   = 3000.;           // max. way allowed [cm]
   static const double Pmin   = 4.E-3;           // minimum momentum for propagation [GeV]
   static const int    ND     = 56;              // number of variables for derivatives calculation
   static const int    ND1    = ND-7;            // = 49
-  double* R           = &P[0];                  // Start coordinates  in cm 	( x,  y,  z)
+  double* R           = &P[0];                  // Start coordinates  [cm] 	( x,  y,  z)
   double* A           = &P[3];                  // Start directions 	      	(ax, ay, az); 	ax^2+ay^2+az^2=1
   double  SA[3]       = {0.,0.,0.};             // Start directions derivatives 
-  double  Pinv        = P[6]*EC;                // P[6] is charge/momentum in e/(Gev/c)
-  double  Way         = 0.;                     // Total way of the trajectory
-  double  Way2        = 0.;                     // Total way of the trajectory with correct signs
+  double  Pinv        = P[6]*EC;                // P[6] is charge/momentum in e/(GeV/c)
+  double  Way         = 0.;                     // Total way of the trajectory [cm]
+  double  Way2        = 0.;                     // Total way of the trajectory with correct signs [cm]
   bool    error       = false;                  // Error of propogation
   bool    stopBecauseOfMaterial = false;        // does not go through main loop again when stepsize is reduced by stepper
 
