@@ -20,6 +20,7 @@
 #include"TDatabasePDG.h"
 #include <algorithm>
 #include <iostream>
+#include <utility>
 
 ClassImp(GFTrackCand)
 
@@ -119,4 +120,34 @@ void GFTrackCand::setComplTrackSeed(const TVector3& pos,const TVector3& mom, con
   TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(fPdg);
   double charge = part->Charge()/(3.);
   fQoverpSeed=charge/mom.Mag();
+}
+
+
+void GFTrackCand::sortHits(){
+	int nHits = fDetId.size(); // all 4 private vectors must have the same size.
+
+	//a vector that will be sorted to give after sort indices to sort the other vectors
+	std::vector<std::pair<double, int> > order(nHits);
+	for (int i = 0; i != nHits; ++i){
+		order[i] = std::make_pair(fRho[i],i);
+	}
+	std::sort(order.begin(), order.end()); // by default sort uses the ".first" value of the pair when sorting a std container of pairs
+
+	//these containers will hold the sorted results. They are created to avoid probably slower in-place sorting
+	std::vector<int> sortedDetId(nHits);
+	std::vector<int> sortedHitId(nHits);
+	std::vector<int> sortedPlaneId(nHits);
+	std::vector<double> sortedRho(nHits);
+	for (int i = 0; i != nHits; ++i){
+		int sortIndex = order[i].second;
+		sortedDetId[i] = fDetId[sortIndex];
+		sortedHitId[i] = fHitId[sortIndex];
+		sortedPlaneId[i] = fPlaneId[sortIndex];
+		sortedRho[i] = fRho[sortIndex];
+	}
+	//write the changes back to the private data members:
+	std::copy(sortedDetId.begin(), sortedDetId.end(), fDetId.begin());
+	std::copy(sortedHitId.begin(), sortedHitId.end(), fHitId.begin());
+	std::copy(sortedPlaneId.begin(), sortedPlaneId.end(), fPlaneId.begin());
+	std::copy(sortedRho.begin(), sortedRho.end(), fRho.begin());
 }
