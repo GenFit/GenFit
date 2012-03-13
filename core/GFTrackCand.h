@@ -163,6 +163,11 @@ public:
   void setPdgCode(int pdgCode){fPdg=pdgCode;}
   void append(const GFTrackCand&);
 
+  /** @brief sort the hits that were already added to the trackCand using the rho parameter.
+   * After this function was called rho will determine the order of propagation not the order of the addHit calls
+   */
+  void sortHits();
+
   // Operations ----------------------
   void reset();
   void Print(const Option_t* = "") const ;
@@ -191,7 +196,7 @@ private:
   // Private Methods -----------------
 
 public:
-  ClassDef(GFTrackCand,5)
+  ClassDef(GFTrackCand,7)
 };
 
 #endif
