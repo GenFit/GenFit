@@ -275,7 +275,7 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
     cov = rep->getCov();
   }
   
-  if(cov[0][0]<1.E-50){
+  if(fabs(cov[0][0])<1.E-50){
     GFException exc(COVEXC,__LINE__,__FILE__);
     throw exc;
   }
