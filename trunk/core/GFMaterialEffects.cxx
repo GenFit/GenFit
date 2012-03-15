@@ -102,8 +102,8 @@ double GFMaterialEffects::effects(const std::vector<TVector3>& points,
 
       double X(0.);
       
-      gGeoManager->InitTrack(points.at(i-1).X(),points.at(i-1).Y(),points.at(i-1).Z(),
-                             dir.X(),dir.Y(),dir.Z());
+      gGeoManager->InitTrack(points.at(i-1).X(), points.at(i-1).Y(), points.at(i-1).Z(),
+                             dir.X(), dir.Y(), dir.Z());
 
       while(X<dist){
 
@@ -111,7 +111,6 @@ double GFMaterialEffects::effects(const std::vector<TVector3>& points,
         
         gGeoManager->FindNextBoundaryAndStep(dist-X);
         fstep = gGeoManager->GetStep();
-        
 
         
         if(fmatZ>1.E-3){ // don't calculate energy loss for vacuum
@@ -150,19 +149,20 @@ double GFMaterialEffects::stepper(const double& maxDist,
                                   const double& diry,
                                   const double& dirz,
                                   const double& mom,
+                                  double& relMomLoss,
                                   const int& pdg){
 
-  static const double maxPloss = .005; // maximum relative momentum loss allowed
+  static const double maxRelMomLoss = .005; // maximum relative momentum loss allowed
 
   if(fNoEffects) return maxDist;
+  if (relMomLoss > maxRelMomLoss) return 0;
 
   fpdg = pdg;
 
-  gGeoManager->InitTrack(posx,posy,posz,dirx,diry,dirz);
+  gGeoManager->InitTrack(posx,posy,posz, dirx,diry,dirz);
 
   double X(0.);
-  double dP = 0.;
-  double momLoss = 0.;
+  double relMomLossStep(0);
 
   while(X<maxDist){
 
@@ -170,28 +170,21 @@ double GFMaterialEffects::stepper(const double& maxDist,
     
     gGeoManager->FindNextBoundaryAndStep(maxDist-X);
     fstep = gGeoManager->GetStep();
-    
 
-      
     if(fmatZ>1.E-3){ // don't calculate energy loss for vacuum
-
       calcBeta(mom);
  
-      if (fEnergyLossBetheBloch)
-        momLoss += this->energyLossBetheBloch(mom);
-
-      if (fEnergyLossBrems)
-        momLoss += this->energyLossBrems(mom);
+      if (fEnergyLossBetheBloch) relMomLossStep += this->energyLossBetheBloch(mom)/mom;
+      if (fEnergyLossBrems)      relMomLossStep += this->energyLossBrems(mom)/mom;
     }
     
-    if(dP + momLoss > mom*maxPloss){
-      double fraction = (mom*maxPloss-dP)/momLoss;
-      dP+=fraction*momLoss;
-      X+=fraction*fstep;
+    if(relMomLoss+relMomLossStep > maxRelMomLoss){
+      double fraction = (maxRelMomLoss-relMomLoss)/relMomLossStep;
+      X += fraction*fstep;
       break;
     }
-    
-    dP += momLoss;
+
+    relMomLoss += relMomLossStep;
     X += fstep;
   }
 

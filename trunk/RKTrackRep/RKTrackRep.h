@@ -146,8 +146,12 @@ class RKTrackRep : public GFAbsTrackRep {
 
   int getPDG() {return fPdg;};
 
-  //! deprecated
-  void switchDirection(){fDirection = (!fDirection);}
+  //! Set propagation direction. (-1,0,1) -> (backward prop,decide myself,forward)
+  void setPropDir(int dir);
+
+  //! Switch propagation direction. Has no effect if propdir is set to 0.
+  void switchDirection(){fDirection = -1*fDirection;}
+
   //! Set PDG particle code
   void setPDG(int);
 
@@ -217,8 +221,16 @@ class RKTrackRep : public GFAbsTrackRep {
                double& coveredDistance,
                std::vector<TVector3>& points,
                std::vector<double>& pointLengths,
-               const double& maxLen=-1,
                bool calcCov=true) const;
+
+  double estimateStep(const TVector3& pos,
+                      const TVector3& dir,
+                      const double* SU,
+                      const GFDetPlane& plane,
+                      const double& mom,
+                      double& relMomLoss,
+                      double& deltaAngle,
+                      bool& stopBecauseOfMaterial) const;
 
   TVector3 poca2Line(const TVector3& extr1,
                      const TVector3& extr2,
@@ -241,7 +253,7 @@ class RKTrackRep : public GFAbsTrackRep {
   
   // data members
   
-  bool fDirection;
+  int fDirection;   // (-1,0,1) -> (backward prop,decide myself,forward)
   bool fNoMaterial; // don't calculate material effects if true
     
   //! PDG particle code

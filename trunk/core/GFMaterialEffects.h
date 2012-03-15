@@ -87,14 +87,16 @@ class GFMaterialEffects : public TObject{
                  const double& diry,
                  const double& dirz,
                  const double& mom,
+                 double& relMomLoss,
                  const int& pdg);
 
   double stepper(const double& maxDist,
                  const TVector3& pos, 
                  const TVector3& dir,
                  const double& mom,
+                 double& relMomLoss,
                  const int& pdg){
-    return stepper(maxDist, pos.X(),pos.Y(),pos.Z(),dir.X(),dir.Y(),dir.Z(),mom,pdg);
+    return stepper(maxDist, pos.X(),pos.Y(),pos.Z(), dir.X(),dir.Y(),dir.Z(), mom, relMomLoss, pdg);
   }
 
  private:
