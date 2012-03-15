@@ -23,26 +23,28 @@
    (Sergei Gerrassimov @ CERN)
 */
 
-#include"RKTrackRep.h"
+#include "RKTrackRep.h"
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include"assert.h"
+#include "assert.h"
 #include "stdlib.h"
-#include"math.h"
-#include"TMath.h"
-#include"TGeoManager.h"
-#include"TDatabasePDG.h"
-#include"GFException.h"
-#include"GFFieldManager.h"
-#include"GFMaterialEffects.h"
+#include "math.h"
+#include "TMath.h"
+#include "TGeoManager.h"
+#include "TDatabasePDG.h"
+#include "GFException.h"
+#include "GFFieldManager.h"
+#include "GFMaterialEffects.h"
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
+//#define DEBUG
 
 
 void RKTrackRep::setData(const TMatrixT<double>& st, const GFDetPlane& pl, const TMatrixT<double>* cov, const TMatrixT<double>* aux){
   if(aux != NULL) {
     fCacheSpu = (*aux)(0,0);
+    fDirection = (*aux)(0,1);
   } else {
     if(pl!=fCachePlane){
       std::cerr << "RKTrackRep::setData() - a fatal error ocurred! It was called with a reference plane which is not the same as the one from the last extrapolate(plane,state,cov)-> abort in line " << __LINE__ << std::endl;
@@ -59,11 +61,12 @@ void RKTrackRep::setData(const TMatrixT<double>& st, const GFDetPlane& pl, const
 const TMatrixT<double>* RKTrackRep::getAuxInfo(const GFDetPlane& pl) {
 
   if(pl!=fCachePlane) {
-    std::cerr << "RKTrackRep::getAuxInfo() - Fatal error: Trying to get auxillary information with planes mismatch (Information returned does not belong to requested plane)! -> abort in line " << __LINE__ << std::endl;
+    std::cerr << "RKTrackRep::getAuxInfo() - Fatal error: Trying to get auxiliary information with planes mismatch (Information returned does not belong to requested plane)! -> abort in line " << __LINE__ << std::endl;
 	throw;
   }
-  fAuxInfo.ResizeTo(1,1);
+  fAuxInfo.ResizeTo(1,2);
   fAuxInfo(0,0) = fCacheSpu;
+  fAuxInfo(0,1) = fDirection;
   return &fAuxInfo;
 
 }
@@ -73,7 +76,7 @@ RKTrackRep::~RKTrackRep(){
 }
 
 
-RKTrackRep::RKTrackRep() : GFAbsTrackRep(5), fDirection(true), fNoMaterial(false), fPdg(0), fMass(0.), fCharge(-1), fCachePlane(), fCacheSpu(1), fSpu(1), fAuxInfo(1,1) {
+RKTrackRep::RKTrackRep() : GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fPdg(0), fMass(0.), fCharge(-1), fCachePlane(), fCacheSpu(1), fSpu(1), fAuxInfo(1,2) {
 }
 
 
@@ -82,7 +85,7 @@ RKTrackRep::RKTrackRep(const TVector3& pos,
                        const TVector3& poserr,
                        const TVector3& momerr,
                        const int& PDGCode) :
-                       GFAbsTrackRep(5), fDirection(true), fNoMaterial(false), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1) {
+                       GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fCachePlane(), fCacheSpu(1), fAuxInfo(1,2) {
 
   setPDG(PDGCode); // also sets charge and mass
 
@@ -92,7 +95,7 @@ RKTrackRep::RKTrackRep(const TVector3& pos,
 
 
 RKTrackRep::RKTrackRep(const GFTrackCand* aGFTrackCandPtr) :
-                       GFAbsTrackRep(5), fDirection(true), fNoMaterial(false), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1) {
+                       GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fCachePlane(), fCacheSpu(1), fAuxInfo(1,2) {
 
   setPDG(aGFTrackCandPtr->getPdgCode()); // also sets charge and mass
 
@@ -110,7 +113,7 @@ RKTrackRep::RKTrackRep(const GFTrackCand* aGFTrackCandPtr) :
 RKTrackRep::RKTrackRep(const TVector3& pos,
                        const TVector3& mom,
                        const int& PDGCode) :
-                       GFAbsTrackRep(5),fDirection(true), fNoMaterial(false), fCachePlane(), fCacheSpu(1), fAuxInfo(1,1) {
+                       GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fCachePlane(), fCacheSpu(1), fAuxInfo(1,2) {
 
   setPDG(PDGCode); // also sets charge and mass
 
@@ -430,7 +433,7 @@ void RKTrackRep::extrapolateToPoint(const TVector3& pos,
     pl.setON(pos,TVector3(state7[3][0], state7[4][0], state7[5][0]));
     coveredDistance =  this->Extrap(pl, &state7);
 
-    if(fabs(coveredDistance)<MINSTEP) break;
+    if(fabs(coveredDistance) < MINSTEP) break;
     if(++iterations == maxIt) {
       GFException exc("RKTrackRep::extrapolateToPoint ==> extrapolation to point failed, maximum number of iterations reached",__LINE__,__FILE__);
       throw exc;
@@ -447,7 +450,7 @@ TVector3 RKTrackRep::poca2Line(const TVector3& extr1,const TVector3& extr2,const
   
   TVector3 theWire = extr2-extr1;
   if(theWire.Mag()<1.E-8){
-    GFException exc("RKTrackRep::poca2Line ==> try to find poca between line and point, but the line is really just a point",__LINE__,__FILE__);
+    GFException exc("RKTrackRep::poca2Line ==> try to find POCA between line and point, but the line is really just a point",__LINE__,__FILE__);
     throw exc;
   }
 
@@ -480,7 +483,7 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
     pl.setV(point2-point1);
     coveredDistance = this->Extrap(pl, &state7);
 
-    if(fabs(coveredDistance)<MINSTEP) break;
+    if(fabs(coveredDistance) < MINSTEP) break;
     if(++iterations == maxIt) {
       GFException exc("RKTrackRep::extrapolateToLine ==> extrapolation to line failed, maximum number of iterations reached",__LINE__,__FILE__);
       throw exc;
@@ -608,43 +611,71 @@ double RKTrackRep::extrapolate(const GFDetPlane& pl,
 //  
 bool RKTrackRep::RKutta (const GFDetPlane& plane,
                          double* P, 
-                         double& coveredDistance, 
+                         double& coveredDistance,
                          std::vector<TVector3>& points,
                          std::vector<double>& pointPaths, 
-                         const double& maxLen,  // currently not used
                          bool calcCov) const {
 
+  // important fixed numbers
   static const double EC     = .000149896229;   // c/(2*10^12) resp. c/2Tera
-  static const double DLT    = .0002;           // max. deviation for approximation-quality test
-  static const double DLT32  = DLT/32.;         //
   static const double P3     = 1./3.;           // 1/3
-  static const double Smax   = 100.;            // max. step allowed > 0 [cm]
-  static const double Wmax   = 3000.;           // max. way allowed [cm]
-  static const double Pmin   = 4.E-3;           // minimum momentum for propagation [GeV]
   static const int    ND     = 56;              // number of variables for derivatives calculation
   static const int    ND1    = ND-7;            // = 49
-  double* R           = &P[0];                  // Start coordinates  [cm] 	( x,  y,  z)
-  double* A           = &P[3];                  // Start directions 	      	(ax, ay, az); 	ax^2+ay^2+az^2=1
+  // limits, check-values, etc. Can be tuned!
+  static const double DLT    = .0002;           // max. deviation for approximation-quality test
+  static const double Wmax   = 3000.;           // max. way allowed [cm]
+  static const double AngleMax = 6.3;           // max. total angle change of momentum. Prevents extrapolating a curler round and round if no active plane is found.
+  static const double Pmin   = 4.E-3;           // minimum momentum for propagation [GeV]
+  static const unsigned int maxNumIt = 1000;    // maximum number of iterations in main loop
+  // Aux parameters
+  double* R           = &P[0];                  // Start coordinates  [cm] 	(x,  y,  z)
+  double* A           = &P[3];                  // Start directions 	      (ax, ay, az); 	ax^2+ay^2+az^2=1
   double  SA[3]       = {0.,0.,0.};             // Start directions derivatives 
   double  Pinv        = P[6]*EC;                // P[6] is charge/momentum in e/(GeV/c)
-  double  Way         = 0.;                     // Total way of the trajectory [cm]
-  double  Way2        = 0.;                     // Total way of the trajectory with correct signs [cm]
-  bool    error       = false;                  // Error of propogation
+  double  Way         = 0.;                     // Sum of absolute values of all extrapolation steps [cm]
   bool    stopBecauseOfMaterial = false;        // does not go through main loop again when stepsize is reduced by stepper
+  TVector3 pos(R[0],R[1],R[2]);                 // position
+  TVector3 dir(A[0],A[1],A[2]);                 // direction
+  TVector3 Hvect;
+  double   momentum   = fabs(fCharge/P[6]);     // momentum [GeV]
+  double   relMomLoss = 0;                      // relative momentum loss in RKutta
+  double   deltaAngle = 0.;                     // total angle by which the momentum has changed during extrapolation
+  double   An, S, Sl=0;
+  double   S3, S4, PS2, EST;
+  // Variables for RKutta main loop
+  double   SU[4], H0[3], H1[3], H2[3], r[3];
+  double   A0, A1, A2, A3, A4, A5, A6;
+  double   B0, B1, B2, B3, B4, B5, B6;
+  double   C0, C1, C2, C3, C4, C5, C6;
+  double   dA0, dA2, dA3, dA4, dA5, dA6;
+  double   dB0, dB2, dB3, dB4, dB5, dB6;
+  double   dC0, dC2, dC3, dC4, dC5, dC6;
 
-  points.clear();
-  pointPaths.clear();
+  #ifdef DEBUG
+    std::cout << "RKTrackRep::RKutta \n";
+    std::cout << "position: "; pos.Print();
+    std::cout << "direction: "; dir.Print();
+    std::cout << "momentum: " << momentum << " GeV\n";
+    std::cout << "destination: "; plane.Print();
+  #endif
 
-  if(fabs(fCharge/P[6])<Pmin){
+  // check momentum
+  if(momentum < Pmin){
     std::cerr << "RKTrackRep::RKutta ==> momentum too low: " << fabs(fCharge/P[6])*1000. << " MeV" << std::endl;
     return (false);
   }
   
-  double SU[4];
-  const TVector3 O = plane.getO();
-  const TVector3 W = plane.getNormal();
+  // clear points and store starting point
+  coveredDistance = 0;
+  points.clear();
+  pointPaths.clear();
+  points.push_back(pos);
+  pointPaths.push_back(0.);
 
-  if(W*O > 0){ 		// make SU vector point away from origin
+
+  // make SU vector point away from origin
+  const TVector3 W = plane.getNormal();
+  if(W*plane.getO() > 0){
     SU[0] = W.X();
     SU[1] = W.Y();
     SU[2] = W.Z();
@@ -654,122 +685,88 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
     SU[1] = -1.*W.Y();
     SU[2] = -1.*W.Z();
   }
-  SU[3] = plane.distance(0.,0.,0.);
+  SU[3] = plane.distance(0., 0., 0.);
 
-  //
-  // Step estimation until surface
-  //
-  double Step,An,Dist,Dis,S,Sl=0;
 
-  points.push_back(TVector3(R[0],R[1],R[2]));
-  pointPaths.push_back(0.);
+  // Step estimation (signed)
+  S = estimateStep(pos, dir, SU, plane, momentum, relMomLoss, deltaAngle, stopBecauseOfMaterial);
+  if (fabs(S) < MINSTEP) return true;
 
-  An=A[0]*SU[0]+A[1]*SU[1]+A[2]*SU[2];		// An = A * N;  component of A normal to surface
-  if(fabs(An) < 1.E-6) {
-    std::cerr << "RKTrackRep::RKutta ==> cannot propagate perpendicular to plane " << std::endl;
-    return false;		          	// no propagation if A perpendicular to surface
-  }
-  if( plane.inActive(TVector3(R[0],R[1],R[2]),TVector3(A[0],A[1],A[2]))) {  // if direction is not pointing to active part of surface
-    Dist=SU[3]-R[0]*SU[0]-R[1]*SU[1]-R[2]*SU[2];				// Distance between start coordinates and surface
-    Step=Dist/An;
-  }
-  else{									                  // make sure to extrapolate towards surface
-    if( (O.X()-R[0])*A[0] + (O.Y()-R[1])*A[1] + (O.Z()-R[2])*A[2] >0 ){	  	// if direction A pointing from start coordinates R towards surface
-      Dist = sqrt((R[0]-O.X())*(R[0]-O.X())+					 // |R-O|; Distance between start coordinates and origin of surface
-                  (R[1]-O.Y())*(R[1]-O.Y())+
-                  (R[2]-O.Z())*(R[2]-O.Z()));      
-    }
-    else{									                // if direction pointing away from surface
-      Dist = -1.*sqrt((R[0]-O.X())*(R[0]-O.X())+
-                      (R[1]-O.Y())*(R[1]-O.Y())+
-                      (R[2]-O.Z())*(R[2]-O.Z()));            
-    }
-    Step=Dist;    
-  }
+  unsigned int counter(0);
 
-  if(fabs(Step)>Wmax) {
-    std::cerr<<"RKTrackRep::RKutta ==> Too long extrapolation requested : "<<Step<<" cm !"<<std::endl;
-    std::cerr<<"X = "<<R[0]<<" Y = "<<R[1]<<" Z = "<<R[2]
-             <<"  COSx = "<<A[0]<<"  COSy = "<<A[1]<<"  COSz = "<<A[2]<<std::endl;
-    std::cout<<"Destination  X = "<<SU[0]*SU[3]<<std::endl;
-    return(false);
-  }
-
-  // reduce maximum stepsize S to Smax
-  Step>Smax ? S=Smax : Step<-Smax ? S=-Smax : S=Step;	
-  
   //
   // Main cycle of Runge-Kutta method
   //
+  while (fabs(S) >= MINSTEP) {
 
-  //for saving points only when the direction didn't change
-  int Ssign=1;
-  if(S<0) Ssign = -1;
-
-  while(fabs(Step)>MINSTEP && !stopBecauseOfMaterial) {
-    
-    // call stepper and reduce stepsize
-    double stepperLen;
-    stepperLen = GFMaterialEffects::getInstance()->stepper(fabs(S),
-                                  R[0],R[1],R[2],
-                                  Ssign*A[0],Ssign*A[1],Ssign*A[2],
-                                  fabs(fCharge/P[6]),
-                                  fPdg);
-    if (stepperLen<MINSTEP) stepperLen=MINSTEP; // prevents tiny stepsizes that can slow down the program
-    if (S > stepperLen) {
-      S = stepperLen;
-      stopBecauseOfMaterial = true;
-    }
-    else if (S < -stepperLen) {
-      S = -stepperLen;	
-      stopBecauseOfMaterial = true;
+    if(++counter > maxNumIt){
+      std::cerr << "RKTrackRep::RKutta ==> maximum number of iterations exceeded\n";
+      return(false);
     }
 
-    double H0[12],H1[12],H2[12],r[3];
-    double S3=P3*S, S4=.25*S, PS2=Pinv*S; 
-    
+    #ifdef DEBUG
+      std::cout << " RKutta main loop nr. " << counter << "\n";
+    #endif
+
+    //for saving points only when the direction didn't change
+    int Ssign = 1;
+    if(S<0) Ssign = -1;
+
     //
+    // Runge Kutta Extrapolation
+    //
+    S3 = P3*S;
+    S4 = 0.25*S;
+    PS2 = Pinv*S;
+    
     // First point
-    //   
-    r[0]=R[0]      ; r[1]=R[1]      ; r[2]=R[2]      ;  
-    TVector3 pos(r[0],r[1],r[2]);						// vector of start coordinates R0	(x, y, z)
-    TVector3 H0vect = GFFieldManager::getFieldVal(pos);				// magnetic field in 10^-4 T = kGauss
-    H0[0]=PS2*H0vect.X(); H0[1]=PS2*H0vect.Y(); H0[2]=PS2*H0vect.Z(); 		// H0 is PS2*(Hx, Hy, Hz) @ R0
-    double A0=A[1]*H0[2]-A[2]*H0[1], B0=A[2]*H0[0]-A[0]*H0[2], C0=A[0]*H0[1]-A[1]*H0[0]; // (ax, ay, az) x H0
-    double A2=A[0]+A0              , B2=A[1]+B0              , C2=A[2]+C0              ; // (A0, B0, C0) + (ax, ay, az)
-    double A1=A2+A[0]              , B1=B2+A[1]              , C1=C2+A[2]              ; // (A0, B0, C0) + 2*(ax, ay, az)
+    r[0] = R[0];           r[1] = R[1];           r[2]=R[2];
+    pos.SetXYZ(r[0], r[1], r[2]); // vector of start coordinates R0	(x, y, z)
+    Hvect = GFFieldManager::getFieldVal(pos);				// magnetic field in 10^-4 T = kGauss
+    H0[0] = PS2*Hvect.X(); H0[1] = PS2*Hvect.Y(); H0[2] = PS2*Hvect.Z(); 		// H0 is PS2*(Hx, Hy, Hz) @ R0
+    A0 = A[1]*H0[2]-A[2]*H0[1]; B0 = A[2]*H0[0]-A[0]*H0[2]; C0 = A[0]*H0[1]-A[1]*H0[0]; // (ax, ay, az) x H0
+    A2 = A[0]+A0              ; B2 = A[1]+B0              ; C2 = A[2]+C0              ; // (A0, B0, C0) + (ax, ay, az)
+    A1 = A2+A[0]              ; B1 = B2+A[1]              ; C1 = C2+A[2]              ; // (A0, B0, C0) + 2*(ax, ay, az)
       
-    //
     // Second point
-    //
-    r[0]+=A1*S4    ; r[1]+=B1*S4    ; r[2]+=C1*S4    ;   //setup.Field(r,H1);
-    pos.SetXYZ(r[0],r[1],r[2]);
-    TVector3 H1vect = GFFieldManager::getFieldVal(pos);
-    H1[0]=H1vect.X()*PS2; H1[1]=H1vect.Y()*PS2;H1[2]=H1vect.Z()*PS2;	// H1 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * [(A0, B0, C0) + 2*(ax, ay, az)]
-    double A3,B3,C3,A4,B4,C4,A5,B5,C5;
-    A3 = B2*H1[2]-C2*H1[1]+A[0]; B3=C2*H1[0]-A2*H1[2]+A[1]; C3=A2*H1[1]-B2*H1[0]+A[2]; // (A2, B2, C2) x H1 + (ax, ay, az)
-    A4 = B3*H1[2]-C3*H1[1]+A[0]; B4=C3*H1[0]-A3*H1[2]+A[1]; C4=A3*H1[1]-B3*H1[0]+A[2]; // (A3, B3, C3) x H1 + (ax, ay, az)
-    A5 = A4-A[0]+A4            ; B5=B4-A[1]+B4            ; C5=C4-A[2]+C4            ; //    2*(A4, B4, C4) - (ax, ay, az)
+    r[0] += A1*S4;         r[1] += B1*S4;         r[2] += C1*S4;
+    pos.SetXYZ(r[0], r[1], r[2]);
+    Hvect = GFFieldManager::getFieldVal(pos);
+    H1[0] = Hvect.X()*PS2; H1[1] = Hvect.Y()*PS2; H1[2] = Hvect.Z()*PS2;	// H1 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * [(A0, B0, C0) + 2*(ax, ay, az)]
+    A3 = B2*H1[2]-C2*H1[1]+A[0]; B3 = C2*H1[0]-A2*H1[2]+A[1]; C3 = A2*H1[1]-B2*H1[0]+A[2]; // (A2, B2, C2) x H1 + (ax, ay, az)
+    A4 = B3*H1[2]-C3*H1[1]+A[0]; B4 = C3*H1[0]-A3*H1[2]+A[1]; C4 = A3*H1[1]-B3*H1[0]+A[2]; // (A3, B3, C3) x H1 + (ax, ay, az)
+    A5 = A4-A[0]+A4            ; B5 = B4-A[1]+B4            ; C5 = C4-A[2]+C4            ; //    2*(A4, B4, C4) - (ax, ay, az)
 
-    //
     // Last point
-    //
-    r[0]=R[0]+S*A4 ; r[1]=R[1]+S*B4 ; r[2]=R[2]+S*C4 ;  //setup.Field(r,H2);
-    pos.SetXYZ(r[0],r[1],r[2]);
-    TVector3 H2vect = GFFieldManager::getFieldVal(pos);
-    H2[0]=H2vect.X()*PS2; H2[1]=H2vect.Y()*PS2;H2[2]=H2vect.Z()*PS2;	// H2 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * (A4, B4, C4)
-    double A6=B5*H2[2]-C5*H2[1], B6=C5*H2[0]-A5*H2[2], C6=A5*H2[1]-B5*H2[0]; // (A5, B5, C5) x H2
+    r[0]=R[0]+S*A4;         r[1]=R[1]+S*B4;         r[2]=R[2]+S*C4;  //setup.Field(r,H2);
+    pos.SetXYZ(r[0], r[1], r[2]);
+    Hvect = GFFieldManager::getFieldVal(pos);
+    H2[0] = Hvect.X()*PS2;  H2[1] = Hvect.Y()*PS2;  H2[2] = Hvect.Z()*PS2;	// H2 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * (A4, B4, C4)
+    A6 = B5*H2[2]-C5*H2[1]; B6 = C5*H2[0]-A5*H2[2]; C6 = A5*H2[1]-B5*H2[0]; // (A5, B5, C5) x H2
 
-    //
+
     // Test approximation quality on given step and possible step reduction
-    //
-    double EST = fabs((A1+A6)-(A3+A4))+fabs((B1+B6)-(B3+B4))+fabs((C1+C6)-(C3+C4));  // EST = ||(ABC1+ABC6)-(ABC3+ABC4)||_1  =  ||(axzy x H0 + ABC5 x H2) - (ABC2 x H1 + ABC3 x H1)||_1
-    if(EST>DLT) {
-      S*=0.5; 
+    EST = fabs((A1+A6)-(A3+A4))+fabs((B1+B6)-(B3+B4))+fabs((C1+C6)-(C3+C4));  // EST = ||(ABC1+ABC6)-(ABC3+ABC4)||_1  =  ||(axzy x H0 + ABC5 x H2) - (ABC2 x H1 + ABC3 x H1)||_1
+    if(EST > DLT) {
+      S *= 0.5;
       stopBecauseOfMaterial = false;
+      #ifdef DEBUG
+        std::cout << " Stepsize was halfed to " << S << "\n";
+      #endif
       continue;
     }
     
+    // update paths
+    coveredDistance += S;				// add stepsize to way (signed)
+    Way  += fabs(S);
+
+    // check way limit
+    if(Way > Wmax){
+      std::cerr << "RKTrackRep::RKutta ==> Total extrapolation length is longer than length limit : " << Way << " cm !" << std::endl;
+      return(false);
+    }
+
+
     //
     // Derivatives of track parameters in last point
     //
@@ -780,186 +777,282 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
         double* dA = &P[i+3];				           	// dA = (dAx/dpN, dAy/dpN, dAz/dpN); N = X,Y,Z,Ax,Ay,Az,q/p
         
         //first point
-        double dA0   = H0[ 2]*dA[1]-H0[ 1]*dA[2];		// dA0/dp	}
-        double dB0   = H0[ 0]*dA[2]-H0[ 2]*dA[0];		// dB0/dp	 } = dA x H0	
-        double dC0   = H0[ 1]*dA[0]-H0[ 0]*dA[1];		// dC0/dp	}
+        dA0 = H0[2]*dA[1]-H0[1]*dA[2];		// dA0/dp	}
+        dB0 = H0[0]*dA[2]-H0[2]*dA[0];		// dB0/dp	 } = dA x H0
+        dC0 = H0[1]*dA[0]-H0[0]*dA[1];		// dC0/dp	}
         
         if(i==ND1) {dA0+=A0; dB0+=B0; dC0+=C0;}			// if last row: (dA0, dB0, dC0) := (dA0, dB0, dC0) + (A0, B0, C0)
         
-        double dA2   = dA0+dA[0];				// }
-        double dB2   = dB0+dA[1]; 			//  } = (dA0, dB0, dC0) + dA
-        double dC2   = dC0+dA[2];				// }
+        dA2 = dA0+dA[0];				// }
+        dB2 = dB0+dA[1]; 			  //  } = (dA0, dB0, dC0) + dA
+        dC2 = dC0+dA[2];				// }
          
         //second point
-        double dA3   = dA[0]+dB2*H1[2]-dC2*H1[1];		// dA3/dp	}
-        double dB3   = dA[1]+dC2*H1[0]-dA2*H1[2];		// dB3/dp	 } = dA + (dA2, dB2, dC2) x H1	
-        double dC3   = dA[2]+dA2*H1[1]-dB2*H1[0];		// dC3/dp	}
+        dA3 = dA[0]+dB2*H1[2]-dC2*H1[1];		// dA3/dp	}
+        dB3 = dA[1]+dC2*H1[0]-dA2*H1[2];		// dB3/dp	 } = dA + (dA2, dB2, dC2) x H1
+        dC3 = dA[2]+dA2*H1[1]-dB2*H1[0];		// dC3/dp	}
         
         if(i==ND1) {dA3+=A3-A[0]; dB3+=B3-A[1]; dC3+=C3-A[2];} // if last row: (dA3, dB3, dC3) := (dA3, dB3, dC3) + (A3, B3, C3) - (ax, ay, az)
 
-        double dA4   = dA[0]+dB3*H1[2]-dC3*H1[1];		// dA4/dp	}
-        double dB4   = dA[1]+dC3*H1[0]-dA3*H1[2];		// dB4/dp	 } = dA + (dA3, dB3, dC3) x H1	
-        double dC4   = dA[2]+dA3*H1[1]-dB3*H1[0];		// dC4/dp	}
+        dA4 = dA[0]+dB3*H1[2]-dC3*H1[1];		// dA4/dp	}
+        dB4 = dA[1]+dC3*H1[0]-dA3*H1[2];		// dB4/dp	 } = dA + (dA3, dB3, dC3) x H1
+        dC4 = dA[2]+dA3*H1[1]-dB3*H1[0];		// dC4/dp	}
         
         if(i==ND1) {dA4+=A4-A[0]; dB4+=B4-A[1]; dC4+=C4-A[2];} // if last row: (dA4, dB4, dC4) := (dA4, dB4, dC4) + (A4, B4, C4) - (ax, ay, az)
         
         //last point	
-        double dA5   = dA4+dA4-dA[0];				// }
-        double dB5   = dB4+dB4-dA[1];				//  } =  2*(dA4, dB4, dC4) - dA
-        double dC5   = dC4+dC4-dA[2]; 			// }
+        dA5 = dA4+dA4-dA[0];			// }
+        dB5 = dB4+dB4-dA[1];	  	//  } =  2*(dA4, dB4, dC4) - dA
+        dC5 = dC4+dC4-dA[2]; 			// }
 
-        double dA6   = dB5*H2[2]-dC5*H2[1];			// dA6/dp	}
-        double dB6   = dC5*H2[0]-dA5*H2[2];			// dB6/dp	 } = (dA5, dB5, dC5) x H2	
-        double dC6   = dA5*H2[1]-dB5*H2[0];			// dC6/dp	}	
+        dA6 = dB5*H2[2]-dC5*H2[1];			// dA6/dp	}
+        dB6 = dC5*H2[0]-dA5*H2[2];			// dB6/dp	 } = (dA5, dB5, dC5) x H2
+        dC6 = dA5*H2[1]-dB5*H2[0];			// dC6/dp	}
 
         if(i==ND1) {dA6+=A6; dB6+=B6; dC6+=C6;}			// if last row: (dA6, dB6, dC6) := (dA6, dB6, dC6) + (A6, B6, C6)                                    
         
-        dR[0]+=(dA2+dA3+dA4)*S3; dA[0] = (dA0+dA3+dA3+dA5+dA6)*P3;	// dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]      
-        dR[1]+=(dB2+dB3+dB4)*S3; dA[1] = (dB0+dB3+dB3+dB5+dB6)*P3;	// dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
-        dR[2]+=(dC2+dC3+dC4)*S3; dA[2] = (dC0+dC3+dC3+dC5+dC6)*P3;
+        dR[0] += (dA2+dA3+dA4)*S3; dA[0] = (dA0+dA3+dA3+dA5+dA6)*P3;	// dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
+        dR[1] += (dB2+dB3+dB4)*S3; dA[1] = (dB0+dB3+dB3+dB5+dB6)*P3;	// dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
+        dR[2] += (dC2+dC3+dC4)*S3; dA[2] = (dC0+dC3+dC3+dC5+dC6)*P3;
       }
-    }
-    
-    Way2 += S;				// add stepsize to way (signed)
-    if((Way+=fabs(S))>Wmax){ 
-      std::cerr<<"RKTrackRep::RKutta ==> Trajectory is longer than length limit : "<<Way<<" cm !"
-      << " p/q = "<<1./P[6]<< " GeV"<<std::endl;
-      return(false);
     }
     
     //
     // Track parameters in last point
     //   
-    R[0]+=(A2+A3+A4)*S3; A[0]+=(SA[0]=(A0+A3+A3+A5+A6)*P3-A[0]);  // R  = R0 + S3*[(A2, B2, C2) +   (A3, B3, C3) + (A4, B4, C4)] 
-    R[1]+=(B2+B3+B4)*S3; A[1]+=(SA[1]=(B0+B3+B3+B5+B6)*P3-A[1]);  // A  =     1/3*[(A0, B0, C0) + 2*(A3, B3, C3) + (A5, B5, C5) + (A6, B6, C6)]
-    R[2]+=(C2+C3+C4)*S3; A[2]+=(SA[2]=(C0+C3+C3+C5+C6)*P3-A[2]); 	// SA = A_new - A_old
-    Sl=S;	// last S used
-    
-    // if extrapolation has changed direction, delete the last point, because it is
-    // not a consecutive point to be used for material estimations
-    if(Ssign*S<0.) {
-      pointPaths.at(pointPaths.size()-1)+=S;
-      points.erase(points.end());
-    }
-    else{
-      pointPaths.push_back(S);
-    }
-
-    points.push_back(TVector3(R[0],R[1],R[2]));
-
+    R[0] += (A2+A3+A4)*S3;   A[0] += (SA[0]=(A0+A3+A3+A5+A6)*P3-A[0]);  // R  = R0 + S3*[(A2, B2, C2) +   (A3, B3, C3) + (A4, B4, C4)]
+    R[1] += (B2+B3+B4)*S3;   A[1] += (SA[1]=(B0+B3+B3+B5+B6)*P3-A[1]);  // A  =     1/3*[(A0, B0, C0) + 2*(A3, B3, C3) + (A5, B5, C5) + (A6, B6, C6)]
+    R[2] += (C2+C3+C4)*S3;   A[2] += (SA[2]=(C0+C3+C3+C5+C6)*P3-A[2]); 	// SA = A_new - A_old
+    pos.SetXYZ(R[0], R[1], R[2]);
+    // normalize A
     double CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);	// 1/|A|
-    A[0]*=CBA; A[1]*=CBA; A[2]*=CBA;				// normalize A
-  
-    // Step estimation until surface and test conditions for stop of propogation
-    if(fabs(Way2)>Wmax) {
-      Dis=0.;
-      Dist=0.;
-      S=0;
-      Step=0.;
-      break;
-    }
-    
+    A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
+    dir.SetXYZ(A[0], A[1], A[2]);
 
-    An=A[0]*SU[0]+A[1]*SU[1]+A[2]*SU[2];
-
-    if(fabs(An) < 1.E-6) {
-      error=true; 
-      Step=0; 
-      break;
-    }
+    // append point and steplength
+    pointPaths.push_back(S);
+    points.push_back(pos);
     
-    if( plane.inActive(TVector3(R[0],R[1],R[2]),TVector3(A[0],A[1],A[2]))) {
-      Dis=SU[3]-R[0]*SU[0]-R[1]*SU[1]-R[2]*SU[2];
-      Step=Dis/An; 
-    }
-    else{
-      if( (O.X()-R[0])*A[0] + (O.Y()-R[1])*A[1] + (O.Z()-R[2])*A[2] >0 ){
-        Dis = sqrt((R[0]-O.X())*(R[0]-O.X())+
-                   (R[1]-O.Y())*(R[1]-O.Y())+
-                   (R[2]-O.Z())*(R[2]-O.Z()));      
+    // if stepsize has been limited by material, break the loop
+    if (stopBecauseOfMaterial) break;
+
+    // estimate Step for next loop or linear extrapolation
+    Sl = S;	// last S used
+    S = estimateStep(pos, dir, SU, plane, momentum, relMomLoss, deltaAngle, stopBecauseOfMaterial);
+
+    // if this estimation has set stopBecauseOfMaterial to true and S<MINSTEP, then the loop should break and no linear extrapolation should be performed!
+    if (stopBecauseOfMaterial && S < MINSTEP) break;
+
+    // check if we went back and forth multiple times -> we don't come closer to the plane!
+    if (counter > 15){
+      if (S                    *pointPaths[counter]   < 0 &&
+          pointPaths[counter  ]*pointPaths[counter-1] < 0 &&
+          pointPaths[counter-1]*pointPaths[counter-2] < 0 &&
+          pointPaths[counter-2]*pointPaths[counter-3] < 0){
+        std::cerr << "RKTrackRep::RKutta ==> Do not get closer to plane!"<<std::endl;
+        return(false);
       }
-      else{
-        Dis = -1.*sqrt((R[0]-O.X())*(R[0]-O.X())+
-                       (R[1]-O.Y())*(R[1]-O.Y())+
-                       (R[2]-O.Z())*(R[2]-O.Z()));            
-      }
-      Step = Dis; // signed distance to surface
     }
 
-    if (Dis*Dist>0 && fabs(Dis)>fabs(Dist)) { // did not get closer to surface
-      error=true; 
-      Step=0; 
-      break;
+    // check if total angle is bigger than AngleMax. Can happen if a curler should be fitted and it does not hit the active area of the next plane.
+    if (fabs(deltaAngle) > AngleMax){
+      std::cerr << "RKTrackRep::RKutta ==> Do not get to an active plane! Already extrapolated " << deltaAngle * 180 / TMath::Pi() << "°." <<std::endl;
+      return(false);
     }
-    Dist=Dis;
 
-    //
-    // reset & check step size
-    //
-    // reset S to Step if extrapolation too long or in wrong direction
-    if (S*Step<0. || fabs(S)>fabs(Step)) S=Step;
-    else if (EST<DLT32 && fabs(2.*S)<=Smax) S*=2.;     
-    
   } //end of main loop
   
-  //
-  // Output information preparation for main track parameteres
-  //
-  
-  if (!stopBecauseOfMaterial) { // linear extrapolation to surface
-    if(fabs(Sl) > 1.E-12) Sl=1./Sl;	      // Sl = inverted last Stepsize Sl
-    A[0]+=(SA[0]*=Sl)*Step; 	// Step  = distance to surface
-    A[1]+=(SA[1]*=Sl)*Step; 	// SA*Sl = delta A / delta way; local derivative of A with respect to the length of the way
-    A[2]+=(SA[2]*=Sl)*Step;	// A = A + Step * SA*Sl
 
-    P[0] = R[0]+Step*(A[0]-.5*Step*SA[0]);    // P = R + Step*(A - 1/2*Step*SA); approximation for final point on surface
-    P[1] = R[1]+Step*(A[1]-.5*Step*SA[1]);
-    P[2] = R[2]+Step*(A[2]-.5*Step*SA[2]);
-      
-    points.push_back(TVector3(P[0],P[1],P[2]));
-    pointPaths.push_back(Step);
-  }
-  
-  double CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);
-  
-  P[3] = A[0]*CBA;	// normalize A
-  P[4] = A[1]*CBA;
-  P[5] = A[2]*CBA;
-   
   //
-  // Output derivatives of track parameters preparation 
+  // linear extrapolation to surface
   //
-  An = A[0]*SU[0]+A[1]*SU[1]+A[2]*SU[2]; 
-  fabs(An) < 1.E-6 ? An=1./An : An = 0; // 1/A_normal
-  
-  if(calcCov && !stopBecauseOfMaterial){
-    for(int i=7; i!=ND; i+=7) {
-      double* dR = &P[i];  double* dA = &P[i+3];	
-      S = (dR[0]*SU[0]+dR[1]*SU[1]+dR[2]*SU[2])*An;	// dR_normal / A_normal
-      dR[0]-=S*A [0];  dR[1]-=S*A [1]; dR[2]-=S*A [2]; 
-      dA[0]-=S*SA[0];  dA[1]-=S*SA[1]; dA[2]-=S*SA[2]; 
+  if (!stopBecauseOfMaterial) {
+    if (fabs(Sl) > 1.E-12) Sl = 1./Sl;	      // Sl = inverted last Stepsize Sl
+    A[0] += (SA[0]*=Sl)*S;   	// S  = distance to surface
+    A[1] += (SA[1]*=Sl)*S;   	// SA*Sl = delta A / delta way; local derivative of A with respect to the length of the way
+    A[2] += (SA[2]*=Sl)*S;	  // A = A + S * SA*Sl
+    // normalize A
+    double CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);  // 1/|A|
+    A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
+
+    R[0] = R[0]+S*(A[0]-0.5*S*SA[0]);    // P = R + S*(A - 1/2*S*SA); approximation for final point on surface
+    R[1] = R[1]+S*(A[1]-0.5*S*SA[1]);
+    R[2] = R[2]+S*(A[2]-0.5*S*SA[2]);
+
+    //
+    // Output derivatives of track parameters preparation
+    //
+    if(!stopBecauseOfMaterial){
+      An = A[0]*SU[0]+A[1]*SU[1]+A[2]*SU[2];
+      fabs(An) < 1.E-6 ? An=1./An : An = 0; // 1/A_normal
+      double norm;
+      for(int i=7; i!=ND; i+=7) {
+        double*dR = &P[i];
+        double*dA = &P[i+3];
+        norm = (dR[0]*SU[0] + dR[1]*SU[1] + dR[2]*SU[2])*An;	// dR_normal / A_normal
+        dR[0] -= norm*A [0];   dR[1] -= norm*A [1];   dR[2] -= norm*A [2];
+        dA[0] -= norm*SA[0];   dA[1] -= norm*SA[1];   dA[2] -= norm*SA[2];
+      }
     }
-  }
-  
-  if(error){
-    std::cerr << "RKTrackRep::RKutta ==> Do not get closer. Path = " << Way << " cm" << "  p/q = " << 1./P[6] << " GeV" << std::endl;
-    return(false);
-  }
 
-  // calculate covered distance
-  if (!stopBecauseOfMaterial) coveredDistance=Way2+Step;
-  else coveredDistance=Way2;
+    // update points and paths
+    points.push_back(TVector3(R[0], R[1], R[2]));
+    pointPaths.push_back(S);
+
+    coveredDistance += S;
+    Way  += fabs(S);
+  }
 
   return(true);
-
 }
 
 
+double RKTrackRep::estimateStep(const TVector3& pos,
+                                const TVector3& dir,
+                                const double* SU,
+                                const GFDetPlane& plane,
+                                const double& momentum,
+                                double& relMomLoss,
+                                double& deltaAngle,
+                                bool& stopBecauseOfMaterial) const{
+
+  static const double Smax      = 100.;          // max. step allowed [cm]
+  static const double dAngleMax = 0.1;           // max. deviation of angle between direction before and after the step [rad]
+  double Step;
+
+  #ifdef DEBUG
+    std::cout << " RKTrackRep::estimateStep \n";
+    std::cout << "  position: "; pos.Print();
+    std::cout << "  direction: "; dir.Print();
+  #endif
+
+
+  // calculate distance to surface
+  double Dist = SU[3] - pos[0]*SU[0]-pos[1]*SU[1]-pos[2]*SU[2];        // Distance between start coordinates and surface
+  double An = dir[0]*SU[0] + dir[1]*SU[1] + dir[2]*SU[2];    // An = dir * N;  component of dir normal to surface
+
+  if (fabs(An) > 1.E-10) Step = Dist/An;
+  else Step = Dist*1.E10;
+
+  // see if dir points towards surface (1) or not (-1)
+  int dirSw(1);
+  if (Step<0) dirSw = -1;
+
+  Step = fabs(Step);
+
+  #ifdef DEBUG
+    std::cout << "  Distance to plane: " << SU[3] - pos[0]*SU[0]-pos[1]*SU[1]-pos[2]*SU[2] << "\n";
+    std::cout << "  guess for Step (unsigned): " << Step << "\n";
+    if (dirSw>0) std::cout << "  Direction is  pointing towards surface.\n";
+    else  std::cout << "  Direction is pointing away from surface.\n";
+  #endif
+
+  // calculate way after which momentum angle has changed AngleMax
+  TVector3 Hvect(GFFieldManager::getFieldVal(pos));       // magnetic field in 10^-4 T = kGauss
+  double Hmag(Hvect.Mag());
+  double p_perp = ( dir - Hvect*((dir*Hvect)/(Hmag*Hmag)) ).Mag() * momentum; // [GeV]
+  double radius = p_perp/(0.3E-3*Hmag); // [cm]
+  double SmaxAngle = fabs(dAngleMax * radius / sin(dir.Angle(Hvect))); // [cm]
+
+
+  //
+  // Select direction
+  //
+  // auto select
+  if (fDirection == 0){
+    Step *= dirSw;
+    #ifdef DEBUG
+      std::cout << "  auto select direction. \n";
+    #endif
+  }
+  // see if straight line approximation is ok
+  else if ( Step < 0.2*SmaxAngle ){
+    #ifdef DEBUG
+      std::cout << "  straight line approximation is fine. Delta angle until surface is reached is approx " << Step/SmaxAngle * dAngleMax * 180 / TMath::Pi()  << " deg \n";
+    #endif
+
+    // if direction is pointing to active part of surface
+    if( plane.inActive(pos, dir) ) {
+      Step *= dirSw;
+      #ifdef DEBUG
+        std::cout << "  direction is pointing to active part of surface. \n";
+      #endif
+    }
+    // if we are near the plane, but not pointing to the active area, make a big step!
+    else {
+      Step = fDirection*SmaxAngle;
+      #ifdef DEBUG
+        std::cout << "  we are near the plane, but not pointing to the active area. make a big step! \n";
+      #endif
+    }
+  }
+  // fDirection decides!
+  else {
+    Step *= fDirection;
+    #ifdef DEBUG
+      std::cout << "  select direction according to fDirection. \n";
+    #endif
+  }
+
+  #ifdef DEBUG
+    std::cout << "  guess for Step (signed): " << Step << "\n";
+  #endif
+
+
+  //
+  // Limit stepsize
+  //
+  int Ssign = 1;
+  if (Step < 0) Ssign = -1;
+
+  // reduce maximum stepsize Step to Smax
+  if (Step > Smax) Step = Smax;
+  else if (Step < -Smax) Step = -Smax;
+
+  // also limit stepsize according to the change of the momentum direction!
+  if (Step > SmaxAngle) Step = SmaxAngle;
+  else if (Step < -SmaxAngle) Step = -SmaxAngle;
+
+  #ifdef DEBUG
+    std::cout << "  limit from maxangle: " << SmaxAngle << ", radius: " << radius << "\n";
+  #endif
+
+  // call stepper and reduce stepsize if step not too small
+  if (fabs(Step) > MINSTEP){
+    double stepperLen = GFMaterialEffects::getInstance()->stepper(fabs(Step),
+                                                                  pos[0], pos[1], pos[2],
+                                                                  Ssign*dir[0], Ssign*dir[1], Ssign*dir[2],
+                                                                  momentum,
+                                                                  relMomLoss,
+                                                                  fPdg);
+
+    if (Step > stepperLen) {
+      Step = stepperLen;
+      stopBecauseOfMaterial = true;
+    }
+    else if (Step < -stepperLen) {
+      Step = -stepperLen;
+      stopBecauseOfMaterial = true;
+    }
+
+    #ifdef DEBUG
+      std::cout << "  limit from stepper: " << stepperLen << "\n";
+    #endif
+  }
+
+  #ifdef DEBUG
+    std::cout << "  --> Step used: " << Step << "\n";
+  #endif
+
+  deltaAngle += Step/SmaxAngle * dAngleMax;
+
+  return Step;
+}
 
 
 double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMatrixT<double>* cov) {
 
-  static const int maxNumIt(2000);
+  static const int maxNumIt(200);
   int numIt(0);
 
   bool calcCov(true);
@@ -982,8 +1075,7 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
 
   while(true){
     if(numIt++ > maxNumIt){
-      GFException exc("RKTrackRep::Extrap ==> maximum number of iterations exceeded",
-		      __LINE__,__FILE__);
+      GFException exc("RKTrackRep::Extrap ==> maximum number of iterations exceeded",__LINE__,__FILE__);
       exc.setFatal();
       delete[] P;
       throw exc;
@@ -997,16 +1089,15 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
       P[55] =  (*state)[6][0];
     }
 
-
     TVector3 directionBefore(P[3],P[4],P[5]); // direction before propagation
     directionBefore.SetMag(1.);
     
     // propagation
     std::vector<TVector3> points;
     std::vector<double> pointPaths;
-    if( ! this->RKutta(plane, P, coveredDistance, points, pointPaths, -1., calcCov) ) { // maxLen currently not used
+    if( ! this->RKutta(plane, P, coveredDistance, points, pointPaths, calcCov) ) {
       GFException exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
-      exc.setFatal(); // stops propagation; faster, but some hits will be lost
+      exc.setFatal();
       delete[] P;
       throw exc;
     }
@@ -1039,18 +1130,6 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
       }
     }
     
-    //consistency check
-    double checkSum(0.);
-    for(unsigned int i=0;i<pointPathsFilt.size();++i){
-      checkSum+=pointPathsFilt.at(i);
-    }
-    if(fabs(checkSum-coveredDistance)>1.E-7){
-      GFException exc("RKTrackRep::Extrap ==> fabs(checkSum-coveredDistance)>1.E-7",__LINE__,__FILE__);
-      exc.setFatal();
-      delete[] P;
-      throw exc;
-    }
-    
     if(calcCov){ //calculate Jacobian jac
       for(int i=0;i<7;++i){
 	      for(int j=0;j<7;++j){
@@ -1061,7 +1140,7 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
       jacT = jac;
       jacT.T();
     }
-    
+
     TMatrixT<double> noise(7,7); // zero everywhere by default
     
     // call MatEffects
@@ -1078,6 +1157,10 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
                                  &jac,
                                  &directionBefore,
                                  &directionAfter);
+
+      #ifdef DEBUG
+        std::cout << "momLoss: " << momLoss << " GeV \n";
+      #endif
     
       if(fabs(P[6])>1.E-10){ // do momLoss only for defined 1/momentum .ne.0
         P[6] = fCharge/(fabs(fCharge/P[6])-momLoss);
@@ -1098,12 +1181,15 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
       *cov = jacT*((oldCov)*jac)+noise;
     }
     
+    #ifdef DEBUG
+      jacT.Print();
+      cov->Print();
+    #endif
+
+    //we arrived at the destination plane, if we point to the active area of the plane (if it is finite), and the distance is below threshold
+    if( plane.inActive(TVector3(P[0],P[1],P[2]), TVector3(P[3],P[4],P[5])) &&
+        plane.distance(P[0],P[1],P[2]) < MINSTEP) break;
     
-    //we arrived at the destination plane, if we point to the active area
-    //of the plane (if it is finite), and the distance is below threshold
-    if( plane.inActive(TVector3(P[0],P[1],P[2]),TVector3(P[3],P[4],P[5]))) {
-      if(plane.distance(P[0],P[1],P[2])<MINSTEP) break;
-    }
   }
 
   (*state)[0][0] = P[0];  (*state)[1][0] = P[1];  (*state)[2][0] = P[2];
@@ -1205,6 +1291,14 @@ double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
   dir.SetMag(1.);  
   
   return coveredDistance;
+}
+
+
+void RKTrackRep::setPropDir(int dir){
+  // make sure fDirection is -1, 0 or 1
+  if (dir>0) fDirection = 1;
+  else if (dir<0) fDirection = -1;
+  else fDirection = 0;
 }
 
 
