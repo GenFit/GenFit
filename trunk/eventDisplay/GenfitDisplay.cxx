@@ -74,25 +74,24 @@ GenfitDisplay* GenfitDisplay::getInstance() {
 
 GenfitDisplay::~GenfitDisplay() { reset(); }
 
-void GenfitDisplay::reset() { 
+void GenfitDisplay::reset() {
 
 	for(unsigned int i = 0; i < fEvents.size(); i++) {
 
 		for(unsigned int j = 0; j < fEvents.at(i)->size(); j++) {
 
 			delete fEvents.at(i)->at(j);
-			fEvents.at(i)->clear();
-			delete fEvents.at(i);
 
 		}
-
+		delete fEvents.at(i);
 	}
 
-	fEvents.clear(); 
+	fEvents.clear();
+	fHits.clear();
 
 }
 
-void GenfitDisplay::addEvent(std::vector<GFTrack*>& evts) { 
+void GenfitDisplay::addEvent(std::vector<GFTrack*>& evts) {
 
 	std::vector<GFTrack*>* vec = new std::vector<GFTrack*>;
 
@@ -102,18 +101,19 @@ void GenfitDisplay::addEvent(std::vector<GFTrack*>& evts) {
 
 	}
 
-	fEvents.push_back(vec); 
+	fEvents.push_back(vec);
 
 }
 
-void GenfitDisplay::next(unsigned int stp) { 
+void GenfitDisplay::next(unsigned int stp) {
 
 	gotoEvent(fEventId + stp);
 
 }
 
-void GenfitDisplay::prev(unsigned int stp) { 
+void GenfitDisplay::prev(unsigned int stp) {
 
+	if(fEvents.size() == 0) return;
 	if(fEventId < (int)stp) {
 		gotoEvent(0);
 	} else {
@@ -134,7 +134,10 @@ void GenfitDisplay::gotoEvent(unsigned int id) {
 	gEve->GetCurrentEvent()->DestroyElements();
 	double old_error_scale = fErrorScale;
 	drawEvent(fEventId);
-	if(old_error_scale != fErrorScale) drawEvent(fEventId); // if autoscaling changed the error, draw again.
+	if(old_error_scale != fErrorScale) {
+		gEve->GetCurrentEvent()->DestroyElements();
+		drawEvent(fEventId); // if autoscaling changed the error, draw again.
+	}
 	fErrorScale = old_error_scale;
 
 };
@@ -165,6 +168,7 @@ void GenfitDisplay::open() {
 		}
 
 		TEveGeoTopNode* eve_top_node = new TEveGeoTopNode(gGeoManager, top_node);
+		eve_top_node->IncDenyDestroy();
 		gEve->AddGlobalElement(eve_top_node);
 	}
 
@@ -185,7 +189,7 @@ void GenfitDisplay::open() {
 void GenfitDisplay::drawEvent(unsigned int id) {
 
 	// parse the option string ------------------------------------------------------------------------
-	bool drawAutoScale = false; 
+	bool drawAutoScale = false;
 	bool drawDetectors = false;
 	bool drawHits = false;
 	bool drawScaleMan = false;
@@ -216,6 +220,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					1./fHits[id][j][3], 1./fHits[id][j][4], 1./fHits[id][j][5], 0);
 
 			TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
+			det_shape->IncDenyDestroy();
 			det_shape->SetShape(new TGeoSphere(0.,1.));
 			det_shape->SetTransMatrix(*det_trans);
 			// finished rotating and translating ------------------------------------------
@@ -328,7 +333,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				}
 			} else if (hit_type == "GFSpacepointHitPolicy") {
 				space_hit = true;
-				plane_size = 4; 
+				plane_size = 4;
 			} else if (hit_type == "GFWireHitPolicy") {
 				wire_hit = true;
 				hit_u = hit_coords(0,0);
@@ -338,7 +343,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				break;
 			}
 
-			if(plane_size < 4) plane_size = 4; 
+			if(plane_size < 4) plane_size = 4;
 			// finished setting variables ---------------------------------------------------------
 
 			// draw planes if corresponding option is set -----------------------------------------
@@ -376,6 +381,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 				if(wire_hit) {
 					TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
+					det_shape->IncDenyDestroy();
 					double pseudo_res_0 = fErrorScale*std::sqrt(hit_cov(0,0));
 					if(!drawHits) { // if the hits are also drawn, make the tube smaller to avoid intersecting volumes
 						det_shape->SetShape(new TGeoTube(0, hit_u, plane_size));
@@ -413,6 +419,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 						// calculate eigenvalues to draw error-ellipse ----------------------------
 						TMatrixDEigen eigen_values(hit_cov);
 						TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
+						det_shape->IncDenyDestroy();
 						TMatrixT<double> ev = eigen_values.GetEigenValues();
 						TMatrixT<double> eVec = eigen_values.GetEigenVectors();
 						double pseudo_res_0 = fErrorScale*std::sqrt(ev(0,0));
@@ -466,6 +473,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					// get eigenvalues of covariance to know how to draw the ellipsoid ------------
 					TMatrixDEigen eigen_values(hit->getRawHitCov());
 					TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
+					det_shape->IncDenyDestroy();
 					det_shape->SetShape(new TGeoSphere(0.,1.));
 					TMatrixT<double> ev = eigen_values.GetEigenValues();
 					TMatrixT<double> eVec = eigen_values.GetEigenVectors();
@@ -504,7 +512,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 								pseudo_res_0 *= cor;
 								pseudo_res_1 *= cor;
 								pseudo_res_2 *= cor;
-								std::cout << " to " << fErrorScale << std::endl; 
+								std::cout << " to " << fErrorScale << std::endl;
 							}
 						}
 					}
@@ -524,6 +532,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				// draw wire hits -----------------------------------------------------------------
 				if(wire_hit) {
 					TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
+					det_shape->IncDenyDestroy();
 					double pseudo_res_0 = fErrorScale*std::sqrt(hit_cov(0,0));
 
 					// autoscale if necessary -----------------------------------------------------
@@ -647,7 +656,7 @@ void GenfitDisplay::makeGui() {
 
 		TString icondir( Form("%s/icons/", gSystem->Getenv("ROOTSYS")) );
 		TGPictureButton* b = 0;
-		GenfitDisplay*  fh = GenfitDisplay::getInstance(); 
+		GenfitDisplay*  fh = GenfitDisplay::getInstance();
 
 		b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoBack.gif"));
 		hf->AddFrame(b);
