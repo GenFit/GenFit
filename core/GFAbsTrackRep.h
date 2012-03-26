@@ -30,6 +30,7 @@
 
 #include "TMatrixT.h"
 #include "TVector3.h"
+#include "TMath.h"
 
 #include "GFDetPlane.h"
 
@@ -259,6 +260,10 @@ class GFAbsTrackRep : public TObject{
   inline double getRedChiSqu() const {
     if(getNDF()>0) return getChiSqu()/getNDF();
     return 0;
+  }
+  // returns p-value
+  inline double getPVal() const {
+    return TMath::Prob(getChiSqu(), getNDF());
   }
   inline unsigned int getNDF() const {
     if(fNdf>getDim())  return fNdf-getDim();
