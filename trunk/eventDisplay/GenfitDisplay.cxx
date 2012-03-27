@@ -266,7 +266,11 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 		GFDetPlane initial_plane = rep->getReferencePlane();
 		TMatrixT<double> initial_state(rep->getState());
 		TMatrixT<double> initial_cov(rep->getCov());
-		TMatrixT<double> initial_auxInfo(*(rep->getAuxInfo(initial_plane)));
+		TMatrixT<double> initial_auxInfo;
+		if (rep->hasAuxInfo()) {
+		  initial_auxInfo.ResizeTo(*(rep->getAuxInfo(initial_plane)));
+		  initial_auxInfo = (*(rep->getAuxInfo(initial_plane)));
+		}
 		// saved initial state --------------------------------------------------------------------
 
 		for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
