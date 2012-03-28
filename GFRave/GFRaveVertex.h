@@ -97,7 +97,7 @@ class GFRaveVertex : public TObject
     double fChi2;
     int fId; // id of the rave::vertex the GFVertex is created from
 
-    std::vector < GFRaveTrackParameters* > fSmoothedTracks; // track parameters of smoothed (with the vertex information) tracks, weights and original tracks
+    std::vector < GFRaveTrackParameters* > fSmoothedTracks; //-> track parameters of smoothed (with the vertex information) tracks, weights and original tracks; Vertex has ownership!
 
   private:
     ClassDef(GFRaveVertex,1)
