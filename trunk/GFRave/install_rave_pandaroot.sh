@@ -47,9 +47,11 @@ fi
 
 if $buildRave
 then
+  # get number of cores
+  NUM_CORES=$(cat /proc/cpuinfo | grep processor | wc -l)
   # configure make make install rave
   ./configure --prefix=$PANDABUILD
-  make
+  make -j$NUM_CORES
   make install
   
   touch installTimeCheck # create (or update) installTimeCheck file
