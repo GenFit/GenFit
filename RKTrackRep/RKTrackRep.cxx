@@ -887,11 +887,11 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
       fabs(An) < 1.E-6 ? An=1./An : An = 0; // 1/A_normal
       double norm;
       for(int i=7; i!=ND; i+=7) {
-        //double* dR = &P[i];
-        //double* dA = &P[i+3];
-        norm = (P[0]*SU[0] + P[1]*SU[1] + P[2]*SU[2])*An;	// dR_normal / A_normal
-        P[0] -= norm*A [0];   P[1] -= norm*A [1];   P[2] -= norm*A [2];
-        P[3] -= norm*SA[0];   P[4] -= norm*SA[1];   P[5] -= norm*SA[2];
+        double* dR = &P[i];
+        double* dA = &P[i+3];
+        norm = (dR[0]*SU[0] + dR[1]*SU[1] + dR[2]*SU[2])*An;	// dR_normal / A_normal
+        dR[0] -= norm*A [0];   dR[1] -= norm*A [1];   dR[2] -= norm*A [2];
+        dA[0] -= norm*SA[0];   dA[1] -= norm*SA[1];   dA[2] -= norm*SA[2];
       }
     }
 
