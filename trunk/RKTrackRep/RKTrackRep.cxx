@@ -882,7 +882,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
     //
     // Output derivatives of track parameters preparation
     //
-    if(!stopBecauseOfMaterial){
+    if(calcCov){
       An = A[0]*SU[0]+A[1]*SU[1]+A[2]*SU[2];
       fabs(An) < 1.E-6 ? An=1./An : An = 0; // 1/A_normal
       double norm;
