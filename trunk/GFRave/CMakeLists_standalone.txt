@@ -5,61 +5,51 @@
 cmake_minimum_required(VERSION 2.6)
 
 IF(NOT DEFINED ENV{RAVEPATH})
-   MESSAGE(FATAL_ERROR "You did not define the environment variable RAVEPATH which is nedded to find rave. Please set this variable and execute cmake again.") 
+   MESSAGE(FATAL_ERROR "You did not define the environment variable RAVEPATH which is nedded to find rave. GFRave will not be built.") 
 ENDIF(NOT DEFINED ENV{RAVEPATH})
+SET(RAVEPATH $ENV{RAVEPATH})
 
 #check for ENV variables that are needed
 IF(NOT DEFINED ENV{ROOTSYS})
    MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
 ENDIF(NOT DEFINED ENV{ROOTSYS})
-#IF(NOT DEFINED ENV{GENFIT})
-#   MESSAGE(FATAL_ERROR "You did not set the environment variable GENFIT.") 
-#ENDIF(NOT DEFINED ENV{GENFIT})
 
-SET(RAVEPATH $ENV{RAVEPATH})
 
 # get compiler flags from rave
+INCLUDE(UsePkgConfig)
 SET(ENV{PKG_CONFIG_PATH} ${RAVEPATH})
-INCLUDE(FindPkgConfig)
-pkg_check_modules(RAVE REQUIRED rave)
-foreach(flag ${RAVE_CFLAGS})
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}") 
-endforeach(flag)
-MESSAGE("CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})
-
+PKGCONFIG(rave 
+  RAVE_INCLUDE_DIR 
+  RAVE_LINK_DIR 
+  RAVE_LINK_FLAGS 
+  CMAKE_CXX_FLAGS
+)
 
 INCLUDE_DIRECTORIES(
-$ENV{ROOTSYS}/include  
-$ENV{GENFIT}/core 
-$ENV{GENFIT}/GFRave
-${CLHEP_INCLUDE_DIR}
-${RAVEPATH}/include 
-${RAVEPATH}/src
-${RAVEPATH}/src/ROOT/mathcore
-${RAVEPATH}/src/ROOT/smatrix
-${RAVEPATH}/src/ROOT/genvector
-${RAVEPATH}/src/ROOT
-${RAVEPATH}/src/RaveBase/RaveInterface
+  $ENV{ROOTSYS}/include  
+  ${GENFIT}/core 
+  ${GENFIT}/GFRave
+  ${CLHEP_INCLUDE_DIR}
+  ${RAVE_INCLUDE_DIR}
 )
 
 set(GFRAVE_SRCS 
-GFRaveVertexFactory.cxx
-GFRaveTrackParameters.cxx
-GFRaveVertex.cxx
-GFRaveConverters.cxx  
-GFRavePropagator.cxx  
-GFRaveMagneticField.cxx  
+  GFRaveVertexFactory.cxx
+  GFRaveTrackParameters.cxx
+  GFRaveVertex.cxx
+  GFRaveConverters.cxx
+  GFRavePropagator.cxx
+  GFRaveMagneticField.cxx
 )
 
-set(GFRAVE_HEADERS 
-GFRaveVertexFactory.h
-GFRaveTrackParameters.h
-GFRaveVertex.h
-GFRaveConverters.h  
-GFRavePropagator.h  
-GFRaveMagneticField.h  
+set(GFRAVE_HEADERS
+  GFRaveVertexFactory.h
+  GFRaveTrackParameters.h
+  GFRaveVertex.h
+  GFRaveConverters.h
+  GFRavePropagator.h
+  GFRaveMagneticField.h
 )
-
 
 
 set(GFRAVE_LINKDEF  GFRaveLinkDef.h)
@@ -70,15 +60,22 @@ FIND_PROGRAM(ROOT_CINT_EXECUTABLE
 	PATHS $ENV{ROOTSYS}/bin
 	NO_DEFAULT_PATH)
 
+
 ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${GFRAVE_DICTIONARY}
 	COMMAND ${ROOT_CINT_EXECUTABLE}
-      	ARGS -f ${CMAKE_BINARY_DIR}/${GFRAVE_DICTIONARY} -c -DHAVE_CONFIG_H
-      	-I${GENFIT}/core ${GFRAVE_HEADERS} ${GFRAVE_LINKDEF}
+      	ARGS -f ${CMAKE_BINARY_DIR}/${GFRAVE_DICTIONARY} -c 
+      	-I$ENV{ROOTSYS}/include
+      	-I${GENFIT}/core 
+       	GFRaveTrackParameters.h
+        GFRaveVertex.h 
+        ${GFRAVE_LINKDEF}
       	DEPENDS ${GFRAVE_HEADERS} ${GFRAVE_LINKDEF})
+      
+message("${ROOT_CINT_EXECUTABLE}") 
+message("${CMAKE_BINARY_DIR}/${GFRAVE_DICTIONARY}") 
 
-# SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS} ${CMAKE_BINARY_DIR}/${GFRAVE_DICTIONARY})
-SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS})
-
+SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS} ${CMAKE_BINARY_DIR}/${GFRAVE_DICTIONARY})
+#SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS})
 
 ################ install ###################
 
@@ -88,7 +85,11 @@ Execute_process(COMMAND root-config --glibs --cflags
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 add_library(gfrave SHARED ${GFRAVE_SRCS_ALL})
-target_link_libraries(gfrave ${ROOT_LIBS})
+target_link_libraries(gfrave 
+  ${ROOT_LIBS}  
+  ${RAVE_LINK_FLAGS}
+  -I${RAVE_INCLUDE_DIR}
+)
 
-install(TARGETS gfrave DESTINATION $ENV{GENFIT}/lib)
+install(TARGETS gfrave DESTINATION ${GENFITLIBINSTALLDIR})
 
