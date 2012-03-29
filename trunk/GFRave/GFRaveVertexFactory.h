@@ -30,7 +30,7 @@
 #ifndef GFRAVEVERTEXFACTORY_H
 #define GFRAVEVERTEXFACTORY_H
 
-#include<vector>
+#include <vector>
 
 #include "GFRaveVertex.h"
 

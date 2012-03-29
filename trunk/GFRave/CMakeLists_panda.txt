@@ -4,79 +4,59 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-
-# check if rave is included as an external; RAVEPPATH is not used in that case
-if(EXISTS ${CMAKE_SOURCE_DIR}/rave)
-  SET(RAVEPATH ${CMAKE_SOURCE_DIR}/rave)
-else(EXISTS ${CMAKE_SOURCE_DIR}/rave)
-  # check if RAVEPATH is set
-  IF(NOT DEFINED ENV{RAVEPATH})
-     MESSAGE(FATAL_ERROR "Did not find rave as an external and RAVEPATH is not set!") 
-  ELSE(NOT DEFINED ENV{RAVEPATH})  
-     SET(RAVEPATH $ENV{RAVEPATH})
-  ENDIF(NOT DEFINED ENV{RAVEPATH})
-endif(EXISTS ${CMAKE_SOURCE_DIR}/rave)
-
-MESSAGE("found rave in " ${RAVEPATH})
-
-
 #check for ENV variables that are needed
 IF(NOT DEFINED ENV{ROOTSYS})
    MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
 ENDIF(NOT DEFINED ENV{ROOTSYS})
 
-# compile rave
-cmake_policy(SET CMP0011 NEW)
-execute_process(COMMAND ${CMAKE_SOURCE_DIR}/GenfitTools/GFRave/install_rave_pandaroot.sh ${RAVEPATH})
+IF(NOT DEFINED ENV{RAVEPATH})
+   MESSAGE(FATAL_ERROR "RAVEPATH is not set!") 
+ENDIF(NOT DEFINED ENV{RAVEPATH})  
+SET(RAVEPATH $ENV{RAVEPATH})
+
 
 # get compiler flags from rave
+INCLUDE(UsePkgConfig)
 SET(ENV{PKG_CONFIG_PATH} ${RAVEPATH})
-INCLUDE(FindPkgConfig)
-pkg_check_modules(RAVE REQUIRED rave)
-foreach(flag ${RAVE_CFLAGS})
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}") 
-endforeach(flag)
-
-
-set(INCLUDE_DIRECTORIES
-${ROOT_INCLUDE_DIR}
-${CLHEP_INCLUDE_DIR}
-${CMAKE_SOURCE_DIR}/genfit
-${CMAKE_SOURCE_DIR}/GenfitTools/GFRave
-${RAVEPATH}
-${RAVEPATH}/include 
-${RAVEPATH}/src
-${RAVEPATH}/src/ROOT/mathcore
-${RAVEPATH}/src/ROOT/smatrix
-${RAVEPATH}/src/ROOT/genvector
-${RAVEPATH}/src/ROOT
-${RAVEPATH}/src/RaveBase/RaveInterface
+PKGCONFIG(rave 
+  RAVE_INCLUDE_DIR 
+  RAVE_LINK_DIR 
+  RAVE_LINK_FLAGS 
+  CMAKE_CXX_FLAGS
 )
 
+set (INCLUDE_DIRECTORIES
+  $ENV{ROOTSYS}/include  
+  ${CMAKE_SOURCE_DIR}/genfit
+  ${CMAKE_SOURCE_DIR}/GenfitTools/GFRave
+  ${CLHEP_INCLUDE_DIR}
+  ${RAVE_INCLUDE_DIR}
+)
 include_directories( ${INCLUDE_DIRECTORIES})
 
 set(LINK_DIRECTORIES
-${ROOT_LIBRARY_DIR}
+	${ROOT_LIBRARY_DIR}
+	$ENV{RAVELIBPATH}
 )
-
 link_directories( ${LINK_DIRECTORIES})
 
 
 set(GFRAVE_SRCS 
-GFRaveConverters.cxx  
-GFRaveMagneticField.cxx  
-GFRavePropagator.cxx  
-GFRaveTrackParameters.cxx
-GFRaveVertex.cxx
-GFRaveVertexFactory.cxx
+	GFRaveConverters.cxx  
+	GFRaveMagneticField.cxx  
+	GFRavePropagator.cxx  
+	GFRaveTrackParameters.cxx
+	GFRaveVertex.cxx
+	GFRaveVertexFactory.cxx
 )
+
 set(GFRAVEDICT_HEADERS 
-GFRaveTrackParameters.h
-GFRaveVertex.h
+	GFRaveTrackParameters.h
+	GFRaveVertex.h
 )
 
 if(RULE_CHECKER_FOUND)
-  CHECK_RULES("${GFRAVE_SRCS}" "${INCLUDE_DIRECTORIES}" GFRAVE_RULES)
+    CHECK_RULES("${GFRAVE_SRCS}" "${INCLUDE_DIRECTORIES}" GFRAVE_RULES)
 endif(RULE_CHECKER_FOUND)
 
 # fill list of header files from list of source files
@@ -90,7 +70,12 @@ ROOT_GENERATE_DICTIONARY("${GFRAVEDICT_HEADERS}" "${GFRAVE_LINKDEF}" "${GFRAVE_D
 SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS} ${GFRAVE_DICTIONARY})
 
 add_library(gfrave SHARED ${GFRAVE_SRCS_ALL})
-target_link_libraries(gfrave ${ROOT_LIBRARIES})
+target_link_libraries(gfrave 
+	${ROOT_LIBRARIES}
+    ${RAVE_LINK_FLAGS}
+    -I${RAVE_INCLUDE_DIR}
+)
 set_target_properties(gfrave PROPERTIES ${FAIRROOT_LIBRARY_PROPERTIES})
 ################ install ###################
 install(TARGETS gfrave DESTINATION ${CMAKE_BINARY_DIR}/lib)
+
