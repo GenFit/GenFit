@@ -636,20 +636,20 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   bool    stopBecauseOfMaterial = false;        // does not go through main loop again when stepsize is reduced by stepper
   TVector3 pos(R[0],R[1],R[2]);                 // position
   TVector3 dir(A[0],A[1],A[2]);                 // direction
-  TVector3 Hvect;
+  TVector3 Hvect(0.,0.,0);
   double   momentum   = fabs(fCharge/P[6]);     // momentum [GeV]
   double   relMomLoss = 0;                      // relative momentum loss in RKutta
   double   deltaAngle = 0.;                     // total angle by which the momentum has changed during extrapolation
-  double   An, S, Sl=0;
-  double   S3, S4, PS2, EST;
+  double   An(0), S(0), Sl(0);
+  double   S3(0), S4(0), PS2(0), EST(0), CBA(0);
   // Variables for RKutta main loop
-  double   SU[4], H0[3], H1[3], H2[3], r[3];
-  double   A0, A1, A2, A3, A4, A5, A6;
-  double   B0, B1, B2, B3, B4, B5, B6;
-  double   C0, C1, C2, C3, C4, C5, C6;
-  double   dA0, dA2, dA3, dA4, dA5, dA6;
-  double   dB0, dB2, dB3, dB4, dB5, dB6;
-  double   dC0, dC2, dC3, dC4, dC5, dC6;
+  double   SU[4]={0.,0.,0.,0.}, H0[3]={0.,0.,0.}, H1[3]={0.,0.,0.}, H2[3]={0.,0.,0.}, r[3]={0.,0.,0.};
+  double   A0(0), A1(0), A2(0), A3(0), A4(0), A5(0), A6(0);
+  double   B0(0), B1(0), B2(0), B3(0), B4(0), B5(0), B6(0);
+  double   C0(0), C1(0), C2(0), C3(0), C4(0), C5(0), C6(0);
+  double   dA0(0), dA2(0), dA3(0), dA4(0), dA5(0), dA6(0);
+  double   dB0(0), dB2(0), dB3(0), dB4(0), dB5(0), dB6(0);
+  double   dC0(0), dC2(0), dC3(0), dC4(0), dC5(0), dC6(0);
 
   #ifdef DEBUG
     std::cout << "RKTrackRep::RKutta \n";
@@ -825,7 +825,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
     R[2] += (C2+C3+C4)*S3;   A[2] += (SA[2]=(C0+C3+C3+C5+C6)*P3-A[2]); 	// SA = A_new - A_old
     pos.SetXYZ(R[0], R[1], R[2]);
     // normalize A
-    double CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);	// 1/|A|
+    CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);	// 1/|A|
     A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
     dir.SetXYZ(A[0], A[1], A[2]);
 
@@ -872,7 +872,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
     A[1] += (SA[1]*=Sl)*S;   	// SA*Sl = delta A / delta way; local derivative of A with respect to the length of the way
     A[2] += (SA[2]*=Sl)*S;	  // A = A + S * SA*Sl
     // normalize A
-    double CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);  // 1/|A|
+    CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);  // 1/|A|
     A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
 
     R[0] = R[0]+S*(A[0]-0.5*S*SA[0]);    // P = R + S*(A - 1/2*S*SA); approximation for final point on surface
@@ -887,11 +887,11 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
       fabs(An) < 1.E-6 ? An=1./An : An = 0; // 1/A_normal
       double norm;
       for(int i=7; i!=ND; i+=7) {
-        double*dR = &P[i];
-        double*dA = &P[i+3];
-        norm = (dR[0]*SU[0] + dR[1]*SU[1] + dR[2]*SU[2])*An;	// dR_normal / A_normal
-        dR[0] -= norm*A [0];   dR[1] -= norm*A [1];   dR[2] -= norm*A [2];
-        dA[0] -= norm*SA[0];   dA[1] -= norm*SA[1];   dA[2] -= norm*SA[2];
+        //double* dR = &P[i];
+        //double* dA = &P[i+3];
+        norm = (P[0]*SU[0] + P[1]*SU[1] + P[2]*SU[2])*An;	// dR_normal / A_normal
+        P[0] -= norm*A [0];   P[1] -= norm*A [1];   P[2] -= norm*A [2];
+        P[3] -= norm*SA[0];   P[4] -= norm*SA[1];   P[5] -= norm*SA[2];
       }
     }
 
