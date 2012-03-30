@@ -20,7 +20,7 @@
 /** @addtogroup RKTrackRep
  * @{
  */
- 
+
 #ifndef GFMATERIALEFFECTS_H
 #define GFMATERIALEFFECTS_H
 
@@ -31,49 +31,55 @@
 #include"TMatrixT.h"
 
 /** @brief  Contains stepper and energy loss/noise matrix calculation
- * 
+ *
  *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Johannes Rauch  (Technische Universit&auml;t M&uuml;nchen, author)
- * 
+ *
  *  It provides functionality to limit the stepsize of an extrapolation in order not to
- *  exceed a specified maximum momentum loss. After propagation, the energy loss 
+ *  exceed a specified maximum momentum loss. After propagation, the energy loss
  *  for the given length and (optionally) the noise matrix can be calculated.
  *  You have to set which energy-loss and noise mechanisms you want to use.
  *  At the moment, per default all energy loss and noise options are ON.
  */
 
-class GFMaterialEffects : public TObject{ 
- private:
+class GFMaterialEffects : public TObject {
+private:
   GFMaterialEffects();
   virtual ~GFMaterialEffects();
 
   static GFMaterialEffects* finstance;
 
- public:
+public:
   static GFMaterialEffects* getInstance();
   static void destruct();
 
-  void setNoEffects(bool opt = true){fNoEffects = opt;}
+  void setNoEffects(bool opt = true) {fNoEffects = opt;}
 
-  void setEnergyLossBetheBloch(bool opt = true){fEnergyLossBetheBloch=opt; fNoEffects = false;}
-  void setNoiseBetheBloch(bool opt = true){fNoiseBetheBloch=opt; fNoEffects = false;}
-  void setNoiseCoulomb(bool opt = true){fNoiseCoulomb=opt; fNoEffects = false;}
-  void setEnergyLossBrems(bool opt = true){fEnergyLossBrems=opt; fNoEffects = false;}
-  void setNoiseBrems(bool opt = true){fNoiseBrems=opt; fNoEffects = false;}
+  void setEnergyLossBetheBloch(bool opt = true) {fEnergyLossBetheBloch = opt; fNoEffects = false;}
+  void setNoiseBetheBloch(bool opt = true) {fNoiseBetheBloch = opt; fNoEffects = false;}
+  void setNoiseCoulomb(bool opt = true) {fNoiseCoulomb = opt; fNoEffects = false;}
+  void setEnergyLossBrems(bool opt = true) {fEnergyLossBrems = opt; fNoEffects = false;}
+  void setNoiseBrems(bool opt = true) {fNoiseBrems = opt; fNoEffects = false;}
+
+  /** @brief Select the multiple scattering model that will be used during track fit.
+   *  At the moment two model are available default and Highland. default is the model was was present in genfit first.
+   *  Note that using this function has no effect if setNoiseCoulomb(false) is set.
+   */
+  void setMscModel(const std::string& modelName);
 
 
   //! Calculates energy loss in the travelled path, optional calculation of noise matrix
-  double effects(const std::vector<TVector3>& points, 
-                 const std::vector<double>& pointPaths, 
+  double effects(const std::vector<TVector3>& points,
+                 const std::vector<double>& pointPaths,
                  const double& mom,
                  const int& pdg,
-                       double& xx0,
+                 double& xx0,
                  const bool& doNoise = false,
-                       TMatrixT<double>* noise = NULL,
+                 TMatrixT<double>* noise = NULL,
                  const TMatrixT<double>* jacobian = NULL,
-                 const TVector3* directionBefore = NULL, 
+                 const TVector3* directionBefore = NULL,
                  const TVector3* directionAfter = NULL);
 
   //! Returns maximum length so that a specified momentum loss will not be exceeded
@@ -91,15 +97,15 @@ class GFMaterialEffects : public TObject{
                  const int& pdg);
 
   double stepper(const double& maxDist,
-                 const TVector3& pos, 
+                 const TVector3& pos,
                  const TVector3& dir,
                  const double& mom,
                  double& relMomLoss,
-                 const int& pdg){
-    return stepper(maxDist, pos.X(),pos.Y(),pos.Z(), dir.X(),dir.Y(),dir.Z(), mom, relMomLoss, pdg);
+                 const int& pdg) {
+    return stepper(maxDist, pos.X(), pos.Y(), pos.Z(), dir.X(), dir.Y(), dir.Z(), mom, relMomLoss, pdg);
   }
 
- private:
+private:
   //! sets fmatDensity, fmatZ, fmatA, fradiationLength, fmEE, fcharge, fmass;
   void getParameters();
 
@@ -124,7 +130,7 @@ class GFMaterialEffects : public TObject{
     *  Needs fdedx, which is calculated in energyLossBetheBloch, so it has to be calles afterwards!
     */
   void noiseBetheBloch(const double& mom,
-                             TMatrixT<double>* noise) const;
+                       TMatrixT<double>* noise) const;
 
   //! calculation of multiple scattering
   /**  With the calculated multiple scattering angle, two noise matrices are calculated:
@@ -317,7 +323,7 @@ class GFMaterialEffects : public TObject{
     * \n
     */
   void noiseCoulomb(const double& mom,
-                          TMatrixT<double>* noise,
+                    TMatrixT<double>* noise,
                     const TMatrixT<double>* jacobian,
                     const TVector3* directionBefore,
                     const TVector3* directionAfter) const;
@@ -334,7 +340,7 @@ class GFMaterialEffects : public TObject{
    *
    */
   void noiseBrems(const double& mom,
-                        TMatrixT<double>* noise) const;
+                  TMatrixT<double>* noise) const;
 
 
   bool fNoEffects;
@@ -365,8 +371,10 @@ class GFMaterialEffects : public TObject{
   double fcharge;
   double fmass;
 
- public:
-  ClassDef(GFMaterialEffects,1)
+  int fMscModelCode; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
+
+public:
+  ClassDef(GFMaterialEffects, 2);
 
 };
 
