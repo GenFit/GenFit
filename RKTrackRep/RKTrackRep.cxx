@@ -950,9 +950,15 @@ double RKTrackRep::estimateStep(const TVector3& pos,
   // calculate way after which momentum angle has changed AngleMax
   TVector3 Hvect(GFFieldManager::getFieldVal(pos));       // magnetic field in 10^-4 T = kGauss
   double Hmag(Hvect.Mag());
-  double p_perp = ( dir - Hvect*((dir*Hvect)/(Hmag*Hmag)) ).Mag() * momentum; // [GeV]
-  double radius = p_perp/(0.3E-3*Hmag); // [cm]
-  double SmaxAngle = fabs(dAngleMax * radius / sin(dir.Angle(Hvect))); // [cm]
+  double SmaxAngle(Smax);
+  if (Hmag > 1E-5){
+    double p_perp = ( dir - Hvect*((dir*Hvect)/(Hmag*Hmag)) ).Mag() * momentum; // [GeV]
+    double radius = p_perp/(0.3E-3*Hmag); // [cm]
+    double sinAngle = fabs(sin(dir.Angle(Hvect)));
+    if (sinAngle > 1E-10){
+      SmaxAngle = fabs(dAngleMax * radius / sinAngle); // [cm]
+    }
+  }
 
 
   //
@@ -1183,7 +1189,7 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMa
     
     #ifdef DEBUG
       jacT.Print();
-      cov->Print();
+      if(calcCov) cov->Print();
     #endif
 
     //we arrived at the destination plane, if we point to the active area of the plane (if it is finite), and the distance is below threshold
