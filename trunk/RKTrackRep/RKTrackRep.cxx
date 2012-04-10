@@ -333,7 +333,6 @@ void RKTrackRep::transformMP(const TMatrixT<double>& in, TMatrixT<double>& out5x
   const double AtV = A*v;
   const double uprime = AtU/AtW;
   const double vprime = AtV/AtW;
-  const double AtW2 = AtW*AtW;
 
   if (!sixD) { // 7D
 
