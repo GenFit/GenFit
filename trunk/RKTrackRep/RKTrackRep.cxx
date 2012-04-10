@@ -220,84 +220,102 @@ void RKTrackRep::getState7(TMatrixT<double>& state7) const{
 
 
 void RKTrackRep::transformPM(const TMatrixT<double>& in5x5, TMatrixT<double>& out,
-                             const GFDetPlane& pl, const TMatrixT<double>& state5, double spu) const{
+                             const GFDetPlane& pl, const TMatrixT<double>& state5, const double&  spu, TMatrixT<double>* Jac) const{
 
   // check if out is 6x6 or 7x7
   bool sixD(false);
-  if (out.GetNcols() == 6) sixD = true;
+  if (out.GetNcols() == 7 && out.GetNrows() == 7) {}
+  else if (out.GetNcols() == 6 && out.GetNrows() == 6) sixD = true;
+  else {
+    GFException exc("RKTrackRep::transformPM ==> output matrix has to be 6x6 or 7x7",__LINE__,__FILE__);
+    throw exc;
+  }
 
   const TVector3 u = pl.getU();
   const TVector3 v = pl.getV();
   const TVector3 w = pl.getNormal();
 
 
-  TVector3 pTilde = spu * (w + state5[1][0] * u + state5[2][0] * v);
-  double pTildeMag = pTilde.Mag();
-  pTilde.SetMag(1.);
+  TVector3 pTildeDir = spu * (w + state5[1][0] * u + state5[2][0] * v);
+  double pTildeMag = pTildeDir.Mag();
+  pTildeDir.SetMag(1.);
 
-  const double utpTilde = u*pTilde;
-  const double vtpTilde = v*pTilde;
+  const double utpTilde = u*pTildeDir;
+  const double vtpTilde = v*pTildeDir;
 
   //J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)   (out is 7x7)
   //J_pM matrix is d(x,y,z,px,py,pz) / d(q/p,u',v',u,v)       (out is 6x6)
-  TMatrixT<double> J_pM(7,5);
-  if (sixD) J_pM.ResizeTo(6,5);
+  TMatrixT<double> J_pM(5,7);
+  if (sixD) J_pM.ResizeTo(5,6);
 
    // dx/du
-  J_pM[0][3] = u.X();
-  J_pM[1][3] = u.Y();
-  J_pM[2][3] = u.Z();
+  J_pM[3][0] = u.X();
+  J_pM[3][1] = u.Y();
+  J_pM[3][2] = u.Z();
   // dx/dv
-  J_pM[0][4] = v.X();
-  J_pM[1][4] = v.Y();
-  J_pM[2][4] = v.Z();
+  J_pM[4][0] = v.X();
+  J_pM[4][1] = v.Y();
+  J_pM[4][2] = v.Z();
 
-  spu /= pTildeMag;
-  if (!sixD) {
+  if (!sixD) { // 7D
+    double fact = spu / pTildeMag;
     // dax/du'
-    J_pM[3][1] = spu * ( u.X() - pTilde.X()*utpTilde );
-    J_pM[4][1] = spu * ( u.Y() - pTilde.Y()*utpTilde );
-    J_pM[5][1] = spu * ( u.Z() - pTilde.Z()*utpTilde );
+    J_pM[1][3] = fact * ( u.X() - pTildeDir.X()*utpTilde );
+    J_pM[1][4] = fact * ( u.Y() - pTildeDir.Y()*utpTilde );
+    J_pM[1][5] = fact * ( u.Z() - pTildeDir.Z()*utpTilde );
     // dax/dv'
-    J_pM[3][2] = spu * ( v.X() - pTilde.X()*vtpTilde );
-    J_pM[4][2] = spu * ( v.Y() - pTilde.Y()*vtpTilde );
-    J_pM[5][2] = spu * ( v.Z() - pTilde.Z()*vtpTilde );
+    J_pM[2][3] = fact * ( v.X() - pTildeDir.X()*vtpTilde );
+    J_pM[2][4] = fact * ( v.Y() - pTildeDir.Y()*vtpTilde );
+    J_pM[2][5] = fact * ( v.Z() - pTildeDir.Z()*vtpTilde );
     // dqop/dqop
-    J_pM[6][0] = 1.;
+    J_pM[0][6] = 1.;
   }
-  else {
+  else { // 6D
     const double qop = state5[0][0];
     const double p = fCharge/qop; // momentum
-    spu *= p;
-    // dpx/dqop
-    J_pM[3][0] = (-1.) * spu / qop * ( w.X() + state5[1][0]*u.X() + state5[2][0]*v.X());
-    J_pM[4][0] = (-1.) * spu / qop * ( w.Y() + state5[1][0]*u.Y() + state5[2][0]*v.Y());
-    J_pM[5][0] = (-1.) * spu / qop * ( w.Z() + state5[1][0]*u.Z() + state5[2][0]*v.Z());
-    // dpx/du'
-    J_pM[3][1] = spu * u.X();
-    J_pM[4][1] = spu * u.Y();
-    J_pM[5][1] = spu * u.Z();
-    // dpx/dv'
-    J_pM[3][2] = spu * v.X();
-    J_pM[4][2] = spu * v.Y();
-    J_pM[5][2] = spu * v.Z();
+    const double AtW = pTildeDir*w;
+    //dqop/dpx
+    double fact = (-1.) * qop / p; // = -q/p²
+    J_pM[0][3] = fact * pTildeDir.X(); // ?
+    J_pM[0][4] = fact * pTildeDir.Y(); // ?
+    J_pM[0][5] = fact * pTildeDir.Z(); // ?
+    //du'/dpx
+    fact = 1. / (p*AtW); // ?
+    //fact = p / AtW;
+    J_pM[1][3] = fact * (u.X() - w.X()*utpTilde/AtW);
+    J_pM[1][4] = fact * (u.Y() - w.Y()*utpTilde/AtW);
+    J_pM[1][5] = fact * (u.Z() - w.Z()*utpTilde/AtW);
+    //dv'/dax
+    J_pM[2][3] = fact * (v.X() - w.X()*vtpTilde/AtW);
+    J_pM[2][4] = fact * (v.Y() - w.Y()*vtpTilde/AtW);
+    J_pM[2][5] = fact * (v.Z() - w.Z()*vtpTilde/AtW);
   }
 
 
   TMatrixT<double> J_pM_transp(J_pM);
   J_pM_transp.T();
 
-  out = J_pM*(in5x5*J_pM_transp);
+  out = J_pM_transp*(in5x5*J_pM);
+
+  if (Jac!=NULL){
+    Jac->ResizeTo(J_pM);
+    *Jac = J_pM;
+  }
 
 }
 
 
 void RKTrackRep::transformMP(const TMatrixT<double>& in, TMatrixT<double>& out5x5,
-                             const GFDetPlane& pl, const TMatrixT<double>& state7) {
+                             const GFDetPlane& pl, const TMatrixT<double>& state7, TMatrixT<double>* Jac) const {
 
   // check if in is 6x6 or 7x7
   bool sixD(false);
-  if (in.GetNcols() == 6) sixD = true;
+  if (in.GetNcols() == 7 && in.GetNrows() == 7) {}
+  else if (in.GetNcols() == 6 && in.GetNrows() == 6) sixD = true;
+  else {
+    GFException exc("RKTrackRep::transformMP ==> input matrix has to be 6x6 or 7x7",__LINE__,__FILE__);
+    throw exc;
+  }
 
   const TVector3 u = pl.getU();
   const TVector3 v = pl.getV();
@@ -305,51 +323,61 @@ void RKTrackRep::transformMP(const TMatrixT<double>& in, TMatrixT<double>& out5x
 
   const TVector3 A(state7[3][0], state7[4][0], state7[5][0]);
 
+
+  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)   (in is 7x7)
+  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,px,py,pz)       (in is 6x6)
+  TMatrixT<double> J_Mp(7,5);
+  if (sixD) J_Mp.ResizeTo(6,5);
   const double AtW = A*w;
   const double AtU = A*u;
   const double AtV = A*v;
+  const double uprime = AtU/AtW;
+  const double vprime = AtV/AtW;
   const double AtW2 = AtW*AtW;
 
-  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)   (out is 7x7)
-  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,px,py,pz)       (out is 6x6)
-  TMatrixT<double> J_Mp(5,7);
-  if (sixD) J_Mp.ResizeTo(5,6);
+  if (!sixD) { // 7D
 
-  if (!sixD) {
-    J_Mp[0][6] = 1.;
+    J_Mp[6][0] = 1.;
     //du'/dax
-    J_Mp[1][3] = (u.X()*AtW - w.X()*AtU) / AtW2;
-    J_Mp[1][4] = (u.Y()*AtW - w.Y()*AtU) / AtW2;
-    J_Mp[1][5] = (u.Z()*AtW - w.Z()*AtU) / AtW2;
+    J_Mp[3][1] = (u.X()- w.X()*uprime) / AtW;
+    J_Mp[4][1] = (u.Y()- w.Y()*uprime) / AtW;
+    J_Mp[5][1] = (u.Z()- w.Z()*uprime) / AtW;
     //dv'/dax
-    J_Mp[2][3] = (v.X()*AtW - w.X()*AtV) / AtW2;
-    J_Mp[2][4] = (v.Y()*AtW - w.Y()*AtV) / AtW2;
-    J_Mp[2][5] = (v.Z()*AtW - w.Z()*AtV) / AtW2;
+    J_Mp[3][2] = (v.X()- w.X()*vprime) / AtW;
+    J_Mp[4][2] = (v.Y()- w.Y()*vprime) / AtW;
+    J_Mp[5][2] = (v.Z()- w.Z()*vprime) / AtW;
   }
-  else {
+  else { // 6D
+    double spu(1);
+    if (AtW < 0) spu = -1.;
     const double qop = state7[6][0];
-    const double p = fCharge/qop; // momentum
-    //dqop/dpx
-    J_Mp[0][3] = (-1.) * qop * A.X() / p;
-    J_Mp[0][4] = (-1.) * qop * A.Y() / p;
-    J_Mp[0][5] = (-1.) * qop * A.Z() / p;
-    //du'/dpx
-    J_Mp[1][3] = (u.X() - w.X()*AtU/AtW) / (p*AtW);
-    J_Mp[1][4] = (u.Y() - w.Y()*AtU/AtW) / (p*AtW);
-    J_Mp[1][5] = (u.Z() - w.Z()*AtU/AtW) / (p*AtW);
-    //dv'/dax
-    J_Mp[2][3] = (v.X() - w.X()*AtU/AtW) / (p*AtW);
-    J_Mp[2][4] = (v.Y() - w.Y()*AtU/AtW) / (p*AtW);
-    J_Mp[2][5] = (v.Z() - w.Z()*AtU/AtW) / (p*AtW);
+    TVector3 pTilde(spu * (w + uprime*u + vprime*v));
+    double pTilde2 = pTilde*pTilde;
+    double fac1 = fCharge / (sqrt(pTilde2) * qop);
+    double trm1 = fac1 * spu / pTilde2;
+    double fac2 = trm1 * u * pTilde;
+    double fac3 = trm1 * v * pTilde;
+
+    J_Mp[3][0] = (-1.) * pTilde.X() * fac1 / qop;
+    J_Mp[4][0] = (-1.) * pTilde.Y() * fac1 / qop;
+    J_Mp[5][0] = (-1.) * pTilde.Z() * fac1 / qop;
+
+    J_Mp[3][1] = spu * u.X() * fac1 - pTilde.X() * fac2;
+    J_Mp[4][1] = spu * u.Y() * fac1 - pTilde.Y() * fac2;
+    J_Mp[5][1] = spu * u.Z() * fac1 - pTilde.Z() * fac2;
+
+    J_Mp[3][2] = spu * v.X() * fac1 - pTilde.X() * fac3;
+    J_Mp[4][2] = spu * v.Y() * fac1 - pTilde.Y() * fac3;
+    J_Mp[5][2] = spu * v.Z() * fac1 - pTilde.Z() * fac3;
   }
   //du/dx
-  J_Mp[3][0] = u.X();
-  J_Mp[3][1] = u.Y();
-  J_Mp[3][2] = u.Z();
+  J_Mp[0][3] = u.X();
+  J_Mp[1][3] = u.Y();
+  J_Mp[2][3] = u.Z();
   //dv/dx
-  J_Mp[4][0] = v.X();
-  J_Mp[4][1] = v.Y();
-  J_Mp[4][2] = v.Z();
+  J_Mp[0][4] = v.X();
+  J_Mp[1][4] = v.Y();
+  J_Mp[2][4] = v.Z();
 
 
   TMatrixT<double> J_Mp_transp(J_Mp);
@@ -357,7 +385,12 @@ void RKTrackRep::transformMP(const TMatrixT<double>& in, TMatrixT<double>& out5x
 
   out5x5.ResizeTo(5, 5);
 
-  out5x5 = J_Mp*(in*J_Mp_transp);
+  out5x5 = J_Mp_transp*(in*J_Mp);
+
+  if (Jac!=NULL){
+    Jac->ResizeTo(J_Mp);
+    *Jac = J_Mp;
+  }
 }
 
 
@@ -1227,13 +1260,10 @@ void RKTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom
   const TVector3 v = pl.getV();
   const TVector3 w = u.Cross(v);
 
-  const double p = fCharge/statePred[0][0]; //Magnitude of the momentum.
-  TVector3 pTilde = spu * (w + statePred[1][0]*u + statePred[2][0]*v);
-  const double pTildeMagnitude=pTilde.Mag();
+  mom = spu * (w + statePred[1][0]*u + statePred[2][0]*v);
+  mom.SetMag(fCharge/statePred[0][0]);
 
   pos = pl.getO() + statePred[3][0]*u + statePred[4][0]*v;
-  mom = p/pTildeMagnitude * pTilde;
-
 }
 
 
@@ -1255,9 +1285,7 @@ void RKTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TM
   TMatrixT<double> state7;
   getState7(state7);
 
-  TMatrixT<double> covcopy6x6(cov6x6);
-
-  transformMP(covcopy6x6, fCov, fRefPlane, state7);
+  transformMP(cov6x6, fCov, fRefPlane, state7);
 }
 
 

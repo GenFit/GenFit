@@ -43,6 +43,8 @@
  * Porting to %C goes back to Igor Gavrilenko @ CERN.
  * The code was taken from the Phast analysis package of the COMPASS experiment
  * (Sergei Gerrassimov @ CERN).
+ *
+ * The state is 5D: (q/p, u', v', u,v)
  */
 
 
@@ -176,7 +178,7 @@ class RKTrackRep : public GFAbsTrackRep {
 
   const TMatrixT<double>* getAuxInfo(const GFDetPlane& pl);
   
-  bool hasAuxInfo() { return true; }
+  bool hasAuxInfo() const { return true; }
 
 
 
@@ -193,15 +195,17 @@ class RKTrackRep : public GFAbsTrackRep {
   void getState7(TMatrixT<double>& state7) const;
 
   void transformPM(const TMatrixT<double>& in5x5,
-                   TMatrixT<double>& out7x7,
+                   TMatrixT<double>& out,
                    const GFDetPlane& pl,
                    const TMatrixT<double>& state5,
-                   double spu) const;
+                   const double& spu,
+                   TMatrixT<double>* Jac = NULL) const;
 
-  void transformMP(const TMatrixT<double>& in7x7,
+  void transformMP(const TMatrixT<double>& in,
                    TMatrixT<double>& out5x5,
                    const GFDetPlane& pl,
-                   const TMatrixT<double>& state7);
+                   const TMatrixT<double>& state7,
+                   TMatrixT<double>* Jac = NULL) const;
 
   RKTrackRep& operator=(const RKTrackRep* rhs){return *this;};
 
