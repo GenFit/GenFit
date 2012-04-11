@@ -178,7 +178,7 @@ class RKTrackRep : public GFAbsTrackRep {
 
   const TMatrixT<double>* getAuxInfo(const GFDetPlane& pl);
   
-  bool hasAuxInfo() const { return true; }
+  bool hasAuxInfo() { return true; }
 
 
 
