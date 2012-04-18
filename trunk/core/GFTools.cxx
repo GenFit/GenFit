@@ -60,7 +60,7 @@ TMatrixT<double> smoothed_state;
 	if(GFTools::getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov)) {
 
 		TMatrixT<double> H = trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep));
-		H.Print();smoothed_state.Print();
+		//H.Print();smoothed_state.Print();
 		TMatrixT<double> pos_tmp(H * smoothed_state);
 		pos.ResizeTo(pos_tmp);
 		pos = pos_tmp;
