@@ -87,10 +87,10 @@ class GFDaf: GFKalman {
 
 		/** @brief Configure the annealing scheme.
 		 *
-		 * In the current implementation you need to provide at least two temperatures. 
-		 * The maximum would ten tempertatures.
+		 * In the current implementation you need to provide at least one temperatures
+		 * and not more then ten tempertatures.
 		 */
-		void setBetas(double b1,double b2,double b3=-1.,double b4=-1.,double b5=-1.,double b6=-1.,double b7=-1.,double b8=-1.,double b9=-1.,double b10=-1.);
+		void setBetas(double b1,double b2=-1,double b3=-1.,double b4=-1.,double b5=-1.,double b6=-1.,double b7=-1.,double b8=-1.,double b9=-1.,double b10=-1.);
 
 	private:
 
