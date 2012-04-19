@@ -22,7 +22,6 @@ GFDaf::GFDaf() : GFKalman::GFKalman() {
 
 	setBetas(81.,8.,4.,1.,1.,1.);
 	setProbCut(0.01);
-
 	GFKalman::setNumIterations(1);
 
 };
@@ -101,7 +100,7 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 
 		std::vector<double> weights;
 
-		TMatrixT<double> x_smoo(GFTools::getSmoothedPos(trk, 0, i));
+		TMatrixT<double> x_smoo(GFTools::getBiasedSmoothedPos(trk, 0, i));
 		if(x_smoo.GetNrows() == 0) {
 			weights.assign(eff_hit->getNumHits(),0.5);
 			std::cout<<"Assumed weight 0.5!!"<<std::endl;
@@ -142,7 +141,6 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 			weights.push_back(phi.at(j)/(phi_sum+phi_cut));
 
 		}
-
 		ret_val.push_back(weights);
 
 	}
@@ -183,24 +181,27 @@ void GFDaf::setProbCut(double val){
 }
 
 void GFDaf::setBetas(double b1,double b2,double b3,double b4,double b5,double b6,double b7,double b8,double b9,double b10){
+	fBeta.clear();
 	assert(b1>0);fBeta.push_back(b1);
-	assert(b2>0 && b2<=b1);fBeta.push_back(b2);
-	if(b3>=0.) {
-		assert(b3<=b2);fBeta.push_back(b3);
-		if(b4>=0.) {
-			assert(b4<=b3);fBeta.push_back(b4);
-			if(b5>=0.) {
-				assert(b5<=b4);fBeta.push_back(b5);
-				if(b6>=0.) {
-					assert(b6<=b5);fBeta.push_back(b6);
-					if(b7>=0.) {
-						assert(b7<=b6);fBeta.push_back(b7);
-						if(b8>=0.) {
-							assert(b8<=b7);fBeta.push_back(b8);
-							if(b9>=0.) {
-								assert(b9<=b8);fBeta.push_back(b9);
-								if(b10>=0.) {
-									assert(b10<=b9);fBeta.push_back(b10);
+	if(b2>0){
+		assert(b2<=b1);fBeta.push_back(b2);
+		if(b3>=0.) {
+			assert(b3<=b2);fBeta.push_back(b3);
+			if(b4>=0.) {
+				assert(b4<=b3);fBeta.push_back(b4);
+				if(b5>=0.) {
+					assert(b5<=b4);fBeta.push_back(b5);
+					if(b6>=0.) {
+						assert(b6<=b5);fBeta.push_back(b6);
+						if(b7>=0.) {
+							assert(b7<=b6);fBeta.push_back(b7);
+							if(b8>=0.) {
+								assert(b8<=b7);fBeta.push_back(b8);
+								if(b9>=0.) {
+									assert(b9<=b8);fBeta.push_back(b9);
+									if(b10>=0.) {
+										assert(b10<=b9);fBeta.push_back(b10);
+									}
 								}
 							}
 						}
