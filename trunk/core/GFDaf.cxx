@@ -131,13 +131,12 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 
 			double cutVal = fchi2Cuts[V.GetNrows()];
 			assert(cutVal>1.E-6);
-			phi_cut += 1./(2.*TMath::Pi()*sqrt(detV))*exp(-0.5*cutVal/beta);
+			phi_cut += (1./(pow(2.*TMath::Pi(),V.GetNrows()/2.)*sqrt(detV)))*exp(-0.5*cutVal/beta);
 
 		}
 
 		for(unsigned int j=0; j<eff_hit->getNumHits(); j++) {
 
-//std::cout<<"Calculated weight (beta = "<<beta<<", hit "<<i<<") "<<phi.at(j)<<"/("<<phi_sum<<"+"<<phi_cut<<") = "<<phi.at(j)/(phi_sum+phi_cut)<<std::endl;
 			weights.push_back(phi.at(j)/(phi_sum+phi_cut));
 
 		}
