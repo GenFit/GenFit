@@ -22,6 +22,10 @@
 #include <vector>
 
 #include <TROOT.h>
+#include <TFile.h>
+#include <TTree.h>
+#include "TDatabasePDG.h"
+#include <TMath.h>
 
 #include <TVirtualMC.h>
 #include "TGeant3.h"
@@ -30,20 +34,24 @@
 #include "PointHit.h"
 
 int main() {
+  std::cerr<<"main"<<std::endl;
 
-  const unsigned int nEvents = 1000;
-  const double BField = 20.;       // kGauss
-  const double momentum = 0.5;     // GeV
-  const double posSmear = 0.1;     // cm
-  const double momSmear = 0.1;     // GeV
-  const unsigned int npoints = 10; // number of hits generated
-  const double pointDist = 5;     // cm; approx. distance between hits generated
-  const int    useEvryNthHit = 1;
-  const double resolution = 0.1;  // cm; resolution of generated hits
+  const unsigned int nEvents = 5000;
+  const double BField = 15.;       // kGauss
+  const double momentum = 0.1;     // GeV
+  const double theta = 120;         // degree
+  const double posSmear = 0.001;     // cm
+  const double momSmear = 0.001;     // GeV
+  const unsigned int npoints = 7; // number of hits generated
+  const double pointDist = 1;      // cm; approx. distance between hits generated
+  const double resolution = 15 * 1E-4;   // cm; resolution of generated hits
+  const int pdg = 13;               // particle pdg code
   
-  const bool planarHits = true;   // true: create planar hits; false: create space point hits
-  const bool GEANE = false;       // true: use GeaneTrackRep2; false: use RKTrackRep
-  const bool matFX = true;       // include material effects; can only be disabled for RKTrackRep!
+  const bool planarHits = true;    // true: create planar hits; false: create space point hits
+  const bool GEANEhits = false;        // for creating the hits. true: use GeaneTrackRep2; false: use RKTrackRep
+  const bool GEANEtest = true;        // Trackrep to be tested. true: use GeaneTrackRep2; false: use RKTrackRep
+  const bool HelixTest = true;      // use helix for creating hits
+  const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
   const bool smoothing = true;
 
   const bool debug = false;
@@ -65,12 +73,22 @@ int main() {
   TGeoManager::Import("genfitGeom.root");
   GFFieldManager::getInstance()->init(new GFConstField(0.,0.,BField));
   
+  const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
+
   // init rootapp (for drawing histograms)
   TApplication* rootapp = new TApplication("rootapp", 0, 0);
 
+  // prepare output tree for GFTracks
+  GFTrack* trueTrack = new GFTrack();
+  GFTrack* fitTrack = new GFTrack();
+  TFile *file = TFile::Open("out.root","RECREATE");
+  TTree *tree = new TTree("t","GFTracks");
+  tree->Branch("trueTracks","GFTrack",&trueTrack);
+  tree->Branch("fitTracks","GFTrack",&fitTrack);
+
 
   // init Geane
-  if (GEANE) {
+  if (GEANEhits || GEANEtest) {
     if (debug) std::cerr<<"../../config/Geane.C"<<std::endl;
     gROOT->Macro("../../config/Geane.C");
   }
@@ -80,6 +98,12 @@ int main() {
 	gStyle->SetPalette(1);
 	gStyle->SetOptFit(1111);
   
+  TH1D *hmomRes = new TH1D("hmomRes","mom res",200,-0.02,0.02);
+  TH1D *hupRes = new TH1D("hupRes","u' res",200,-0.05,0.05);
+  TH1D *hvpRes = new TH1D("hvpRes","v' res",200,-0.05,0.05);
+  TH1D *huRes = new TH1D("huRes","u res",200,-0.05,0.05);
+  TH1D *hvRes = new TH1D("hvRes","v res",200,-0.05,0.05);
+
   TH1D *hqopPu = new TH1D("hqopPu","q/p pull",200,-6.,6.);
   TH1D *pVal = new TH1D("pVal","p-value",100,0.,1.);
   TH1D *hupPu = new TH1D("hupPu","u' pull",200,-6.,6.);
@@ -96,9 +120,22 @@ int main() {
       // true start values
       TVector3 pos(0, 0, 0);
       TVector3 mom(1.,0,0);
-      mom.SetMag(momentum);
       mom.SetPhi(rand.Uniform(0.,2*TMath::Pi()));
-      mom.SetTheta(rand.Uniform(0.2*TMath::Pi(),0.8*TMath::Pi()));
+      //mom.SetTheta(rand.Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
+      mom.SetTheta(theta*TMath::Pi()/180);
+      mom.SetMag(momentum);
+
+      // calc helix parameters
+      TVector3 dir2D(mom);
+      dir2D.SetZ(0);
+      dir2D.SetMag(1.);
+      double R = 100.*mom.Perp()/(0.03*BField);
+      double sgn = 1;
+      if (charge<0) sgn=-1.;
+      TVector3 center = pos + sgn * R * dir2D.Orthogonal();
+      double alpha0 = (pos-center).Phi();
+
+
 
       TVector3 posErr(1.,1.,1.);
       posErr *= posSmear;
@@ -120,15 +157,16 @@ int main() {
         
       // trackrep for creating hits
       GFAbsTrackRep* rephits;
-      if (!GEANE) {
-        rephits = new RKTrackRep(pos, mom, posErr, momErr, 211);
-        if (!matFX) GFMaterialEffects::getInstance()->setNoEffects();
-        //((RKTrackRep*)rephits)->setPropDir(1);
+      if (!GEANEhits) {
+        rephits = new RKTrackRep(pos, mom, posErr, momErr, pdg);
+        ((RKTrackRep*)rephits)->setPropDir(1);
       }
-      else rephits = new GeaneTrackRep2(GFDetPlane(pos, mom), mom, posErr, momErr, 211);
+      else rephits = new GeaneTrackRep2(GFDetPlane(pos, mom), mom, posErr, momErr, pdg);
+
+      if (!matFX) GFMaterialEffects::getInstance()->setNoEffects();
       					      
       // remember original initial plane and state					  
-      GFDetPlane referencePlane(rephits->getReferencePlane());
+      GFDetPlane referencePlane;
       TMatrixT<double> referenceState(rephits->getState());
       
       // create smeared hits
@@ -139,10 +177,39 @@ int main() {
       try{
         for (unsigned int i=0; i<npoints; ++i){
           // get current position and momentum
-          rephits->getPosMom(rephits->getReferencePlane(), point, dir);
+          if (!HelixTest) rephits->getPosMom(rephits->getReferencePlane(), point, dir);
+          else{
+            double angle = alpha0 - sgn * 0.1*i;
+            TVector3 radius(R,0,0);
+            radius.SetPhi(angle);
+            point = center + radius;
+            point.SetZ(pos.Z() + ((alpha0-angle)*R * TMath::Tan(mom.Theta()-TMath::Pi()*0.5) ));
+
+            dir = mom;
+            dir.SetPhi(mom.Phi()+(angle-alpha0));
+            dir.SetMag(1);
+          }
           // create hit
+          if (i==1){ // get reference state
+            TVector3 planeNorm(point);
+            planeNorm.SetZ(0);
+            referencePlane = GFDetPlane(point, planeNorm.Cross(TVector3(0,0,1)), TVector3(0,0,1));
+            if (!HelixTest) rephits->extrapolate(referencePlane, referenceState);
+            else{
+              //if (!GEANEhits) {
+                referenceState[0][0] = charge/momentum;
+                referenceState[1][0] = (dir*referencePlane.getU()) / (dir*referencePlane.getNormal());
+                referenceState[2][0] = (dir*referencePlane.getV()) / (dir*referencePlane.getNormal());
+                referenceState[3][0] = (point-referencePlane.getO())*referencePlane.getU();
+                referenceState[4][0] = (point-referencePlane.getO())*referencePlane.getV();
+              //}
+            }
+          }
+          if (i>0){
             if (planarHits) {
-              PixHit* hit = new PixHit(GFDetPlane(point, dir, new GFRectFinitePlane(-5,5,-5,5)), resolution);
+              TVector3 planeNorm(point);
+              planeNorm.SetZ(0);
+              PixHit* hit = new PixHit(GFDetPlane(point, planeNorm.Cross(TVector3(0,0,1)), TVector3(0,0,1), new GFRectFinitePlane(-1,1,-1,1)), resolution);
               hits.push_back(hit);
             }
             else {
@@ -153,10 +220,13 @@ int main() {
               PointHit* hit = new PointHit(smearedPos, TVector3(resolution,resolution,resolution));
               hits.push_back(hit);
             }
+          }
           // stepalong (approximately)
-          dir.SetMag(pointDist);
-          GFDetPlane pl(point+dir, dir);
-          rephits->extrapolate(pl);
+          if (!HelixTest) {
+            dir.SetMag(pointDist);
+            GFDetPlane pl(point+dir, dir);
+            rephits->extrapolate(pl);
+          }
         }
       }
       catch(GFException& e){
@@ -164,9 +234,6 @@ int main() {
 	      e.what();
 	      continue; // here is a memleak!
       } 
-      catch(...){
-        std::cerr<<"WTF ???"<<std::endl;
-      }
       
       if (debug) std::cerr << "... done creating hits \n";
       
@@ -174,18 +241,19 @@ int main() {
       
       // trackrep to be fitted and tested
       GFAbsTrackRep* rep;
-      if (!GEANE) {
-        rep = new RKTrackRep(posM, momM, /*posErr, momErr,*/ 211);
+      if (!GEANEtest) {
+        rep = new RKTrackRep(posM, momM, /*posErr, momErr,*/ pdg);
         //((RKTrackRep*)rep)->setPropDir(1);
       }
       else {
-        rep = new GeaneTrackRep2(GFDetPlane(posM, momM), momM, posErr, momErr, 211);
+        rep = new GeaneTrackRep2(GFDetPlane(posM, momM), momM, posErr, momErr, pdg);
       }
       				          
-		  // create track, add hits 
-		  GFTrack fitTrack(rep, smoothing); //initialized with smeared rep
+		  // create track, add hits
+      if (fitTrack != NULL) delete fitTrack;
+		  fitTrack = new GFTrack(rep, smoothing); //initialized with smeared rep
       for(unsigned int i=0; i<hits.size(); ++i){
-        fitTrack.addHit(hits[i], 
+        fitTrack->addHit(hits[i],
 		                    3,//dummy detector id
 		                    i);
       }
@@ -194,24 +262,26 @@ int main() {
 		  // do the fit
       try{
         if (debug) std::cerr<<"Starting the fitter"<<std::endl;
-        kalman.processTrack(&fitTrack);
+        kalman.processTrack(fitTrack);
         if (debug) std::cerr<<"fitter is finished!"<<std::endl;
       }
       catch(GFException& e){
         e.what();
 	      std::cerr<<"Exception, next track"<<std::endl;
-	      continue; // here is a memleak!
+	      continue;
       }
       catch(...){
         std::cerr<<"WTF???"<<std::endl;
       }
 
       // check if fit was successfull
-      if(rep->getStatusFlag() != 0 ) continue; // here is a memleak!
+      if(rep->getStatusFlag() != 0 ) {
+        continue;
+      }
 
       // add track to event display
       std::vector<GFTrack*> event;
-			event.push_back(&fitTrack);
+			event.push_back(fitTrack);
 			display->addEvent(event);
 
 			if (debug) {
@@ -231,8 +301,14 @@ int main() {
         cov.Print();
 		  }
 
+      hmomRes->Fill( (charge/state[0][0]-momentum));
+      hupRes->Fill(  (state[1][0]-referenceState[1][0]));
+      hvpRes->Fill(  (state[2][0]-referenceState[2][0]));
+      huRes->Fill(   (state[3][0]-referenceState[3][0]));
+      hvRes->Fill(   (state[4][0]-referenceState[4][0]));
+
 		  hqopPu->Fill( (state[0][0]-referenceState[0][0]) / sqrt(cov[0][0]) );
-		  pVal->Fill(rep->getPVal());
+		  pVal->Fill(   rep->getPVal());
 			hupPu->Fill(  (state[1][0]-referenceState[1][0]) / sqrt(cov[1][1]) );
 			hvpPu->Fill(  (state[2][0]-referenceState[2][0]) / sqrt(cov[2][2]) );
 			huPu->Fill(   (state[3][0]-referenceState[3][0]) / sqrt(cov[3][3]) );
@@ -250,45 +326,82 @@ int main() {
 		  //delete rephits;
 		  //delete rep;
 
+
+			tree->Fill();
+
 				          
 				          
   }// end loop over events
   
-				      
-	// fit and draw histograms		
-	TCanvas* c1 = new TCanvas();
-	c1->Divide(2,3);
+  if (debug) std::cerr<<"Write Tree ...";
+  tree->Write();
+  if (debug) std::cerr<<"... done"<<std::endl;
+
+  if (debug) std::cerr<<"Draw histograms ...";
+	// fit and draw histograms
+  TCanvas* c1 = new TCanvas();
+  c1->Divide(2,3);
+
+  c1->cd(1);
+  hmomRes->Fit("gaus");
+  hmomRes->Draw();
+
+  c1->cd(3);
+  hupRes->Fit("gaus");
+  hupRes->Draw();
+
+  c1->cd(4);
+  hvpRes->Fit("gaus");
+  hvpRes->Draw();
+
+  c1->cd(5);
+  huRes->Fit("gaus");
+  huRes->Draw();
+
+  c1->cd(6);
+  hvRes->Fit("gaus");
+  hvRes->Draw();
+
+  c1->Write();
+
+	TCanvas* c2 = new TCanvas();
+	c2->Divide(2,3);
 	
-	c1->cd(1);
+	c2->cd(1);
 	hqopPu->Fit("gaus");
 	hqopPu->Draw();
 	
-	c1->cd(2);
+	c2->cd(2);
 	pVal->Fit("pol1");
 	pVal->Draw();
-
-	c1->cd(3);
+	c2->cd(3);
 	hupPu->Fit("gaus");
 	hupPu->Draw();
 		
-	c1->cd(4);
+	c2->cd(4);
 	hvpPu->Fit("gaus");
 	hvpPu->Draw();
 		
-	c1->cd(5);
+	c2->cd(5);
 	huPu->Fit("gaus");
 	huPu->Draw();	
 		
-	c1->cd(6);
+	c2->cd(6);
 	hvPu->Fit("gaus");
 	hvPu->Draw();
 	
+	c2->Write();
+
+	if (debug) std::cerr<<"... done"<<std::endl;
 	
 	// open event display
 	display->setOptions("THDSPM");
 	display->open();
 	
   rootapp->Run();		      
+
+	file->Close();
+  if (debug) std::cerr<<"... closed file"<<std::endl;
 				      
 }
 
