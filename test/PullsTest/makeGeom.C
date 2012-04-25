@@ -13,7 +13,7 @@ void makeGeom()
    TGeoMedium *sil = gGeoManager->GetMedium("silicon");
    assert(sil!=NULL);
 
-   TGeoVolume *top = gGeoManager->MakeBox("TOPPER", air, 1000., 1000., 1000.);
+   TGeoVolume *top = gGeoManager->MakeBox("TOPPER", vacuum, 1000., 1000., 1000.);
    gGeoManager->SetTopVolume(top); // mandatory !
 
    /*TGeoVolume *redBullCan = gGeoManager->MakeTube("redBullCan", sil, 3.-0.01, 3., 10.);//, 90., 270.);

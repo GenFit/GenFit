@@ -49,10 +49,11 @@ int main() {
   
   const bool planarHits = true;    // true: create planar hits; false: create space point hits
   const bool GEANEhits = false;        // for creating the hits. true: use GeaneTrackRep2; false: use RKTrackRep
-  const bool GEANEtest = true;        // Trackrep to be tested. true: use GeaneTrackRep2; false: use RKTrackRep
   const bool HelixTest = true;      // use helix for creating hits
-  const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
-  const bool smoothing = true;
+
+  const bool GEANEtest = false;        // Trackrep to be tested. true: use GeaneTrackRep2; false: use RKTrackRep
+  const bool matFX = true;         // include material effects; can only be disabled for RKTrackRep!
+  const bool smoothing = false;
 
   const bool debug = false;
 
@@ -72,6 +73,12 @@ int main() {
   TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
   GFFieldManager::getInstance()->init(new GFConstField(0.,0.,BField));
+
+  // init Geane
+  if (GEANEhits || GEANEtest) {
+    if (debug) std::cerr<<"../../config/Geane.C"<<std::endl;
+    gROOT->Macro("../../config/Geane.C");
+  }
   
   const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
 
@@ -86,23 +93,17 @@ int main() {
   tree->Branch("trueTracks","GFTrack",&trueTrack);
   tree->Branch("fitTracks","GFTrack",&fitTrack);
 
-
-  // init Geane
-  if (GEANEhits || GEANEtest) {
-    if (debug) std::cerr<<"../../config/Geane.C"<<std::endl;
-    gROOT->Macro("../../config/Geane.C");
-  }
   
   // create histograms
 	gROOT->SetStyle("Plain");
 	gStyle->SetPalette(1);
 	gStyle->SetOptFit(1111);
   
-  TH1D *hmomRes = new TH1D("hmomRes","mom res",200,-0.02,0.02);
-  TH1D *hupRes = new TH1D("hupRes","u' res",200,-0.05,0.05);
-  TH1D *hvpRes = new TH1D("hvpRes","v' res",200,-0.05,0.05);
-  TH1D *huRes = new TH1D("huRes","u res",200,-0.05,0.05);
-  TH1D *hvRes = new TH1D("hvRes","v res",200,-0.05,0.05);
+  TH1D *hmomRes = new TH1D("hmomRes","mom res",2000,-0.02,0.02);
+  TH1D *hupRes = new TH1D("hupRes","u' res",2000,-0.05,0.05);
+  TH1D *hvpRes = new TH1D("hvpRes","v' res",2000,-0.05,0.05);
+  TH1D *huRes = new TH1D("huRes","u res",2000,-0.05,0.05);
+  TH1D *hvRes = new TH1D("hvRes","v res",2000,-0.05,0.05);
 
   TH1D *hqopPu = new TH1D("hqopPu","q/p pull",200,-6.,6.);
   TH1D *pVal = new TH1D("pVal","p-value",100,0.,1.);
