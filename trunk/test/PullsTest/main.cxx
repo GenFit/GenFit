@@ -26,6 +26,7 @@
 #include <TTree.h>
 #include "TDatabasePDG.h"
 #include <TMath.h>
+#include <TString.h>
 
 #include <TVirtualMC.h>
 #include "TGeant3.h"
@@ -39,7 +40,8 @@ int main() {
   const unsigned int nEvents = 5000;
   const double BField = 15.;       // kGauss
   const double momentum = 0.1;     // GeV
-  const double theta = 120;         // degree
+  const double theta = 90;         // degree
+  const double thetaDetPlane = 90;
   const double posSmear = 0.001;     // cm
   const double momSmear = 0.001;     // GeV
   const unsigned int npoints = 7; // number of hits generated
@@ -51,9 +53,9 @@ int main() {
   const bool GEANEhits = false;        // for creating the hits. true: use GeaneTrackRep2; false: use RKTrackRep
   const bool HelixTest = true;      // use helix for creating hits
 
-  const bool GEANEtest = false;        // Trackrep to be tested. true: use GeaneTrackRep2; false: use RKTrackRep
+  const int testRep = 0;          // 0=RKTrackRep, 1=RK7TrackRep, 2=GeaneTrackRep2
   const bool matFX = true;         // include material effects; can only be disabled for RKTrackRep!
-  const bool smoothing = false;
+  const bool smoothing = true;
 
   const bool debug = false;
 
@@ -75,7 +77,7 @@ int main() {
   GFFieldManager::getInstance()->init(new GFConstField(0.,0.,BField));
 
   // init Geane
-  if (GEANEhits || GEANEtest) {
+  if (GEANEhits || testRep==2) {
     if (debug) std::cerr<<"../../config/Geane.C"<<std::endl;
     gROOT->Macro("../../config/Geane.C");
   }
@@ -88,7 +90,12 @@ int main() {
   // prepare output tree for GFTracks
   GFTrack* trueTrack = new GFTrack();
   GFTrack* fitTrack = new GFTrack();
-  TFile *file = TFile::Open("out.root","RECREATE");
+  TString outname = "out_Rep";
+  outname += testRep;
+  outname += "_degPlane";
+  outname += thetaDetPlane;
+  outname += ".root";
+  TFile *file = TFile::Open(outname,"RECREATE");
   TTree *tree = new TTree("t","GFTracks");
   tree->Branch("trueTracks","GFTrack",&trueTrack);
   tree->Branch("fitTracks","GFTrack",&fitTrack);
@@ -192,9 +199,11 @@ int main() {
           }
           // create hit
           if (i==1){ // get reference state
-            TVector3 planeNorm(point);
-            planeNorm.SetZ(0);
-            referencePlane = GFDetPlane(point, planeNorm.Cross(TVector3(0,0,1)), TVector3(0,0,1));
+            TVector3 planeNorm(dir);
+            planeNorm.SetTheta(thetaDetPlane*TMath::Pi()/180);
+            TVector3 z(0,0,1);
+            //z.SetTheta(thetaDetPlane*TMath::Pi()/180-TMath::PiOver2());
+            referencePlane = GFDetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm));
             if (!HelixTest) rephits->extrapolate(referencePlane, referenceState);
             else{
               //if (!GEANEhits) {
@@ -208,9 +217,11 @@ int main() {
           }
           if (i>0){
             if (planarHits) {
-              TVector3 planeNorm(point);
-              planeNorm.SetZ(0);
-              PixHit* hit = new PixHit(GFDetPlane(point, planeNorm.Cross(TVector3(0,0,1)), TVector3(0,0,1), new GFRectFinitePlane(-1,1,-1,1)), resolution);
+              TVector3 planeNorm(dir);
+              planeNorm.SetTheta(thetaDetPlane*TMath::Pi()/180);
+              TVector3 z(0,0,1);
+              //z.SetTheta(thetaDetPlane*TMath::Pi()/180+TMath::PiOver2());
+              PixHit* hit = new PixHit(GFDetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)/*, new GFRectFinitePlane(-1,1,-1,1)*/), resolution);
               hits.push_back(hit);
             }
             else {
@@ -242,12 +253,23 @@ int main() {
       
       // trackrep to be fitted and tested
       GFAbsTrackRep* rep;
-      if (!GEANEtest) {
-        rep = new RKTrackRep(posM, momM, /*posErr, momErr,*/ pdg);
-        //((RKTrackRep*)rep)->setPropDir(1);
-      }
-      else {
-        rep = new GeaneTrackRep2(GFDetPlane(posM, momM), momM, posErr, momErr, pdg);
+      switch(testRep){
+        case 0:
+          rep = new RKTrackRep(posM, momM, /*posErr, momErr,*/ pdg);
+          //((RKTrackRep*)rep)->setPropDir(1);
+          break;
+        case 1:
+          std::cerr<<"Fieser Fehler!"<<std::endl;
+          throw;
+          //rep = new RK7TrackRep(posM, momM, /*posErr, momErr,*/ pdg);
+          //((RKTrackRep*)rep)->setPropDir(1);
+          break;
+        case 2:
+          rep = new GeaneTrackRep2(GFDetPlane(posM, momM), momM, posErr, momErr, pdg);
+          break;
+        default:
+          std::cerr<<"Fieser Fehler!"<<std::endl;
+          throw;
       }
       				          
 		  // create track, add hits
@@ -271,9 +293,7 @@ int main() {
 	      std::cerr<<"Exception, next track"<<std::endl;
 	      continue;
       }
-      catch(...){
-        std::cerr<<"WTF???"<<std::endl;
-      }
+
 
       // check if fit was successfull
       if(rep->getStatusFlag() != 0 ) {
@@ -308,12 +328,14 @@ int main() {
       huRes->Fill(   (state[3][0]-referenceState[3][0]));
       hvRes->Fill(   (state[4][0]-referenceState[4][0]));
 
-		  hqopPu->Fill( (state[0][0]-referenceState[0][0]) / sqrt(cov[0][0]) );
-		  pVal->Fill(   rep->getPVal());
-			hupPu->Fill(  (state[1][0]-referenceState[1][0]) / sqrt(cov[1][1]) );
-			hvpPu->Fill(  (state[2][0]-referenceState[2][0]) / sqrt(cov[2][2]) );
-			huPu->Fill(   (state[3][0]-referenceState[3][0]) / sqrt(cov[3][3]) );
-			hvPu->Fill(   (state[4][0]-referenceState[4][0]) / sqrt(cov[4][4]) );
+		  if (cov[0][0]>0) {
+		    hqopPu->Fill( (state[0][0]-referenceState[0][0]) / sqrt(cov[0][0]) );
+        pVal->Fill(   rep->getPVal());
+        hupPu->Fill(  (state[1][0]-referenceState[1][0]) / sqrt(cov[1][1]) );
+        hvpPu->Fill(  (state[2][0]-referenceState[2][0]) / sqrt(cov[2][2]) );
+        huPu->Fill(   (state[3][0]-referenceState[3][0]) / sqrt(cov[3][3]) );
+        hvPu->Fill(   (state[4][0]-referenceState[4][0]) / sqrt(cov[4][4]) );
+		  }
 		  
 		  // print covariance
 			if (debug) cov.Print();
