@@ -960,11 +960,14 @@ double RKTrackRep::estimateStep(const TVector3& pos,
 
 
   // calculate distance to surface
-  double Dist = SU[3] - pos[0]*SU[0]-pos[1]*SU[1]-pos[2]*SU[2];        // Distance between start coordinates and surface
+  double Dist = SU[3] - (pos[0]*SU[0]+pos[1]*SU[1]+pos[2]*SU[2]);        // Distance between start coordinates and surface
   double An = dir[0]*SU[0] + dir[1]*SU[1] + dir[2]*SU[2];    // An = dir * N;  component of dir normal to surface
 
   if (fabs(An) > 1.E-10) Step = Dist/An;
-  else Step = Dist*1.E10;
+  else {
+    Step = Dist*1.E10;
+    if (An<0) Step *= -1.;
+  }
 
   // see if dir points towards surface (1) or not (-1)
   int dirSw(1);
@@ -973,7 +976,7 @@ double RKTrackRep::estimateStep(const TVector3& pos,
   Step = fabs(Step);
 
   #ifdef DEBUG
-    std::cout << "  Distance to plane: " << SU[3] - pos[0]*SU[0]-pos[1]*SU[1]-pos[2]*SU[2] << "\n";
+    std::cout << "  Distance to plane: " << Dist << "\n";
     std::cout << "  guess for Step (unsigned): " << Step << "\n";
     if (dirSw>0) std::cout << "  Direction is  pointing towards surface.\n";
     else  std::cout << "  Direction is pointing away from surface.\n";
@@ -983,9 +986,10 @@ double RKTrackRep::estimateStep(const TVector3& pos,
   TVector3 Hvect(GFFieldManager::getFieldVal(pos));       // magnetic field in 10^-4 T = kGauss
   double Hmag(Hvect.Mag());
   double SmaxAngle(Smax);
+  double radius(0);
   if (Hmag > 1E-5){
     double p_perp = ( dir - Hvect*((dir*Hvect)/(Hmag*Hmag)) ).Mag() * momentum; // [GeV]
-    double radius = p_perp/(0.3E-3*Hmag); // [cm]
+    radius = p_perp/(0.3E-3*Hmag); // [cm]
     double sinAngle = fabs(sin(dir.Angle(Hvect)));
     if (sinAngle > 1E-10){
       SmaxAngle = fabs(dAngleMax * radius / sinAngle); // [cm]
