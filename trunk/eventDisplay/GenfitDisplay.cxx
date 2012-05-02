@@ -257,6 +257,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			std::cout << std::endl;
 		}
 
+    TVector3 plane_pos;
 		TVector3 track_pos;
 		TVector3 old_track_pos;
 
@@ -300,6 +301,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				}
 			}
 				track_pos = rep->getPos(plane);
+				plane_pos = plane.getO();
 			// finished getting the hit infos -----------------------------------------------------
 
 			// sort hit infos into variables ------------------------------------------------------
@@ -352,7 +354,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 			// draw planes if corresponding option is set -----------------------------------------
 			if(drawPlanes || (drawDetectors && planar_hit)) {
-				TEveBox* box = boxCreator(track_pos, u, v, plane_size, plane_size, 0.01);
+				TEveBox* box = boxCreator(plane_pos, u, v, plane_size, plane_size, 0.01);
 				if (drawDetectors && planar_hit) {
 					box->SetMainColor(kCyan);
 				} else {
@@ -412,10 +414,10 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 				// draw planar hits, with distinction between strip and pixel hits ----------------
 				if(planar_hit) {
-					TVector2 plane_coords = plane.LabToPlane(track_pos);
+					TVector2 plane_coords = plane.LabToPlane(plane_pos);
 					if(!planar_pixel_hit) {
 						TEveBox* hit_box;
-						hit_box = boxCreator((track_pos + (plane_coords.Px() - hit_u)*u), u, v, fErrorScale*std::sqrt(hit_res_u), plane_size, 0.0105);
+						hit_box = boxCreator((plane_pos + (plane_coords.Px() + hit_u)*u), u, v, fErrorScale*std::sqrt(hit_res_u), plane_size, 0.0105);
 						hit_box->SetMainColor(kYellow);
 						hit_box->SetMainTransparency(0);
 						gEve->AddElement(hit_box);
@@ -450,7 +452,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 						// calculate the semiaxis of the error ellipse ----------------------------
 						det_shape->SetShape(new TGeoEltu(pseudo_res_0, pseudo_res_1, 0.0105));
-						TVector3 pix_pos = track_pos + (plane_coords.Px() - hit_u)*u + (plane_coords.Py() - hit_v)*v;
+						TVector3 pix_pos = plane_pos + (plane_coords.Px() + hit_u)*u + (plane_coords.Py() + hit_v)*v;
 						TVector3 u_semiaxis = (pix_pos + eVec(0,0)*u + eVec(1,0)*v)-pix_pos;
 						TVector3 v_semiaxis = (pix_pos + eVec(0,1)*u + eVec(1,1)*v)-pix_pos;
 						TVector3 norm = u.Cross(v);
