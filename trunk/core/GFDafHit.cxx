@@ -69,7 +69,7 @@ TMatrixT<double> GFDafHit::getHitCoord(const GFDetPlane& pl) {
 	} else {
 
 		if(fHitCovUpd != true || fPl != pl) getHitCov(pl);
-		fHitCoord -= fHitCoord;
+		fHitCoord.Zero();
 		for(unsigned int i=0;i<fRawHits.size();i++) {
 
 			fHitCoord += fWeights.at(i) * fCovInvs.at(i) * fRawHits.at(i)->getHitCoord(pl);
@@ -104,7 +104,7 @@ TMatrixT<double> GFDafHit::getHitCov(const GFDetPlane& pl) {
 
 	} else {
 
-		fHitCov -= fHitCov;
+		fHitCov.Zero();
 		fCovInvs.clear();
 
 		for(unsigned int i=0;i<fRawHits.size();i++) {
