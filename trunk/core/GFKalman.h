@@ -109,6 +109,13 @@ public:
   /** @brief Set the blowup factor (see blowUpCovs() )
    */
   void setBlowUpFactor(double f){fBlowUpFactor=f;}
+  
+  // Protected Methods -----------------
+protected:  
+  /** @brief this is needed to blow up the covariance matrix before a fitting pass
+   * drops off-diagonal elements and blows up diagonal by blowUpFactor
+   */
+  void blowUpCovs(GFTrack* trk);
 
   // Private Methods -----------------
 private:
@@ -137,10 +144,7 @@ private:
   double chi2Increment(const TMatrixT<double>& r,const TMatrixT<double>& H,
 		       const TMatrixT<double>& cov,const TMatrixT<double>& V);
 
-  /** @brief this is needed to blow up the covariance matrix before a fitting pass
-   * drops off-diagonal elements and blows up diagonal by blowUpFactor
-   */
-  void blowUpCovs(GFTrack* trk);
+
 
   int fInitialDirection;
   Int_t fNumIt;

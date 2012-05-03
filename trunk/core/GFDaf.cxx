@@ -57,8 +57,10 @@ void GFDaf::processTrack(GFTrack* trk) {
 				GFDafHit* hit = static_cast<GFDafHit*>(mini_trk->getHit(j));
 				hit->setWeights(fWeights.at(i).at(j));
 				hit->setBlowUp(fBeta.at(iBeta));
+			}			
+			if ( iBeta != 0){
+				GFKalman::blowUpCovs(mini_trk);
 			}
-
 			GFKalman::processTrack(mini_trk);
 
 			if(mini_trk->getTrackRep(0)->getStatusFlag() != 0) break;
