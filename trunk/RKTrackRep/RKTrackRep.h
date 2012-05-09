@@ -32,7 +32,7 @@
 #include "GFAbsTrackRep.h"
 #include "GFDetPlane.h"
 #include "GFTrackCand.h"
-#include <TMatrixT.h>
+#include <TMatrixD.h>
 
 /** @brief Track Representation module based on a Runge-Kutta algorithm including a full material model
  *
@@ -60,11 +60,11 @@ class RKTrackRep : public GFAbsTrackRep {
        const TVector3& momerr,
        const int& PDGCode);
 
-  RKTrackRep(const GFTrackCand* aGFTrackCandPtr);
-
   RKTrackRep(const TVector3& pos,
        const TVector3& mom,
        const int& PDGCode);
+
+  RKTrackRep(const GFTrackCand* aGFTrackCandPtr);
 
   virtual ~RKTrackRep();
 
@@ -96,12 +96,12 @@ class RKTrackRep : public GFAbsTrackRep {
     *
     */
   double extrapolate(const GFDetPlane&, 
-         TMatrixT<double>& statePred,
-         TMatrixT<double>& covPred);
+         TMatrixD& statePred,
+         TMatrixD& covPred);
 
   //! returns the tracklength spanned in this extrapolation
   double extrapolate(const GFDetPlane&, 
-         TMatrixT<double>& statePred);
+         TMatrixD& statePred);
 
   //! This method is to extrapolate the track to point of closest approach to a point in space
   void extrapolateToPoint(const TVector3& pos,
@@ -141,7 +141,7 @@ class RKTrackRep : public GFAbsTrackRep {
 
   void getPosMomCov(const GFDetPlane& pl,
                     TVector3& pos, TVector3& mom,
-                    TMatrixT<double>& cov);
+                    TMatrixD& cov);
 
   //! Returns charge
   double getCharge()const {return fCharge;}
@@ -162,27 +162,28 @@ class RKTrackRep : public GFAbsTrackRep {
     * the plane #pl is the same as the plane of the last extrapolation (i.e. #fCachePlane), where #fCacheSpu was calculated.
     * Hence, if the argument #pl is not equal to #fCachePlane, an error message is shown an an exception is thrown.
     */
-  void setData(const TMatrixT<double>& st,
+  void setData(const TMatrixD& st,
                const GFDetPlane& pl,
-               const TMatrixT<double>* cov=NULL,
-               const TMatrixT<double>* aux=NULL);
+               const TMatrixD* cov=NULL,
+               const TMatrixD* aux=NULL);
 
   //! Sets state, plane and covariance from position, momentum and 6x6 covariance
   /** Also sets the reference plane at position
     */
   void setPosMomCov(const TVector3& pos,
                     const TVector3& mom,
-                    const TMatrixT<double>& cov);
+                    const TMatrixD& cov);
 
   void disableMaterialEffects(bool opt = true){fNoMaterial = opt;}
 
-  const TMatrixT<double>* getAuxInfo(const GFDetPlane& pl);
+  const TMatrixD* getAuxInfo(const GFDetPlane& pl);
   
   bool hasAuxInfo() { return true; }
 
 
 
- private:
+ //private:
+ public:
 
   void calcStateCov(const TVector3& pos,
                     const TVector3& mom,
@@ -192,20 +193,22 @@ class RKTrackRep : public GFAbsTrackRep {
   void calcState(const TVector3& pos,
                  const TVector3& mom);
 
-  void getState7(TMatrixT<double>& state7) const;
+  TMatrixD getState7() const;
+  TMatrixD getState7(const TMatrixD& state5, const GFDetPlane& pl, const double& spu) const;
+  TMatrixD getState5(const TMatrixD& state7, const GFDetPlane& pl, double& spu) const;
 
-  void transformPM(const TMatrixT<double>& in5x5,
-                   TMatrixT<double>& out,
+  void transformPM(const TMatrixD& in5x5,
+                   TMatrixD& out,
                    const GFDetPlane& pl,
-                   const TMatrixT<double>& state5,
+                   const TMatrixD& state5,
                    const double& spu,
-                   TMatrixT<double>* Jac = NULL) const;
+                   TMatrixD* Jac = NULL) const;
 
-  void transformMP(const TMatrixT<double>& in,
-                   TMatrixT<double>& out5x5,
+  void transformMP(const TMatrixD& in,
+                   TMatrixD& out5x5,
                    const GFDetPlane& pl,
-                   const TMatrixT<double>& state7,
-                   TMatrixT<double>* Jac = NULL) const;
+                   const TMatrixD& state7,
+                   TMatrixD* Jac = NULL) const;
 
   RKTrackRep& operator=(const RKTrackRep* rhs){return *this;};
 
@@ -250,8 +253,8 @@ class RKTrackRep : public GFAbsTrackRep {
     * fXX0 is also updated here.
     */
   double Extrap(const GFDetPlane& plane,
-                TMatrixT<double>* state,
-                TMatrixT<double>* cov=NULL);
+                TMatrixD* state,
+                TMatrixD* cov=NULL);
   
   //RKTrackRep(const RKTrackRep& rhs){};
   
@@ -270,7 +273,7 @@ class RKTrackRep : public GFAbsTrackRep {
   GFDetPlane fCachePlane;
   double fCacheSpu;
   double fSpu;
-  TMatrixT<double> fAuxInfo;
+  TMatrixD fAuxInfo;
 
  public:
   ClassDef(RKTrackRep,5)

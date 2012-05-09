@@ -41,37 +41,6 @@
 //#define DEBUG
 
 
-void RKTrackRep::setData(const TMatrixT<double>& st, const GFDetPlane& pl, const TMatrixT<double>* cov, const TMatrixT<double>* aux){
-  if(aux != NULL) {
-    fCacheSpu = (*aux)(0,0);
-    fDirection = (*aux)(0,1);
-  } else {
-    if(pl!=fCachePlane){
-      std::cerr << "RKTrackRep::setData() - a fatal error ocurred! It was called with a reference plane which is not the same as the one from the last extrapolate(plane,state,cov)-> abort in line " << __LINE__ << std::endl;
-      throw;
-	}
-  }
-  GFAbsTrackRep::setData(st,pl,cov);
-  if (fCharge*fState[0][0] < 0) fCharge *= -1; // set charge accordingly! (fState[0][0] = q/p)
-  fSpu = fCacheSpu;
-
-}
-
-
-const TMatrixT<double>* RKTrackRep::getAuxInfo(const GFDetPlane& pl) {
-
-  if(pl!=fCachePlane) {
-    std::cerr << "RKTrackRep::getAuxInfo() - Fatal error: Trying to get auxiliary information with planes mismatch (Information returned does not belong to requested plane)! -> abort in line " << __LINE__ << std::endl;
-	throw;
-  }
-  fAuxInfo.ResizeTo(1,2);
-  fAuxInfo(0,0) = fCacheSpu;
-  fAuxInfo(0,1) = fDirection;
-  return &fAuxInfo;
-
-}
-
-
 RKTrackRep::~RKTrackRep(){
 }
 
@@ -88,9 +57,26 @@ RKTrackRep::RKTrackRep(const TVector3& pos,
                        GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fCachePlane(), fCacheSpu(1), fAuxInfo(1,2) {
 
   setPDG(PDGCode); // also sets charge and mass
-
   calcStateCov(pos, mom, poserr, momerr);
+}
 
+
+RKTrackRep::RKTrackRep(const TVector3& pos,
+                       const TVector3& mom,
+                       const int& PDGCode) :
+                       GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fCachePlane(), fCacheSpu(1), fAuxInfo(1,2) {
+
+  setPDG(PDGCode); // also sets charge and mass
+  calcState(pos, mom);
+
+  // set covariance diagonal elements to large number
+  static const double value(1.E4);
+
+  fCov[0][0] = value;
+  fCov[1][1] = value;
+  fCov[2][2] = value;
+  fCov[3][3] = value;
+  fCov[4][4] = value;
 }
 
 
@@ -106,43 +92,57 @@ RKTrackRep::RKTrackRep(const GFTrackCand* aGFTrackCandPtr) :
   TVector3 momerr = aGFTrackCandPtr->getDirError();
 
   calcStateCov(pos, mom, poserr, momerr);
-
 }
 
 
-RKTrackRep::RKTrackRep(const TVector3& pos,
-                       const TVector3& mom,
-                       const int& PDGCode) :
-                       GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fCachePlane(), fCacheSpu(1), fAuxInfo(1,2) {
 
-  setPDG(PDGCode); // also sets charge and mass
-
-  static const TVector3 stdPosErr(0,0,0);
-  static const TVector3 stdMomErr(0,0,0);
-
-  calcStateCov(pos, mom, stdPosErr, stdMomErr);
-
-  // reset covariance diagonal elements to large number
-  static const double value(1.E6);
-
-  fCov[0][0] = value;
-  fCov[1][1] = value;
-  fCov[2][2] = value;
-  fCov[3][3] = value;
-  fCov[4][4] = value;
-
+void RKTrackRep::setData(const TMatrixD& st, const GFDetPlane& pl, const TMatrixD* cov, const TMatrixD* aux){
+  if(aux != NULL) {
+    fCacheSpu = (*aux)(0,0);
+    fDirection = (*aux)(0,1);
+  }
+  else {
+    if(pl!=fCachePlane){
+      std::cerr << "RKTrackRep::setData() - a fatal error occurred! It was called with a reference plane which is not the same as the one from the last extrapolate(plane,state,cov)-> abort in line " << __LINE__ << std::endl;
+      throw;
+    }
+  }
+  GFAbsTrackRep::setData(st,pl,cov);
+  if (fCharge*fState[0][0] < 0) fCharge *= -1; // set charge accordingly! (fState[0][0] = q/p)
+  fSpu = fCacheSpu;
 }
+
+
+const TMatrixD* RKTrackRep::getAuxInfo(const GFDetPlane& pl) {
+
+  if(pl!=fCachePlane) {
+    std::cerr << "RKTrackRep::getAuxInfo() - Fatal error: Trying to get auxiliary information with planes mismatch (Information returned does not belong to requested plane)! -> abort in line " << __LINE__ << std::endl;
+	  throw;
+  }
+  fAuxInfo.ResizeTo(1,2);
+  fAuxInfo(0,0) = fCacheSpu;
+  fAuxInfo(0,1) = fDirection;
+  return &fAuxInfo;
+}
+
+
+void RKTrackRep::setPDG(int i){
+  fPdg = i;
+  TParticlePDG * part = TDatabasePDG::Instance()->GetParticle(fPdg);
+  if(part == 0){
+    GFException exc("RKTrackRep::setPDG ==> particle id not known to TDatabasePDG",__LINE__,__FILE__);
+    throw exc;
+  }
+  fMass = part->Mass();
+  fCharge = part->Charge()/(3.);
+}
+
 
 
 void RKTrackRep::calcStateCov(const TVector3& pos,
                               const TVector3& mom,
                               const TVector3& poserr,
                               const TVector3& momerr){
-
-  fRefPlane.setON(pos, mom);
-
-  //spu
-  fSpu=1.;
 
   calcState(pos, mom);
 
@@ -182,6 +182,9 @@ void RKTrackRep::calcStateCov(const TVector3& pos,
 void RKTrackRep::calcState(const TVector3& pos,
                            const TVector3& mom){
 
+  fRefPlane.setON(pos, mom);
+  fSpu=1.;
+
   fState[0][0] = fCharge/mom.Mag();
 
   //u' and v'
@@ -195,32 +198,68 @@ void RKTrackRep::calcState(const TVector3& pos,
 }
 
 
-void RKTrackRep::getState7(TMatrixT<double>& state7) const{
 
-  TVector3 o = fRefPlane.getO();
-  TVector3 u = fRefPlane.getU();
-  TVector3 v = fRefPlane.getV();
-  TVector3 w = fRefPlane.getNormal();
+TMatrixD RKTrackRep::getState7() const{
+  return getState7(fState, fRefPlane, fSpu);
+}
 
-  TVector3 pTilde = fSpu * (w + fState[1][0] * u + fState[2][0] * v);
-  pTilde.SetMag(1.);
 
-  TVector3 point = o + fState[3][0]*u + fState[4][0]*v;
+TMatrixD RKTrackRep::getState7(const TMatrixD& state5, const GFDetPlane& pl, const double& spu) const{
 
-  state7.ResizeTo(7,1);
+  const TVector3 U = pl.getU();
+  const TVector3 V = pl.getV();
+
+  const TVector3 point = pl.getO() + state5[3][0]*U + state5[4][0]*V;
+
+  TVector3 dir = spu * (pl.getNormal() + state5[1][0]*U + state5[2][0]*V);
+  dir.SetMag(1.);
+
+  TMatrixD state7(7,1);
 
   state7[0][0] = point.X();
   state7[1][0] = point.Y();
   state7[2][0] = point.Z();
-  state7[3][0] = pTilde.X();
-  state7[4][0] = pTilde.Y();
-  state7[5][0] = pTilde.Z();
-  state7[6][0] = fState[0][0];
+  state7[3][0] = dir.X();
+  state7[4][0] = dir.Y();
+  state7[5][0] = dir.Z();
+  state7[6][0] = state5[0][0];
+
+  return state7;
 }
 
 
-void RKTrackRep::transformPM(const TMatrixT<double>& in5x5, TMatrixT<double>& out,
-                             const GFDetPlane& pl, const TMatrixT<double>& state5, const double&  spu, TMatrixT<double>* Jac) const{
+TMatrixD RKTrackRep::getState5(const TMatrixD& state7, const GFDetPlane& pl, double& spu) const {
+
+  const TVector3 O = pl.getO();
+  const TVector3 U = pl.getU();
+  const TVector3 V = pl.getV();
+
+  const TVector3 Point(state7[0][0], state7[1][0], state7[2][0]);
+  TVector3 A(state7[3][0], state7[4][0], state7[5][0]);
+
+  // force A to be in normal direction and set spu accordingly
+  double AtW = A * pl.getNormal();
+  spu = 1.;
+  if (AtW < 0) {
+    A *= -1.;
+    AtW *= -1.;
+    spu = -1.;
+  }
+
+  TMatrixD state5(5,1);
+  state5[0][0] = state7[6][0];
+  state5[1][0] = A*U / AtW;
+  state5[2][0] = A*V / AtW;
+  state5[3][0] = (Point-O)*U;
+  state5[4][0] = (Point-O)*V;
+
+  return state5;
+}
+
+
+
+void RKTrackRep::transformPM(const TMatrixD& in5x5, TMatrixD& out,
+                             const GFDetPlane& pl, const TMatrixD& state5, const double&  spu, TMatrixD* Jac) const{
 
   // check if out is 6x6 or 7x7
   bool sixD(false);
@@ -231,68 +270,67 @@ void RKTrackRep::transformPM(const TMatrixT<double>& in5x5, TMatrixT<double>& ou
     throw exc;
   }
 
-  const TVector3 u = pl.getU();
-  const TVector3 v = pl.getV();
-  const TVector3 w = pl.getNormal();
+  // get vectors and aux variables
+  const TVector3 U = pl.getU();
+  const TVector3 V = pl.getV();
+  const TVector3 W = pl.getNormal();
 
+  const TVector3 pTilde =  spu * (W + state5[1][0]*U + state5[2][0]*V);
+  const double pTildeMag = pTilde.Mag();
+  const double pTildeMag2 = pTildeMag*pTildeMag;
 
-  TVector3 pTildeDir = spu * (w + state5[1][0] * u + state5[2][0] * v);
-  double pTildeMag = pTildeDir.Mag();
-  pTildeDir.SetMag(1.);
-
-  const double utpTilde = u*pTildeDir;
-  const double vtpTilde = v*pTildeDir;
+  const double utpTilde = U*pTilde;
+  const double vtpTilde = V*pTilde;
 
   //J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)   (out is 7x7)
   //J_pM matrix is d(x,y,z,px,py,pz) / d(q/p,u',v',u,v)       (out is 6x6)
-  TMatrixT<double> J_pM(5,7);
+  TMatrixD J_pM(5,7);
   if (sixD) J_pM.ResizeTo(5,6);
 
-   // dx/du
-  J_pM[3][0] = u.X();
-  J_pM[3][1] = u.Y();
-  J_pM[3][2] = u.Z();
-  // dx/dv
-  J_pM[4][0] = v.X();
-  J_pM[4][1] = v.Y();
-  J_pM[4][2] = v.Z();
+   // d(x,y,z)/d(u)
+  J_pM[3][0] = U.X();
+  J_pM[3][1] = U.Y();
+  J_pM[3][2] = U.Z();
+  // d(x,y,z)/d(v)
+  J_pM[4][0] = V.X();
+  J_pM[4][1] = V.Y();
+  J_pM[4][2] = V.Z();
 
   if (!sixD) { // 7D
-    double fact = spu / pTildeMag;
-    // dax/du'
-    J_pM[1][3] = fact * ( u.X() - pTildeDir.X()*utpTilde );
-    J_pM[1][4] = fact * ( u.Y() - pTildeDir.Y()*utpTilde );
-    J_pM[1][5] = fact * ( u.Z() - pTildeDir.Z()*utpTilde );
-    // dax/dv'
-    J_pM[2][3] = fact * ( v.X() - pTildeDir.X()*vtpTilde );
-    J_pM[2][4] = fact * ( v.Y() - pTildeDir.Y()*vtpTilde );
-    J_pM[2][5] = fact * ( v.Z() - pTildeDir.Z()*vtpTilde );
-    // dqop/dqop
+    // d(q/p)/d(q/p)
     J_pM[0][6] = 1.;
+    // d(ax,ay,az)/d(u')
+    double fact = spu / pTildeMag;
+    J_pM[1][3] = fact * ( U.X() - pTilde.X()*utpTilde/pTildeMag2 );
+    J_pM[1][4] = fact * ( U.Y() - pTilde.Y()*utpTilde/pTildeMag2 );
+    J_pM[1][5] = fact * ( U.Z() - pTilde.Z()*utpTilde/pTildeMag2 );
+    // d(ax,ay,az)/d(v')
+    J_pM[2][3] = fact * ( V.X() - pTilde.X()*vtpTilde/pTildeMag2 );
+    J_pM[2][4] = fact * ( V.Y() - pTilde.Y()*vtpTilde/pTildeMag2 );
+    J_pM[2][5] = fact * ( V.Z() - pTilde.Z()*vtpTilde/pTildeMag2 );
   }
   else { // 6D
     const double qop = state5[0][0];
     const double p = fCharge/qop; // momentum
-    const double AtW = pTildeDir*w;
-    //dqop/dpx
-    double fact = (-1.) * qop / p; // = -q/p²
-    J_pM[0][3] = fact * pTildeDir.X(); // ?
-    J_pM[0][4] = fact * pTildeDir.Y(); // ?
-    J_pM[0][5] = fact * pTildeDir.Z(); // ?
-    //du'/dpx
-    fact = 1. / (p*AtW); // ?
-    //fact = p / AtW;
-    J_pM[1][3] = fact * (u.X() - w.X()*utpTilde/AtW);
-    J_pM[1][4] = fact * (u.Y() - w.Y()*utpTilde/AtW);
-    J_pM[1][5] = fact * (u.Z() - w.Z()*utpTilde/AtW);
-    //dv'/dax
-    J_pM[2][3] = fact * (v.X() - w.X()*vtpTilde/AtW);
-    J_pM[2][4] = fact * (v.Y() - w.Y()*vtpTilde/AtW);
-    J_pM[2][5] = fact * (v.Z() - w.Z()*vtpTilde/AtW);
+
+    // d(px,py,pz)/d(q/p)
+    double fact = -1. * p / (pTildeMag * qop);
+    J_pM[0][3] = fact * pTilde.X();
+    J_pM[0][4] = fact * pTilde.Y();
+    J_pM[0][5] = fact * pTilde.Z();
+    // d(px,py,pz)/d(u')
+    fact = p * spu / pTildeMag;
+    J_pM[1][3] = fact * ( U.X() - pTilde.X()*utpTilde/pTildeMag2 );
+    J_pM[1][4] = fact * ( U.Y() - pTilde.Y()*utpTilde/pTildeMag2 );
+    J_pM[1][5] = fact * ( U.Z() - pTilde.Z()*utpTilde/pTildeMag2 );
+    // d(px,py,pz)/d(v')
+    J_pM[2][3] = fact * ( V.X() - pTilde.X()*vtpTilde/pTildeMag2 );
+    J_pM[2][4] = fact * ( V.Y() - pTilde.Y()*vtpTilde/pTildeMag2 );
+    J_pM[2][5] = fact * ( V.Z() - pTilde.Z()*vtpTilde/pTildeMag2 );
   }
 
 
-  TMatrixT<double> J_pM_transp(J_pM);
+  TMatrixD J_pM_transp(J_pM);
   J_pM_transp.T();
 
   out = J_pM_transp*(in5x5*J_pM);
@@ -305,8 +343,8 @@ void RKTrackRep::transformPM(const TMatrixT<double>& in5x5, TMatrixT<double>& ou
 }
 
 
-void RKTrackRep::transformMP(const TMatrixT<double>& in, TMatrixT<double>& out5x5,
-                             const GFDetPlane& pl, const TMatrixT<double>& state7, TMatrixT<double>* Jac) const {
+void RKTrackRep::transformMP(const TMatrixD& in, TMatrixD& out5x5,
+                             const GFDetPlane& pl, const TMatrixD& state7, TMatrixD* Jac) const {
 
   // check if in is 6x6 or 7x7
   bool sixD(false);
@@ -317,69 +355,66 @@ void RKTrackRep::transformMP(const TMatrixT<double>& in, TMatrixT<double>& out5x
     throw exc;
   }
 
-  const TVector3 u = pl.getU();
-  const TVector3 v = pl.getV();
-  const TVector3 w = pl.getNormal();
+  // get vectors and aux variables
+  const TVector3 U = pl.getU();
+  const TVector3 V = pl.getV();
+  const TVector3 W = pl.getNormal();
 
   const TVector3 A(state7[3][0], state7[4][0], state7[5][0]);
+
+  const double AtU = A*U;
+  const double AtV = A*V;
+  const double AtW = A*W;
 
 
   // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)   (in is 7x7)
   // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,px,py,pz)       (in is 6x6)
-  TMatrixT<double> J_Mp(7,5);
+  TMatrixD J_Mp(7,5);
   if (sixD) J_Mp.ResizeTo(6,5);
-  const double AtW = A*w;
-  const double AtU = A*u;
-  const double AtV = A*v;
-  const double uprime = AtU/AtW;
-  const double vprime = AtV/AtW;
 
   if (!sixD) { // 7D
-
+    // d(u')/d(ax,ay,az)
+    double fact = 1./(AtW*AtW);
+    J_Mp[3][1] = fact * (U.X()*AtW - W.X()*AtU);
+    J_Mp[4][1] = fact * (U.Y()*AtW - W.Y()*AtU);
+    J_Mp[5][1] = fact * (U.Z()*AtW - W.Z()*AtU);
+    // d(v')/d(ax,ay,az)
+    J_Mp[3][2] = fact * (V.X()*AtW - W.X()*AtV);
+    J_Mp[4][2] = fact * (V.Y()*AtW - W.Y()*AtV);
+    J_Mp[5][2] = fact * (V.Z()*AtW - W.Z()*AtV);
+    // d(q/p)/d(q/p)
     J_Mp[6][0] = 1.;
-    //du'/dax
-    J_Mp[3][1] = (u.X()- w.X()*uprime) / AtW;
-    J_Mp[4][1] = (u.Y()- w.Y()*uprime) / AtW;
-    J_Mp[5][1] = (u.Z()- w.Z()*uprime) / AtW;
-    //dv'/dax
-    J_Mp[3][2] = (v.X()- w.X()*vprime) / AtW;
-    J_Mp[4][2] = (v.Y()- w.Y()*vprime) / AtW;
-    J_Mp[5][2] = (v.Z()- w.Z()*vprime) / AtW;
   }
   else { // 6D
-    double spu(1);
-    if (AtW < 0) spu = -1.;
     const double qop = state7[6][0];
-    TVector3 pTilde(spu * (w + uprime*u + vprime*v));
-    double pTilde2 = pTilde*pTilde;
-    double fac1 = fCharge / (sqrt(pTilde2) * qop);
-    double trm1 = fac1 * spu / pTilde2;
-    double fac2 = trm1 * u * pTilde;
-    double fac3 = trm1 * v * pTilde;
+    const double p = fCharge/qop; // momentum
 
-    J_Mp[3][0] = (-1.) * pTilde.X() * fac1 / qop;
-    J_Mp[4][0] = (-1.) * pTilde.Y() * fac1 / qop;
-    J_Mp[5][0] = (-1.) * pTilde.Z() * fac1 / qop;
-
-    J_Mp[3][1] = spu * u.X() * fac1 - pTilde.X() * fac2;
-    J_Mp[4][1] = spu * u.Y() * fac1 - pTilde.Y() * fac2;
-    J_Mp[5][1] = spu * u.Z() * fac1 - pTilde.Z() * fac2;
-
-    J_Mp[3][2] = spu * v.X() * fac1 - pTilde.X() * fac3;
-    J_Mp[4][2] = spu * v.Y() * fac1 - pTilde.Y() * fac3;
-    J_Mp[5][2] = spu * v.Z() * fac1 - pTilde.Z() * fac3;
+    // d(q/p)/d(px,py,pz)
+    double fact = (-1.) * qop / p;
+    J_Mp[3][0] = fact * A.X();
+    J_Mp[4][0] = fact * A.Y();
+    J_Mp[5][0] = fact * A.Z();
+    // d(u')/d(px,py,pz)
+    fact = 1./(p*AtW*AtW);
+    J_Mp[3][1] = fact * (U.X()*AtW - W.X()*AtU);
+    J_Mp[4][1] = fact * (U.Y()*AtW - W.Y()*AtU);
+    J_Mp[5][1] = fact * (U.Z()*AtW - W.Z()*AtU);
+    // d(v')/d(px,py,pz)
+    J_Mp[3][2] = fact * (V.X()*AtW - W.X()*AtV);
+    J_Mp[4][2] = fact * (V.Y()*AtW - W.Y()*AtV);
+    J_Mp[5][2] = fact * (V.Z()*AtW - W.Z()*AtV);
   }
-  //du/dx
-  J_Mp[0][3] = u.X();
-  J_Mp[1][3] = u.Y();
-  J_Mp[2][3] = u.Z();
-  //dv/dx
-  J_Mp[0][4] = v.X();
-  J_Mp[1][4] = v.Y();
-  J_Mp[2][4] = v.Z();
+  //d(u)/d(x,y,z)
+  J_Mp[0][3] = U.X();
+  J_Mp[1][3] = U.Y();
+  J_Mp[2][3] = U.Z();
+  //d(v)/d(x,y,z)
+  J_Mp[0][4] = V.X();
+  J_Mp[1][4] = V.Y();
+  J_Mp[2][4] = V.Z();
 
 
-  TMatrixT<double> J_Mp_transp(J_Mp);
+  TMatrixD J_Mp_transp(J_Mp);
   J_Mp_transp.T();
 
   out5x5.ResizeTo(5, 5);
@@ -393,68 +428,88 @@ void RKTrackRep::transformMP(const TMatrixT<double>& in, TMatrixT<double>& out5x
 }
 
 
-void RKTrackRep::setPDG(int i){
-  fPdg = i;
-  TParticlePDG * part = TDatabasePDG::Instance()->GetParticle(fPdg);
-  if(part == 0){
-    GFException exc("RKTrackRep::setPDG ==> particle id not known to TDatabasePDG",__LINE__,__FILE__);
-    throw exc;
-  }
-  fMass = part->Mass();
-  fCharge = part->Charge()/(3.);
-}
-
 
 TVector3 RKTrackRep::getPos(const GFDetPlane& pl){
+  TMatrixD state7(getState7());
   if(pl!=fRefPlane){
-    TMatrixT<double> s(5,1);
-    extrapolate(pl,s);
-    return pl.getO()+s[3][0]*pl.getU()+s[4][0]*pl.getV();
+    Extrap(pl, &state7);
   }
-  return fRefPlane.getO() + fState[3][0]*fRefPlane.getU() + fState[4][0]*fRefPlane.getV();
+  return TVector3(state7[0][0], state7[1][0], state7[2][0]);
 }
 
 
 TVector3 RKTrackRep::getMom(const GFDetPlane& pl){
-  TMatrixT<double> statePred(fState);
-  TVector3 retmom;
-  if(pl!=fRefPlane) {
-    extrapolate(pl,statePred);
-    retmom = fCacheSpu*(pl.getNormal()+statePred[1][0]*pl.getU()+statePred[2][0]*pl.getV());
+  TMatrixD state7(getState7());
+  if(pl!=fRefPlane){
+    Extrap(pl, &state7);
   }
-  else{
-    retmom = fSpu*(pl.getNormal()+statePred[1][0]*pl.getU()+statePred[2][0]*pl.getV());
-  }
-  retmom.SetMag(1./fabs(statePred[0][0]));
-  return retmom;
+
+  TVector3 mom(state7[3][0], state7[4][0], state7[5][0]);
+  mom.SetMag(fCharge/state7[6][0]);
+  return mom;
 }
 
 
-void RKTrackRep::getPosMom(const GFDetPlane& pl,TVector3& pos,
-                           TVector3& mom){
-  TMatrixT<double> statePred(fState);
+void RKTrackRep::getPosMom(const GFDetPlane& pl,TVector3& pos, TVector3& mom){
+  TMatrixD state7(getState7());
+  if(pl!=fRefPlane){
+    Extrap(pl, &state7);
+  }
+
+  pos.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
+  mom.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
+  mom.SetMag(fCharge/state7[6][0]);
+}
+
+
+void RKTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixD& cov6x6){
+
+  TMatrixD statePred(fState);
+  TMatrixD covPred(fCov);
+  double spu(fSpu);
+
   if(pl != fRefPlane) {
-    extrapolate(pl,statePred);
-    mom = fCacheSpu*(pl.getNormal()+statePred[1][0]*pl.getU()+statePred[2][0]*pl.getV());
+    extrapolate(pl, statePred, covPred);
+    spu = fCacheSpu;
   }
-  else{
-    mom = fSpu*(pl.getNormal()+statePred[1][0]*pl.getU()+statePred[2][0]*pl.getV());
+
+  TMatrixD state7(getState7(statePred, pl, spu));
+
+  // cov
+  cov6x6.ResizeTo(6, 6); // make sure cov has correct dimensions
+  transformPM(covPred, cov6x6, pl, statePred, spu);
+
+  pos.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
+  mom.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
+  mom.SetMag(fCharge/state7[6][0]);
+}
+
+
+void RKTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixD& cov6x6){
+
+  if (cov6x6.GetNcols()!=6 || cov6x6.GetNrows()!=6){
+    GFException exc("RKTrackRep::setPosMomCov ==> cov has to be 6x6 (x, y, z, px, py, pz)",__LINE__,__FILE__);
+    throw exc;
   }
-  mom.SetMag(1./fabs(statePred[0][0]));
-  pos = pl.getO()+(statePred[3][0]*pl.getU())+(statePred[4][0]*pl.getV());
+
+  // fCharge does not change!
+  calcState(pos, mom);
+
+  fCachePlane = fRefPlane;
+  fCacheSpu = 1.;
+
+  TMatrixD state7(getState7());
+
+  transformMP(cov6x6, fCov, fRefPlane, state7);
 }
 
 
 
-
-void RKTrackRep::extrapolateToPoint(const TVector3& pos,
-				   TVector3& poca,
-				   TVector3& dirInPoca){
+void RKTrackRep::extrapolateToPoint(const TVector3& pos, TVector3& poca, TVector3& dirInPoca){
 
   static const int maxIt(30);
 
-  TMatrixT<double> state7;
-  getState7(state7);
+  TMatrixD state7(getState7());
 
   double coveredDistance(0.);
 
@@ -462,7 +517,7 @@ void RKTrackRep::extrapolateToPoint(const TVector3& pos,
   int iterations(0);
 
   while(true){
-    pl.setON(pos,TVector3(state7[3][0], state7[4][0], state7[5][0]));
+    pl.setON(pos, TVector3(state7[3][0], state7[4][0], state7[5][0]));
     coveredDistance =  this->Extrap(pl, &state7);
 
     if(fabs(coveredDistance) < MINSTEP) break;
@@ -474,8 +529,6 @@ void RKTrackRep::extrapolateToPoint(const TVector3& pos,
   poca.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
   dirInPoca.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
 }
-
-
 
 
 TVector3 RKTrackRep::poca2Line(const TVector3& extr1,const TVector3& extr2,const TVector3& point) const {
@@ -491,8 +544,6 @@ TVector3 RKTrackRep::poca2Line(const TVector3& extr1,const TVector3& extr2,const
 }
 
 
-
-
 void RKTrackRep::extrapolateToLine(const TVector3& point1,
                                    const TVector3& point2,
                                    TVector3& poca,
@@ -500,8 +551,7 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
                                    TVector3& poca_onwire){
   static const int maxIt(30);
 
-  TMatrixT<double> state7;
-  getState7(state7);
+  TMatrixD state7(getState7());
 
   double coveredDistance(0.);
 
@@ -528,80 +578,229 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
 }
 
 
-
-
 double RKTrackRep::extrapolate(const GFDetPlane& pl, 
-                               TMatrixT<double>& statePred,
-                               TMatrixT<double>& covPred){
+                               TMatrixD& statePred,
+                               TMatrixD& covPred){
   
-  TMatrixT<double> cov7x7(7,7);
-
-  TMatrixT<double> state7;
-  getState7(state7);
+  TMatrixD state7(getState7());
+  TMatrixD cov7x7(7,7);
 
   transformPM(fCov, cov7x7, fRefPlane, fState, fSpu);
 
-  double coveredDistance = this->Extrap(pl, &state7, &cov7x7);
-
-  covPred.ResizeTo(5,5);
-
-  transformMP(cov7x7, covPred, pl, state7);
-
-  const TVector3 O = pl.getO();
-  const TVector3 U = pl.getU();
-  const TVector3 V = pl.getV();
-  const TVector3 W = pl.getNormal();
-
-  const TVector3 Point(state7[0][0], state7[1][0], state7[2][0]);
-  const TVector3 A(state7[3][0], state7[4][0], state7[5][0]);
+  double coveredDistance = Extrap(pl, &state7, &cov7x7);
   
-  double AtW = A*W;
-
   statePred.ResizeTo(5,1);
-  statePred[0][0] = state7[6][0];
-  statePred[1][0] = (A*U)/(AtW);
-  statePred[2][0] = (A*V)/(AtW);
-  statePred[3][0] = (Point-O)*U;
-  statePred[4][0] = (Point-O)*V;
-  
+  statePred = getState5(state7, pl, fCacheSpu);
   fCachePlane = pl;
 
-  if (AtW >=0 ) fCacheSpu = 1.;
-  else fCacheSpu = -1.;
+  covPred.ResizeTo(5,5);
+  transformMP(cov7x7, covPred, pl, state7);
 
   return coveredDistance;
 }
-
-
 
 
 double RKTrackRep::extrapolate(const GFDetPlane& pl, 
-                               TMatrixT<double>& statePred){
+                               TMatrixD& statePred){
 
-  TMatrixT<double> state7;
-  getState7(state7);
-
-  double coveredDistance = this->Extrap(pl, &state7);
-
-  const TVector3 O = pl.getO();
-  const TVector3 U = pl.getU();
-  const TVector3 V = pl.getV();
-  const TVector3 W = pl.getNormal();
-
-  const TVector3 Point(state7[0][0], state7[1][0], state7[2][0]);
-  const TVector3 A(state7[3][0], state7[4][0], state7[5][0]);
-
+  TMatrixD state7(getState7());
+  double coveredDistance = Extrap(pl, &state7);
+  double spu;
   statePred.ResizeTo(5,1);
-  statePred[0][0] = state7[6][0];
-  statePred[1][0] = (A*U)/(A*W);
-  statePred[2][0] = (A*V)/(A*W);
-  statePred[3][0] = (Point-O)*U;
-  statePred[4][0] = (Point-O)*V;
+  statePred = getState5(state7, pl, spu);
 
   return coveredDistance;
 }
 
 
+double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
+
+  TVector3 dest;
+
+  static const int maxIt(30);
+
+  TMatrixD state7(getState7());
+
+  double coveredDistance(0.);
+
+  GFDetPlane pl;
+  int iterations(0);
+
+  while(true){
+    pos.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
+    dir.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
+    dir.SetMag(1.);
+
+    dest = pos + (h - coveredDistance) * dir;
+
+    pl.setON(dest, dir);
+    coveredDistance += this->Extrap(pl, &state7);
+
+    if(fabs(h - coveredDistance)<MINSTEP) break;
+    if(++iterations == maxIt) {
+      GFException exc("RKTrackRep::stepalong ==> maximum number of iterations reached",__LINE__,__FILE__);
+      throw exc;
+    }
+  }
+
+  pos.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
+  dir.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
+
+  return coveredDistance;
+}
+
+
+
+double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixD* state, TMatrixD* cov) {
+
+  //std::cerr<<"RKTrackRep::Extrap"<<std::endl;
+  static const int maxNumIt(200);
+  int numIt(0);
+
+  bool calcCov(true);
+  if(cov==NULL) calcCov=false;
+
+  double *P;
+  if(calcCov) {P = new double[56];}
+  else {P = new double[7];}
+
+  for(int i=0;i<7;++i){
+    P[i] = (*state)[i][0];
+  }
+
+  TMatrixD jac(7,7);
+  TMatrixD jacT(7,7);
+  TMatrixD oldCov(7,7);
+  if(calcCov) oldCov=(*cov);
+  double coveredDistance(0.);
+  double sumDistance(0.);
+
+  while(true){
+    if(numIt++ > maxNumIt){
+      GFException exc("RKTrackRep::Extrap ==> maximum number of iterations exceeded",__LINE__,__FILE__);
+      exc.setFatal();
+      delete[] P;
+      throw exc;
+    }
+
+    if(calcCov){
+      memset(&P[7],0x00,49*sizeof(double));
+      for(int i=0; i<6; ++i){
+        P[(i+1)*7+i] = 1.;
+      }
+      P[55] =  (*state)[6][0];
+    }
+
+    TVector3 directionBefore(P[3],P[4],P[5]); // direction before propagation
+    directionBefore.SetMag(1.);
+
+    // propagation
+    std::vector<TVector3> points;
+    std::vector<double> pointPaths;
+    if( ! this->RKutta(plane, P, coveredDistance, points, pointPaths, calcCov) ) {
+      GFException exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
+      exc.setFatal();
+      delete[] P;
+      throw exc;
+    }
+
+    TVector3 directionAfter(P[3],P[4],P[5]); // direction after propagation
+    directionAfter.SetMag(1.);
+
+    sumDistance+=coveredDistance;
+
+    // filter Points
+    std::vector<TVector3> pointsFilt(1, points.at(0));
+    std::vector<double> pointPathsFilt(1, 0.);
+    // only if in right direction
+    for(unsigned int i=1;i<points.size();++i){
+      if (pointPaths.at(i) * coveredDistance > 0.) {
+        pointsFilt.push_back(points.at(i));
+        pointPathsFilt.push_back(pointPaths.at(i));
+      }
+      else {
+        pointsFilt.back() = points.at(i);
+        pointPathsFilt.back() += pointPaths.at(i);
+      }
+      // clean up tiny steps
+      int position = pointsFilt.size()-1;  // position starts with 0
+      if (fabs(pointPathsFilt.back()) < MINSTEP && position > 1) {
+        pointsFilt.at(position-1) = pointsFilt.at(position);
+        pointsFilt.pop_back();
+        pointPathsFilt.at(position-1) += pointPathsFilt.at(position);
+        pointPathsFilt.pop_back();
+      }
+    }
+
+    if(calcCov){ //calculate Jacobian jac
+      for(int i=0;i<7;++i){
+        for(int j=0;j<7;++j){
+          if(i<6) jac[i][j] = P[ (i+1)*7+j ];
+          else jac[i][j] = P[ (i+1)*7+j ]/P[6];
+        }
+      }
+      jacT = jac;
+      jacT.T();
+    }
+
+    TMatrixD noise(7,7); // zero everywhere by default
+
+    // call MatEffects
+    if (!fNoMaterial){
+      double momLoss; // momLoss has a sign - negative loss means momentum gain
+
+      momLoss = GFMaterialEffects::getInstance()->effects(pointsFilt,
+                                 pointPathsFilt,
+                                 fabs(fCharge/P[6]), // momentum
+                                 fPdg,
+                                 fXX0,
+                                 calcCov,
+                                 &noise,
+                                 &jac,
+                                 &directionBefore,
+                                 &directionAfter);
+
+      #ifdef DEBUG
+        std::cout << "momLoss: " << momLoss << " GeV \n";
+      #endif
+
+      if(fabs(P[6])>1.E-10){ // do momLoss only for defined 1/momentum .ne.0
+        P[6] = fCharge/(fabs(fCharge/P[6])-momLoss);
+      }
+    }
+
+    if(calcCov){ //propagate cov and add noise
+      TMatrixD absCov(oldCov);
+      absCov.Abs();
+      if(!(absCov < 1.E200)){
+        GFException exc("RKTrackRep::Extrap ==> covariance matrix exceeds numerical limits",__LINE__,__FILE__);
+        oldCov.Print();
+        exc.setFatal();
+        delete[] P;
+        throw exc;
+      }
+      oldCov = *cov;
+      *cov = jacT*((oldCov)*jac)+noise;
+    }
+
+    #ifdef DEBUG
+      jacT.Print();
+      if(calcCov) cov->Print();
+    #endif
+
+    //we arrived at the destination plane, if we point to the active area of the plane (if it is finite), and the distance is below threshold
+    if( plane.inActive(TVector3(P[0],P[1],P[2]), TVector3(P[3],P[4],P[5])) &&
+        plane.distance(P[0],P[1],P[2]) < MINSTEP) break;
+
+  }
+
+  (*state)[0][0] = P[0];  (*state)[1][0] = P[1];  (*state)[2][0] = P[2];
+  (*state)[3][0] = P[3];  (*state)[4][0] = P[4];  (*state)[5][0] = P[5];
+  (*state)[6][0] = P[6];
+
+  delete[] P;
+  return sumDistance;
+}
 
 
 //
@@ -662,7 +861,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   // Aux parameters
   double* R           = &P[0];                  // Start coordinates  [cm] 	(x,  y,  z)
   double* A           = &P[3];                  // Start directions 	      (ax, ay, az); 	ax^2+ay^2+az^2=1
-  double  SA[3]       = {0.,0.,0.};             // Start directions derivatives 
+  double  SA[3]       = {0.,0.,0.};             // Start directions derivatives dA/S
   double  Pinv        = P[6]*EC;                // P[6] is charge/momentum in e/(GeV/c)
   double  Way         = 0.;                     // Sum of absolute values of all extrapolation steps [cm]
   bool    stopBecauseOfMaterial = false;        // does not go through main loop again when stepsize is reduced by stepper
@@ -740,10 +939,6 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
       std::cout << " RKutta main loop nr. " << counter << "\n";
     #endif
 
-    //for saving points only when the direction didn't change
-    int Ssign = 1;
-    if(S<0) Ssign = -1;
-
     //
     // Runge Kutta Extrapolation
     //
@@ -803,7 +998,11 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
     // Derivatives of track parameters in last point
     //
     if(calcCov){
-      for(int i=7; i!=ND; i+=7) {				// i = 7, 14, 21, 28, 35, 42, 49;    ND = 56;	ND1 = 49; rows of Jacobian
+      // d(x, y, z)/d(x, y, z) submatrix is unit matrix
+      P[7] = 1;  P[15] = 1;  P[23] = 1;
+      // d(ax, ay, az)/d(ax, ay, az) submatrix is 0
+      // start with d(x, y, z)/d(ax, ay, az)
+      for(int i=4*7; i!=ND; i+=7) {				// i = 7, 14, 21, 28, 35, 42, 49;    ND = 56;	ND1 = 49; rows of Jacobian
 	
         double* dR = &P[i];			            		// dR = (dX/dpN,  dY/dpN,  dZ/dpN)
         double* dA = &P[i+3];				           	// dA = (dAx/dpN, dAy/dpN, dAz/dpN); N = X,Y,Z,Ax,Ay,Az,q/p
@@ -843,9 +1042,9 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
 
         if(i==ND1) {dA6+=A6; dB6+=B6; dC6+=C6;}			// if last row: (dA6, dB6, dC6) := (dA6, dB6, dC6) + (A6, B6, C6)                                    
         
-        dR[0] += (dA2+dA3+dA4)*S3; dA[0] = (dA0+dA3+dA3+dA5+dA6)*P3;	// dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
-        dR[1] += (dB2+dB3+dB4)*S3; dA[1] = (dB0+dB3+dB3+dB5+dB6)*P3;	// dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
-        dR[2] += (dC2+dC3+dC4)*S3; dA[2] = (dC0+dC3+dC3+dC5+dC6)*P3;
+        dR[0] += (dA2+dA3+dA4)*S3;  dA[0] = (dA0+dA3+dA3+dA5+dA6)*P3;	// dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
+        dR[1] += (dB2+dB3+dB4)*S3;  dA[1] = (dB0+dB3+dB3+dB5+dB6)*P3;	// dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
+        dR[2] += (dC2+dC3+dC4)*S3;  dA[2] = (dC0+dC3+dC3+dC5+dC6)*P3;
       }
     }
     
@@ -856,6 +1055,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
     R[1] += (B2+B3+B4)*S3;   A[1] += (SA[1]=(B0+B3+B3+B5+B6)*P3-A[1]);  // A  =     1/3*[(A0, B0, C0) + 2*(A3, B3, C3) + (A5, B5, C5) + (A6, B6, C6)]
     R[2] += (C2+C3+C4)*S3;   A[2] += (SA[2]=(C0+C3+C3+C5+C6)*P3-A[2]); 	// SA = A_new - A_old
     pos.SetXYZ(R[0], R[1], R[2]);
+
     // normalize A
     CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);	// 1/|A|
     A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
@@ -899,10 +1099,13 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   // linear extrapolation to surface
   //
   if (!stopBecauseOfMaterial) {
-    if (fabs(Sl) > 1.E-12) Sl = 1./Sl;	      // Sl = inverted last Stepsize Sl
-    A[0] += (SA[0]*=Sl)*S;   	// S  = distance to surface
-    A[1] += (SA[1]*=Sl)*S;   	// SA*Sl = delta A / delta way; local derivative of A with respect to the length of the way
-    A[2] += (SA[2]*=Sl)*S;	  // A = A + S * SA*Sl
+    // normalize SA
+    SA[0]*=Sl;  SA[1]*=Sl;  SA[2]*=Sl;
+    // calculate A
+    A[0] += SA[0]*S;   	// S  = distance to surface
+    A[1] += SA[1]*S;   	// SA*Sl = delta A / delta way; local derivative of A with respect to the length of the way
+    A[2] += SA[2]*S;	  // A = A + S * SA*Sl
+
     // normalize A
     CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);  // 1/|A|
     A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
@@ -916,7 +1119,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
     //
     if(calcCov){
       An = A[0]*SU[0]+A[1]*SU[1]+A[2]*SU[2];
-      fabs(An) < 1.E-6 ? An=1./An : An = 0; // 1/A_normal
+      fabs(An) > 1.E-7 ? An=1./An : An = 0; // 1/A_normal
       double norm;
       for(int i=7; i!=ND; i+=7) {
         double* dR = &P[i];
@@ -1044,7 +1247,7 @@ double RKTrackRep::estimateStep(const TVector3& pos,
   //
   // Limit stepsize
   //
-  int Ssign = 1;
+  double Ssign = 1.;
   if (Step < 0) Ssign = -1;
 
   // reduce maximum stepsize Step to Smax
@@ -1089,245 +1292,6 @@ double RKTrackRep::estimateStep(const TVector3& pos,
   deltaAngle += Step/SmaxAngle * dAngleMax;
 
   return Step;
-}
-
-
-double RKTrackRep::Extrap( const GFDetPlane& plane, TMatrixT<double>* state, TMatrixT<double>* cov) {
-
-  static const int maxNumIt(200);
-  int numIt(0);
-
-  bool calcCov(true);
-  if(cov==NULL) calcCov=false;  
-
-  double *P;
-  if(calcCov) {P = new double[56];}
-  else {P = new double[7];}
-
-  for(int i=0;i<7;++i){
-    P[i] = (*state)[i][0];
-  }
-  
-  TMatrixT<double> jac(7,7);
-  TMatrixT<double> jacT(7,7);
-  TMatrixT<double> oldCov(7,7);
-  if(calcCov) oldCov=(*cov);
-  double coveredDistance(0.);
-  double sumDistance(0.);
-
-  while(true){
-    if(numIt++ > maxNumIt){
-      GFException exc("RKTrackRep::Extrap ==> maximum number of iterations exceeded",__LINE__,__FILE__);
-      exc.setFatal();
-      delete[] P;
-      throw exc;
-    }
-
-    if(calcCov){
-      memset(&P[7],0x00,49*sizeof(double));
-      for(int i=0; i<6; ++i){
-        P[(i+1)*7+i] = 1.;
-      }
-      P[55] =  (*state)[6][0];
-    }
-
-    TVector3 directionBefore(P[3],P[4],P[5]); // direction before propagation
-    directionBefore.SetMag(1.);
-    
-    // propagation
-    std::vector<TVector3> points;
-    std::vector<double> pointPaths;
-    if( ! this->RKutta(plane, P, coveredDistance, points, pointPaths, calcCov) ) {
-      GFException exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
-      exc.setFatal();
-      delete[] P;
-      throw exc;
-    }
-
-    TVector3 directionAfter(P[3],P[4],P[5]); // direction after propagation
-    directionAfter.SetMag(1.);
-      
-    sumDistance+=coveredDistance;
-     
-    // filter Points
-    std::vector<TVector3> pointsFilt(1, points.at(0));
-    std::vector<double> pointPathsFilt(1, 0.);
-    // only if in right direction
-    for(unsigned int i=1;i<points.size();++i){ 
-      if (pointPaths.at(i) * coveredDistance > 0.) { 
-        pointsFilt.push_back(points.at(i));
-        pointPathsFilt.push_back(pointPaths.at(i));
-      }
-      else {
-        pointsFilt.back() = points.at(i);
-        pointPathsFilt.back() += pointPaths.at(i);
-      }
-      // clean up tiny steps
-      int position = pointsFilt.size()-1;  // position starts with 0
-      if (fabs(pointPathsFilt.back()) < MINSTEP && position > 1) {
-        pointsFilt.at(position-1) = pointsFilt.at(position);
-        pointsFilt.pop_back();        
-        pointPathsFilt.at(position-1) += pointPathsFilt.at(position);
-        pointPathsFilt.pop_back();
-      }
-    }
-    
-    if(calcCov){ //calculate Jacobian jac
-      for(int i=0;i<7;++i){
-	      for(int j=0;j<7;++j){
-	        if(i<6) jac[i][j] = P[ (i+1)*7+j ];
-	        else jac[i][j] = P[ (i+1)*7+j ]/P[6];
-	      }  
-      }
-      jacT = jac;
-      jacT.T();
-    }
-
-    TMatrixT<double> noise(7,7); // zero everywhere by default
-    
-    // call MatEffects
-    if (!fNoMaterial){
-      double momLoss; // momLoss has a sign - negative loss means momentum gain
-
-      momLoss = GFMaterialEffects::getInstance()->effects(pointsFilt,
-                                 pointPathsFilt,
-                                 fabs(fCharge/P[6]), // momentum
-                                 fPdg,
-                                 fXX0,
-                                 calcCov,
-                                 &noise,
-                                 &jac,
-                                 &directionBefore,
-                                 &directionAfter);
-
-      #ifdef DEBUG
-        std::cout << "momLoss: " << momLoss << " GeV \n";
-      #endif
-    
-      if(fabs(P[6])>1.E-10){ // do momLoss only for defined 1/momentum .ne.0
-        P[6] = fCharge/(fabs(fCharge/P[6])-momLoss);
-      }
-    }
-    
-    if(calcCov){ //propagate cov and add noise
-      TMatrixT<double> absCov(oldCov);
-      absCov.Abs();
-      if(!(absCov < 1.E200)){
-        GFException exc("RKTrackRep::Extrap ==> covariance matrix exceeds numerical limits",__LINE__,__FILE__);
-        oldCov.Print();
-        exc.setFatal();
-        delete[] P;
-        throw exc;
-      }
-      oldCov = *cov;
-      *cov = jacT*((oldCov)*jac)+noise;
-    }
-    
-    #ifdef DEBUG
-      jacT.Print();
-      if(calcCov) cov->Print();
-    #endif
-
-    //we arrived at the destination plane, if we point to the active area of the plane (if it is finite), and the distance is below threshold
-    if( plane.inActive(TVector3(P[0],P[1],P[2]), TVector3(P[3],P[4],P[5])) &&
-        plane.distance(P[0],P[1],P[2]) < MINSTEP) break;
-    
-  }
-
-  (*state)[0][0] = P[0];  (*state)[1][0] = P[1];  (*state)[2][0] = P[2];
-  (*state)[3][0] = P[3];  (*state)[4][0] = P[4];  (*state)[5][0] = P[5];
-  (*state)[6][0] = P[6];
-    
-  delete[] P;
-  return sumDistance;
-}
-
-
-void RKTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixT<double>& cov6x6){
-
-  TMatrixT<double> statePred(fState);
-  TMatrixT<double> covPred(fCov);
-  double spu(fSpu);
-
-  if(pl != fRefPlane) {
-    extrapolate(pl, statePred, covPred);
-    spu = fCacheSpu;
-  }
-
-  // cov
-  cov6x6.ResizeTo(6, 6); // make sure cov has correct dimensions
-  transformPM(covPred, cov6x6, pl, statePred, spu);
-
-  // pos and mom
-  const TVector3 u = pl.getU();
-  const TVector3 v = pl.getV();
-  const TVector3 w = u.Cross(v);
-
-  mom = spu * (w + statePred[1][0]*u + statePred[2][0]*v);
-  mom.SetMag(fCharge/statePred[0][0]);
-
-  pos = pl.getO() + statePred[3][0]*u + statePred[4][0]*v;
-}
-
-
-void RKTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixT<double>& cov6x6){
-
-  if (cov6x6.GetNcols()!=6 || cov6x6.GetNrows()!=6){
-    GFException exc("RKTrackRep::setPosMomCov ==> cov has to be 6x6 (x, y, z, px, py, pz)",__LINE__,__FILE__);
-    throw exc;
-  }
-
-  fRefPlane.setON(pos, mom);
-
-  fCachePlane = fRefPlane;
-  fSpu = 1.;
-  fCacheSpu = 1.;
-
-  calcState(pos, mom);
-
-  TMatrixT<double> state7;
-  getState7(state7);
-
-  transformMP(cov6x6, fCov, fRefPlane, state7);
-}
-
-
-double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
-
-  TVector3 dest;
-
-  static const int maxIt(30);
-
-  TMatrixT<double> state7;
-  getState7(state7);
-
-  double coveredDistance(0.);
-
-  GFDetPlane pl;
-  int iterations(0);
-
-  while(true){
-    pos.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
-    dir.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
-    dir.SetMag(1.);
-
-    dest = pos + (h - coveredDistance) * dir;
-
-    pl.setON(dest, dir);
-    coveredDistance += this->Extrap(pl, &state7);
-
-    if(fabs(h - coveredDistance)<MINSTEP) break;
-    if(++iterations == maxIt) {
-      GFException exc("RKTrackRep::stepalong ==> maximum number of iterations reached",__LINE__,__FILE__);
-      throw exc;
-    }
-  }
-  
-  pos.SetXYZ(state7[0][0], state7[1][0], state7[2][0]);
-  dir.SetXYZ(state7[3][0], state7[4][0], state7[5][0]);
-  dir.SetMag(1.);  
-  
-  return coveredDistance;
 }
 
 
