@@ -182,8 +182,7 @@ class RKTrackRep : public GFAbsTrackRep {
 
 
 
- //private:
- public:
+ private:
 
   void calcStateCov(const TVector3& pos,
                     const TVector3& mom,
