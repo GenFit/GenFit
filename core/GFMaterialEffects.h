@@ -64,7 +64,7 @@ public:
   void setNoiseBrems(bool opt = true) {fNoiseBrems = opt; fNoEffects = false;}
 
   /** @brief Select the multiple scattering model that will be used during track fit.
-   *  At the moment two model are available default and Highland. default is the model was was present in genfit first.
+   *  At the moment two model are available GEANE and Highland. GEANE is the model was was present in Genfit first.
    *  Note that using this function has no effect if setNoiseCoulomb(false) is set.
    */
   void setMscModel(const std::string& modelName);
