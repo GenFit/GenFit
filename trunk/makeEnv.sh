@@ -2,13 +2,15 @@
 ENVFILE=env.sh
 if [ -z $GENFIT ]; then
   echo "define the GENFIT env variable before executing this script"
-elif [ -z $VMC ]; then
-  echo "WARNING: the environment variable VMC is not set. You will not be able to compile/use the GeaneTrackRep2!"
+else
+  if [ -z $VMC ]; then
+    echo "WARNING: the environment variable VMC is not set. You will not be able to compile/use the GeaneTrackRep2"
+  fi
   echo "if [ -z \$ROOTSYS ]; then" > $ENVFILE
     echo "echo \"ROOTSYS is not set. Check your ROOT installation.\"" >> $ENVFILE
   echo "else" >> $ENVFILE
     echo "export GENFIT=$GENFIT" >> $ENVFILE
-    echo "export VMC=\$VMC" >> $ENVFILE
+    echo "export VMC=$VMC" >> $ENVFILE
     echo "if [ \`root-config --arch\` = macosx ]; then" >>$ENVFILE
       echo "export DYLD_LIBRARY_PATH=\$DYLD_LIBRARY_PATH:\$VMC/lib/tgt_macosx:\$GENFIT/lib" >>$ENVFILE
       echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$VMC/lib/tgt_macosx:\$GENFIT/lib" >>$ENVFILE
