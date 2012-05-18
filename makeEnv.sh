@@ -3,8 +3,7 @@ ENVFILE=env.sh
 if [ -z $GENFIT ]; then
   echo "define the GENFIT env variable before executing this script"
 elif [ -z $VMC ]; then
-  echo "define the VMC env variable before executing this script"
-else
+  echo "WARNING: the environment variable VMC is not set. You will not be able to compile/use the GeaneTrackRep2!"
   echo "if [ -z \$ROOTSYS ]; then" > $ENVFILE
     echo "echo \"ROOTSYS is not set. Check your ROOT installation.\"" >> $ENVFILE
   echo "else" >> $ENVFILE
