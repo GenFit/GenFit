@@ -24,8 +24,7 @@ GFDafHit::GFDafHit(std::vector<GFAbsRecoHit*> HitsInPlane) {
 	fRawHits = HitsInPlane;
 	fWeights.assign(fRawHits.size(),1.);
 	fBlow = 1;
-	fHitCovUpd = false;
-	fHitCoordUpd = false;
+	fHitUpd = false;
 
 }
 
@@ -38,17 +37,13 @@ GFAbsRecoHit* GFDafHit::getHit(unsigned int ihit) {
 void GFDafHit::setBlowUp(double blow_up) {
 
 	fBlow = blow_up;
-	fHitCovUpd = false;
-	fHitCoordUpd = false;
-
+	fHitUpd = false;
 }
 
 void GFDafHit::setWeights(std::vector<double> weights) {
 
 	fWeights = weights;
-	fHitCovUpd = false;
-	fHitCoordUpd = false;
-
+	fHitUpd = false;
 }
 
 const GFDetPlane& GFDafHit::getDetPlane(GFAbsTrackRep* rep) {
@@ -57,74 +52,90 @@ const GFDetPlane& GFDafHit::getDetPlane(GFAbsTrackRep* rep) {
 
 }
 
-TMatrixT<double> GFDafHit::getHitCoord(const GFDetPlane& pl) {
+void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TMatrixT<double>& statePred,const TMatrixT<double>& covPred,TMatrixT<double>& m, TMatrixT<double>& V) {
 
-	if(fHitCoordUpd && fPl == pl) return fHitCoord;
+  /*
+  if(fHitUpd && fPl != pl) {
+    GFException exc("GFDafHit::getMeasurement(): pl!=fPl",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+  */
 
-	if(fRawHits.size() == 1) {
+  if(fHitUpd && fPl == pl) {
+    m.ResizeTo(fHitCoord);
+    V.ResizeTo(fHitCov);
+    m = fHitCoord;
+    V = fHitCov;
+    return;
+  }
 
-		if(fHitCoord.GetNrows() ==0) fHitCoord.ResizeTo(fRawHits.at(0)->getHitCoord(pl));
-		fHitCoord = fRawHits.at(0)->getHitCoord(pl);
+  if(fRawHits.size() == 1) {
+    fRawHits.at(0)->getMeasurement(rep,pl,statePred,covPred,fHitCoord,fHitCov);
+    static const double maxCovSize = 1.e10;
+    if(((1/fWeights.at(0)) * fBlow) < maxCovSize) {
+      fHitCov = (1 / fWeights.at(0)) * fBlow * fHitCov;
+    }
+    else {
+      fHitCov = maxCovSize * fHitCov;
+    }
+  } 
 
-	} else {
+  else {
+    //set the weighted-mean cov
+    // this might seem like kind of a waste, but we need to make sure that fHitCov has the right dimensionality
+    // and we dont know it from elsewhere
+    fRawHits.at(0)->getMeasurement(rep,pl,statePred,covPred,fHitCoord,fHitCov);
+    fHitCoord.Zero();
+    fHitCov.Zero();
+    fCovInvs.clear();
+    TMatrixT<double> CovInv;
+    TMatrixT<double>* coordTemp;
+    TMatrixT<double> covTemp;
+    std::vector<TMatrixT<double>* > coords;
+    for(unsigned int i=0;i<fRawHits.size();i++) {
+      coordTemp = new TMatrixT<double>;
+      try{
+	fRawHits.at(i)->getMeasurement(rep,pl,statePred,covPred,*coordTemp,covTemp);
+	coords.push_back(coordTemp);
+	GFTools::invertMatrix(fBlow * covTemp, CovInv);
+      }
+      catch(GFException& e){
+	for(unsigned int j=0;j<coords.size();++j) delete coords[j];
+	delete coordTemp;
+	throw e;
+      }
+      fCovInvs.push_back(CovInv);
+      fHitCov += fWeights.at(i) * CovInv;
+    }
+    TMatrixT<double> HitCovTemp(fHitCov);
 
-		if(fHitCovUpd != true || fPl != pl) getHitCov(pl);
-		fHitCoord.Zero();
-		for(unsigned int i=0;i<fRawHits.size();i++) {
+    try{
+      GFTools::invertMatrix(HitCovTemp, fHitCov);
+    }
+    catch(GFException& e){
+      for(unsigned int j=0;j<coords.size();++j) delete coords[j];
+      throw e;
+    }
+    
 
-			fHitCoord += fWeights.at(i) * fCovInvs.at(i) * fRawHits.at(i)->getHitCoord(pl);
-
-		}
-
-		fHitCoord = fHitCov * fHitCoord;
-	}
-
-	fPl = pl;
-	fHitCoordUpd = true;
-	return fHitCoord;
-
+    //set the weighted-mean coord
+    //fRawHits.size()==coords.size() is a certainty here
+    for(unsigned int i=0;i<fRawHits.size();i++) {
+      fHitCoord += fWeights.at(i) * fCovInvs.at(i) * (*(coords.at(i)));
+    }
+    for(unsigned int j=0;j<coords.size();++j) delete coords[j];
+    fHitCoord = fHitCov * fHitCoord;
+  }
+  //return by refernce
+  m.ResizeTo(fHitCoord);
+  V.ResizeTo(fHitCov);
+  m = fHitCoord;
+  V = fHitCov;
+  fPl = pl;
+  fHitUpd = true;
 }
 
-TMatrixT<double> GFDafHit::getHitCov(const GFDetPlane& pl) {
-
-	if(fHitCovUpd && fPl == pl) return fHitCov;
-
-	if(fHitCov.GetNrows() == 0) {
-		fHitCov.ResizeTo(fRawHits.at(0)->getHitCov(pl));
-		fHitCoord.ResizeTo(fRawHits.at(0)->getHitCoord(pl));
-	}
-
-	if(fRawHits.size() == 1) {
-
-		if(((1/fWeights.at(0)) * fBlow) < pow(10,10)) {
-			fHitCov = (1 / fWeights.at(0)) * fBlow * fRawHits.at(0)->getHitCov(pl);
-		} else {
-			fHitCov = pow(10,10) * fRawHits.at(0)->getHitCov(pl);
-		}
-
-	} else {
-
-		fHitCov.Zero();
-		fCovInvs.clear();
-
-		for(unsigned int i=0;i<fRawHits.size();i++) {
-
-			TMatrixT<double> CovInv;
-			GFTools::invertMatrix((fBlow * fRawHits.at(i)->getHitCov(pl)), CovInv);
-			fCovInvs.push_back(CovInv);
-			fHitCov += fWeights.at(i) * CovInv;
-		}
-
-		TMatrixT<double> HitCovTemp(fHitCov);
-		GFTools::invertMatrix(HitCovTemp, fHitCov);
-
-	}
-
-	fPl = pl;
-	fHitCovUpd = true;
-	return fHitCov;
-
-}
 
 TMatrixT<double> GFDafHit::getHMatrix(const GFAbsTrackRep* rep) {
 

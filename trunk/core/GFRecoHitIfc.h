@@ -79,19 +79,19 @@ class GFRecoHitIfc : public GFAbsRecoHit{
    */
   virtual const GFDetPlane& getDetPlane(GFAbsTrackRep* rep){return fPolicy.detPlane(this,rep);}
 
-  /** @brief Get hit coordinates in a specific detector plane
+  /** @brief Get measurement m,V and HMatrix
    *
    * Implementation in the HitPolicy
    */
-  virtual TMatrixT<double> getHitCoord(const GFDetPlane& plane)
-  {return fPolicy.hitCoord(this,plane);}
+  virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TMatrixT<double>& statePred,const TMatrixT<double>& covPred,TMatrixT<double>& m, TMatrixT<double>& V){
 
-  /** @brief Get hit covariances in a specific detector plane
-   *
-   * Implementation in the HitPolicy
-   */
-  virtual TMatrixT<double> getHitCov(const GFDetPlane& plane)
-  {return fPolicy.hitCov(this,plane);}
+    TMatrixT<double> mTemp = fPolicy.hitCoord(this,pl);
+    TMatrixT<double> VTemp = fPolicy.hitCov(this,pl);
+    m.ResizeTo(mTemp);
+    V.ResizeTo(VTemp);
+    m = mTemp;
+    V = VTemp;
+}
 
   const std::string& getPolicyName(){return fPolicy.getName();}
 

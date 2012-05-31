@@ -103,6 +103,8 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 		std::vector<double> weights;
 
 		TMatrixT<double> x_smoo(GFTools::getBiasedSmoothedPos(trk, 0, i));
+		TMatrixT<double> smoothedState,smoothedCov;
+		GFTools::getBiasedSmoothedData(trk, 0, i, smoothedState,smoothedCov);
 		if(x_smoo.GetNrows() == 0) {
 			weights.assign(eff_hit->getNumHits(),0.5);
 			std::cout<<"Assumed weight 0.5!!"<<std::endl;
@@ -113,14 +115,16 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 		for(unsigned int j=0; j<eff_hit->getNumHits(); j++) {
 			GFAbsRecoHit* real_hit = eff_hit->getHit(j);
 			GFDetPlane pl;
+			TMatrixT<double> m,Vorig;
 			try{
 				pl = real_hit->getDetPlane(trk->getTrackRep(0));
+				real_hit->getMeasurement(trk->getTrackRep(0),pl,smoothedState,smoothedCov,m,Vorig);
 			} catch(GFException& e) {
 				std::cerr<<e.what();
 				e.info();
 			}
-			TMatrixT<double> m(real_hit->getHitCoord(pl));
-			TMatrixT<double> V( beta * real_hit->getHitCov(pl));
+
+			TMatrixT<double> V( beta * Vorig);
 			TMatrixT<double> resid(m - x_smoo);
 			TMatrixT<double> resid_T(resid);
 			resid_T.T();

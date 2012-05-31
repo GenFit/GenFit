@@ -51,7 +51,7 @@ class GFDafHit: public GFAbsRecoHit {
 		 */
 		GFDafHit(std::vector<GFAbsRecoHit*> HitsInPlane);
 
-		/** @brief Get the hit coordinates.
+		/** @brief Get the measurement m,V
 		 *
 		 * Due to the nature of the GFDafHit, the coordinates returned are not 
 		 * necessarily the coordinates of the real hits. There are two cases:
@@ -66,12 +66,9 @@ class GFDafHit: public GFAbsRecoHit {
 		 * all real hits in the GFDafHit. \f$\mathbf{V}\f$ is the effective hit
 		 * covariance as returned by getHitCov(). This calculation is only done,
 		 * if the plane has changed from the last time gitHitCoord() was called.
-		 */
-		TMatrixT<double> getHitCoord(const GFDetPlane& pl);
-
-		/** @brief Get the hit covariance.
 		 *
-		 * Analog to getHitCoord(), there are two cases: if the GFDafHit contains
+		 * And now for the covariance matrix:
+		 * There are two cases as well: if the GFDafHit contains
 		 * only one hit, the covariance is calculated like:
 		 * \f[
 		 * \mathbf{V} = \frac{1}{p_{1}}\cdot\beta\cdot\mathbf{V}_{1}
@@ -86,7 +83,7 @@ class GFDafHit: public GFAbsRecoHit {
 		 * As before, these calculations are only done if the plane is different
 		 * from the one getHitCov was last called.
 		 */
-		TMatrixT<double> getHitCov(const GFDetPlane& pl);
+		void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TMatrixT<double>& statePred,const TMatrixT<double>& covPred,TMatrixT<double>& m, TMatrixT<double>& V);
 
 		/** @brief Get the H matrix.
 		 *
@@ -132,7 +129,7 @@ class GFDafHit: public GFAbsRecoHit {
 		const std::string& getPolicyName();
 
 	private:
-		bool fHitCoordUpd, fHitCovUpd;
+		bool fHitUpd;
 		GFDetPlane fPl;
 		double fBlow;
 		std::vector<TMatrixT<double> > fCovInvs;
