@@ -302,6 +302,10 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			}
 				track_pos = rep->getPos(plane);
 				plane_pos = plane.getO();
+				TMatrixT<double> hit_coords;
+				TMatrixT<double> hit_cov;
+				hit->getMeasurement(rep,plane,rep->getState(),rep->getCov(),hit_coords,hit_cov);
+
 			// finished getting the hit infos -----------------------------------------------------
 
 			// sort hit infos into variables ------------------------------------------------------
@@ -321,8 +325,6 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			double_t hit_res_u = 0.5;
 			double_t hit_res_v = 0.5;
 
-			TMatrixT<double> hit_coords(hit->getHitCoord(plane));
-			TMatrixT<double> hit_cov(hit->getHitCov(plane));
 			int hit_coords_dim = hit_coords.GetNrows();
 
 			if(hit_type == "GFPlanarHitPolicy") {

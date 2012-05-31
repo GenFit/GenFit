@@ -20,6 +20,7 @@
 #include <iostream>
 
 #include "GFTrack.h"
+#include "GFException.h"
 #include "TVirtualGeoTrack.h"
 
 GFTrack::GFTrack(GFAbsTrackRep* defaultRep, bool smooth) 
@@ -177,6 +178,10 @@ GFTrack::getResiduals(unsigned int detId, // which detector?
 		    unsigned int repid,   // which trackrep ?
 		    std::vector<double>& result)
 {
+  GFException exc ("Dear physicist: If you are the one who's is using this method, please reconsider your choice of career. Are you sure about this: [dim][0]? Sincerely, yours CH & JR",__LINE__,__FILE__);
+  exc.setFatal();
+  throw exc;
+  /*
   unsigned int nhits=getNumHits();
   if(repid>=getNumReps())return;
   GFAbsTrackRep* rep=getTrackRep(repid);//->clone();
@@ -190,18 +195,24 @@ GFTrack::getResiduals(unsigned int detId, // which detector?
       // extrapolate trackrep there
       int repDim=rep->getDim();
       TMatrixT<double> state(repDim,1);
+      TMatrixT<double> cov(repDim,repDim);
       GFDetPlane pl=hit->getDetPlane(rep);
       
-      rep->extrapolate(pl,state);
+      rep->extrapolate(pl,state,cov);
       //rep->setState(state);
       //rep->setReferencePlane(pl);
-      double res=hit->residualVector(rep,state,pl)[dim][0];
+
+      TMatrixT<double> H = hit->getHMatrix(rep);
+      TMatrixT<double> m,V;
+      hit->getMeasurement(rep,pl,state,cov,m,V);
+      double res=(m-(H*state))[dim][0];;
 
       //std::cout<<res<<std::endl;
 
       result.push_back(res);
     } 
   }
+  */
 }
 
 

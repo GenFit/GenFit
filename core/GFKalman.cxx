@@ -31,13 +31,16 @@
 #include "GFTools.h"
 
 #define COVEXC "cov_is_zero"
-
+//#define DEBUG
 
 GFKalman::GFKalman():fInitialDirection(1),fNumIt(3),fBlowUpFactor(500.){;}
 
 GFKalman::~GFKalman(){;}
 
 void GFKalman::processTrack(GFTrack* trk){
+#ifdef DEBUG
+        std::cout<<"GFKalman::processTrack "<<std::endl;
+#endif
 
   fSmooth = trk->getSmoothing();
 
@@ -147,10 +150,10 @@ GFKalman::fittingPass(GFTrack* trk, int direction){
     if(arep->getStatusFlag()==0) {
       //clear chi2 sum and ndf sum in track reps
         if (direction == -1){
-      	  arep->setChiSqu(0.);
+          arep->setChiSqu(0.);
         }
         if (direction == 1){
-      	  arep->setForwardChiSqu(0.);
+          arep->setForwardChiSqu(0.);
         }
       arep->setNDF(0);
       //clear failedHits and outliers
@@ -165,6 +168,10 @@ GFKalman::fittingPass(GFTrack* trk, int direction){
 	  GFAbsTrackRep* arep=trk->getTrackRep(irep);
 	  if(arep->getStatusFlag()==0) { 
 	    try {
+#ifdef DEBUG
+        std::cout<<"++++++++++++++++++++++++++++++++++++++++\n";
+        std::cout<<"GFKalman::fittingPass - process rep nr. "<<irep<<" and hit nr. "<<ihit<<std::endl;
+#endif
 	      processHit(trk,ihit,irep,direction);
 	    }
 	    catch(GFException& e) {
@@ -205,14 +212,14 @@ double GFKalman::chi2Increment(const TMatrixT<double>& r,const TMatrixT<double>&
   assert(chisq.GetNoElements()==1);
 
   if(TMath::IsNaN(chisq[0][0])){
-	GFException exc("chi2 is nan",__LINE__,__FILE__);
-	exc.setFatal();
-	std::vector< TMatrixT<double> > matrices;
-	matrices.push_back(r);
-	matrices.push_back(V);
-	matrices.push_back(R);
-	matrices.push_back(cov);
-	exc.setMatrices("r, V, R, cov",matrices);
+    GFException exc("chi2 is nan",__LINE__,__FILE__);
+    exc.setFatal();
+    std::vector< TMatrixT<double> > matrices;
+    matrices.push_back(r);
+    matrices.push_back(V);
+    matrices.push_back(R);
+    matrices.push_back(cov);
+    exc.setMatrices("r, V, R, cov",matrices);
     throw exc;
   }
 
@@ -232,16 +239,16 @@ GFKalman::getChi2Hit(GFAbsRecoHit* hit, GFAbsTrackRep* rep)
 
 
   TMatrixT<double> H = hit->getHMatrix(rep);
-  // get hit covariances  
-  TMatrixT<double> V=hit->getHitCov(pl);
+  TMatrixT<double> m,V;
+  hit->getMeasurement(rep,pl,state,cov,m,V);
 
-  TMatrixT<double> r=hit->residualVector(rep,state,pl);
-  assert(r.GetNrows()>0);
+  TMatrixT<double> res = m-(H*state);
+  assert(res.GetNrows()>0);
 
   //this is where chi2 is calculated
-  double chi2 = chi2Increment(r,H,cov,V);
+  double chi2 = chi2Increment(res,H,cov,V);
 
-  return chi2/r.GetNrows();
+  return chi2/res.GetNrows();
 }
 
   
@@ -275,20 +282,34 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
     cov = rep->getCov();
   }
   
-  if(fabs(cov[0][0])<1.E-50){
+  if(cov[0][0]<1.E-50){ // diagonal elements must be >=0
     GFException exc(COVEXC,__LINE__,__FILE__);
     throw exc;
   }
   
-  //  TMatrixT<double> origcov=rep->getCov();
-  TMatrixT<double> H=hit->getHMatrix(rep);
-  // get hit covariances  
-  TMatrixT<double> V=hit->getHitCov(pl);
+#ifdef DEBUG
+  std::cerr<<"GFKalman::processHit - state and cov prediction "<<std::endl;
+  state.Print();
+  cov.Print();
+#endif
+
+  TMatrixT<double> H(hit->getHMatrix(rep));
+  TMatrixT<double> m, V;
+  hit->getMeasurement(rep,pl,state,cov,m,V);
+  TMatrixT<double> res = m-(H*state);
+
   // calculate kalman gain ------------------------------
   TMatrixT<double> Gain(calcGain(cov,V,H));
-  TMatrixT<double> res=hit->residualVector(rep,state,pl);
+
   // calculate update -----------------------------------
   TMatrixT<double> update=Gain*res;
+  
+#ifdef DEBUG
+  std::cout<<"Gain"; Gain.Print();
+  std::cout<<"residual vector"; res.Print();
+  std::cout<<"update = Gain*res"; update.Print();
+#endif
+
   state+=update; // prediction overwritten!
   cov-=Gain*(H*cov);
 
@@ -308,9 +329,9 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
 
   // calculate filtered chisq
   // filtered residual
-  TMatrixT<double> r=hit->residualVector(rep,state,pl);
-  double chi2 = chi2Increment(r,H,cov,V);
-  int ndf = r.GetNrows();
+  res = m-(H*state);
+  double chi2 = chi2Increment(res,H,cov,V);
+  int ndf = res.GetNrows();
   if (direction == -1) {
 	  rep->addChiSqu( chi2 );
   }
@@ -332,8 +353,15 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   //rep->setState(state);
   //rep->setCov(cov);
   //rep->setReferencePlane(pl);
+
   rep->setData(state,pl,&cov);
   tr->setRepAtHit(irep,ihit);
+
+#ifdef DEBUG
+   std::cout<<"GFKalman::processHit - updated state and cov "<<std::endl;
+   rep->getState().Print();
+   rep->getCov().Print();
+#endif
 }
 
 

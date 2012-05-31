@@ -122,30 +122,11 @@ public:
    * For example code see implementing classes below:
    */
   virtual TMatrixT<double> getHMatrix(const GFAbsTrackRep* stateVector)=0;
-  
-  
-  /** @brief Calculate residual with respect to a track representation.
-   *
-   * Returns the N-dimensional residual of this vector to a given 
-   * track representation.
-   *
-   * This method is not doing any extrapolation. But it
-   * creates the necessary detector plane object. See GFAbsRecoHit::getGFDetPlane
-   *
-   * @param stateVector pointer to track representation - used to synchronize
-   * with the track repesentation
-   * @param state parameter vector of the track representation 
-   *
-   * @sa setHMatrix
-   * @sa getGFDetPlane
-   */
-  virtual TMatrixT<double> residualVector(const GFAbsTrackRep* stateVector,
-				  const TMatrixT<double>& state,
-				  const GFDetPlane& d) {
-    TMatrixT<double> H = getHMatrix(stateVector);
-    return ( getHitCoord(d) - (H*state ));
-  }
 
+  /** @brief get measurement vector and hit covariance
+   *
+   */
+  virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TMatrixT<double>& statePred,const TMatrixT<double>& covPred,TMatrixT<double>& m, TMatrixT<double>& V) = 0;
   
   /** @brief Get raw hit covariances. 
    *
@@ -156,24 +137,6 @@ public:
    *
    */
   TMatrixT<double> getRawHitCoord() const {return fHitCoord;}
-
-  /** @brief Get hit covariances in a specific detector plane
-   *
-   * Virtual abstract method has to be implemented by inherting classes.
-   * Implementation involves transformation from raw coordinates in detector
-   * coordinate system to detector plane coordinate system. 
-   * @sa getGFDetPlane
-   */
-  virtual TMatrixT<double> getHitCov(const GFDetPlane&)=0;
-
-  /** @brief Get hit coordinates in a specific detector plane
-   *
-   * Virtual abstract method has to be implemented by inherting classes.
-   * Implementation involves transformation from raw coordinates in detector
-   * coordinate system to detector plane coordinate system. 
-   * @sa getDetPlane
-   */
-  virtual TMatrixT<double> getHitCoord(const GFDetPlane&)=0;
   
   
   /** @brief Get detector plane for a given track representation.
