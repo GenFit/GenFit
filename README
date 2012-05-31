@@ -1,9 +1,14 @@
-After your checkout you will also have a geane3 directory, which is CERN's VMC with geant3.
+Per default, the GeaneTrackRep2 is not being built.
+If you want to use the GeaneTrackRep2, you have to check out CERN's VMC with geant3 from 
+https://genfit.svn.sourceforge.net/svnroot/genfit/geant3
+In the directory where you checked it out, just type "make" and set the environment variable VMC to that directory.
+
+export VMC=yourVMCdir 
+
 
 Set up a ROOT installation (I tested only with 5.24) (ROOTSYS PATH ...)
 
 export GENFIT=yourInstallDir
-export VMC=$GENFIT/geant3
 
 ./makeEnv.sh
 
