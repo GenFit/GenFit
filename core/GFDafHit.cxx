@@ -23,7 +23,6 @@ GFDafHit::GFDafHit(std::vector<GFAbsRecoHit*> HitsInPlane) {
 
 	fRawHits = HitsInPlane;
 	fWeights.assign(fRawHits.size(),1.);
-	fBlow = 1;
 	fHitUpd = false;
 
 }
@@ -32,12 +31,6 @@ GFAbsRecoHit* GFDafHit::getHit(unsigned int ihit) {
 
 	return fRawHits.at(ihit);
 
-}
-
-void GFDafHit::setBlowUp(double blow_up) {
-
-	fBlow = blow_up;
-	fHitUpd = false;
 }
 
 void GFDafHit::setWeights(std::vector<double> weights) {
@@ -73,8 +66,8 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
   if(fRawHits.size() == 1) {
     fRawHits.at(0)->getMeasurement(rep,pl,statePred,covPred,fHitCoord,fHitCov);
     static const double maxCovSize = 1.e10;
-    if(((1/fWeights.at(0)) * fBlow) < maxCovSize) {
-      fHitCov = (1 / fWeights.at(0)) * fBlow * fHitCov;
+    if( 1.0/fWeights.at(0)  < maxCovSize) {
+      fHitCov = (1.0 / fWeights.at(0)) * fHitCov;
     }
     else {
       fHitCov = maxCovSize * fHitCov;
@@ -98,7 +91,7 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
       try{
 	fRawHits.at(i)->getMeasurement(rep,pl,statePred,covPred,*coordTemp,covTemp);
 	coords.push_back(coordTemp);
-	GFTools::invertMatrix(fBlow * covTemp, CovInv);
+	GFTools::invertMatrix(covTemp, CovInv);
       }
       catch(GFException& e){
 	for(unsigned int j=0;j<coords.size();++j) delete coords[j];
@@ -147,7 +140,6 @@ GFDafHit* GFDafHit::clone() {
 
 	GFDafHit* retval = new GFDafHit(fRawHits);
 	retval->setWeights(fWeights);
-	retval->setBlowUp(fBlow);
 	return retval;
 
 }
