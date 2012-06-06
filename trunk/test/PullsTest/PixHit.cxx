@@ -32,7 +32,22 @@ PixHit::PixHit(const GFDetPlane& pl,double res) : PlanarRecoHit(NparHitRep){
 	fHitCoord[1][0] = rand.Gaus(0.,res);
 	fHitCov[0][0] = res*res;
 	fHitCov[1][1] = res*res;
+	
+	//TVector3 pos = pl.getO() + fHitCoord[0][0] * pl.getU() + fHitCoord[1][0] * pl.getV();
+	//pos.Print();
 
+}
+
+PixHit::PixHit(const GFDetPlane& pl,double res, double u, double v) : PlanarRecoHit(NparHitRep){
+
+	fPolicy.setDetPlane(pl);
+	fHitCoord[0][0] = u;
+	fHitCoord[1][0] = v;
+	fHitCov[0][0] = res*res;
+	fHitCov[1][1] = res*res;
+	
+	//TVector3 pos = pl.getO() + fHitCoord[0][0] * pl.getU() + fHitCoord[1][0] * pl.getV();
+	//pos.Print();
 }
 
 PixHit::PixHit(TVector3 point,double x_res, double y_res)

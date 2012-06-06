@@ -52,6 +52,20 @@ class RKTrackRep : public GFAbsTrackRep {
 
  public:
 
+  // Array Matrix typedefs. They are needed for SSE optimization:
+  // gcc can vectorize loops only if the array sizes are known.
+  typedef double M1x3[1*3];
+  typedef double M1x4[1*4];
+  typedef double M1x7[1*7];
+  typedef double M5x5[5*5];
+  typedef double M6x6[6*6];
+  typedef double M7x7[7*7];
+  typedef double M8x7[8*7];
+  typedef double M6x5[6*5];
+  typedef double M7x5[7*5];
+  typedef double M5x6[5*6];
+  typedef double M5x7[5*7];
+
   // Constructors/Destructors ---------
   RKTrackRep();
   RKTrackRep(const TVector3& pos,
@@ -183,6 +197,9 @@ class RKTrackRep : public GFAbsTrackRep {
 
 
  private:
+ //public: // only for testing purposes. 
+
+  void initArrays();
 
   void calcStateCov(const TVector3& pos,
                     const TVector3& mom,
@@ -192,22 +209,35 @@ class RKTrackRep : public GFAbsTrackRep {
   void calcState(const TVector3& pos,
                  const TVector3& mom);
 
-  TMatrixD getState7() const;
-  TMatrixD getState7(const TMatrixD& state5, const GFDetPlane& pl, const double& spu) const;
-  TMatrixD getState5(const TMatrixD& state7, const GFDetPlane& pl, double& spu) const;
+  void getState7(M1x7& state7) const;
+  void getState7(M1x7& state7, const TMatrixD& state5, const GFDetPlane& pl, const double& spu) const;
+  TMatrixD getState5(const M1x7& state7, const GFDetPlane& pl, double& spu) const;
 
-  void transformPM(const TMatrixD& in5x5,
-                   TMatrixD& out,
-                   const GFDetPlane& pl,
-                   const TMatrixD& state5,
-                   const double& spu,
-                   TMatrixD* Jac = NULL) const;
+  void transformPM7(const TMatrixD& in5x5,
+                    M7x7& out7x7,
+                    const GFDetPlane& pl,
+                    const TMatrixD& state5,
+                    const double& spu,
+                    TMatrixD* Jac = NULL) const;
 
-  void transformMP(const TMatrixD& in,
-                   TMatrixD& out5x5,
-                   const GFDetPlane& pl,
-                   const TMatrixD& state7,
-                   TMatrixD* Jac = NULL) const;
+  void transformPM6(const TMatrixD& in5x5,
+                    M6x6& out6x6,
+                    const GFDetPlane& pl,
+                    const TMatrixD& state5,
+                    const double& spu,
+                    TMatrixD* Jac = NULL) const;
+
+  void transformM7P(const M7x7& in7x7,
+                    TMatrixD& out5x5,
+                    const GFDetPlane& pl,
+                    const M1x7& state7,
+                    TMatrixD* Jac = NULL) const;
+
+  void transformM6P(const M6x6& in6x6,
+                    TMatrixD& out5x5,
+                    const GFDetPlane& pl,
+                    const M1x7& state7,
+                    TMatrixD* Jac = NULL) const;
 
   RKTrackRep& operator=(const RKTrackRep* rhs){return *this;};
 
@@ -223,7 +253,7 @@ class RKTrackRep : public GFAbsTrackRep {
     * 
     */
   bool RKutta (const GFDetPlane& plane,
-               double* P,
+               M8x7& P,
                double& coveredDistance,
                std::vector<TVector3>& points,
                std::vector<double>& pointLengths,
@@ -231,7 +261,7 @@ class RKTrackRep : public GFAbsTrackRep {
 
   double estimateStep(const TVector3& pos,
                       const TVector3& dir,
-                      const double* SU,
+                      const M1x4& SU,
                       const GFDetPlane& plane,
                       const double& mom,
                       double& relMomLoss,
@@ -252,8 +282,8 @@ class RKTrackRep : public GFAbsTrackRep {
     * fXX0 is also updated here.
     */
   double Extrap(const GFDetPlane& plane,
-                TMatrixD* state,
-                TMatrixD* cov=NULL);
+                M1x7& state7,
+                M7x7* cov=NULL);
   
   //RKTrackRep(const RKTrackRep& rhs){};
   
@@ -269,13 +299,19 @@ class RKTrackRep : public GFAbsTrackRep {
   //! Charge
   double fCharge;
 
-  GFDetPlane fCachePlane;
-  double fCacheSpu;
+  GFDetPlane fCachePlane; //!
+  double fCacheSpu; //!
   double fSpu;
   TMatrixD fAuxInfo;
 
+  // auxiliary variables and arrays
+  // needed in Extrap()
+  M8x7 fStateJac; //!
+  M7x7 fNoise; //!
+  M7x7 fOldCov; //!
+
  public:
-  ClassDef(RKTrackRep,5)
+  ClassDef(RKTrackRep, 6)
 
 };
 

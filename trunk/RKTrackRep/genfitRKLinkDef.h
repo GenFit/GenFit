@@ -24,5 +24,6 @@
 #pragma link off all functions;
 
 #pragma link C++ class RKTrackRep+;
+#pragma link C++ class GFMaterialEffects+;
 
 #endif

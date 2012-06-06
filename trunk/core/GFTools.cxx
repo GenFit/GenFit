@@ -44,8 +44,8 @@ TVector3 GFTools::getSmoothedPosXYZ(GFTrack* trk, unsigned int irep, unsigned in
 
   // calc 3D position
   TVector3 pos3D(plane.getO());
-  pos3D += pos[0][0] * plane.getU();
-  pos3D += pos[1][0] * plane.getV();
+  pos3D += pos(0,0) * plane.getU();
+  pos3D += pos(1,0) * plane.getV();
 
   return pos3D;
 }
@@ -343,16 +343,35 @@ GFDetPlane GFTools::getSmoothingPlane(GFTrack* trk, unsigned int irep, unsigned 
 
 void GFTools::invertMatrix(const TMatrixT<double>& mat, TMatrixT<double>& inv){
 	inv.ResizeTo(mat);
-	bool status = 0;
-	TDecompSVD invertAlgo(mat);
 
   // check if numerical limits are reached (i.e at least one entry < 1E-100 and/or at least one entry > 1E100)
 	if (!(mat<1.E100) || !(mat>-1.E100)){
-		GFException e("cannot invert matrix GFTools::invertMatrix(), entries too big (>1E100)",
+		GFException e("cannot invert matrix GFTools::invertMatrix(), entries too big (>1e100)",
 				__LINE__,__FILE__);
 		e.setFatal();
-		throw e;	
+		throw e;
 	}
+
+	// do the trivial inversion for 2x2 matrices manually
+	if (mat.GetNrows() == 2){
+	  double det = mat(0,0)*mat(1,1) - mat(1,0)*mat(0,1);
+	  if(fabs(det) < 1E-50){
+	    GFException e("cannot invert matrix GFTools::invertMatrix(), determinant = 0",
+	        __LINE__,__FILE__);
+	    e.setFatal();
+	    throw e;
+	  }
+	  det = 1./det;
+	  inv(0,0) =     det * mat(1,1);
+	  inv(0,1) = -1.*det * mat(0,1);
+	  inv(1,0) = -1.*det * mat(1,0);
+	  inv(1,1) =     det * mat(0,0);
+	  return;
+	}
+
+	// else use TDecompSVD
+	bool status = 0;
+	TDecompSVD invertAlgo(mat);
 	
 	invertAlgo.SetTol(1E-50); //this is a hack because a tolerance of 1E-22 does not make any sense for doubles only for floats
 	
@@ -396,6 +415,6 @@ double GFTools::getSmoothedChiSqu(GFTrack* const trk, unsigned int irep, unsigne
 	TMatrixT<double> invR;
 	invertMatrix(R,invR);
 	TMatrixT<double> smoothedChiSqu = resT*invR*res;
-	return smoothedChiSqu[0][0];
+	return smoothedChiSqu(0,0);
 }
 

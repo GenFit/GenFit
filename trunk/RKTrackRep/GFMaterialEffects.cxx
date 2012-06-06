@@ -103,8 +103,8 @@ double GFMaterialEffects::effects(const std::vector<TVector3>& points,
                                   const int& pdg,
                                   double& xx0,
                                   const bool& doNoise,
-                                  TMatrixT<double>* noise,
-                                  const TMatrixT<double>* jacobian,
+                                  double* noise,
+                                  const double* jacobian,
                                   const TVector3* directionBefore,
                                   const TVector3* directionAfter)
 {
@@ -135,6 +135,7 @@ double GFMaterialEffects::effects(const std::vector<TVector3>& points,
 
         gGeoManager->FindNextBoundaryAndStep(dist - X);
         fstep = gGeoManager->GetStep();
+        if (fstep <= 0.) continue;
 
 
         if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
@@ -195,6 +196,7 @@ double GFMaterialEffects::stepper(const double& maxDist,
 
     gGeoManager->FindNextBoundaryAndStep(maxDist - X);
     fstep = gGeoManager->GetStep();
+    if (fstep <= 0.) continue;
 
     if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
       calcBeta(mom);
@@ -273,7 +275,7 @@ double GFMaterialEffects::energyLossBetheBloch(const double& mom)
 
 
 void GFMaterialEffects::noiseBetheBloch(const double& mom,
-                                        TMatrixT<double>* noise) const
+                                        double* noise) const
 {
 
 
@@ -285,7 +287,8 @@ void GFMaterialEffects::noiseBetheBloch(const double& mom,
 
   if (kappa > 0.01) { // Vavilov-Gaussian regime
     sigma2E += zeta * Emax * (1. - fbeta * fbeta / 2.); // eV^2
-  } else { // Urban/Landau approximation
+  }
+  else { // Urban/Landau approximation
     double alpha = 0.996;
     double sigmaalpha = 15.76;
     // calculate number of collisions Nc
@@ -329,13 +332,13 @@ void GFMaterialEffects::noiseBetheBloch(const double& mom,
   sigma2E *= 1.E-18; // eV -> GeV
 
   // update noise matrix
-  (*noise)[6][6] += (mom * mom + fmass * fmass) / pow(mom, 6.) * sigma2E;
+  noise[6*7+6] += (mom * mom + fmass * fmass) / pow(mom, 6.) * sigma2E;
 }
 
 
 void GFMaterialEffects::noiseCoulomb(const double& mom,
-                                     TMatrixT<double>* noise,
-                                     const TMatrixT<double>* jacobian,
+                                     double* noise,
+                                     const double* jacobian,
                                      const TVector3* directionBefore,
                                      const TVector3* directionAfter) const
 {
@@ -357,7 +360,8 @@ void GFMaterialEffects::noiseCoulomb(const double& mom,
 
 
   // noiseBefore
-  TMatrixT<double> noiseBefore(7, 7);
+  double noiseBefore[7*7];
+  memset(noiseBefore,0x00,7*7*sizeof(double));
 
   // calculate euler angles theta, psi (so that directionBefore' points in z' direction)
   double psi = 0;
@@ -375,30 +379,50 @@ void GFMaterialEffects::noiseCoulomb(const double& mom,
   double cospsi = cos(psi);
 
   // calculate NoiseBefore Matrix R M R^T
-  double noiseBefore34 =  sigma2 * cospsi * sinpsi * sintheta * sintheta; // noiseBefore_ij = noiseBefore_ji
-  double noiseBefore35 = -sigma2 * costheta * sinpsi * sintheta;
-  double noiseBefore45 =  sigma2 * costheta * cospsi * sintheta;
+  const double noiseBefore33 =  sigma2 * (cospsi * cospsi + costheta * costheta - costheta * costheta * cospsi * cospsi);
+  const double noiseBefore43 =  sigma2 *  cospsi * sinpsi * sintheta * sintheta;
+  const double noiseBefore53 = -sigma2 *  costheta * sinpsi * sintheta;
+  const double noiseBefore44 =  sigma2 * (sinpsi * sinpsi + costheta * costheta * cospsi * cospsi);
+  const double noiseBefore54 =  sigma2 *  costheta * cospsi * sintheta;
+  const double noiseBefore55 =  sigma2 *  sintheta * sintheta;
 
-  noiseBefore[3][3] = sigma2 * (cospsi * cospsi + costheta * costheta - costheta * costheta * cospsi * cospsi);
-  noiseBefore[4][3] = noiseBefore34;
-  noiseBefore[5][3] = noiseBefore35;
+  // propagate
+  // last column of jac is [0,0,0,0,0,0,1]
+  double JTM0  = jacobian[21+0] * noiseBefore33 + jacobian[28+0] * noiseBefore43 + jacobian[35+0] * noiseBefore53;
+  double JTM1  = jacobian[21+0] * noiseBefore43 + jacobian[28+0] * noiseBefore44 + jacobian[35+0] * noiseBefore54;
+  double JTM2  = jacobian[21+0] * noiseBefore53 + jacobian[28+0] * noiseBefore54 + jacobian[35+0] * noiseBefore55;
+  double JTM3  = jacobian[21+1] * noiseBefore33 + jacobian[28+1] * noiseBefore43 + jacobian[35+1] * noiseBefore53;
+  double JTM4  = jacobian[21+1] * noiseBefore43 + jacobian[28+1] * noiseBefore44 + jacobian[35+1] * noiseBefore54;
+  double JTM5  = jacobian[21+1] * noiseBefore53 + jacobian[28+1] * noiseBefore54 + jacobian[35+1] * noiseBefore55;
+  double JTM6  = jacobian[21+2] * noiseBefore33 + jacobian[28+2] * noiseBefore43 + jacobian[35+2] * noiseBefore53;
+  double JTM7  = jacobian[21+2] * noiseBefore43 + jacobian[28+2] * noiseBefore44 + jacobian[35+2] * noiseBefore54;
+  double JTM8  = jacobian[21+2] * noiseBefore53 + jacobian[28+2] * noiseBefore54 + jacobian[35+2] * noiseBefore55;
+  double JTM9  = jacobian[21+3] * noiseBefore33 + jacobian[28+3] * noiseBefore43 + jacobian[35+3] * noiseBefore53;
+  double JTM10 = jacobian[21+3] * noiseBefore43 + jacobian[28+3] * noiseBefore44 + jacobian[35+3] * noiseBefore54;
+  double JTM11 = jacobian[21+3] * noiseBefore53 + jacobian[28+3] * noiseBefore54 + jacobian[35+3] * noiseBefore55;
+  double JTM12 = jacobian[21+4] * noiseBefore33 + jacobian[28+4] * noiseBefore43 + jacobian[35+4] * noiseBefore53;
+  double JTM13 = jacobian[21+4] * noiseBefore43 + jacobian[28+4] * noiseBefore44 + jacobian[35+4] * noiseBefore54;
+  double JTM14 = jacobian[21+4] * noiseBefore53 + jacobian[28+4] * noiseBefore54 + jacobian[35+4] * noiseBefore55;
 
-  noiseBefore[3][4] = noiseBefore34;
-  noiseBefore[4][4] = sigma2 * (sinpsi * sinpsi + costheta * costheta * cospsi * cospsi);
-  noiseBefore[5][4] = noiseBefore45;
+  // loops are vectorizable by the compiler!
+  noiseBefore[35+5] = (jacobian[21+5] * noiseBefore33 + jacobian[28+5] * noiseBefore43 + jacobian[35+5] * noiseBefore53) * jacobian[21+5] + (jacobian[21+5] * noiseBefore43 + jacobian[28+5] * noiseBefore44 + jacobian[35+5] * noiseBefore54) * jacobian[28+5] + (jacobian[21+5] * noiseBefore53 + jacobian[28+5] * noiseBefore54 + jacobian[35+5] * noiseBefore55) * jacobian[35+5];
+  for (int i=0; i<6; ++i) noiseBefore[i] = JTM0 * jacobian[21+i] + JTM1 * jacobian[28+i] + JTM2 * jacobian[35+i];
+  for (int i=1; i<6; ++i) noiseBefore[7+i] = JTM3 * jacobian[21+i] + JTM4 * jacobian[28+i] + JTM5 * jacobian[35+i];
+  for (int i=2; i<6; ++i) noiseBefore[14+i] = JTM6 * jacobian[21+i] + JTM7 * jacobian[28+i] + JTM8 * jacobian[35+i];
+  for (int i=3; i<6; ++i) noiseBefore[21+i] = JTM9 * jacobian[21+i] + JTM10 * jacobian[28+i] + JTM11 * jacobian[35+i];
+  for (int i=4; i<6; ++i) noiseBefore[28+i] = JTM12 * jacobian[21+i] + JTM13 * jacobian[28+i] + JTM14 * jacobian[35+i];
 
-  noiseBefore[3][5] = noiseBefore35;
-  noiseBefore[4][5] = noiseBefore45;
-  noiseBefore[5][5] = sigma2 * sintheta * sintheta;
+  // symmetric part
+  noiseBefore[7+0] = noiseBefore[1];
+  noiseBefore[14+0] = noiseBefore[2];  noiseBefore[14+1] = noiseBefore[7+2];
+  noiseBefore[21+0] = noiseBefore[3];  noiseBefore[21+1] = noiseBefore[7+3];  noiseBefore[21+2] = noiseBefore[14+3];
+  noiseBefore[28+0] = noiseBefore[4];  noiseBefore[28+1] = noiseBefore[7+4];  noiseBefore[28+2] = noiseBefore[14+4];  noiseBefore[28+3] = noiseBefore[21+4];
+  noiseBefore[35+0] = noiseBefore[5];  noiseBefore[35+1] = noiseBefore[7+5];  noiseBefore[35+2] = noiseBefore[14+5];  noiseBefore[35+3] = noiseBefore[21+5];  noiseBefore[35+4] = noiseBefore[28+5];
 
-  TMatrixT<double> jacobianT(7, 7);
-  jacobianT = (*jacobian);
-  jacobianT.T();
-
-  noiseBefore = jacobianT * noiseBefore * (*jacobian); //propagate
 
   // noiseAfter
-  TMatrixT<double> noiseAfter(7, 7);
+  double noiseAfter[7*7];
+  memset(noiseAfter,0x00,7*7*sizeof(double));
 
   // calculate euler angles theta, psi (so that A' points in z' direction)
   psi = 0;
@@ -416,24 +440,22 @@ void GFMaterialEffects::noiseCoulomb(const double& mom,
   cospsi = cos(psi);
 
   // calculate NoiseAfter Matrix R M R^T
-  double noiseAfter34 =  sigma2 * cospsi * sinpsi * sintheta * sintheta; // noiseAfter_ij = noiseAfter_ji
-  double noiseAfter35 = -sigma2 * costheta * sinpsi * sintheta;
-  double noiseAfter45 =  sigma2 * costheta * cospsi * sintheta;
+  noiseAfter[3*7+3] =  sigma2 * (cospsi * cospsi + costheta * costheta - costheta * costheta * cospsi * cospsi);
+  noiseAfter[3*7+4] =  sigma2 * cospsi * sinpsi * sintheta * sintheta; // noiseAfter_ij = noiseAfter_ji
+  noiseAfter[3*7+5] = -sigma2 * costheta * sinpsi * sintheta;
 
-  noiseAfter[3][3] = sigma2 * (cospsi * cospsi + costheta * costheta - costheta * costheta * cospsi * cospsi);
-  noiseAfter[4][3] = noiseAfter34;
-  noiseAfter[5][3] = noiseAfter35;
+  noiseAfter[4*7+3] =  noiseAfter[3*7+4];
+  noiseAfter[4*7+4] =  sigma2 * (sinpsi * sinpsi + costheta * costheta * cospsi * cospsi);
+  noiseAfter[4*7+5] =  sigma2 * costheta * cospsi * sintheta;
 
-  noiseAfter[3][4] = noiseAfter34;
-  noiseAfter[4][4] = sigma2 * (sinpsi * sinpsi + costheta * costheta * cospsi * cospsi);
-  noiseAfter[5][4] = noiseAfter45;
-
-  noiseAfter[3][5] = noiseAfter35;
-  noiseAfter[4][5] = noiseAfter45;
-  noiseAfter[5][5] = sigma2 * sintheta * sintheta;
+  noiseAfter[5*7+3] =  noiseAfter[3*7+5];
+  noiseAfter[5*7+4] =  noiseAfter[4*7+5];
+  noiseAfter[5*7+5] =  sigma2 * sintheta * sintheta;
 
   //calculate mean of noiseBefore and noiseAfter and update noise
-  (*noise) += 0.5 * noiseBefore + 0.5 * noiseAfter;
+  for (unsigned int i=0; i<7*7; ++i){
+    noise[i] += 0.5 * (noiseBefore[i]+noiseAfter[i]);
+  }
 
 }
 
@@ -600,7 +622,7 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
 
 
 void GFMaterialEffects::noiseBrems(const double& mom,
-                                   TMatrixT<double>* noise) const
+                                   double* noise) const
 {
 
   if (fabs(fpdg) != 11) return; // only for electrons and positrons
@@ -612,7 +634,7 @@ void GFMaterialEffects::noiseBrems(const double& mom,
   double sigma2E = DEDXB * DEDXB; //eV^2
   sigma2E *= 1.E-18; // eV -> GeV
 
-  (*noise)[6][6] += (mom * mom + fmass * fmass) / pow(mom, 6.) * sigma2E;
+  noise[6*7+6] += (mom * mom + fmass * fmass) / pow(mom, 6.) * sigma2E;
 }
 
 //---------------------------------------------------------------------------------

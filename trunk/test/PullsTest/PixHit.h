@@ -21,6 +21,7 @@ public:
   PixHit();
   PixHit(TVector3 point,double x_res, double y_res);
   PixHit(const GFDetPlane& pl,double res);
+  PixHit(const GFDetPlane& pl,double res, double u, double v);
 
   virtual ~PixHit();
 
