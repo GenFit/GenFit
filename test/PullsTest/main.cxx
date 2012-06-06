@@ -34,27 +34,31 @@
 #include "PixHit.h"
 #include "PointHit.h"
 
+//#define VALGRIND
+
 int main() {
   std::cerr<<"main"<<std::endl;
 
-  const unsigned int nEvents = 5000;
+  const unsigned int nEvents = 10000;
   const double BField = 15.;       // kGauss
   const double momentum = 0.1;     // GeV
-  const double theta = 90;         // degree
+  const double theta = 150;         // degree
   const double thetaDetPlane = 90;
-  const double posSmear = 0.001;     // cm
-  const double momSmear = 0.001;     // GeV
   const unsigned int npoints = 7; // number of hits generated
   const double pointDist = 1;      // cm; approx. distance between hits generated
-  const double resolution = 15 * 1E-4;   // cm; resolution of generated hits
+  const double resolution = 15.E-4;   // cm; resolution of generated hits
   const int pdg = 13;               // particle pdg code
+
+  const bool smearPosMom = false;     // init the Reps with smeared pos and mom
+  const double posSmear = 2*resolution;     // cm
+  const double momSmear = 0.05*momentum;     // GeV
   
   const bool planarHits = true;    // true: create planar hits; false: create space point hits
   const bool GEANEhits = false;        // for creating the hits. true: use GeaneTrackRep2; false: use RKTrackRep
   const bool HelixTest = true;      // use helix for creating hits
 
-  const int testRep = 0;          // 0=RKTrackRep, 1=RK7TrackRep, 2=GeaneTrackRep2
-  const bool matFX = true;         // include material effects; can only be disabled for RKTrackRep!
+  const int testRep = 0;          // 0=RKTrackRep, 1=RK7TrackRep, 2=GeaneTrackRep2, 3=RK+Geane
+  const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
   const bool smoothing = true;
 
   const bool debug = false;
@@ -62,22 +66,24 @@ int main() {
   // init fitter
   GFKalman kalman;
   kalman.setNumIterations(3);
-
+  //kalman.setBlowUpFactor(50.);
 
   // init mersenne twister with TUUID
-	TRandom3 rand(0);
-	
+	TRandom3 rand(10);
+
+#ifndef VALGRIND
   // init event display
 	GenfitDisplay* display = GenfitDisplay::getInstance();
 	display->reset();
-  
+#endif
+
   // init geometry and mag. field
   TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
   GFFieldManager::getInstance()->init(new GFConstField(0.,0.,BField));
 
   // init Geane
-  if (GEANEhits || testRep==2) {
+  if (GEANEhits || testRep==2 || testRep==3) {
     if (debug) std::cerr<<"../../config/Geane.C"<<std::endl;
     gROOT->Macro("../../config/Geane.C");
   }
@@ -152,15 +158,16 @@ int main() {
       
       // smeared start values
       TVector3 posM(pos);
-      posM.SetX(rand.Gaus(posM.X(),posSmear));
-      posM.SetY(rand.Gaus(posM.Y(),posSmear));
-      posM.SetZ(rand.Gaus(posM.Z(),posSmear));
-
       TVector3 momM(mom);
-      momM.SetX(rand.Gaus(momM.X(),momSmear));
-      momM.SetY(rand.Gaus(momM.Y(),momSmear));
-      momM.SetZ(rand.Gaus(momM.Z(),momSmear)); 
-      
+      if (smearPosMom) {
+        posM.SetX(rand.Gaus(posM.X(),posSmear));
+        posM.SetY(rand.Gaus(posM.Y(),posSmear));
+        posM.SetZ(rand.Gaus(posM.Z(),posSmear));
+
+        momM.SetX(rand.Gaus(momM.X(),momSmear));
+        momM.SetY(rand.Gaus(momM.Y(),momSmear));
+        momM.SetZ(rand.Gaus(momM.Z(),momSmear)); 
+      }
 
         
       // trackrep for creating hits
@@ -192,13 +199,14 @@ int main() {
             radius.SetPhi(angle);
             point = center + radius;
             point.SetZ(pos.Z() + ((alpha0-angle)*R * TMath::Tan(mom.Theta()-TMath::Pi()*0.5) ));
-
+            if (debug) point.Print();
+            
             dir = mom;
             dir.SetPhi(mom.Phi()+(angle-alpha0));
             dir.SetMag(1);
           }
           // create hit
-          if (i==1){ // get reference state
+          if (i==0){ // get reference state
             TVector3 planeNorm(dir);
             planeNorm.SetTheta(thetaDetPlane*TMath::Pi()/180);
             TVector3 z(0,0,1);
@@ -206,22 +214,26 @@ int main() {
             referencePlane = GFDetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm));
             if (!HelixTest) rephits->extrapolate(referencePlane, referenceState);
             else{
-              //if (!GEANEhits) {
-                referenceState[0][0] = charge/momentum;
-                referenceState[1][0] = (dir*referencePlane.getU()) / (dir*referencePlane.getNormal());
-                referenceState[2][0] = (dir*referencePlane.getV()) / (dir*referencePlane.getNormal());
-                referenceState[3][0] = (point-referencePlane.getO())*referencePlane.getU();
-                referenceState[4][0] = (point-referencePlane.getO())*referencePlane.getV();
-              //}
+              double AtW = dir*referencePlane.getNormal();
+              if (AtW<0) AtW *= -1.;
+              referenceState[0][0] = charge/momentum;
+              referenceState[1][0] = -1.*dir*referencePlane.getU()/AtW;
+              referenceState[2][0] = -1.*dir*referencePlane.getV()/AtW;
+              referenceState[3][0] = (point-referencePlane.getO())*referencePlane.getU();
+              referenceState[4][0] = (point-referencePlane.getO())*referencePlane.getV();
+              //std::cout<<"referenceState[2][0] "<<referenceState[2][0]<<"\n";
             }
           }
-          if (i>0){
+          //if (i>0){
             if (planarHits) {
               TVector3 planeNorm(dir);
               planeNorm.SetTheta(thetaDetPlane*TMath::Pi()/180);
               TVector3 z(0,0,1);
               //z.SetTheta(thetaDetPlane*TMath::Pi()/180+TMath::PiOver2());
-              PixHit* hit = new PixHit(GFDetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)/*, new GFRectFinitePlane(-1,1,-1,1)*/), resolution);
+              PixHit* hit = new PixHit(GFDetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)), 
+                                       resolution,
+                                       rand.Gaus(0,resolution),
+                                       rand.Gaus(0,resolution));
               hits.push_back(hit);
             }
             else {
@@ -232,7 +244,7 @@ int main() {
               PointHit* hit = new PointHit(smearedPos, TVector3(resolution,resolution,resolution));
               hits.push_back(hit);
             }
-          }
+          //}
           // stepalong (approximately)
           if (!HelixTest) {
             dir.SetMag(pointDist);
@@ -255,8 +267,10 @@ int main() {
       GFAbsTrackRep* rep;
       switch(testRep){
         case 0:
-          rep = new RKTrackRep(posM, momM, /*posErr, momErr,*/ pdg);
+        case 3:
+          rep = new RKTrackRep(posM, momM, posErr, momErr, pdg);
           //((RKTrackRep*)rep)->setPropDir(1);
+          if (debug) {std::cout<<"init cov "; rep->getCov().Print();}
           break;
         case 1:
           std::cerr<<"Fieser Fehler!"<<std::endl;
@@ -272,15 +286,31 @@ int main() {
           throw;
       }
       				          
-		  // create track, add hits
+		  // create track
       if (fitTrack != NULL) delete fitTrack;
 		  fitTrack = new GFTrack(rep, smoothing); //initialized with smeared rep
+		  
+		  // optionally add GeaneTrackRep
+		  if (testRep==3){
+		    GFAbsTrackRep* rep2 = new GeaneTrackRep2(GFDetPlane(posM, momM), momM, posErr, momErr, pdg);
+		    fitTrack->addTrackRep(rep2);
+		  }
+		  
+		  // add hits
       for(unsigned int i=0; i<hits.size(); ++i){
         fitTrack->addHit(hits[i],
 		                    3,//dummy detector id
 		                    i);
       }
 		  
+      //test
+      /*std::cout<<"pos and mom at last hit without fit\n";
+      rep->getPos(hits.back()->getDetPlane(rep)).Print();
+      rep->getMom(hits.back()->getDetPlane(rep)).Print();
+      TMatrixD statePred(5,1);
+      rep->extrapolate(hits.back()->getDetPlane(rep), statePred);
+      statePred.Print();*/
+
 		  
 		  // do the fit
       try{
@@ -300,10 +330,12 @@ int main() {
         continue;
       }
 
+#ifndef VALGRIND
       // add track to event display
       std::vector<GFTrack*> event;
 			event.push_back(fitTrack);
 			display->addEvent(event);
+#endif
 
 			if (debug) {
 			  std::cerr << "cov before extrapolating back to reference plane \n";
@@ -313,6 +345,19 @@ int main() {
 		  // extrapolate back to reference plane. Not needed for planar hits!
 		  if (!planarHits) rep->extrapolate(referencePlane);
 		  
+
+		  // check getPos etc methods
+		  const double epsilon = 1E-3;
+		  TVector3 getPos, getMom;
+
+		  getPos = rep->getPos(referencePlane);
+		  getMom = rep->getMom(referencePlane);
+		  if ((pos-getPos).Mag() > 10*epsilon) {std::cout<<"pos mismatch\n"; pos.Print(); getPos.Print();}
+		  if ((mom-getMom).Mag() > epsilon) {std::cout<<"mom mismatch\n"; mom.Print(); getMom.Print();}
+		  rep->getPosMom(referencePlane, getPos, getMom);
+		  if ((pos-getPos).Mag() > 10*epsilon) {std::cout<<"pos mismatch 2\n"; pos.Print(); getPos.Print();}
+		  if ((mom-getMom).Mag() > epsilon) {std::cout<<"mom mismatch 2\n"; mom.Print(); getMom.Print();}
+
 		  // calculate pulls  
 		  TMatrixT<double> state(rep->getState());
 		  TMatrixT<double> cov(rep->getCov());
@@ -355,7 +400,7 @@ int main() {
 				          
 				          
   }// end loop over events
-  
+#ifndef VALGRIND
   if (debug) std::cerr<<"Write Tree ...";
   tree->Write();
   if (debug) std::cerr<<"... done"<<std::endl;
@@ -418,13 +463,13 @@ int main() {
 	if (debug) std::cerr<<"... done"<<std::endl;
 	
 	// open event display
-	display->setOptions("THDSPM");
+	display->setOptions("THDSPMA");
 	display->open();
 	
   rootapp->Run();		      
 
 	file->Close();
   if (debug) std::cerr<<"... closed file"<<std::endl;
-				      
+#endif
 }
 

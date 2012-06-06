@@ -77,8 +77,8 @@ public:
                  const int& pdg,
                  double& xx0,
                  const bool& doNoise = false,
-                 TMatrixT<double>* noise = NULL,
-                 const TMatrixT<double>* jacobian = NULL,
+                 double* noise7x7 = NULL,
+                 const double* jacobian7x7 = NULL,
                  const TVector3* directionBefore = NULL,
                  const TVector3* directionAfter = NULL);
 
@@ -127,10 +127,10 @@ private:
     *  - truncated Landau distribution
     *  - Urban model
     *
-    *  Needs fdedx, which is calculated in energyLossBetheBloch, so it has to be calles afterwards!
+    *  Needs fdedx, which is calculated in energyLossBetheBloch, so it has to be called afterwards!
     */
   void noiseBetheBloch(const double& mom,
-                       TMatrixT<double>* noise) const;
+                       double* noise) const;
 
   //! calculation of multiple scattering
   /**  With the calculated multiple scattering angle, two noise matrices are calculated:
@@ -323,8 +323,8 @@ private:
     * \n
     */
   void noiseCoulomb(const double& mom,
-                    TMatrixT<double>* noise,
-                    const TMatrixT<double>* jacobian,
+                    double* noise,
+                    const double* jacobian,
                     const TVector3* directionBefore,
                     const TVector3* directionAfter) const;
 
@@ -340,7 +340,7 @@ private:
    *
    */
   void noiseBrems(const double& mom,
-                  TMatrixT<double>* noise) const;
+                  double* noise) const;
 
 
   bool fNoEffects;
