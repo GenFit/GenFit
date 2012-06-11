@@ -121,6 +121,7 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 			} catch(GFException& e) {
 				std::cerr<<e.what();
 				e.info();
+				continue; //m and Vorig do not contain sensible values, skip hit
 			}
 
 			TMatrixT<double> V( beta * Vorig);
