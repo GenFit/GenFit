@@ -82,6 +82,56 @@ GFRave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
 }
 
 
+std::vector < rave::Track >
+GFRave::GFTrackRepsToTracks(const std::vector < GFAbsTrackRep* >  & GFTrackReps,
+                            std::map<int, GFTrack*> * IdGFTrackMap,
+                            std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap,
+                            int startID){
+
+  unsigned int ntracks(GFTrackReps.size());
+
+  std::vector < rave::Track > ravetracks;
+  ravetracks.reserve(ntracks);
+
+  for (unsigned int i=0; i<ntracks; ++i){
+
+    // only convert successfully fitted tracks!
+    if (GFTrackReps[i]->getStatusFlag()!=0) continue;
+
+    ravetracks.push_back(RepToTrack(GFTrackReps[i], startID) );
+
+    if (IdGFTrackMap != NULL){
+      if (IdGFTrackMap->count(startID) > 0){
+        GFException exc("GFTrackRepsToTracks ==> IdGFTrackMap has already an entry for this id",__LINE__,__FILE__);
+        throw exc;
+      }
+      (*IdGFTrackMap)[startID] = NULL; // fill with NULL pointers since we only have track reps and no GFTracks
+    }
+    else {
+      GFException exc("GFTrackRepsToTracks ==> IdGFTrackMap is NULL",__LINE__,__FILE__);
+      throw exc;
+    }
+
+    if (IdGFTrackRepMap != NULL){
+      if (IdGFTrackRepMap->count(startID) > 0){
+        GFException exc("GFTrackRepsToTracks ==> IdGFTrackRepMap has already an entry for this id",__LINE__,__FILE__);
+        throw exc;
+      }
+      (*IdGFTrackRepMap)[startID] = GFTrackReps[i]->clone(); // here clones are made so that the state of the original TrackReps will not be altered by the vertexing process
+    }
+    else {
+      GFException exc("GFTracksToTracks ==> IdGFTrackRepMap is NULL",__LINE__,__FILE__);
+      throw exc;
+    }
+
+    ++startID;
+  }
+
+  //std::cout << "IdGFTrackMap size " << IdGFTrackMap->size() <<"     IdGFTrackRepMap size " << IdGFTrackRepMap->size() << std::endl;
+  return ravetracks;
+}
+
+
 rave::Track
 GFRave::GFTrackToTrack(GFTrack* orig, int id, std::string tag){
   return GFRave::RepToTrack(orig->getCardinalRep(), id, orig, tag);
@@ -144,7 +194,7 @@ GFRave::setTrackRepData(const rave::Track & orig, GFAbsTrackRep* rep){
 
 
 GFRaveVertex*
-GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTrack*> * IdGFTrackMap){
+GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTrack*> * IdGFTrackMap,  const std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap){
 
   if (!(raveVertex.isValid())) {
     GFException exc("RaveToGFVertex ==> rave Vertex is not valid!",__LINE__,__FILE__);
@@ -189,11 +239,17 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
       throw exc;
     }
 
+    if (IdGFTrackRepMap->count(id) == 0){
+      GFException exc("RaveToGFVertex ==> rave track id is not present in IdGFTrackRepMap",__LINE__,__FILE__);
+      throw exc;
+    }
+
     // convert smoothed track parameters
     GFRaveTrackParameters* trackparams = new GFRaveTrackParameters(IdGFTrackMap->at(id),
-                                      raveSmoothedTracks[i].first,
-                                      GFRave::Vector6DToTMatrixT(raveSmoothedTracks[i].second.state()),
-                                      GFRave::Covariance6DToTMatrixT(raveSmoothedTracks[i].second.error()) );
+                                                                   IdGFTrackRepMap->at(id),
+                                                                   raveSmoothedTracks[i].first,
+                                                                   GFRave::Vector6DToTMatrixT(raveSmoothedTracks[i].second.state()),
+                                                                   GFRave::Covariance6DToTMatrixT(raveSmoothedTracks[i].second.error()) );
 
     smoothedTracks.push_back(trackparams);
   }
@@ -206,14 +262,14 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
 }
 
 void
-GFRave::RaveToGFVertices(std::vector<GFRaveVertex*> * GFVertices, const std::vector<rave::Vertex> & raveVertices, const std::map<int, GFTrack*> * IdGFTrackMap){
+GFRave::RaveToGFVertices(std::vector<GFRaveVertex*> * GFVertices, const std::vector<rave::Vertex> & raveVertices, const std::map<int, GFTrack*> * IdGFTrackMap,  const std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap){
 
   unsigned int nVert(raveVertices.size());
 
   GFVertices->reserve(nVert);
 
   for (unsigned int i=0; i<nVert; ++i){
-    GFVertices->push_back(RaveToGFVertex(raveVertices[i], IdGFTrackMap));
+    GFVertices->push_back(RaveToGFVertex(raveVertices[i], IdGFTrackMap, IdGFTrackRepMap));
   }
 }
 

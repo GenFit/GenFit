@@ -64,6 +64,11 @@ namespace GFRave
                                                std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap = NULL,
                                                int startID = 0);
 
+  std::vector < rave::Track > GFTrackRepsToTracks(const std::vector < GFAbsTrackRep* >  & GFTrackReps,
+                                                  std::map<int, GFTrack*> * IdGFTrackMap,
+                                                  std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap,
+                                                  int startID);
+
   rave::Track GFTrackToTrack(GFTrack* orig, int id = -1, std::string tag="");
   rave::Track RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig);
   rave::Track RepToTrack(GFAbsTrackRep* rep, int id = -1, void * originaltrack = 0, std::string tag="");
@@ -73,8 +78,8 @@ namespace GFRave
    */
   void setTrackRepData(const rave::Track & orig, GFAbsTrackRep* rep);
 
-  GFRaveVertex* RaveToGFVertex(const rave::Vertex &, const std::map<int, GFTrack*> * IdGFTrackMap = NULL);
-  void RaveToGFVertices(std::vector<GFRaveVertex*> *, const std::vector<rave::Vertex> &, const std::map<int, GFTrack*> * IdGFTrackMap);
+  GFRaveVertex* RaveToGFVertex(const rave::Vertex &, const std::map<int, GFTrack*> * IdGFTrackMap,  const std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap);
+  void RaveToGFVertices(std::vector<GFRaveVertex*> *, const std::vector<rave::Vertex> &, const std::map<int, GFTrack*> * IdGFTrackMap,  const std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap);
 
   GFDetPlane PlaneToGFDetPlane(const ravesurf::Plane & rplane);
 
