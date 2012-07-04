@@ -56,6 +56,7 @@ class GFRaveVertexFactory {
   // functions
 
   void findVertices ( std::vector <  GFRaveVertex* > *, const std::vector < GFTrack* > &, bool use_beamspot=false );
+  void findVertices ( std::vector <  GFRaveVertex* > *, const std::vector < GFAbsTrackRep* > &, bool use_beamspot=false );
 
   void setBeamspot(const TVector3 & pos, const TMatrixT<double> & cov);
 

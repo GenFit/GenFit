@@ -34,6 +34,7 @@
 #include "TVector3.h"
 
 #include "GFTrack.h"
+#include "GFAbsTrackRep.h"
 
 #include <iostream>
 
@@ -49,11 +50,16 @@ class GFRaveTrackParameters : public TObject
   public:
     // constructors, destructors
     GFRaveTrackParameters();
-    GFRaveTrackParameters(GFTrack* track, double weight, const TMatrixT<double>& state6, const TMatrixT<double>& cov6x6);
+    GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight, const TMatrixT<double>& state6, const TMatrixT<double>& cov6x6);
 
     // Accessors
     double getWeight() const {return fWeight;}
+
+    bool hasTrack() const {return fOriginalTrack!=NULL;}
     GFTrack* getTrack() const {return  fOriginalTrack;}
+
+    bool hasRep() const {return fOriginalRep!=NULL;}
+    GFAbsTrackRep* getRep() const {return  fOriginalRep;}
 
     TMatrixT<double> getState() const {return fState;}
     TVector3 getPos() const;
@@ -68,12 +74,13 @@ class GFRaveTrackParameters : public TObject
   private:
 
     GFTrack* fOriginalTrack; // NO ownership
+    GFAbsTrackRep* fOriginalRep; // NO ownership
     double fWeight;
     TMatrixT<double> fState; // x, y, z, px, py, pz
     TMatrixT<double> fCov; // 6x6 covariance matrix
 
   private:
-    ClassDef(GFRaveTrackParameters, 1)
+    ClassDef(GFRaveTrackParameters, 2)
 };
 
 

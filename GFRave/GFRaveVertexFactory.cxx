@@ -72,7 +72,24 @@ GFRaveVertexFactory::findVertices ( std::vector <  GFRaveVertex* > * GFvertices,
     GFRave::RaveToGFVertices(GFvertices,
                              fFactory->create(GFRave::GFTracksToTracks(GFTracks, fIdGFTrackMap, fIdGFTrackRepMap, 0),
                                               use_beamspot),
-                             fIdGFTrackMap);
+                             fIdGFTrackMap, fIdGFTrackRepMap);
+  }
+  catch(GFException & e){
+    std::cerr << e.what();
+    return;
+  }
+}
+
+
+void
+GFRaveVertexFactory::findVertices ( std::vector <  GFRaveVertex* > * GFvertices, const std::vector < GFAbsTrackRep* > & GFTrackReps, bool use_beamspot ){
+  clearMaps();
+
+  try{
+    GFRave::RaveToGFVertices(GFvertices,
+                             fFactory->create(GFRave::GFTrackRepsToTracks(GFTrackReps, fIdGFTrackMap, fIdGFTrackRepMap, 0),
+                                              use_beamspot),
+                             fIdGFTrackMap, fIdGFTrackRepMap);
   }
   catch(GFException & e){
     std::cerr << e.what();

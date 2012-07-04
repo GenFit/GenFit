@@ -29,6 +29,7 @@ using namespace std;
 
 GFRaveTrackParameters::GFRaveTrackParameters() :
   fOriginalTrack(NULL),
+  fOriginalRep(NULL),
   fWeight(0),
   fState(1,6),
   fCov(6,6)
@@ -37,8 +38,9 @@ GFRaveTrackParameters::GFRaveTrackParameters() :
 }
 
 
-GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, double weight, const TMatrixT<double>& state6, const TMatrixT<double>& cov6x6) :
+GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight, const TMatrixT<double>& state6, const TMatrixT<double>& cov6x6) :
   fOriginalTrack(track),
+  fOriginalRep(rep),
   fWeight(weight),
   fState(state6),
   fCov(cov6x6)
@@ -83,5 +85,8 @@ GFRaveTrackParameters::Print(const Option_t*) const {
   std::cout << "weight: " << getWeight() << "\n";
   std::cout << "state: "; getState().Print();
   std::cout << "cov: "; getCov().Print();
-  std::cout << "GFTrack: "; getTrack()->Print();
+  if (hasTrack()) {std::cout << "GFTrack: "; getTrack()->Print();}
+  else std::cout << "NO GFTrack pointer \n";
+  if (hasRep()) {std::cout << "GFAbsTrackRep: "; getRep()->Print();}
+  else std::cout << "NO GFAbsTrackRep pointer \n";
 }
