@@ -32,6 +32,8 @@
 #include "GFAbsTrackRep.h"
 #include "GFDetPlane.h"
 #include "GFTrackCand.h"
+#include "GFPathMat.h"
+#include "RKTools.h"
 #include <TMatrixD.h>
 
 /** @brief Track Representation module based on a Runge-Kutta algorithm including a full material model
@@ -51,20 +53,6 @@
 class RKTrackRep : public GFAbsTrackRep {
 
  public:
-
-  // Array Matrix typedefs. They are needed for SSE optimization:
-  // gcc can vectorize loops only if the array sizes are known.
-  typedef double M1x3[1*3];
-  typedef double M1x4[1*4];
-  typedef double M1x7[1*7];
-  typedef double M5x5[5*5];
-  typedef double M6x6[6*6];
-  typedef double M7x7[7*7];
-  typedef double M8x7[8*7];
-  typedef double M6x5[6*5];
-  typedef double M7x5[7*5];
-  typedef double M5x6[5*6];
-  typedef double M5x7[5*7];
 
   // Constructors/Destructors ---------
   RKTrackRep();
@@ -90,24 +78,67 @@ class RKTrackRep : public GFAbsTrackRep {
   /** The covariance matrix is transformed from the plane coordinate system to the master reference system (for the propagation) and, after propagation, back to the plane coordinate system.\n
     * Also the parameter spu (which is +1 or -1 and indicates the direction of the particle) is calculated and stored in #fCacheSpu. The plane is stored in #fCachePlane.
     * \n
-    *
-    * Master reference system (MARS):
-    * \f{eqnarray*}x & = & O_{x}+uU_{x}+vV_{x}\\y & = & O_{y}+uU_{y}+vV_{y}\\z & = & O_{z}+uU_{z}+vV_{z}\\a_{x} & = & \frac{\mbox{spu}}{\widetilde{p}}\left(N_{x}+u\prime U_{x}+v\prime V_{x}\right)\\a_{y} & = & \frac{\mbox{spu}}{\widetilde{p}}\left(N_{y}+u\prime U_{y}+v\prime V_{y}\right)\\a_{z} & = & \frac{\mbox{spu}}{\widetilde{p}}\left(N_{z}+u\prime U_{z}+v\prime V_{z}\right)\\\frac{q}{p} & = & \frac{q}{p}\f}
-    * Plane coordinate system:
-    * \f{eqnarray*}u & = & \left(x-O_{x}\right)U_{x}+\left(y-O_{y}\right)U_{y}+\left(z-O_{z}\right)U_{z}\\v & = & \left(x-O_{x}\right)V_{x}+\left(y-O_{y}\right)V_{y}+\left(z-O_{z}\right)V_{z}\\u\prime & = & \frac{a_{x}U_{x}+a_{y}U_{y}+a_{z}U_{z}}{a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}}\\v\prime & = & \frac{a_{x}V_{x}+a_{y}V_{y}+a_{z}V_{z}}{a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}}\\\frac{q}{p} & = & \frac{q}{p}\\\mbox{spu} & = & \frac{a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}}{|a_{x}^{2}N_{x}^{2}+a_{y}^{2}N_{y}^{2}+a_{z}^{2}N_{z}^{2}|}=\pm1\f}
+    *  The transformation from plane- to master reference system obeys:
+    * \f{eqnarray*}{
+    * \boldsymbol{\mathbf{x}}    & = \boldsymbol{\mathbf{O}}+u\boldsymbol{\mathbf{U}}+v\boldsymbol{\mathbf{V}} \\
+    * \boldsymbol{\mathbf{a}}    & = \frac{\boldsymbol{\mathbf{\widetilde{p}}}}{\widetilde{p}} \\
+    * \frac{q}{p} & = \frac{q}{p}
+    * \f}
+    * with
+    * \f{eqnarray*}{
+    * \boldsymbol{\mathbf{\widetilde{p}}} & = spu \cdot \left(\boldsymbol{\mathbf{N}}+u^{\prime} \boldsymbol{\mathbf{U}} + v^{\prime} \boldsymbol{\mathbf{V}}\right) \\
+    * \widetilde{p}        & = \left| \boldsymbol{\mathbf{\widetilde{p}}} \right| \textrm{.}
+    * \f}
+    * The following equations define the transformation from master- to plane reference system:
+    * \f{eqnarray*}{
+    * u & = \left(\boldsymbol{\mathbf{x}}-\boldsymbol{\mathbf{O}}\right)\boldsymbol{\mathbf{U}}\\
+    * v & = \left(\boldsymbol{\mathbf{x}}-\boldsymbol{\mathbf{O}}\right)\boldsymbol{\mathbf{V}}\\
+    * u^{\prime}   & = \frac{\boldsymbol{\mathbf{a}} \boldsymbol{\mathbf{U}}}{\boldsymbol{\mathbf{a}} \boldsymbol{\mathbf{N}}} \\
+    * v^{\prime}   & = \frac{\boldsymbol{\mathbf{a}} \boldsymbol{\mathbf{V}}}{\boldsymbol{\mathbf{a}} \boldsymbol{\mathbf{N}}} \\
+    * \frac{q}{p}  & = \frac{q}{p}
+    * \f}
+    * with
+    * \f{eqnarray*}{
+    * spu & = \frac{\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}}{\left|\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} \right| }=\pm1 \textrm{.}
+    * \f}
     *
     * Jacobians:\n
-    * \f$J_{p,M}=\left(\begin{array}{ccccc}\frac{\partial x}{\partial u} & \frac{\partial x}{\partial v} & \frac{\partial x}{\partial u\prime} & \frac{\partial x}{\partial v\prime} & \frac{\partial x}{\partial\frac{q}{p}}\\\frac{\partial y}{\partial u} & \frac{\partial y}{\partial v} & \frac{\partial y}{\partial u\prime} & \frac{\partial y}{\partial v\prime} & \frac{\partial y}{\partial\frac{q}{p}}\\\frac{\partial z}{\partial u} & \frac{\partial z}{\partial v} & \frac{\partial z}{\partial u\prime} & \frac{\partial z}{\partial v\prime} & \frac{\partial z}{\partial\frac{q}{p}}\\\frac{\partial a_{x}}{\partial u} & \frac{\partial a_{x}}{\partial v} & \frac{\partial a_{x}}{\partial u\prime} & \frac{\partial a_{x}}{\partial v\prime} & \frac{\partial a_{x}}{\partial\frac{q}{p}}\\\frac{\partial a_{y}}{\partial u} & \frac{\partial a_{y}}{\partial v} & \frac{\partial a_{y}}{\partial u\prime} & \frac{\partial a_{y}}{\partial v\prime} & \frac{\partial a_{y}}{\partial\frac{q}{p}}\\\frac{\partial a_{z}}{\partial u} & \frac{\partial a_{z}}{\partial v} & \frac{\partial a_{z}}{\partial u\prime} & \frac{\partial a_{z}}{\partial v\prime} & \frac{\partial a_{z}}{\partial\frac{q}{p}}\\\frac{\partial\frac{q}{p}}{\partial u} & \frac{\partial\frac{q}{p}}{\partial v} & \frac{\partial\frac{q}{p}}{\partial u\prime} & \frac{\partial\frac{q}{p}}{\partial v\prime} & \frac{\partial\frac{q}{p}}{\partial\frac{q}{p}}\end{array}\right)\f$
-    *
-    * \f$J_{p,M}=\left(\begin{array}{cccccc}U_{x} & V_{x} & 0 & 0 & 0\\U_{y} & V_{y} & 0 & 0 & 0\\U_{z} & V_{z} & 0 & 0 & 0\\0 & 0 & \left\{ \frac{\textrm{spu}}{\widetilde{p}}U_{x}-\left[\frac{\textrm{spu}}{\widetilde{p}^{3}}\widetilde{p}_{x}\left(U_{x}\widetilde{p}_{x}+U_{y}\widetilde{p}_{y}+U_{z}\widetilde{p}_{z}\right)\right]\right\}  & \left\{ \frac{\textrm{spu}}{\widetilde{p}}V_{x}-\left[\frac{\textrm{spu}}{\widetilde{p}^{3}}\widetilde{p}_{x}\left(V_{x}\widetilde{p}_{x}+V_{y}\widetilde{p}_{y}+V_{z}\widetilde{p}_{z}\right)\right]\right\}  & 0\\0 & 0 & \left\{ \frac{\textrm{spu}}{\widetilde{p}}U_{y}-\left[\frac{\textrm{spu}}{\widetilde{p}^{3}}\widetilde{p}_{y}\left(U_{x}\widetilde{p}_{x}+U_{y}\widetilde{p}_{y}+U_{z}\widetilde{p}_{z}\right)\right]\right\}  & \left\{ \frac{\textrm{spu}}{\widetilde{p}}V_{y}-\left[\frac{\textrm{spu}}{\widetilde{p}^{3}}\widetilde{p}_{y}\left(V_{x}\widetilde{p}_{x}+V_{y}\widetilde{p}_{y}+V_{z}\widetilde{p}_{z}\right)\right]\right\}  & 0\\0 & 0 & \left\{ \frac{\textrm{spu}}{\widetilde{p}}U_{z}-\left[\frac{\textrm{spu}}{\widetilde{p}^{3}}\widetilde{p}_{z}\left(U_{x}\widetilde{p}_{x}+U_{y}\widetilde{p}_{y}+U_{z}\widetilde{p}_{z}\right)\right]\right\}  & \left\{ \frac{\textrm{spu}}{\widetilde{p}}V_{z}-\left[\frac{\textrm{spu}}{\widetilde{p}^{3}}\widetilde{p}_{z}\left(V_{x}\widetilde{p}_{x}+V_{y}\widetilde{p}_{y}+V_{z}\widetilde{p}_{z}\right)\right]\right\}  & 0\\0 & 0 & 0 & 0 & 1\end{array}\right)\f$
-    * 
-    * with
-    * \f{eqnarray*}\widetilde{p} & = & \sqrt{\widetilde{p}_{x}^{2}+\widetilde{p}_{y}^{2}+\widetilde{p}_{z}^{2}}\\\widetilde{p}_{x} & = & \textrm{spu}\left(N_{x}+u\prime U_{x}+v\prime V_{x}\right)\\\widetilde{p}_{y} & = & \textrm{spu}\left(N_{y}+u\prime U_{y}+v\prime V_{y}\right)\\\widetilde{p}_{z} & = & \textrm{spu}\left(N_{z}+u\prime U_{z}+v\prime V_{z}\right)\f}
-    *
-    * \f$J_{M,p}=\left(\begin{array}{ccccccc}\frac{\partial u}{\partial x} & \frac{\partial u}{\partial y} & \frac{\partial u}{\partial z} & \frac{\partial u}{\partial a_{x}} & \frac{\partial u}{\partial a_{y}} & \frac{\partial u}{\partial a_{z}} & \frac{\partial u}{\partial\frac{q}{p}}\\\frac{\partial v}{\partial x} & \frac{\partial v}{\partial y} & \frac{\partial v}{\partial z} & \frac{\partial v}{\partial a_{x}} & \frac{\partial v}{\partial a_{y}} & \frac{\partial v}{\partial a_{z}} & \frac{\partial v}{\partial\frac{q}{p}}\\\frac{\partial u\prime}{\partial x} & \frac{\partial u\prime}{\partial y} & \frac{\partial u\prime}{\partial z} & \frac{\partial u\prime}{\partial a_{x}} & \frac{\partial u\prime}{\partial a_{y}} & \frac{\partial u\prime}{\partial a_{z}} & \frac{\partial u\prime}{\partial\frac{q}{p}}\\\frac{\partial v\prime}{\partial x} & \frac{\partial v\prime}{\partial y} & \frac{\partial v\prime}{\partial z} & \frac{\partial v\prime}{\partial a_{x}} & \frac{\partial v\prime}{\partial a_{y}} & \frac{\partial v\prime}{\partial a_{z}} & \frac{\partial v\prime}{\partial\frac{q}{p}}\\ \frac{\partial\frac{q}{p}}{\partial x} & \frac{\partial\frac{q}{p}}{\partial y} & \frac{\partial\frac{q}{p}}{\partial z} & \frac{\partial\frac{q}{p}}{\partial a_{x}} & \frac{\partial\frac{q}{p}}{\partial a_{y}} & \frac{\partial\frac{q}{p}}{\partial a_{z}} & \frac{\partial\frac{q}{p}}{\partial\frac{q}{p}}\\ \\\end{array}\right)\f$ 
-    *
-    * \f$J_{M,p}=\left(\begin{array}{ccccccc} U_{x} & U_{y} & U_{z} & 0 & 0 & 0 & 0\\ V_{x} & V_{y} & V_{z} & 0 & 0 & 0 & 0\\ 0 & 0 & 0 & \frac{U_{x}\left(a_{y}N_{y}+a_{z}N_{z}\right)-N_{x}\left(a_{y}U_{y}+a_{z}U_{z}\right)}{\left(a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}\right)^{2}} & \frac{U_{y}\left(a_{x}N_{x}+a_{z}N_{z}\right)-N_{y}\left(a_{x}U_{x}+a_{z}U_{z}\right)}{\left(a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}\right)^{2}} & \frac{U_{z}\left(a_{x}N_{x}+a_{y}N_{y}\right)-N_{z}\left(a_{x}U_{x}+a_{y}U_{y}\right)}{\left(a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}\right)^{2}} & 0\\ 0 & 0 & 0 & \frac{V_{x}\left(a_{y}N_{y}+a_{z}N_{z}\right)-N_{x}\left(a_{y}V_{y}+a_{z}V_{z}\right)}{\left(a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}\right)^{2}} & \frac{V_{y}\left(a_{x}N_{x}+a_{z}N_{z}\right)-N_{y}\left(a_{x}V_{x}+a_{z}V_{z}\right)}{\left(a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}\right)^{2}} & \frac{V_{z}\left(a_{x}N_{x}+a_{y}N_{y}\right)-N_{z}\left(a_{x}V_{x}+a_{y}V_{y}\right)}{\left(a_{x}N_{x}+a_{y}N_{y}+a_{z}N_{z}\right)^{2}} & 0\\ 0 & 0 & 0 & 0 & 0 & 0 & 1\\ \\\end{array}\right)\f$
-    *
+    * \f{eqnarray*}{
+    *   C_M     & = J_{p,M} \, C_p \, J_{p,M}^T \\
+    *   J_{p,M} & = \begin{pmatrix}
+    *         \frac{\partial x}{\partial u} & \frac{\partial x}{\partial v} & \frac{\partial x}{\partial u^{\prime}} & \frac{\partial x}{\partial v^{\prime}} & \frac{\partial x}{\partial\frac{q}{p}}\\
+    *         \frac{\partial y}{\partial u} & \frac{\partial y}{\partial v} & \frac{\partial y}{\partial u^{\prime}} & \frac{\partial y}{\partial v^{\prime}} & \frac{\partial y}{\partial\frac{q}{p}}\\
+    *         \frac{\partial z}{\partial u} & \frac{\partial z}{\partial v} & \frac{\partial z}{\partial u^{\prime}} & \frac{\partial z}{\partial v^{\prime}} & \frac{\partial z}{\partial\frac{q}{p}}\\
+    *         \frac{\partial a_{x}}{\partial u} & \frac{\partial a_{x}}{\partial v} & \frac{\partial a_{x}}{\partial u^{\prime}} & \frac{\partial a_{x}}{\partial v^{\prime}} & \frac{\partial a_{x}}{\partial\frac{q}{p}}\\
+    *         \frac{\partial a_{y}}{\partial u} & \frac{\partial a_{y}}{\partial v} & \frac{\partial a_{y}}{\partial u^{\prime}} & \frac{\partial a_{y}}{\partial v^{\prime}} & \frac{\partial a_{y}}{\partial\frac{q}{p}}\\
+    *         \frac{\partial a_{z}}{\partial u} & \frac{\partial a_{z}}{\partial v} & \frac{\partial a_{z}}{\partial u^{\prime}} & \frac{\partial a_{z}}{\partial v^{\prime}} & \frac{\partial a_{z}}{\partial\frac{q}{p}}\\
+    *         \frac{\partial\frac{q}{p}}{\partial u} & \frac{\partial\frac{q}{p}}{\partial v} & \frac{\partial\frac{q}{p}}{\partial u^{\prime}} & \frac{\partial\frac{q}{p}}{\partial v^{\prime}} & \frac{\partial\frac{q}{p}}{\partial\frac{q}{p}}
+    *         \end{pmatrix} \\
+    *           & = \begin{pmatrix}
+    *         U_{x} & V_{x} & 0 & 0 & 0\\
+    *         U_{y} & V_{y} & 0 & 0 & 0\\
+    *         U_{z} & V_{z} & 0 & 0 & 0\\
+    *         0 & 0 & \frac{d}{\widetilde{p}} \left( U_{x} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{U}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & \frac{d}{\widetilde{p}} \left( V_{x} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{V}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & 0\\
+    *         0 & 0 & \frac{d}{\widetilde{p}} \left( U_{y} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{U}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & \frac{d}{\widetilde{p}} \left( V_{y} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{V}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & 0\\
+    *         0 & 0 & \frac{d}{\widetilde{p}} \left( U_{z} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{U}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & \frac{d}{\widetilde{p}} \left( V_{z} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{V}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & 0\\
+    *         0 & 0 & 0 & 0 & 1
+    *         \end{pmatrix} \\
+    *   C_p     & = J_{M.p} \, C_M \, J_{M,p}^T \\
+    *   J_{M,p} & = \begin{pmatrix}
+    *         \frac{\partial u}{\partial x} & \frac{\partial u}{\partial y} & \frac{\partial u}{\partial z} & \frac{\partial u}{\partial a_{x}} & \frac{\partial u}{\partial a_{y}} & \frac{\partial u}{\partial a_{z}} & \frac{\partial u}{\partial\frac{q}{p}}\\
+    *         \frac{\partial v}{\partial x} & \frac{\partial v}{\partial y} & \frac{\partial v}{\partial z} & \frac{\partial v}{\partial a_{x}} & \frac{\partial v}{\partial a_{y}} & \frac{\partial v}{\partial a_{z}} & \frac{\partial v}{\partial\frac{q}{p}}\\
+    *         \frac{\partial u^{\prime}}{\partial x} & \frac{\partial u^{\prime}}{\partial y} & \frac{\partial u^{\prime}}{\partial z} & \frac{\partial u^{\prime}}{\partial a_{x}} & \frac{\partial u^{\prime}}{\partial a_{y}} & \frac{\partial u^{\prime}}{\partial a_{z}} & \frac{\partial u^{\prime}}{\partial\frac{q}{p}}\\
+    *         \frac{\partial v^{\prime}}{\partial x} & \frac{\partial v^{\prime}}{\partial y} & \frac{\partial v^{\prime}}{\partial z} & \frac{\partial v^{\prime}}{\partial a_{x}} & \frac{\partial v^{\prime}}{\partial a_{y}} & \frac{\partial v^{\prime}}{\partial a_{z}} & \frac{\partial v^{\prime}}{\partial\frac{q}{p}}\\
+    *         \frac{\partial\frac{q}{p}}{\partial x} & \frac{\partial\frac{q}{p}}{\partial y} & \frac{\partial\frac{q}{p}}{\partial z} & \frac{\partial\frac{q}{p}}{\partial a_{x}} & \frac{\partial\frac{q}{p}}{\partial a_{y}} & \frac{\partial\frac{q}{p}}{\partial a_{z}} & \frac{\partial\frac{q}{p}}{\partial\frac{q}{p}}\\
+    *         \end{pmatrix} \\
+    *           & = \begin{pmatrix}
+    *         U_{x} & U_{y} & U_{z} & 0 & 0 & 0 & 0\\
+    *         V_{x} & V_{y} & V_{z} & 0 & 0 & 0 & 0\\
+    *         0 & 0 & 0 & \frac{U_{x} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} - N_{x} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{U}}}{\left(\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}\right)^{2}} & \frac{U_{y} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} - N_{y} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{U}}}{\left(\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}\right)^{2}} & \frac{U_{z} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} - N_{z} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{U}}}{\left(\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}\right)^{2}} & 0\\
+    *         0 & 0 & 0 & \frac{V_{x} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} - N_{x} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{V}}}{\left(\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}\right)^{2}} & \frac{V_{y} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} - N_{y} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{V}}}{\left(\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}\right)^{2}} & \frac{V_{z} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} - N_{z} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{V}}}{\left(\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}\right)^{2}} & 0\\
+    *         0 & 0 & 0 & 0 & 0 & 0 & 1\\
+    *         \end{pmatrix}
+    * \f}
     */
   double extrapolate(const GFDetPlane&, 
          TMatrixD& statePred,
@@ -197,7 +228,6 @@ class RKTrackRep : public GFAbsTrackRep {
 
 
  private:
- //public: // only for testing purposes. 
 
   void initArrays();
 
@@ -209,35 +239,35 @@ class RKTrackRep : public GFAbsTrackRep {
   void calcState(const TVector3& pos,
                  const TVector3& mom);
 
-  void getState7(M1x7& state7) const;
-  void getState7(M1x7& state7, const TMatrixD& state5, const GFDetPlane& pl, const double& spu) const;
-  TMatrixD getState5(const M1x7& state7, const GFDetPlane& pl, double& spu) const;
+  void getState7(M1x7& state7);
+  void getState7(M1x7& state7, const TMatrixD& state5, const GFDetPlane& pl, const double& spu);
+  TMatrixD getState5(const M1x7& state7, const GFDetPlane& pl, double& spu);
 
   void transformPM7(const TMatrixD& in5x5,
                     M7x7& out7x7,
                     const GFDetPlane& pl,
                     const TMatrixD& state5,
                     const double& spu,
-                    TMatrixD* Jac = NULL) const;
+                    TMatrixD* Jac = NULL);
 
   void transformPM6(const TMatrixD& in5x5,
                     M6x6& out6x6,
                     const GFDetPlane& pl,
                     const TMatrixD& state5,
                     const double& spu,
-                    TMatrixD* Jac = NULL) const;
+                    TMatrixD* Jac = NULL);
 
   void transformM7P(const M7x7& in7x7,
                     TMatrixD& out5x5,
                     const GFDetPlane& pl,
                     const M1x7& state7,
-                    TMatrixD* Jac = NULL) const;
+                    TMatrixD* Jac = NULL);
 
   void transformM6P(const M6x6& in6x6,
                     TMatrixD& out5x5,
                     const GFDetPlane& pl,
                     const M1x7& state7,
-                    TMatrixD* Jac = NULL) const;
+                    TMatrixD* Jac = NULL);
 
   RKTrackRep& operator=(const RKTrackRep* rhs){return *this;};
 
@@ -255,18 +285,21 @@ class RKTrackRep : public GFAbsTrackRep {
   bool RKutta (const GFDetPlane& plane,
                M8x7& P,
                double& coveredDistance,
-               std::vector<TVector3>& points,
-               std::vector<double>& pointLengths,
-               bool calcCov=true) const;
+               std::vector<GFPathMat>& points,
+               bool& checkJacProj,
+               bool calcCov=true);
 
-  double estimateStep(const TVector3& pos,
+  double estimateStep(std::vector<GFPathMat>& points,
+                      const TVector3& pos,
                       const TVector3& dir,
                       const M1x4& SU,
+                      const TVector3& MagField,
                       const GFDetPlane& plane,
                       const double& mom,
                       double& relMomLoss,
                       double& deltaAngle,
-                      bool& stopBecauseOfMaterial) const;
+                      bool& stopBecauseOfMomLoss,
+                      bool& stopBecauseOfBoundary) const;
 
   TVector3 poca2Line(const TVector3& extr1,
                      const TVector3& extr2,
@@ -304,14 +337,26 @@ class RKTrackRep : public GFAbsTrackRep {
   double fSpu;
   TMatrixD fAuxInfo;
 
+  // vectors for getState, transform, Extrap etc. functions. Saves a lot of TVector3 constructions/destructions
+  TVector3 fO, fU, fV, fW; //!
+  TVector3 fPos, fDir; //!
+  TVector3 fpTilde; //!
+  TVector3 fDirectionBefore, fDirectionAfter; //!
+  TVector3 fH; //!
+
   // auxiliary variables and arrays
   // needed in Extrap()
   M8x7 fStateJac; //!
   M7x7 fNoise; //!
   M7x7 fOldCov; //!
+  // needed in transform...
+  M5x7 fJ_pM_5x7; //!
+  M5x6 fJ_pM_5x6; //!
+  M7x5 fJ_Mp_7x5; //!
+  M6x5 fJ_Mp_6x5; //!
 
  public:
-  ClassDef(RKTrackRep, 6)
+  ClassDef(RKTrackRep, 7)
 
 };
 

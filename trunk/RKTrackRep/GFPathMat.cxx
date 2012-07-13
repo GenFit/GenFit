@@ -16,14 +16,23 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifdef __CINT__
+
+#include <iostream>
+#include <string>
+#include "stdlib.h"
+#include "GFPathMat.h"
 
 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
+GFPathMat::GFPathMat() :
+  fPath(0), fMat(NULL) {
 
-#pragma link C++ class RKTrackRep-;
-#pragma link C++ class GFMaterialEffects+;
+}
 
-#endif
+
+GFPathMat::~GFPathMat(){;}
+
+
+void GFPathMat::Print(){
+  std::cout<<"  GFPathMat: Path = "<< fPath <<" cm; Material is " << fMat->GetName() << " ("<< fMat <<")\n";
+}
+
