@@ -16,14 +16,49 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifdef __CINT__
+
+/*
+ */
+
+/** @addtogroup RKTrackRep
+ * @{
+ */
 
 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
+#ifndef GFPATHMAT_H
+#define GFPATHMAT_H
 
-#pragma link C++ class RKTrackRep-;
-#pragma link C++ class GFMaterialEffects+;
+#include "math.h"
+#include "TVector3.h"
+#include "TGeoMaterial.h"
+
+
+class GFPathMat {
+
+ public:
+  // Constructors/Destructors
+  GFPathMat();
+  GFPathMat(double path, TGeoMaterial* mat){fPath = path; fMat = mat;}
+  ~GFPathMat();
+
+  // Accessors
+  double getPath() const {return fPath;}
+  double getAbsPath() const {return fabs(fPath);}
+  TGeoMaterial* getMat() const {return fMat;}
+
+  // Modifiers
+  void setPath(double path){fPath = path;}
+  void setMat(TGeoMaterial* const mat){fMat = mat;}
+
+  // Functions
+  void addToPath(double dpath){fPath += dpath;}
+  void Print();
+
+ private:
+  double fPath; // pathlength to next position (signed)
+  TGeoMaterial* fMat; // pointer to material
+};
 
 #endif
+
+/** @} */

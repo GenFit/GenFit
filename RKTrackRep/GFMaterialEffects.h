@@ -25,10 +25,12 @@
 #define GFMATERIALEFFECTS_H
 
 #include<iostream>
-#include"TObject.h"
-#include<vector>
-#include"TVector3.h"
-#include"TMatrixT.h"
+#include "RKTools.h"
+#include "TObject.h"
+#include <vector>
+#include "TVector3.h"
+#include "TMatrixT.h"
+#include "GFPathMat.h"
 
 /** @brief  Contains stepper and energy loss/noise matrix calculation
  *
@@ -71,8 +73,7 @@ public:
 
 
   //! Calculates energy loss in the travelled path, optional calculation of noise matrix
-  double effects(const std::vector<TVector3>& points,
-                 const std::vector<double>& pointPaths,
+  double effects(const std::vector<GFPathMat>& points,
                  const double& mom,
                  const int& pdg,
                  double& xx0,
@@ -83,31 +84,29 @@ public:
                  const TVector3* directionAfter = NULL);
 
   //! Returns maximum length so that a specified momentum loss will not be exceeded
-  /**  The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded.
+  /**  The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded,
+   *   or the next material boundary is reached. The material crossed are stored together with their stepsizes.
   */
-  double stepper(const double& maxDist,
+  double stepper(std::vector<GFPathMat>& points, // pointers to materials and stepsizes are appended
+                 const double& maxStep, // maximum step. unsigned!
+                 const double& maxAngleStep, // maximum step due to curvature. unsigned!
                  const double& posx,
                  const double& posy,
                  const double& posz,
                  const double& dirx,
                  const double& diry,
                  const double& dirz,
-                 const double& mom,
-                 double& relMomLoss,
-                 const int& pdg);
+                 const double& mom, // momentum
+                 double& relMomLoss, // relative momloss for the step will be added
+                 const int& pdg,
+                 bool& stopBecauseOfMomLoss,
+                 bool& stopBecauseOfBoundary,
+                 bool& dontImproveEstimation);
 
-  double stepper(const double& maxDist,
-                 const TVector3& pos,
-                 const TVector3& dir,
-                 const double& mom,
-                 double& relMomLoss,
-                 const int& pdg) {
-    return stepper(maxDist, pos.X(), pos.Y(), pos.Z(), dir.X(), dir.Y(), dir.Z(), mom, relMomLoss, pdg);
-  }
 
 private:
   //! sets fmatDensity, fmatZ, fmatA, fradiationLength, fmEE, fcharge, fmass;
-  void getParameters();
+  void getParameters(TGeoMaterial* mat);
 
   //! sets fbeta, fgamma, fgammasquare; must only be used after calling getParameters()
   void calcBeta(double mom);

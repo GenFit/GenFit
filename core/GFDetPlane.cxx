@@ -340,17 +340,19 @@ void GFDetPlane::getGraphics(double mesh, double length, TPolyMarker3D **pl,TPol
   }
 }
 
-double GFDetPlane::distance(TVector3& v) const{
-  double s = (v - fO)*fU;
-  double t = (v - fO)*fV;
-  TVector3 distanceVector = v - fO - (s*fU) - (t*fV); 
+double GFDetPlane::distance(TVector3 v) const{
+  v -= fO;
+  double s = v*fU;
+  double t = v*fV;
+  TVector3 distanceVector = v - (s*fU) - (t*fV);
   return distanceVector.Mag();
 }
-double GFDetPlane::distance(double x,double y,double z) const{
+double GFDetPlane::distance(double x, double y, double z) const{
   TVector3 v(x,y,z);
-  double s = (v - fO)*fU;
-  double t = (v - fO)*fV;
-  TVector3 distanceVector = v - fO - (s*fU) - (t*fV); 
+  v -= fO;
+  double s = v*fU;
+  double t = v*fV;
+  TVector3 distanceVector = v - (s*fU) - (t*fV);
   return distanceVector.Mag();
 }
 
