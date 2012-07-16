@@ -32,7 +32,7 @@
 #include "GFAbsTrackRep.h"
 #include "GFDetPlane.h"
 #include "GFTrackCand.h"
-#include "GFPathMat.h"
+#include "GFPointPath.h"
 #include "RKTools.h"
 #include <TMatrixD.h>
 
@@ -285,11 +285,11 @@ class RKTrackRep : public GFAbsTrackRep {
   bool RKutta (const GFDetPlane& plane,
                M8x7& P,
                double& coveredDistance,
-               std::vector<GFPathMat>& points,
+               std::vector<GFPointPath>& points,
                bool& checkJacProj,
                bool calcCov=true);
 
-  double estimateStep(std::vector<GFPathMat>& points,
+  double estimateStep(std::vector<GFPointPath>& points,
                       const TVector3& pos,
                       const TVector3& dir,
                       const M1x4& SU,
@@ -298,8 +298,8 @@ class RKTrackRep : public GFAbsTrackRep {
                       const double& mom,
                       double& relMomLoss,
                       double& deltaAngle,
-                      bool& stopBecauseOfMomLoss,
-                      bool& stopBecauseOfBoundary) const;
+                      bool& momLossExceeded,
+                      bool& atPlane) const;
 
   TVector3 poca2Line(const TVector3& extr1,
                      const TVector3& extr2,

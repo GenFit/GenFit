@@ -98,7 +98,7 @@ void GFMaterialEffects::setMscModel(const std::string& modelName)
 }
 
 
-double GFMaterialEffects::effects(const std::vector<GFPathMat>& points,
+double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
                                   const double& mom,
                                   const int& pdg,
                                   double& xx0,
@@ -112,46 +112,61 @@ double GFMaterialEffects::effects(const std::vector<GFPathMat>& points,
   if (fNoEffects) return 0.;
 
   fpdg = pdg;
+  getParticleParameters(mom);
 
   double momLoss = 0.;
   unsigned int nPoints(points.size());
 
-  for (unsigned int i = 0; i < nPoints; ++i) {
+  for (unsigned int i = 1; i < nPoints; ++i) {
 
-    fstep = points[i].getAbsPath();
-    TGeoMaterial* mat = points[i].getMat();
+    TVector3 dir(points.at(i).getPos() - points.at(i-1).getPos());
+    double dist = dir.Mag();
 
-    getParameters(mat);
+    if (dist > 1.E-8) { // do material effects only if distance is not too small
+
+      double X(0.);
+      double realPath = points.at(i-1).getPath();
+
+      gGeoManager->InitTrack(points.at(i-1).X(), points.at(i-1).Y(), points.at(i-1).Z(),
+                             dir.X(), dir.Y(), dir.Z());
+
+      while (X < dist) {
+
+        getMaterialParameters(gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial());
+
+        gGeoManager->FindNextBoundaryAndStep(dist - X);
+        fstep = gGeoManager->GetStep();
+        if (fstep <= 0.) continue;
 
 
-    if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
+        if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
 
-      calcBeta(mom);
 
-      if (fEnergyLossBetheBloch)
-        momLoss += this->energyLossBetheBloch(mom);
-      if (doNoise && fEnergyLossBetheBloch && fNoiseBetheBloch)
-        this->noiseBetheBloch(mom, noise);
+          if (fEnergyLossBetheBloch)
+            momLoss += realPath / dist * this->energyLossBetheBloch(mom);
+          if (doNoise && fEnergyLossBetheBloch && fNoiseBetheBloch)
+            this->noiseBetheBloch(mom, noise);
 
-      if (doNoise && fNoiseCoulomb)
-        this->noiseCoulomb(mom, noise, jacobian, directionBefore, directionAfter);
+          if (doNoise && fNoiseCoulomb)
+            this->noiseCoulomb(mom, noise, jacobian, directionBefore, directionAfter);
 
-      if (fEnergyLossBrems)
-        momLoss += this->energyLossBrems(mom);
-      if (doNoise && fEnergyLossBrems && fNoiseBrems)
-        this->noiseBrems(mom, noise);
+          if (fEnergyLossBrems)
+            momLoss += realPath / dist * this->energyLossBrems(mom);
+          if (doNoise && fEnergyLossBrems && fNoiseBrems)
+            this->noiseBrems(mom, noise);
 
-      xx0 += fstep / fradiationLength;
+          xx0 += fstep / fradiationLength;
+        }
+        X += fstep;
+      }
     }
-
   }
 
   return momLoss;
 }
 
 
-double GFMaterialEffects::stepper(std::vector<GFPathMat>& points,
-                                  const double& maxStep, // unsigned!
+double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
                                   const double& maxAngleStep,
                                   const double& posx,
                                   const double& posy,
@@ -161,10 +176,7 @@ double GFMaterialEffects::stepper(std::vector<GFPathMat>& points,
                                   const double& dirz,
                                   const double& mom,
                                   double& relMomLoss,
-                                  const int& pdg,
-                                  bool& stopBecauseOfMomLoss,
-                                  bool& stopBecauseOfBoundary,
-                                  bool& dontImproveEstimation)
+                                  const int& pdg)
 {
 
   static const double maxRelMomLoss = .005; // maximum relative momentum loss allowed
@@ -172,12 +184,13 @@ double GFMaterialEffects::stepper(std::vector<GFPathMat>& points,
 
   if (fNoEffects) return maxStep;
   if (relMomLoss > maxRelMomLoss) return 0;
-  if (maxStep == 0) return 0;
+  if (maxStep < minStep) return minStep;
 
-  fstep = minStep;
   fpdg = pdg;
+  double X(minStep);
   double relMomLossStep(0);
   TGeoMaterial* mat(NULL);
+  getParticleParameters(mom);
 
   gGeoManager->InitTrack(posx+minStep*dirx,
                          posy+minStep*diry,
@@ -185,116 +198,64 @@ double GFMaterialEffects::stepper(std::vector<GFPathMat>& points,
                          dirx, diry, dirz);
 
   #ifdef DEBUG
-    gGeoManager->SetVerboseLevel(5);
+    //gGeoManager->SetVerboseLevel(5);
   #endif
 
-  while (true){
+  while (X < maxStep){
+    relMomLossStep = 0;
     TGeoMedium* medium = gGeoManager->GetCurrentVolume()->GetMedium();
     assert(medium != NULL);
     mat = medium->GetMaterial();
-    gGeoManager->FindNextBoundaryAndStep(maxStep-fstep);
-    fstep += gGeoManager->GetStep();
+    gGeoManager->FindNextBoundaryAndStep(maxStep-X);
+    fstep = gGeoManager->GetStep();
 
     #ifdef DEBUG
       std::cout<<"     gGeoManager->GetStep() = " << gGeoManager->GetStep() << "       fstep = " << fstep << "\n";
     #endif
 
-    if (fabs(fstep) > maxStep-minStep) break; // stayed in the same material -> end loop
-    if (gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial() == mat) continue; // there's a boundary, but after it is the same material as before -> go ahead
-    else break; // at a material boundary
+    if (fstep <= 0.) continue;
+
+    getMaterialParameters(mat);
+
+    if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
+
+      if (fEnergyLossBetheBloch) relMomLossStep += this->energyLossBetheBloch(mom) / mom;
+      if (fEnergyLossBrems)      relMomLossStep += this->energyLossBrems(mom) / mom;
+    }
+
+    if (relMomLoss + relMomLossStep > maxRelMomLoss) {
+      double fraction = (maxRelMomLoss - relMomLoss) / relMomLossStep;
+      X += fraction * fstep;
+      #ifdef DEBUG
+        std::cout<<"     momLoss exceeded \n";
+      #endif
+      break;
+    }
+
+    relMomLoss += relMomLossStep;
+    X += fstep;
   }
 
-  if (fabs(fstep) < fabs(maxStep)-0.1*minStep) {
-    if (fabs(fstep) < 0.1*maxAngleStep) {
-      stopBecauseOfBoundary = true; // we are at a material boundary!
-      #ifdef DEBUG
-        std::cout<<"     stopBecauseOfBoundary = true; \n";
-      #endif
-    }
-    else {
-      // make sure we don't "overshoot" beyond the boundary due to track curvature
-      double mult = 1. - 0.1 * fstep*fstep/(maxAngleStep*maxAngleStep);
-      #ifdef DEBUG
-        std::cout<<"     mult = " << mult << " \t";
-      #endif
-      if (mult < 0.9) mult = 0.9;
-      fstep *= mult;
-      #ifdef DEBUG
-        std::cout<<" -> reduced step to " << fstep << "\n";
-      #endif
-        dontImproveEstimation = true; // we are at a material boundary!
-      #ifdef DEBUG
-        std::cout<<"     dontImproveEstimation = true; \n";
-      #endif
-    }
-  }
-
-  getParameters(mat);
-
-  if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
-    calcBeta(mom);
-    if (fEnergyLossBetheBloch) relMomLossStep += this->energyLossBetheBloch(mom) / mom;
-    if (fEnergyLossBrems)      relMomLossStep += this->energyLossBrems(mom) / mom;
-  }
-
-    #ifdef DEBUG
-      std::cout<<"     relMomLoss up to this step = " << relMomLoss << "\n";
-      std::cout<<"     relMomLossStep for whole step = " << relMomLossStep << "\n";
-    #endif
-
-  // check if maxRelMomLoss is exceeded and limit fstep accordingly
-  if (relMomLoss + relMomLossStep > maxRelMomLoss) {
-    double fraction = (maxRelMomLoss - relMomLoss) / relMomLossStep;
-    // ignore rel momLoss if resulting step would be very small
-    static const double minStepFact = 100.;
-    if (fabs(fstep) > minStepFact*minStep && fabs(fstep) * fraction < minStepFact*minStep) {
-      relMomLossStep *= fstep / (minStepFact*minStep);
-      fstep = minStepFact*minStep * TMath::Sign(1.,fstep);
-    }
-    else {
-      relMomLossStep *= fraction;
-      fstep *= fraction;
-      #ifdef DEBUG
-        std::cout<<"     reduced fstep by " << fraction << " due to momentum loss \n";
-      #endif
-    }
-    stopBecauseOfMomLoss = true; // max. momloss is reached!
-    #ifdef DEBUG
-      std::cout<<"     stopBecauseOfMomLoss = true; \n";
-    #endif
-  }
-
-  relMomLoss += relMomLossStep;
-
-  #ifdef DEBUG
-    std::cout<<"     relMomLoss after this step = " << relMomLoss << "\n";
-  #endif
-
-  points.push_back(GFPathMat(fstep, mat));
-  #ifdef DEBUG
-    points.back().Print();
-  #endif
-
-  return fstep;
+  return X;
 }
 
 
-void GFMaterialEffects::getParameters(TGeoMaterial* mat)
+void GFMaterialEffects::getMaterialParameters(TGeoMaterial* mat)
 {
   fmatDensity      = mat->GetDensity();
   fmatZ            = mat->GetZ();
   fmatA            = mat->GetA();
   fradiationLength = mat->GetRadLen();
   fmEE             = MeanExcEnergy_get(mat);
-
-  TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(fpdg);
-  fcharge = part->Charge() / (3.);
-  fmass = part->Mass();
 }
 
 
-void GFMaterialEffects::calcBeta(double mom)
+void GFMaterialEffects::getParticleParameters(double mom)
 {
+  TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(fpdg);
+  fcharge = part->Charge() / (3.);
+  fmass = part->Mass();
+
   fbeta = mom / sqrt(fmass * fmass + mom * mom);
 
   //for numerical stability
