@@ -20,19 +20,20 @@
 #include <iostream>
 #include <string>
 #include "stdlib.h"
-#include "GFPathMat.h"
+#include "GFPointPath.h"
 
 
-GFPathMat::GFPathMat() :
-  fPath(0), fMat(NULL) {
+GFPointPath::GFPointPath() :
+  fPos(0,0,0), fPath(0) {
 
 }
 
 
-GFPathMat::~GFPathMat(){;}
+GFPointPath::~GFPointPath(){;}
 
 
-void GFPathMat::Print(){
-  std::cout<<"  GFPathMat: Path = "<< fPath <<" cm; Material is " << fMat->GetName() << " ("<< fMat <<")\n";
+void GFPointPath::Print() const {
+  std::cout << "  GFPointPath at "; fPos.Print();
+  std::cout << "   Path to next point = "<< fPath <<" cm \n";
 }
 

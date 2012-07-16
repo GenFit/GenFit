@@ -30,7 +30,7 @@
 #include <vector>
 #include "TVector3.h"
 #include "TMatrixT.h"
-#include "GFPathMat.h"
+#include "GFPointPath.h"
 
 /** @brief  Contains stepper and energy loss/noise matrix calculation
  *
@@ -73,7 +73,7 @@ public:
 
 
   //! Calculates energy loss in the travelled path, optional calculation of noise matrix
-  double effects(const std::vector<GFPathMat>& points,
+  double effects(const std::vector<GFPointPath>& points,
                  const double& mom,
                  const int& pdg,
                  double& xx0,
@@ -87,8 +87,7 @@ public:
   /**  The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded,
    *   or the next material boundary is reached. The material crossed are stored together with their stepsizes.
   */
-  double stepper(std::vector<GFPathMat>& points, // pointers to materials and stepsizes are appended
-                 const double& maxStep, // maximum step. unsigned!
+  double stepper(const double& maxStep, // maximum step. unsigned!
                  const double& maxAngleStep, // maximum step due to curvature. unsigned!
                  const double& posx,
                  const double& posy,
@@ -98,18 +97,15 @@ public:
                  const double& dirz,
                  const double& mom, // momentum
                  double& relMomLoss, // relative momloss for the step will be added
-                 const int& pdg,
-                 bool& stopBecauseOfMomLoss,
-                 bool& stopBecauseOfBoundary,
-                 bool& dontImproveEstimation);
+                 const int& pdg);
 
 
 private:
-  //! sets fmatDensity, fmatZ, fmatA, fradiationLength, fmEE, fcharge, fmass;
-  void getParameters(TGeoMaterial* mat);
+  //! sets fcharge, fmass and calculates fbeta, fgamma, fgammasquare;
+  void getParticleParameters(double mom);
 
-  //! sets fbeta, fgamma, fgammasquare; must only be used after calling getParameters()
-  void calcBeta(double mom);
+  //! sets fmatDensity, fmatZ, fmatA, fradiationLength, fmEE;
+  void getMaterialParameters(TGeoMaterial* mat);
 
   //! Returns energy loss
   /**  Uses Bethe Bloch formula to calculate energy loss.
