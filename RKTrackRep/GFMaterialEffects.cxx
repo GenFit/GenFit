@@ -117,15 +117,17 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
   double momLoss = 0.;
   unsigned int nPoints(points.size());
 
-  for (unsigned int i = 1; i < nPoints; ++i) {
+  for (unsigned int i = 1; i < nPoints; ++i) { // loop over points
 
-    TVector3 dir(points.at(i).getPos() - points.at(i-1).getPos());
-    double dist = dir.Mag();
+    TVector3 dir(points.at(i).getPos() - points.at(i-1).getPos()); // straight line from one point to the next
+    double dist = dir.Mag(); // straight line distance
 
     if (dist > 1.E-8) { // do material effects only if distance is not too small
 
-      double X(0.);
-      double realPath = points.at(i-1).getPath();
+      dir.SetMag(1.);
+      double X(0.); // path already gone through material (straight line)
+      double step(0); // straight line step
+      double realPath = points.at(i-1).getPath(); // real (curved) distance
 
       gGeoManager->InitTrack(points.at(i-1).X(), points.at(i-1).Y(), points.at(i-1).Z(),
                              dir.X(), dir.Y(), dir.Z());
@@ -135,15 +137,14 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
         getMaterialParameters(gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial());
 
         gGeoManager->FindNextBoundaryAndStep(dist - X);
-        fstep = gGeoManager->GetStep();
+        step = gGeoManager->GetStep();
+        fstep = fabs(step * realPath / dist); // the actual path is curved, not straight!
         if (fstep <= 0.) continue;
-
 
         if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
 
-
           if (fEnergyLossBetheBloch)
-            momLoss += realPath / dist * this->energyLossBetheBloch(mom);
+            momLoss += this->energyLossBetheBloch(mom);
           if (doNoise && fEnergyLossBetheBloch && fNoiseBetheBloch)
             this->noiseBetheBloch(mom, noise);
 
@@ -151,16 +152,16 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
             this->noiseCoulomb(mom, noise, jacobian, directionBefore, directionAfter);
 
           if (fEnergyLossBrems)
-            momLoss += realPath / dist * this->energyLossBrems(mom);
+            momLoss += this->energyLossBrems(mom);
           if (doNoise && fEnergyLossBrems && fNoiseBrems)
             this->noiseBrems(mom, noise);
 
           xx0 += fstep / fradiationLength;
         }
-        X += fstep;
+        X += step;
       }
     }
-  }
+  } // end loop over points
 
   return momLoss;
 }
