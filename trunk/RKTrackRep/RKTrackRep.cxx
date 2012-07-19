@@ -1029,21 +1029,21 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   else                  {SU[0] = -1.*W.X();  SU[1] = -1.*W.Y();  SU[2] = -1.*W.Z();  }
   SU[3] = plane.distance(0., 0., 0.);
 
+  unsigned int counter(0);
 
   // Step estimation (signed)
   fH = GFFieldManager::getFieldVal(fPos);
   S = estimateStep(points, fPos, fDir, SU, fH, plane, momentum, relMomLoss, deltaAngle, momLossExceeded, atPlane);
   if (fabs(S) < 0.001*MINSTEP) {
     #ifdef DEBUG
-      std::cout << " RKutta - step too small -> return \n";
+      std::cout << " RKutta - step too small -> break \n";
     #endif
-    return true;
+    counter += 1; // skip the main loop, go to linear extrapolation step (will be skipped) and just project jacobian
   }
 
   //
   // Main loop of Runge-Kutta method
   //
-  unsigned int counter(0);
   while (fabs(S) >= MINSTEP || counter == 0) {
 
     if(++counter > maxNumIt){
@@ -1229,30 +1229,34 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   // linear extrapolation to surface
   //
   if (atPlane) {
-    #ifdef DEBUG
-      std::cout << " RKutta - linear extrapolation to surface\n";
-    #endif
 
-    if (fabs(Sl) > 1.E-12) Sl = 1./Sl;        // Sl = inverted last Stepsize Sl
-    else{
-      GFException exc("RKTrackRep::Extrap ==> last stepsize too small -> can't do linear extrapolation!",__LINE__,__FILE__);
-      throw exc;
+    if (fabs(Sl) > 0.001*MINSTEP){
+      #ifdef DEBUG
+        std::cout << " RKutta - linear extrapolation to surface\n";
+      #endif
+      Sl = 1./Sl;        // Sl = inverted last Stepsize Sl
+      
+      // normalize SA
+      SA[0]*=Sl;  SA[1]*=Sl;  SA[2]*=Sl; // SA/Sl = delta A / delta way; local derivative of A with respect to the length of the way
+
+      // calculate A
+      A[0] += SA[0]*S;   	// S  = distance to surface
+      A[1] += SA[1]*S;	  // A = A + S * SA*Sl
+      A[2] += SA[2]*S;
+
+      // normalize A
+      CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);  // 1/|A|
+      A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
+
+      R[0] += S*(A[0]-0.5*S*SA[0]);    // P = R + S*(A - 0.5*S*SA); approximation for final point on surface
+      R[1] += S*(A[1]-0.5*S*SA[1]);
+      R[2] += S*(A[2]-0.5*S*SA[2]);
     }
-    // normalize SA
-    SA[0]*=Sl;  SA[1]*=Sl;  SA[2]*=Sl; // SA/Sl = delta A / delta way; local derivative of A with respect to the length of the way
-
-    // calculate A
-    A[0] += SA[0]*S;   	// S  = distance to surface
-    A[1] += SA[1]*S;	  // A = A + S * SA*Sl
-    A[2] += SA[2]*S;
-
-    // normalize A
-    CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);  // 1/|A|
-    A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
-
-    R[0] += S*(A[0]-0.5*S*SA[0]);    // P = R + S*(A - 0.5*S*SA); approximation for final point on surface
-    R[1] += S*(A[1]-0.5*S*SA[1]);
-    R[2] += S*(A[2]-0.5*S*SA[2]);
+#ifdef DEBUG
+    else {
+      std::cout << " RKutta - last stepsize too small -> can't do linear extrapolation! \n";
+    }
+#endif
 
     //
     // Project Jacobian of extrapolation onto destination plane
@@ -1438,15 +1442,14 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
       double S3 = Step/3.;
       double PS2 = fCharge/momentum*0.000149896229 * Step;
       M1x3   H0 = {0.,0.,0.};
-      double   A0(0), A1(0), A2(0), A3(0), A4(0), A5(0), A6(0);
-      double   B0(0), B1(0), B2(0), B3(0), B4(0), B5(0), B6(0);
-      double   C0(0), C1(0), C2(0), C3(0), C4(0), C5(0), C6(0);
+      double   A0(0), A2(0), A3(0), A4(0), A5(0), A6(0);
+      double   B0(0), B2(0), B3(0), B4(0), B5(0), B6(0);
+      double   C0(0), C2(0), C3(0), C4(0), C5(0), C6(0);
 
       // First point
       H0[0] = PS2*MagField.X(); H0[1] = PS2*MagField.Y(); H0[2] = PS2*MagField.Z();     // H0 is PS2*(Hx, Hy, Hz) @ R0
       A0 = dir.Y()*H0[2]-dir.Z()*H0[1]; B0 = dir.Z()*H0[0]-dir.X()*H0[2]; C0 = dir.X()*H0[1]-dir.Y()*H0[0]; // (ax, ay, az) x H0
       A2 = dir.X()+A0                 ; B2 = dir.Y()+B0                 ; C2 = dir.Z()+C0                 ; // (A0, B0, C0) + (ax, ay, az)
-      A1 = A2+dir.X()                 ; B1 = B2+dir.Y()                 ; C1 = C2+dir.Z()                 ; // (A0, B0, C0) + 2*(ax, ay, az)
 
       // Second point
       A3 = B2*H0[2]-C2*H0[1]+dir.X(); B3 = C2*H0[0]-A2*H0[2]+dir.Y(); C3 = A2*H0[1]-B2*H0[0]+dir.Z(); // (A2, B2, C2) x H0 + (ax, ay, az)
