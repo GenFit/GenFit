@@ -56,6 +56,7 @@ void GFDaf::processTrack(GFTrack* trk) {
 			for(unsigned int j=0; j<mini_trk->getNumHits(); j++) {
 				GFDafHit* hit = static_cast<GFDafHit*>(mini_trk->getHit(j));
 				hit->setWeights(fWeights.at(i).at(j));
+				hit->setBlowUp(fBeta.at(iBeta));
 			}			
 			if ( iBeta != 0){
 				GFKalman::blowUpCovs(mini_trk);
@@ -121,7 +122,6 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 			} catch(GFException& e) {
 				std::cerr<<e.what();
 				e.info();
-				continue; //m and Vorig do not contain sensible values, skip hit
 			}
 
 			TMatrixT<double> V( beta * Vorig);

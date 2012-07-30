@@ -178,7 +178,10 @@ GFTrack::getResiduals(unsigned int detId, // which detector?
 		    unsigned int repid,   // which trackrep ?
 		    std::vector<double>& result)
 {
-
+  GFException exc ("Dear physicist: If you are the one who's is using this method, please reconsider your choice of career. Are you sure about this: [dim][0]? Sincerely, yours CH & JR",__LINE__,__FILE__);
+  exc.setFatal();
+  throw exc;
+  /*
   unsigned int nhits=getNumHits();
   if(repid>=getNumReps())return;
   GFAbsTrackRep* rep=getTrackRep(repid);//->clone();
@@ -209,6 +212,7 @@ GFTrack::getResiduals(unsigned int detId, // which detector?
       result.push_back(res);
     } 
   }
+  */
 }
 
 

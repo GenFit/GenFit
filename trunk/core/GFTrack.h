@@ -74,12 +74,13 @@ private:
 
   /** @brief Collection of RecoHits
    */
-  std::vector<GFAbsRecoHit*> fHits; //!
+  std::vector<GFAbsRecoHit*>      fHits;
+  //!
   
   /** @brief Collection of Bookeeping objects for failed hits
    * in every trackrep
    */
-  std::vector<GFBookkeeping*> fBookkeeping;
+  std::vector< GFBookkeeping* > fBookkeeping;
 
   /** @brief repAtHit keeps track of at which hit index which rep
    * is currently defined, to avoid null extrapolations
@@ -200,10 +201,7 @@ public:
    */
   GFAbsTrackRep* getCardinalRep() const {return ((GFAbsTrackRep*)fTrackReps->At(fCardinal_rep));}
   
-  /** @brief Get ID of the cardinal track representation
-   */  
-  unsigned int getCardinalRepID() const {return fCardinal_rep;}
-  
+
   /** @brief Get momentum at the present position
    *
    * Cardinal representation is used.
