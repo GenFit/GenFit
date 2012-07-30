@@ -71,13 +71,14 @@ class GFDafHit: public GFAbsRecoHit {
 		 * There are two cases as well: if the GFDafHit contains
 		 * only one hit, the covariance is calculated like:
 		 * \f[
-		 * \mathbf{V} = \frac{1}{p_{1}}\cdot\mathbf{V}_{1}
+		 * \mathbf{V} = \frac{1}{p_{1}}\cdot\beta\cdot\mathbf{V}_{1}
 		 * \f]
-		 * with the symbols analog to getHitCoord().
+		 * with \f$\beta\f$ the blow up factor for the temperature annealing as
+		 * set in setBlowUp() and the rest of the symbols analog to getHitCoord().
 		 * If there are several hits in the GFDafHit, the following formula is
 		 * used:
 		 * \f[
-		 * \mathbf{V} = \left( \sum_{i} p_{i} \cdot \left( \mathbf{V}_{i}\right)^{-1} \right)^{-1}
+		 * \mathbf{V} = \left( \sum_{i} p_{i} \cdot \left( \beta \mathbf{V}_{i}\right)^{-1} \right)^{-1}
 		 * \f]
 		 * As before, these calculations are only done if the plane is different
 		 * from the one getHitCov was last called.
@@ -106,6 +107,12 @@ class GFDafHit: public GFAbsRecoHit {
 		 */
 		void setWeights(std::vector<double> weights);
 
+		/** @brief Set the \f$\beta\f$ blow up factor for the covariance matrices.
+		 *
+		 * Set the \f$\beta\f$ as used by getHitCoord() and getHitCov().
+		 */
+		void setBlowUp(double blow_up);
+
 		/** @brief Get the number of hits in the GFDafHit.
 		 */
 		unsigned int getNumHits() { return fRawHits.size(); };
@@ -124,12 +131,13 @@ class GFDafHit: public GFAbsRecoHit {
 	private:
 		bool fHitUpd;
 		GFDetPlane fPl;
+		double fBlow;
 		std::vector<TMatrixT<double> > fCovInvs;
 		std::vector<GFAbsRecoHit*> fRawHits;
 		std::vector<double> fWeights;
 
 	public:
-		ClassDef(GFDafHit,2)
+		ClassDef(GFDafHit,1)
 
 };
 #endif

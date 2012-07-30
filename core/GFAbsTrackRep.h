@@ -126,7 +126,6 @@ class GFAbsTrackRep : public TObject{
      the predicted covaraiance. If your trackrep has a way to extrapolate
      without giving a correct cov (that would be faster probably), please
      overwrite it.
-     This method does NOT alter the state of the object!
   */
   virtual double extrapolate(const GFDetPlane& plane, TMatrixT<double>& statePred);
 
@@ -148,11 +147,10 @@ class GFAbsTrackRep : public TObject{
       chambers and such. An example where you would need it, would be a TPC
       where you have to fit the track to space points, or other drift chambers
       with complicated hit topology.
-      This method does NOT alter the state of the object!
    */
   virtual void extrapolateToPoint(const TVector3& point,
-         TVector3& poca,
-         TVector3& normVec);
+				 TVector3& poca,
+				 TVector3& normVec); 
 
   //! 
   /** @brief This method extrapolates to the point of closest approach to a line
@@ -161,20 +159,18 @@ class GFAbsTrackRep : public TObject{
    * is a default implementation just like for the extrapolateToPoca for
    * trackReps which do not need this feature, which will abort the
    * execution if it is ever called.
-   * This method does NOT alter the state of the object!
    */
   virtual void extrapolateToLine(const TVector3& point1, 
-         const TVector3& point2,
-         TVector3& poca,
-         TVector3& normVec,
-         TVector3& poca_onwire);
+				 const TVector3& point2,
+				 TVector3& poca,
+				 TVector3& normVec,
+				 TVector3& poca_onwire);
   
   
   //! make step of h cm along the track
-  /*! There is an empty implementation in GFAbsTrackRep.cxx which will abort
+  /*! There is an emply implementation in GFAbsTrackRep.cxx which will abort
       (see one of the extrapolate methods above). This can be overwritten,
       if this feature is needed.
-      This method does NOT alter the state of the object!
   */
   virtual double stepalong(double h,
            TVector3& point,
@@ -185,8 +181,8 @@ class GFAbsTrackRep : public TObject{
       This method does NOT alter the state of the object!
    */ 
   virtual double extrapolate(const GFDetPlane& plane,
-           TMatrixT<double>& statePred,
-           TMatrixT<double>& covPred)=0;
+			     TMatrixT<double>& statePred,
+			     TMatrixT<double>& covPred)=0;
   
   //! This changes the state and cov and plane of the rep
   /*! This method extrapolates to to the plane and sets the results of state,
@@ -365,7 +361,7 @@ class GFAbsTrackRep : public TObject{
    * documentation of GFAbsTrackRep::getAuxInfo() for details.
    */
   virtual bool hasAuxInfo() {
-    return false;
+	  return false;
   }
 
   /** @brief Get auxillary information from the track representation.
@@ -378,12 +374,12 @@ class GFAbsTrackRep : public TObject{
    * GFAbsTrackRep::setData().
    */
   virtual const TMatrixT<double>* getAuxInfo(const GFDetPlane& pl) {
-    return NULL;
+	  return NULL;
   }
 
 
   void resetXX0() {
-    fXX0 = 0.;
+	  fXX0 = 0.;
   }
 
  private:

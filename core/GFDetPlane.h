@@ -124,7 +124,7 @@ public:
   //! returns NOT ==
   friend bool operator!= (const GFDetPlane& lhs, const GFDetPlane& rhs);
 
-  double distance(TVector3) const;
+  double distance(TVector3&) const;
   double distance(double,double,double) const;
 
 

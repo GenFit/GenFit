@@ -44,6 +44,7 @@
 #pragma link C++ class GFBookkeeping-;
 #pragma link C++ class GFAbsFinitePlane+;
 #pragma link C++ class GFRectFinitePlane+;
+#pragma link C++ class GFMaterialEffects+;
 #pragma link C++ class GFFieldManager+;
 
 #endif

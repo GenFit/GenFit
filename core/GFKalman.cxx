@@ -51,7 +51,7 @@ void GFKalman::processTrack(GFTrack* trk){
       std::vector<std::string> mat_keys = trk->getBK(i)->getMatrixKeys();
       bool already_there = false;
       for(unsigned int j=0; j<mat_keys.size(); j++) {
-        if(mat_keys.at(j) == "fUpSt") already_there = true;
+      	if(mat_keys.at(j) == "fUpSt") already_there = true;
       }
       if(already_there) continue;
       trk->getBK(i)->bookMatrices("fUpSt");
@@ -61,8 +61,8 @@ void GFKalman::processTrack(GFTrack* trk){
       trk->getBK(i)->bookGFDetPlanes("fPl");
       trk->getBK(i)->bookGFDetPlanes("bPl");
       if(trk->getTrackRep(i)->hasAuxInfo()) {
-        trk->getBK(i)->bookMatrices("fAuxInfo");
-        trk->getBK(i)->bookMatrices("bAuxInfo");
+      	trk->getBK(i)->bookMatrices("fAuxInfo");
+      	trk->getBK(i)->bookMatrices("bAuxInfo");
       }
     }
   }
@@ -165,25 +165,25 @@ GFKalman::fittingPass(GFTrack* trk, int direction){
     //    GFAbsRecoHit* ahit=trk->getHit(ihit);
     // loop over reps
     for(int irep=0; irep<nreps; ++irep){
-    GFAbsTrackRep* arep=trk->getTrackRep(irep);
-    if(arep->getStatusFlag()==0) {
-      try {
+	  GFAbsTrackRep* arep=trk->getTrackRep(irep);
+	  if(arep->getStatusFlag()==0) { 
+	    try {
 #ifdef DEBUG
         std::cout<<"++++++++++++++++++++++++++++++++++++++++\n";
         std::cout<<"GFKalman::fittingPass - process rep nr. "<<irep<<" and hit nr. "<<ihit<<std::endl;
 #endif
-        processHit(trk,ihit,irep,direction);
-      }
-      catch(GFException& e) {
-        trk->addFailedHit(irep,ihit);
-        std::cerr << e.what();
-        e.info();
-        if(e.isFatal()) {
-          arep->setStatusFlag(1);
-          continue; // go to next rep immediately
-        }
-      }
-    }
+	      processHit(trk,ihit,irep,direction);
+	    }
+	    catch(GFException& e) {
+	      trk->addFailedHit(irep,ihit);
+	      std::cerr << e.what();
+	      e.info();
+	      if(e.isFatal()) {
+		arep->setStatusFlag(1);
+		continue; // go to next rep immediately
+	      }
+	    }	
+	  }
     }// end loop over reps
     ihit+=direction;
   }// end loop over hits
@@ -192,7 +192,7 @@ GFKalman::fittingPass(GFTrack* trk, int direction){
 }
 
 double GFKalman::chi2Increment(const TMatrixT<double>& r,const TMatrixT<double>& H,
-           const TMatrixT<double>& cov,const TMatrixT<double>& V){
+			     const TMatrixT<double>& cov,const TMatrixT<double>& V){
 
   // residuals covariances:R=(V - HCH^T)
   TMatrixT<double> R(V);
@@ -303,7 +303,7 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
 
   // calculate update -----------------------------------
   TMatrixT<double> update=Gain*res;
-
+  
 #ifdef DEBUG
   std::cout<<"Gain"; Gain.Print();
   std::cout<<"residual vector"; res.Print();
@@ -315,16 +315,16 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
 
   if(fSmooth) {
     if(direction == 1) {
-    tr->getBK(irep)->setMatrix("fUpSt",ihit,state);
-    tr->getBK(irep)->setMatrix("fUpCov",ihit,cov);
-    if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
-    tr->getBK(irep)->setDetPlane("fPl",ihit,pl);
-  } else {
-    tr->getBK(irep)->setMatrix("bUpSt",ihit,state);
-    tr->getBK(irep)->setMatrix("bUpCov",ihit,cov);
-    if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
-    tr->getBK(irep)->setDetPlane("bPl",ihit,pl);
-  }
+	  tr->getBK(irep)->setMatrix("fUpSt",ihit,state);
+	  tr->getBK(irep)->setMatrix("fUpCov",ihit,cov);
+	  if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
+	  tr->getBK(irep)->setDetPlane("fPl",ihit,pl);
+	} else {
+	  tr->getBK(irep)->setMatrix("bUpSt",ihit,state);
+	  tr->getBK(irep)->setMatrix("bUpCov",ihit,cov);
+	  if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
+	  tr->getBK(irep)->setDetPlane("bPl",ihit,pl);
+	}
   }
 
   // calculate filtered chisq
@@ -333,10 +333,10 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   double chi2 = chi2Increment(res,H,cov,V);
   int ndf = res.GetNrows();
   if (direction == -1) {
-    rep->addChiSqu( chi2 );
+	  rep->addChiSqu( chi2 );
   }
   if (direction == 1) {
-    rep->addForwardChiSqu( chi2 );
+	  rep->addForwardChiSqu( chi2 );
   }
   rep->addNDF( ndf );
 
@@ -367,8 +367,8 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
 
 TMatrixT<double>
 GFKalman::calcGain(const TMatrixT<double>& cov, 
-           const TMatrixT<double>& HitCov,
-           const TMatrixT<double>& H){
+					 const TMatrixT<double>& HitCov,
+					 const TMatrixT<double>& H){
 
   // calculate covsum (V + HCH^T)
   TMatrixT<double> covsum1(cov,TMatrixT<double>::kMultTranspose,H);

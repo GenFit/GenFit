@@ -25,12 +25,10 @@
 #define GFMATERIALEFFECTS_H
 
 #include<iostream>
-#include "RKTools.h"
-#include "TObject.h"
-#include <vector>
-#include "TVector3.h"
-#include "TMatrixT.h"
-#include "GFPointPath.h"
+#include"TObject.h"
+#include<vector>
+#include"TVector3.h"
+#include"TMatrixT.h"
 
 /** @brief  Contains stepper and energy loss/noise matrix calculation
  *
@@ -73,39 +71,46 @@ public:
 
 
   //! Calculates energy loss in the travelled path, optional calculation of noise matrix
-  double effects(const std::vector<GFPointPath>& points,
+  double effects(const std::vector<TVector3>& points,
+                 const std::vector<double>& pointPaths,
                  const double& mom,
                  const int& pdg,
                  double& xx0,
                  const bool& doNoise = false,
-                 double* noise7x7 = NULL,
-                 const double* jacobian7x7 = NULL,
+                 TMatrixT<double>* noise = NULL,
+                 const TMatrixT<double>* jacobian = NULL,
                  const TVector3* directionBefore = NULL,
                  const TVector3* directionAfter = NULL);
 
   //! Returns maximum length so that a specified momentum loss will not be exceeded
-  /**  The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded,
-   *   or the next material boundary is reached. The material crossed are stored together with their stepsizes.
+  /**  The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded.
   */
-  double stepper(const double& maxStep, // maximum step. unsigned!
-                 const double& maxAngleStep, // maximum step due to curvature. unsigned!
+  double stepper(const double& maxDist,
                  const double& posx,
                  const double& posy,
                  const double& posz,
                  const double& dirx,
                  const double& diry,
                  const double& dirz,
-                 const double& mom, // momentum
-                 double& relMomLoss, // relative momloss for the step will be added
+                 const double& mom,
+                 double& relMomLoss,
                  const int& pdg);
 
+  double stepper(const double& maxDist,
+                 const TVector3& pos,
+                 const TVector3& dir,
+                 const double& mom,
+                 double& relMomLoss,
+                 const int& pdg) {
+    return stepper(maxDist, pos.X(), pos.Y(), pos.Z(), dir.X(), dir.Y(), dir.Z(), mom, relMomLoss, pdg);
+  }
 
 private:
-  //! sets fcharge, fmass and calculates fbeta, fgamma, fgammasquare;
-  void getParticleParameters(double mom);
+  //! sets fmatDensity, fmatZ, fmatA, fradiationLength, fmEE, fcharge, fmass;
+  void getParameters();
 
-  //! sets fmatDensity, fmatZ, fmatA, fradiationLength, fmEE;
-  void getMaterialParameters(TGeoMaterial* mat);
+  //! sets fbeta, fgamma, fgammasquare; must only be used after calling getParameters()
+  void calcBeta(double mom);
 
   //! Returns energy loss
   /**  Uses Bethe Bloch formula to calculate energy loss.
@@ -122,10 +127,10 @@ private:
     *  - truncated Landau distribution
     *  - Urban model
     *
-    *  Needs fdedx, which is calculated in energyLossBetheBloch, so it has to be called afterwards!
+    *  Needs fdedx, which is calculated in energyLossBetheBloch, so it has to be calles afterwards!
     */
   void noiseBetheBloch(const double& mom,
-                       double* noise) const;
+                       TMatrixT<double>* noise) const;
 
   //! calculation of multiple scattering
   /**  With the calculated multiple scattering angle, two noise matrices are calculated:
@@ -318,8 +323,8 @@ private:
     * \n
     */
   void noiseCoulomb(const double& mom,
-                    double* noise,
-                    const double* jacobian,
+                    TMatrixT<double>* noise,
+                    const TMatrixT<double>* jacobian,
                     const TVector3* directionBefore,
                     const TVector3* directionAfter) const;
 
@@ -335,7 +340,7 @@ private:
    *
    */
   void noiseBrems(const double& mom,
-                  double* noise) const;
+                  TMatrixT<double>* noise) const;
 
 
   bool fNoEffects;
