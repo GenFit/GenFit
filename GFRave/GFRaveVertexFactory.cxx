@@ -17,6 +17,7 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <string>
 
 #include "GFRaveVertexFactory.h"
 #include "GFRaveConverters.h"
@@ -49,7 +50,7 @@ GFRaveVertexFactory::GFRaveVertexFactory(int verbosity, bool useVacuumPropagator
 
   if (verbosity > 0) ++verbosity; // verbosity has to be >1 for rave
 
-  fFactory = new rave::VertexFactory(*fMagneticField, *fPropagator, "default", verbosity); // here copies of fMagneticField and fPropagator are made!
+  fFactory = new rave::VertexFactory(*fMagneticField, *fPropagator, "kalman-smoothing:1", verbosity); // here copies of fMagneticField and fPropagator are made!
 }
 
 
@@ -107,6 +108,11 @@ GFRaveVertexFactory::setBeamspot(const TVector3 & pos, const TMatrixT<double> & 
 
 void
 GFRaveVertexFactory::setMethod(const std::string & method){
+  size_t found = method.find("smoothing:1");
+  if (found==std::string::npos){
+    std::cerr << "GFRaveVertexFactory::setMethod(" << method << ") ==> smoothing not turned on! Smoothing has to be turned on! e.g. kalman-smoothing:1\n";
+    throw;
+  }
   fFactory->setDefaultMethod(method);
   std::cout << "GFRaveVertexFactory::setMethod ==> set method to " << fFactory->method() << std::endl;
 }
