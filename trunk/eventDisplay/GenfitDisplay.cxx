@@ -131,11 +131,15 @@ void GenfitDisplay::gotoEvent(unsigned int id) {
 	fEventId = id;
 
 	std::cout << "At event " << id << std::endl;
-	gEve->GetCurrentEvent()->DestroyElements();
+	if (gEve->GetCurrentEvent()) {
+	  gEve->GetCurrentEvent()->DestroyElements();
+	}
 	double old_error_scale = fErrorScale;
 	drawEvent(fEventId);
 	if(old_error_scale != fErrorScale) {
-		gEve->GetCurrentEvent()->DestroyElements();
+	  if (gEve->GetCurrentEvent()) {
+	    gEve->GetCurrentEvent()->DestroyElements();
+	  }
 		drawEvent(fEventId); // if autoscaling changed the error, draw again.
 	}
 	fErrorScale = old_error_scale;
@@ -160,7 +164,7 @@ void GenfitDisplay::open() {
 
 		//Set transparency & color of geometry
 		TObjArray* volumes = gGeoManager->GetListOfVolumes();
-		for(int i = 0; i < volumes->GetEntries(); i++) {
+		for(int i = 0; i < volumes->GetEntriesFast(); i++) {
 			TGeoVolume* volume = dynamic_cast<TGeoVolume*>(volumes->At(i));
 			assert(volume != NULL);
 			volume->SetLineColor(12);
@@ -300,11 +304,12 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					else continue;
 				}
 			}
-				track_pos = rep->getPos(plane);
-				plane_pos = plane.getO();
-				TMatrixT<double> hit_coords;
-				TMatrixT<double> hit_cov;
-				hit->getMeasurement(rep,plane,rep->getState(),rep->getCov(),hit_coords,hit_cov);
+			
+			track_pos = rep->getPos(plane);
+			plane_pos = plane.getO();
+			TMatrixT<double> hit_coords;
+			TMatrixT<double> hit_cov;
+			hit->getMeasurement(rep,plane,rep->getState(),rep->getCov(),hit_coords,hit_cov);
 
 			// finished getting the hit infos -----------------------------------------------------
 
@@ -416,10 +421,9 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 				// draw planar hits, with distinction between strip and pixel hits ----------------
 				if(planar_hit) {
-					TVector2 plane_coords = plane.LabToPlane(plane_pos);
 					if(!planar_pixel_hit) {
 						TEveBox* hit_box;
-						hit_box = boxCreator((plane_pos + (plane_coords.Px() + hit_u)*u), u, v, fErrorScale*std::sqrt(hit_res_u), plane_size, 0.0105);
+						hit_box = boxCreator((plane_pos + hit_u*u), u, v, fErrorScale*std::sqrt(hit_res_u), plane_size, 0.0105);
 						hit_box->SetMainColor(kYellow);
 						hit_box->SetMainTransparency(0);
 						gEve->AddElement(hit_box);
@@ -454,7 +458,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 						// calculate the semiaxis of the error ellipse ----------------------------
 						det_shape->SetShape(new TGeoEltu(pseudo_res_0, pseudo_res_1, 0.0105));
-						TVector3 pix_pos = plane_pos + (plane_coords.Px() + hit_u)*u + (plane_coords.Py() + hit_v)*v;
+						TVector3 pix_pos = plane_pos + hit_u*u + hit_v*v;
 						TVector3 u_semiaxis = (pix_pos + eVec(0,0)*u + eVec(1,0)*v)-pix_pos;
 						TVector3 v_semiaxis = (pix_pos + eVec(0,1)*u + eVec(1,1)*v)-pix_pos;
 						TVector3 norm = u.Cross(v);

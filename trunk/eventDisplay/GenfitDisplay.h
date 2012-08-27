@@ -142,7 +142,7 @@ class GenfitDisplay : public TNamed {
 		/** @brief Draw an event.*/
 		void drawEvent(unsigned int id);
 
-		/** @brief Create a box around o, orientet along u and v with widths ud, vd and depeth and
+		/** @brief Create a box around o, oriented along u and v with widths ud, vd and depth and
 		 *  return a pointer to the box object.
 		 */
 		TEveBox* boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth);
