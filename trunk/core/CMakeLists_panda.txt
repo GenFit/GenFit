@@ -44,7 +44,7 @@ ROOT_GENERATE_DICTIONARY("${GENFIT_HEADERS}" "${GENFIT_LINKDEF}" "${GENFIT_DICTI
 SET(GENFIT_SRCS ${GENFIT_SRCS} ${GENFIT_DICTIONARY})
 
 add_library(genfit SHARED ${GENFIT_SRCS})
-target_link_libraries(genfit ${ROOT_LIBRARIES})
+target_link_libraries(genfit ${ROOT_LIBRARIES} -lGeom -lVMC -lEG)
 set_target_properties(genfit PROPERTIES ${FAIRROOT_LIBRARY_PROPERTIES})
 ################ install ###################
 install(TARGETS genfit DESTINATION ${CMAKE_BINARY_DIR}/lib)
