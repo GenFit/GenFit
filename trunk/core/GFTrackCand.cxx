@@ -115,8 +115,11 @@ void GFTrackCand::append(const GFTrackCand& rhs){
 
 }
 
-void GFTrackCand::setComplTrackSeed(const TVector3& pos,const TVector3& mom, const int pdgCode, TVector3 posError, TVector3 dirError){
-  fPosSeed=pos;fDirSeed=mom; fPdg = pdgCode; fPosError = posError; fDirError = dirError;
+void GFTrackCand::setComplTrackSeed(const TVector3& pos, const TVector3& mom, const int pdgCode, TVector3 posError, TVector3 dirError){
+  fPosSeed=pos; fPdg = pdgCode; fPosError = posError; fDirError = dirError;
+  TVector3 dir = mom;
+  dir.SetMag(1.0);
+  fDirSeed=dir;
   TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(fPdg);
   double charge = part->Charge()/(3.);
   fQoverpSeed=charge/mom.Mag();
