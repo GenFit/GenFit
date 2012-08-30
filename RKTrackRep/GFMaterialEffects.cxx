@@ -24,15 +24,16 @@
 #include "stdlib.h"
 
 #include "TDatabasePDG.h"
+#include "TGeoMedium.h"
 #include "TGeoMaterial.h"
 #include "TGeoManager.h"
+#include "TMath.h"
 
 #include "math.h"
 #include "assert.h"
 
 
-
-#define DEBUG 0
+//#define DEBUG
 
 
 GFMaterialEffects* GFMaterialEffects::finstance = NULL;
@@ -97,52 +98,56 @@ void GFMaterialEffects::setMscModel(const std::string& modelName)
 }
 
 
-double GFMaterialEffects::effects(const std::vector<TVector3>& points,
-                                  const std::vector<double>& pointPaths,
+double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
                                   const double& mom,
                                   const int& pdg,
                                   double& xx0,
                                   const bool& doNoise,
-                                  TMatrixT<double>* noise,
-                                  const TMatrixT<double>* jacobian,
+                                  double* noise,
+                                  const double* jacobian,
                                   const TVector3* directionBefore,
                                   const TVector3* directionAfter)
 {
 
-  //assert(points.size()==pointPaths.size());
   if (fNoEffects) return 0.;
 
   fpdg = pdg;
+  getParticleParameters(mom);
 
   double momLoss = 0.;
+  unsigned int nPoints(points.size());
 
-  for (unsigned int i = 1; i < points.size(); ++i) {
-    TVector3 dir = points.at(i) - points.at(i - 1);
-    double dist = dir.Mag();
-    double realPath = pointPaths.at(i);
+  for (unsigned int i = 1; i < nPoints; ++i) { // loop over points
+
+    TVector3 dir(points.at(i).getPos() - points.at(i-1).getPos()); // straight line from one point to the next
+    double dist = dir.Mag(); // straight line distance
 
     if (dist > 1.E-8) { // do material effects only if distance is not too small
-      dir *= 1. / dist; //normalize dir
 
-      double X(0.);
-
-      gGeoManager->InitTrack(points.at(i - 1).X(), points.at(i - 1).Y(), points.at(i - 1).Z(),
+      dir.SetMag(1.);
+      double X(0.); // path already gone through material (straight line)
+      double step(0); // straight line step
+      double realPath = points.at(i-1).getPath(); // real (curved) distance, signed
+      
+      gGeoManager->InitTrack(points.at(i-1).X(), points.at(i-1).Y(), points.at(i-1).Z(),
                              dir.X(), dir.Y(), dir.Z());
 
       while (X < dist) {
 
-        getParameters();
+        getMaterialParameters(gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial());
 
         gGeoManager->FindNextBoundaryAndStep(dist - X);
-        fstep = gGeoManager->GetStep();
-
+        step = gGeoManager->GetStep();
+        fstep = fabs(step * realPath / dist); // the actual path is curved, not straight!
+        if (fstep <= 0.) continue;
+        
+        double stepSign(1.);
+        if (realPath < 0) stepSign = -1.;
 
         if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
 
-          calcBeta(mom);
-
           if (fEnergyLossBetheBloch)
-            momLoss += realPath / dist * this->energyLossBetheBloch(mom);
+            momLoss += stepSign * this->energyLossBetheBloch(mom);
           if (doNoise && fEnergyLossBetheBloch && fNoiseBetheBloch)
             this->noiseBetheBloch(mom, noise);
 
@@ -150,22 +155,23 @@ double GFMaterialEffects::effects(const std::vector<TVector3>& points,
             this->noiseCoulomb(mom, noise, jacobian, directionBefore, directionAfter);
 
           if (fEnergyLossBrems)
-            momLoss += realPath / dist * this->energyLossBrems(mom);
+            momLoss += stepSign * this->energyLossBrems(mom);
           if (doNoise && fEnergyLossBrems && fNoiseBrems)
             this->noiseBrems(mom, noise);
 
           xx0 += fstep / fradiationLength;
         }
-        X += fstep;
+        X += step;
       }
     }
-  }
+  } // end loop over points
 
   return momLoss;
 }
 
 
-double GFMaterialEffects::stepper(const double& maxDist,
+double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
+                                  const double& maxAngleStep,
                                   const double& posx,
                                   const double& posy,
                                   const double& posz,
@@ -178,26 +184,44 @@ double GFMaterialEffects::stepper(const double& maxDist,
 {
 
   static const double maxRelMomLoss = .005; // maximum relative momentum loss allowed
+  static const double minStep = 1.E-4; // 1 µm
 
-  if (fNoEffects) return maxDist;
+  if (fNoEffects) return maxStep;
   if (relMomLoss > maxRelMomLoss) return 0;
+  if (maxStep < minStep) return minStep;
 
   fpdg = pdg;
-
-  gGeoManager->InitTrack(posx, posy, posz, dirx, diry, dirz);
-
-  double X(0.);
+  double X(minStep);
   double relMomLossStep(0);
+  TGeoMaterial* mat(NULL);
+  getParticleParameters(mom);
 
-  while (X < maxDist) {
+  gGeoManager->InitTrack(posx+minStep*dirx,
+                         posy+minStep*diry,
+                         posz+minStep*dirz,
+                         dirx, diry, dirz);
 
-    getParameters();
+  #ifdef DEBUG
+    //gGeoManager->SetVerboseLevel(5);
+  #endif
 
-    gGeoManager->FindNextBoundaryAndStep(maxDist - X);
+  while (X < maxStep){
+    relMomLossStep = 0;
+    TGeoMedium* medium = gGeoManager->GetCurrentVolume()->GetMedium();
+    assert(medium != NULL);
+    mat = medium->GetMaterial();
+    gGeoManager->FindNextBoundaryAndStep(maxStep-X);
     fstep = gGeoManager->GetStep();
 
+    #ifdef DEBUG
+      std::cout<<"     gGeoManager->GetStep() = " << gGeoManager->GetStep() << "       fstep = " << fstep << "\n";
+    #endif
+
+    if (fstep <= 0.) continue;
+
+    getMaterialParameters(mat);
+
     if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
-      calcBeta(mom);
 
       if (fEnergyLossBetheBloch) relMomLossStep += this->energyLossBetheBloch(mom) / mom;
       if (fEnergyLossBrems)      relMomLossStep += this->energyLossBrems(mom) / mom;
@@ -206,6 +230,9 @@ double GFMaterialEffects::stepper(const double& maxDist,
     if (relMomLoss + relMomLossStep > maxRelMomLoss) {
       double fraction = (maxRelMomLoss - relMomLoss) / relMomLossStep;
       X += fraction * fstep;
+      #ifdef DEBUG
+        std::cout<<"     momLoss exceeded \n";
+      #endif
       break;
     }
 
@@ -217,24 +244,22 @@ double GFMaterialEffects::stepper(const double& maxDist,
 }
 
 
-void GFMaterialEffects::getParameters()
+void GFMaterialEffects::getMaterialParameters(TGeoMaterial* mat)
 {
-  assert(gGeoManager->GetCurrentVolume()->GetMedium() != NULL);
-  TGeoMaterial* mat = gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial();
   fmatDensity      = mat->GetDensity();
   fmatZ            = mat->GetZ();
   fmatA            = mat->GetA();
   fradiationLength = mat->GetRadLen();
   fmEE             = MeanExcEnergy_get(mat);
-
-  TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(fpdg);
-  fcharge = part->Charge() / (3.);
-  fmass = part->Mass();
 }
 
 
-void GFMaterialEffects::calcBeta(double mom)
+void GFMaterialEffects::getParticleParameters(double mom)
 {
+  TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(fpdg);
+  fcharge = part->Charge() / (3.);
+  fmass = part->Mass();
+
   fbeta = mom / sqrt(fmass * fmass + mom * mom);
 
   //for numerical stability
@@ -263,29 +288,30 @@ double GFMaterialEffects::energyLossBetheBloch(const double& mom)
     if (fdedx < 0.) fdedx = 0;
   }
 
-  double DE = fstep * fdedx; //always positive
+  double DE = fabs(fstep) * fdedx; //always positive
   double momLoss = sqrt(mom * mom + 2.*sqrt(mom * mom + fmass * fmass) * DE + DE * DE) - mom; //always positive
 
-  //in vacuum it can numerically happen that momLoss becomes a small negative number. A cut-off at 0.01 eV for momentum loss seems reasonable
-  if (fabs(momLoss) < 1.E-11)momLoss = 1.E-11;
+  //in vacuum it can numerically happen that momLoss becomes a small negative number.
+  if (momLoss < 0.) return 0.;
   return momLoss;
 }
 
 
 void GFMaterialEffects::noiseBetheBloch(const double& mom,
-                                        TMatrixT<double>* noise) const
+                                        double* noise) const
 {
 
 
   // ENERGY LOSS FLUCTUATIONS; calculate sigma^2(E);
   double sigma2E = 0.;
-  double zeta  = 153.4E3 * fcharge * fcharge / (fbeta * fbeta) * fmatZ / fmatA * fmatDensity * fstep; // eV
+  double zeta  = 153.4E3 * fcharge * fcharge / (fbeta * fbeta) * fmatZ / fmatA * fmatDensity * fabs(fstep); // eV
   double Emax  = 2.E9 * me * fbeta * fbeta * fgammaSquare / (1. + 2.*fgamma * me / fmass + (me / fmass) * (me / fmass)); // eV
   double kappa = zeta / Emax;
 
   if (kappa > 0.01) { // Vavilov-Gaussian regime
     sigma2E += zeta * Emax * (1. - fbeta * fbeta / 2.); // eV^2
-  } else { // Urban/Landau approximation
+  }
+  else { // Urban/Landau approximation
     double alpha = 0.996;
     double sigmaalpha = 15.76;
     // calculate number of collisions Nc
@@ -301,7 +327,7 @@ void GFMaterialEffects::noiseBetheBloch(const double& mom,
     double Sigma2 = fdedx * 1.0E9 * f2 / e2 * (log(mbbgg2 / e2) - fbeta * fbeta) / (log(mbbgg2 / I) - fbeta * fbeta) * 0.6; // 1/cm
     double Sigma3 = fdedx * 1.0E9 * Emax / (I * (Emax + I) * log((Emax + I) / I)) * 0.4; // 1/cm
 
-    double Nc = (Sigma1 + Sigma2 + Sigma3) * fstep;
+    double Nc = (Sigma1 + Sigma2 + Sigma3) * fabs(fstep);
 
     if (Nc > 50.) { // truncated Landau distribution
       // calculate sigmaalpha  (see GEANT3 manual W5013)
@@ -322,20 +348,20 @@ void GFMaterialEffects::noiseBetheBloch(const double& mom,
     } else { // Urban model
       double Ealpha  = I / (1. - (alpha * Emax / (Emax + I))); // eV
       double meanE32 = I * (Emax + I) / Emax * (Ealpha - I); // eV^2
-      sigma2E += fstep * (Sigma1 * e1 * e1 + Sigma2 * e2 * e2 + Sigma3 * meanE32); // eV^2
+      sigma2E += fabs(fstep) * (Sigma1 * e1 * e1 + Sigma2 * e2 * e2 + Sigma3 * meanE32); // eV^2
     }
   }
 
   sigma2E *= 1.E-18; // eV -> GeV
 
   // update noise matrix
-  (*noise)[6][6] += (mom * mom + fmass * fmass) / pow(mom, 6.) * sigma2E;
+  noise[6*7+6] += (mom * mom + fmass * fmass) / pow(mom, 6.) * sigma2E;
 }
 
 
 void GFMaterialEffects::noiseCoulomb(const double& mom,
-                                     TMatrixT<double>* noise,
-                                     const TMatrixT<double>* jacobian,
+                                     double* noise,
+                                     const double* jacobian,
                                      const TVector3* directionBefore,
                                      const TVector3* directionAfter) const
 {
@@ -345,10 +371,10 @@ void GFMaterialEffects::noiseCoulomb(const double& mom,
   double sigma2 = 0;
   assert(fMscModelCode == 0 || fMscModelCode == 1);
   if (fMscModelCode == 0) {// PANDA report PV/01-07 eq(43); linear in step length
-    sigma2 = 225.E-6 / (fbeta * fbeta * mom * mom) * fstep / fradiationLength * fmatZ / (fmatZ + 1) * log(159.*pow(fmatZ, -1. / 3.)) / log(287.*pow(fmatZ, -0.5)); // sigma^2 = 225E-6/mom^2 * XX0/fbeta^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
+    sigma2 = 225.E-6 / (fbeta * fbeta * mom * mom) * fabs(fstep) / fradiationLength * fmatZ / (fmatZ + 1) * log(159.*pow(fmatZ, -1. / 3.)) / log(287.*pow(fmatZ, -0.5)); // sigma^2 = 225E-6/mom^2 * XX0/fbeta^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
 
   } else if (fMscModelCode == 1) { //Highland not linear in step length formula taken from PDG book 2011 edition
-    double stepOverRadLength = fstep / fradiationLength;
+    double stepOverRadLength = fabs(fstep) / fradiationLength;
     double logCor = (1 + 0.038 * log(stepOverRadLength));
     sigma2 = 0.0136 * 0.0136 / (fbeta * fbeta * mom * mom) * stepOverRadLength * logCor * logCor;
   }
@@ -357,7 +383,8 @@ void GFMaterialEffects::noiseCoulomb(const double& mom,
 
 
   // noiseBefore
-  TMatrixT<double> noiseBefore(7, 7);
+  double noiseBefore[7*7];
+  memset(noiseBefore,0x00,7*7*sizeof(double));
 
   // calculate euler angles theta, psi (so that directionBefore' points in z' direction)
   double psi = 0;
@@ -375,30 +402,50 @@ void GFMaterialEffects::noiseCoulomb(const double& mom,
   double cospsi = cos(psi);
 
   // calculate NoiseBefore Matrix R M R^T
-  double noiseBefore34 =  sigma2 * cospsi * sinpsi * sintheta * sintheta; // noiseBefore_ij = noiseBefore_ji
-  double noiseBefore35 = -sigma2 * costheta * sinpsi * sintheta;
-  double noiseBefore45 =  sigma2 * costheta * cospsi * sintheta;
+  const double noiseBefore33 =  sigma2 * (cospsi * cospsi + costheta * costheta - costheta * costheta * cospsi * cospsi);
+  const double noiseBefore43 =  sigma2 *  cospsi * sinpsi * sintheta * sintheta;
+  const double noiseBefore53 = -sigma2 *  costheta * sinpsi * sintheta;
+  const double noiseBefore44 =  sigma2 * (sinpsi * sinpsi + costheta * costheta * cospsi * cospsi);
+  const double noiseBefore54 =  sigma2 *  costheta * cospsi * sintheta;
+  const double noiseBefore55 =  sigma2 *  sintheta * sintheta;
 
-  noiseBefore[3][3] = sigma2 * (cospsi * cospsi + costheta * costheta - costheta * costheta * cospsi * cospsi);
-  noiseBefore[4][3] = noiseBefore34;
-  noiseBefore[5][3] = noiseBefore35;
+  // propagate
+  // last column of jac is [0,0,0,0,0,0,1]
+  double JTM0  = jacobian[21+0] * noiseBefore33 + jacobian[28+0] * noiseBefore43 + jacobian[35+0] * noiseBefore53;
+  double JTM1  = jacobian[21+0] * noiseBefore43 + jacobian[28+0] * noiseBefore44 + jacobian[35+0] * noiseBefore54;
+  double JTM2  = jacobian[21+0] * noiseBefore53 + jacobian[28+0] * noiseBefore54 + jacobian[35+0] * noiseBefore55;
+  double JTM3  = jacobian[21+1] * noiseBefore33 + jacobian[28+1] * noiseBefore43 + jacobian[35+1] * noiseBefore53;
+  double JTM4  = jacobian[21+1] * noiseBefore43 + jacobian[28+1] * noiseBefore44 + jacobian[35+1] * noiseBefore54;
+  double JTM5  = jacobian[21+1] * noiseBefore53 + jacobian[28+1] * noiseBefore54 + jacobian[35+1] * noiseBefore55;
+  double JTM6  = jacobian[21+2] * noiseBefore33 + jacobian[28+2] * noiseBefore43 + jacobian[35+2] * noiseBefore53;
+  double JTM7  = jacobian[21+2] * noiseBefore43 + jacobian[28+2] * noiseBefore44 + jacobian[35+2] * noiseBefore54;
+  double JTM8  = jacobian[21+2] * noiseBefore53 + jacobian[28+2] * noiseBefore54 + jacobian[35+2] * noiseBefore55;
+  double JTM9  = jacobian[21+3] * noiseBefore33 + jacobian[28+3] * noiseBefore43 + jacobian[35+3] * noiseBefore53;
+  double JTM10 = jacobian[21+3] * noiseBefore43 + jacobian[28+3] * noiseBefore44 + jacobian[35+3] * noiseBefore54;
+  double JTM11 = jacobian[21+3] * noiseBefore53 + jacobian[28+3] * noiseBefore54 + jacobian[35+3] * noiseBefore55;
+  double JTM12 = jacobian[21+4] * noiseBefore33 + jacobian[28+4] * noiseBefore43 + jacobian[35+4] * noiseBefore53;
+  double JTM13 = jacobian[21+4] * noiseBefore43 + jacobian[28+4] * noiseBefore44 + jacobian[35+4] * noiseBefore54;
+  double JTM14 = jacobian[21+4] * noiseBefore53 + jacobian[28+4] * noiseBefore54 + jacobian[35+4] * noiseBefore55;
 
-  noiseBefore[3][4] = noiseBefore34;
-  noiseBefore[4][4] = sigma2 * (sinpsi * sinpsi + costheta * costheta * cospsi * cospsi);
-  noiseBefore[5][4] = noiseBefore45;
+  // loops are vectorizable by the compiler!
+  noiseBefore[35+5] = (jacobian[21+5] * noiseBefore33 + jacobian[28+5] * noiseBefore43 + jacobian[35+5] * noiseBefore53) * jacobian[21+5] + (jacobian[21+5] * noiseBefore43 + jacobian[28+5] * noiseBefore44 + jacobian[35+5] * noiseBefore54) * jacobian[28+5] + (jacobian[21+5] * noiseBefore53 + jacobian[28+5] * noiseBefore54 + jacobian[35+5] * noiseBefore55) * jacobian[35+5];
+  for (int i=0; i<6; ++i) noiseBefore[i] = JTM0 * jacobian[21+i] + JTM1 * jacobian[28+i] + JTM2 * jacobian[35+i];
+  for (int i=1; i<6; ++i) noiseBefore[7+i] = JTM3 * jacobian[21+i] + JTM4 * jacobian[28+i] + JTM5 * jacobian[35+i];
+  for (int i=2; i<6; ++i) noiseBefore[14+i] = JTM6 * jacobian[21+i] + JTM7 * jacobian[28+i] + JTM8 * jacobian[35+i];
+  for (int i=3; i<6; ++i) noiseBefore[21+i] = JTM9 * jacobian[21+i] + JTM10 * jacobian[28+i] + JTM11 * jacobian[35+i];
+  for (int i=4; i<6; ++i) noiseBefore[28+i] = JTM12 * jacobian[21+i] + JTM13 * jacobian[28+i] + JTM14 * jacobian[35+i];
 
-  noiseBefore[3][5] = noiseBefore35;
-  noiseBefore[4][5] = noiseBefore45;
-  noiseBefore[5][5] = sigma2 * sintheta * sintheta;
+  // symmetric part
+  noiseBefore[7+0] = noiseBefore[1];
+  noiseBefore[14+0] = noiseBefore[2];  noiseBefore[14+1] = noiseBefore[7+2];
+  noiseBefore[21+0] = noiseBefore[3];  noiseBefore[21+1] = noiseBefore[7+3];  noiseBefore[21+2] = noiseBefore[14+3];
+  noiseBefore[28+0] = noiseBefore[4];  noiseBefore[28+1] = noiseBefore[7+4];  noiseBefore[28+2] = noiseBefore[14+4];  noiseBefore[28+3] = noiseBefore[21+4];
+  noiseBefore[35+0] = noiseBefore[5];  noiseBefore[35+1] = noiseBefore[7+5];  noiseBefore[35+2] = noiseBefore[14+5];  noiseBefore[35+3] = noiseBefore[21+5];  noiseBefore[35+4] = noiseBefore[28+5];
 
-  TMatrixT<double> jacobianT(7, 7);
-  jacobianT = (*jacobian);
-  jacobianT.T();
-
-  noiseBefore = jacobianT * noiseBefore * (*jacobian); //propagate
 
   // noiseAfter
-  TMatrixT<double> noiseAfter(7, 7);
+  double noiseAfter[7*7];
+  memset(noiseAfter,0x00,7*7*sizeof(double));
 
   // calculate euler angles theta, psi (so that A' points in z' direction)
   psi = 0;
@@ -416,24 +463,22 @@ void GFMaterialEffects::noiseCoulomb(const double& mom,
   cospsi = cos(psi);
 
   // calculate NoiseAfter Matrix R M R^T
-  double noiseAfter34 =  sigma2 * cospsi * sinpsi * sintheta * sintheta; // noiseAfter_ij = noiseAfter_ji
-  double noiseAfter35 = -sigma2 * costheta * sinpsi * sintheta;
-  double noiseAfter45 =  sigma2 * costheta * cospsi * sintheta;
+  noiseAfter[3*7+3] =  sigma2 * (cospsi * cospsi + costheta * costheta - costheta * costheta * cospsi * cospsi);
+  noiseAfter[3*7+4] =  sigma2 * cospsi * sinpsi * sintheta * sintheta; // noiseAfter_ij = noiseAfter_ji
+  noiseAfter[3*7+5] = -sigma2 * costheta * sinpsi * sintheta;
 
-  noiseAfter[3][3] = sigma2 * (cospsi * cospsi + costheta * costheta - costheta * costheta * cospsi * cospsi);
-  noiseAfter[4][3] = noiseAfter34;
-  noiseAfter[5][3] = noiseAfter35;
+  noiseAfter[4*7+3] =  noiseAfter[3*7+4];
+  noiseAfter[4*7+4] =  sigma2 * (sinpsi * sinpsi + costheta * costheta * cospsi * cospsi);
+  noiseAfter[4*7+5] =  sigma2 * costheta * cospsi * sintheta;
 
-  noiseAfter[3][4] = noiseAfter34;
-  noiseAfter[4][4] = sigma2 * (sinpsi * sinpsi + costheta * costheta * cospsi * cospsi);
-  noiseAfter[5][4] = noiseAfter45;
-
-  noiseAfter[3][5] = noiseAfter35;
-  noiseAfter[4][5] = noiseAfter45;
-  noiseAfter[5][5] = sigma2 * sintheta * sintheta;
+  noiseAfter[5*7+3] =  noiseAfter[3*7+5];
+  noiseAfter[5*7+4] =  noiseAfter[4*7+5];
+  noiseAfter[5*7+5] =  sigma2 * sintheta * sintheta;
 
   //calculate mean of noiseBefore and noiseAfter and update noise
-  (*noise) += 0.5 * noiseBefore + 0.5 * noiseAfter;
+  for (unsigned int i=0; i<7*7; ++i){
+    noise[i] += 0.5 * (noiseBefore[i]+noiseAfter[i]);
+  }
 
 }
 
@@ -592,7 +637,7 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
     }
   }
 
-  double DE = fstep * factor * dedxBrems; //always positive
+  double DE = fabs(fstep) * factor * dedxBrems; //always positive
   double momLoss = sqrt(mom * mom + 2.*sqrt(mom * mom + fmass * fmass) * DE + DE * DE) - mom; //always positive
 
   return momLoss;
@@ -600,19 +645,19 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
 
 
 void GFMaterialEffects::noiseBrems(const double& mom,
-                                   TMatrixT<double>* noise) const
+                                   double* noise) const
 {
 
   if (fabs(fpdg) != 11) return; // only for electrons and positrons
 
-  double LX  = 1.442695 * fstep / fradiationLength;
+  double LX  = 1.442695 * fabs(fstep) / fradiationLength;
   double S2B = mom * mom * (1. / pow(3., LX) - 1. / pow(4., LX));
   double DEDXB  = pow(fabs(S2B), 0.5);
   DEDXB = 1.2E9 * DEDXB; //eV
   double sigma2E = DEDXB * DEDXB; //eV^2
   sigma2E *= 1.E-18; // eV -> GeV
 
-  (*noise)[6][6] += (mom * mom + fmass * fmass) / pow(mom, 6.) * sigma2E;
+  noise[6*7+6] += (mom * mom + fmass * fmass) / pow(mom, 6.) * sigma2E;
 }
 
 //---------------------------------------------------------------------------------

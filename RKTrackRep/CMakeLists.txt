@@ -5,3 +5,4 @@ IF(DEFINED ENV{SIMPATH})
 ELSE(DEFINED ENV{SIMPATH})
    include(CMakeLists_standalone.txt)
 ENDIF(DEFINED ENV{SIMPATH})
+

@@ -16,14 +16,24 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifdef __CINT__
+
+#include <iostream>
+#include <string>
+#include "stdlib.h"
+#include "GFPointPath.h"
 
 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
+GFPointPath::GFPointPath() :
+  fPos(0,0,0), fPath(0) {
 
-#pragma link C++ class RKTrackRep-;
-#pragma link C++ class GFMaterialEffects+;
+}
 
-#endif
+
+GFPointPath::~GFPointPath(){;}
+
+
+void GFPointPath::Print() const {
+  std::cout << "  GFPointPath at "; fPos.Print();
+  std::cout << "   Path to next point = "<< fPath <<" cm \n";
+}
+
