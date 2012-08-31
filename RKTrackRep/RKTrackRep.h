@@ -269,7 +269,9 @@ class RKTrackRep : public GFAbsTrackRep {
                     const M1x7& state7,
                     TMatrixD* Jac = NULL);
 
-  RKTrackRep& operator=(const RKTrackRep* rhs){return *this;};
+  RKTrackRep& operator=(const RKTrackRep*){
+    return *this;
+  };
 
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successfull and the plane is reached, the function returns true.
