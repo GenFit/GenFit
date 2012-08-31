@@ -84,7 +84,9 @@ class GFRecoHitIfc : public GFAbsRecoHit{
    * Implementation in the HitPolicy
    */
   virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TMatrixT<double>& statePred,const TMatrixT<double>& covPred,TMatrixT<double>& m, TMatrixT<double>& V){
-
+    static_cast<void>(rep);
+    static_cast<void>(statePred);
+    static_cast<void>(covPred);
     TMatrixT<double> mTemp = fPolicy.hitCoord(this,pl);
     TMatrixT<double> VTemp = fPolicy.hitCov(this,pl);
     m.ResizeTo(mTemp);

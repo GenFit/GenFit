@@ -77,7 +77,10 @@ public:
    *
    * This is a historically left-over method and shall be deleted some time
    */
-  void setLazy(Int_t flag){std::cerr<<"Using outdates setLazy method of class GFKalman:"<<std::endl;}
+  void setLazy(Int_t flag){
+    static_cast<void>(flag);
+    std::cerr<<"Using outdates setLazy method of class GFKalman:"<<std::endl;
+  }
 
   /** @brief Set number of iterations for Kalman Filter
    *

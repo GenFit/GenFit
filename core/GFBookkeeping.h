@@ -79,8 +79,10 @@ class GFBookkeeping : public TObject {
   void Print(const Option_t* = "") const;
 
  private:
-  //protect from call of net yet defined assignement operator
-  GFBookkeeping& operator=(const GFBookkeeping& rhs){return *this;}
+  //protect from call of not yet defined assignement operator
+  GFBookkeeping& operator=(const GFBookkeeping&){
+    return *this;
+  }
 
  public:
   ClassDef(GFBookkeeping,2)
