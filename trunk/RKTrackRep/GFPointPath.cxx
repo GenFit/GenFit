@@ -29,9 +29,6 @@ GFPointPath::GFPointPath() :
 }
 
 
-GFPointPath::~GFPointPath(){;}
-
-
 void GFPointPath::Print() const {
   std::cout << "  GFPointPath at "; fPos.Print();
   std::cout << "   Path to next point = "<< fPath <<" cm \n";
