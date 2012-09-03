@@ -91,11 +91,11 @@ class RKTrackRep : public GFAbsTrackRep {
     * \f}
     * The following equations define the transformation from master- to plane reference system:
     * \f{eqnarray*}{
-    * u & = \left(\boldsymbol{\mathbf{x}}-\boldsymbol{\mathbf{O}}\right)\boldsymbol{\mathbf{U}}\\
-    * v & = \left(\boldsymbol{\mathbf{x}}-\boldsymbol{\mathbf{O}}\right)\boldsymbol{\mathbf{V}}\\
+    * \frac{q}{p}  & = \frac{q}{p} \\
     * u^{\prime}   & = \frac{\boldsymbol{\mathbf{a}} \boldsymbol{\mathbf{U}}}{\boldsymbol{\mathbf{a}} \boldsymbol{\mathbf{N}}} \\
     * v^{\prime}   & = \frac{\boldsymbol{\mathbf{a}} \boldsymbol{\mathbf{V}}}{\boldsymbol{\mathbf{a}} \boldsymbol{\mathbf{N}}} \\
-    * \frac{q}{p}  & = \frac{q}{p}
+    * u & = \left(\boldsymbol{\mathbf{x}}-\boldsymbol{\mathbf{O}}\right)\boldsymbol{\mathbf{U}}\\
+    * v & = \left(\boldsymbol{\mathbf{x}}-\boldsymbol{\mathbf{O}}\right)\boldsymbol{\mathbf{V}}\\
     * \f}
     * with
     * \f{eqnarray*}{
@@ -106,37 +106,37 @@ class RKTrackRep : public GFAbsTrackRep {
     * \f{eqnarray*}{
     *   C_M     & = J_{p,M} \, C_p \, J_{p,M}^T \\
     *   J_{p,M} & = \begin{pmatrix}
-    *         \frac{\partial x}{\partial u} & \frac{\partial x}{\partial v} & \frac{\partial x}{\partial u^{\prime}} & \frac{\partial x}{\partial v^{\prime}} & \frac{\partial x}{\partial\frac{q}{p}}\\
-    *         \frac{\partial y}{\partial u} & \frac{\partial y}{\partial v} & \frac{\partial y}{\partial u^{\prime}} & \frac{\partial y}{\partial v^{\prime}} & \frac{\partial y}{\partial\frac{q}{p}}\\
-    *         \frac{\partial z}{\partial u} & \frac{\partial z}{\partial v} & \frac{\partial z}{\partial u^{\prime}} & \frac{\partial z}{\partial v^{\prime}} & \frac{\partial z}{\partial\frac{q}{p}}\\
-    *         \frac{\partial a_{x}}{\partial u} & \frac{\partial a_{x}}{\partial v} & \frac{\partial a_{x}}{\partial u^{\prime}} & \frac{\partial a_{x}}{\partial v^{\prime}} & \frac{\partial a_{x}}{\partial\frac{q}{p}}\\
-    *         \frac{\partial a_{y}}{\partial u} & \frac{\partial a_{y}}{\partial v} & \frac{\partial a_{y}}{\partial u^{\prime}} & \frac{\partial a_{y}}{\partial v^{\prime}} & \frac{\partial a_{y}}{\partial\frac{q}{p}}\\
-    *         \frac{\partial a_{z}}{\partial u} & \frac{\partial a_{z}}{\partial v} & \frac{\partial a_{z}}{\partial u^{\prime}} & \frac{\partial a_{z}}{\partial v^{\prime}} & \frac{\partial a_{z}}{\partial\frac{q}{p}}\\
-    *         \frac{\partial\frac{q}{p}}{\partial u} & \frac{\partial\frac{q}{p}}{\partial v} & \frac{\partial\frac{q}{p}}{\partial u^{\prime}} & \frac{\partial\frac{q}{p}}{\partial v^{\prime}} & \frac{\partial\frac{q}{p}}{\partial\frac{q}{p}}
+    *         \frac{\partial x}{\partial\frac{q}{p}}          & \frac{\partial x}{\partial u^{\prime}}          & \frac{\partial x}{\partial v^{\prime}}          & \frac{\partial x}{\partial u}           & \frac{\partial x}{\partial v}          \\
+    *         \frac{\partial y}{\partial\frac{q}{p}}          & \frac{\partial y}{\partial u^{\prime}}          & \frac{\partial y}{\partial v^{\prime}}          & \frac{\partial y}{\partial u}           & \frac{\partial y}{\partial v}          \\
+    *         \frac{\partial z}{\partial\frac{q}{p}}          & \frac{\partial z}{\partial u^{\prime}}          & \frac{\partial z}{\partial v^{\prime}}          & \frac{\partial z}{\partial u}           & \frac{\partial z}{\partial v}          \\
+    *         \frac{\partial a_{x}}{\partial\frac{q}{p}}      & \frac{\partial a_{x}}{\partial u^{\prime}}      & \frac{\partial a_{x}}{\partial v^{\prime}}      & \frac{\partial a_{x}}{\partial u}       & \frac{\partial a_{x}}{\partial v}      \\
+    *         \frac{\partial a_{y}}{\partial\frac{q}{p}}      & \frac{\partial a_{y}}{\partial u^{\prime}}      & \frac{\partial a_{y}}{\partial v^{\prime}}      & \frac{\partial a_{y}}{\partial u}       & \frac{\partial a_{y}}{\partial v}      \\
+    *         \frac{\partial a_{z}}{\partial\frac{q}{p}}      & \frac{\partial a_{z}}{\partial u^{\prime}}      & \frac{\partial a_{z}}{\partial v^{\prime}}      & \frac{\partial a_{z}}{\partial u}       & \frac{\partial a_{z}}{\partial v}      \\
+    *         \frac{\partial\frac{q}{p}}{\partial\frac{q}{p}} & \frac{\partial\frac{q}{p}}{\partial u^{\prime}} & \frac{\partial\frac{q}{p}}{\partial v^{\prime}} & \frac{\partial\frac{q}{p}}{\partial u}  & \frac{\partial\frac{q}{p}}{\partial v} \\
     *         \end{pmatrix} \\
     *           & = \begin{pmatrix}
-    *         U_{x} & V_{x} & 0 & 0 & 0\\
-    *         U_{y} & V_{y} & 0 & 0 & 0\\
-    *         U_{z} & V_{z} & 0 & 0 & 0\\
-    *         0 & 0 & \frac{d}{\widetilde{p}} \left( U_{x} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{U}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & \frac{d}{\widetilde{p}} \left( V_{x} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{V}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & 0\\
-    *         0 & 0 & \frac{d}{\widetilde{p}} \left( U_{y} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{U}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & \frac{d}{\widetilde{p}} \left( V_{y} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{V}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & 0\\
-    *         0 & 0 & \frac{d}{\widetilde{p}} \left( U_{z} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{U}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & \frac{d}{\widetilde{p}} \left( V_{z} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{V}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & 0\\
-    *         0 & 0 & 0 & 0 & 1
+    *         0 & 0 & 0 & U_{x} & V_{x} \\
+    *         0 & 0 & 0 & U_{y} & V_{y} \\
+    *         0 & 0 & 0 & U_{z} & V_{z} \\
+    *         0 & \frac{d}{\widetilde{p}} \left( U_{x} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{U}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & \frac{d}{\widetilde{p}} \left( V_{x} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{V}} \boldsymbol{\mathbf{\widetilde{p}}}\right) & 0 & 0 \\
+    *         0 & \frac{d}{\widetilde{p}} \left( U_{y} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{U}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & \frac{d}{\widetilde{p}} \left( V_{y} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{V}} \boldsymbol{\mathbf{\widetilde{p}}}\right) & 0 & 0 \\
+    *         0 & \frac{d}{\widetilde{p}} \left( U_{z} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{U}} \boldsymbol{\mathbf{\widetilde{p}}}\right)  & \frac{d}{\widetilde{p}} \left( V_{z} - \frac{\widetilde{p}_{x}}{\widetilde{p}^2} \boldsymbol{\mathbf{V}} \boldsymbol{\mathbf{\widetilde{p}}}\right) & 0 & 0 \\
+    *         1 & 0 & 0 & 0 & 0
     *         \end{pmatrix} \\
     *   C_p     & = J_{M.p} \, C_M \, J_{M,p}^T \\
     *   J_{M,p} & = \begin{pmatrix}
-    *         \frac{\partial u}{\partial x} & \frac{\partial u}{\partial y} & \frac{\partial u}{\partial z} & \frac{\partial u}{\partial a_{x}} & \frac{\partial u}{\partial a_{y}} & \frac{\partial u}{\partial a_{z}} & \frac{\partial u}{\partial\frac{q}{p}}\\
-    *         \frac{\partial v}{\partial x} & \frac{\partial v}{\partial y} & \frac{\partial v}{\partial z} & \frac{\partial v}{\partial a_{x}} & \frac{\partial v}{\partial a_{y}} & \frac{\partial v}{\partial a_{z}} & \frac{\partial v}{\partial\frac{q}{p}}\\
-    *         \frac{\partial u^{\prime}}{\partial x} & \frac{\partial u^{\prime}}{\partial y} & \frac{\partial u^{\prime}}{\partial z} & \frac{\partial u^{\prime}}{\partial a_{x}} & \frac{\partial u^{\prime}}{\partial a_{y}} & \frac{\partial u^{\prime}}{\partial a_{z}} & \frac{\partial u^{\prime}}{\partial\frac{q}{p}}\\
-    *         \frac{\partial v^{\prime}}{\partial x} & \frac{\partial v^{\prime}}{\partial y} & \frac{\partial v^{\prime}}{\partial z} & \frac{\partial v^{\prime}}{\partial a_{x}} & \frac{\partial v^{\prime}}{\partial a_{y}} & \frac{\partial v^{\prime}}{\partial a_{z}} & \frac{\partial v^{\prime}}{\partial\frac{q}{p}}\\
-    *         \frac{\partial\frac{q}{p}}{\partial x} & \frac{\partial\frac{q}{p}}{\partial y} & \frac{\partial\frac{q}{p}}{\partial z} & \frac{\partial\frac{q}{p}}{\partial a_{x}} & \frac{\partial\frac{q}{p}}{\partial a_{y}} & \frac{\partial\frac{q}{p}}{\partial a_{z}} & \frac{\partial\frac{q}{p}}{\partial\frac{q}{p}}\\
+    *         \frac{\partial\frac{q}{p}}{\partial x} & \frac{\partial\frac{q}{p}}{\partial y} & \frac{\partial\frac{q}{p}}{\partial z} & \frac{\partial\frac{q}{p}}{\partial a_{x}} & \frac{\partial\frac{q}{p}}{\partial a_{y}} & \frac{\partial\frac{q}{p}}{\partial a_{z}} & \frac{\partial\frac{q}{p}}{\partial\frac{q}{p}} \\
+    *         \frac{\partial u^{\prime}}{\partial x} & \frac{\partial u^{\prime}}{\partial y} & \frac{\partial u^{\prime}}{\partial z} & \frac{\partial u^{\prime}}{\partial a_{x}} & \frac{\partial u^{\prime}}{\partial a_{y}} & \frac{\partial u^{\prime}}{\partial a_{z}} & \frac{\partial u^{\prime}}{\partial\frac{q}{p}} \\
+    *         \frac{\partial v^{\prime}}{\partial x} & \frac{\partial v^{\prime}}{\partial y} & \frac{\partial v^{\prime}}{\partial z} & \frac{\partial v^{\prime}}{\partial a_{x}} & \frac{\partial v^{\prime}}{\partial a_{y}} & \frac{\partial v^{\prime}}{\partial a_{z}} & \frac{\partial v^{\prime}}{\partial\frac{q}{p}} \\
+    *         \frac{\partial u}{\partial x}          & \frac{\partial u}{\partial y}          & \frac{\partial u}{\partial z}          & \frac{\partial u}{\partial a_{x}}          & \frac{\partial u}{\partial a_{y}}          & \frac{\partial u}{\partial a_{z}}          & \frac{\partial u}{\partial\frac{q}{p}}          \\
+    *         \frac{\partial v}{\partial x}          & \frac{\partial v}{\partial y}          & \frac{\partial v}{\partial z}          & \frac{\partial v}{\partial a_{x}}          & \frac{\partial v}{\partial a_{y}}          & \frac{\partial v}{\partial a_{z}}          & \frac{\partial v}{\partial\frac{q}{p}}          \\
     *         \end{pmatrix} \\
     *           & = \begin{pmatrix}
-    *         U_{x} & U_{y} & U_{z} & 0 & 0 & 0 & 0\\
-    *         V_{x} & V_{y} & V_{z} & 0 & 0 & 0 & 0\\
+    *         0 & 0 & 0 & 0 & 0 & 0 & 1\\
     *         0 & 0 & 0 & \frac{U_{x} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} - N_{x} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{U}}}{\left(\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}\right)^{2}} & \frac{U_{y} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} - N_{y} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{U}}}{\left(\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}\right)^{2}} & \frac{U_{z} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} - N_{z} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{U}}}{\left(\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}\right)^{2}} & 0\\
     *         0 & 0 & 0 & \frac{V_{x} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} - N_{x} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{V}}}{\left(\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}\right)^{2}} & \frac{V_{y} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} - N_{y} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{V}}}{\left(\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}\right)^{2}} & \frac{V_{z} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}} - N_{z} \boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{V}}}{\left(\boldsymbol{\mathbf{a}}\boldsymbol{\mathbf{N}}\right)^{2}} & 0\\
-    *         0 & 0 & 0 & 0 & 0 & 0 & 1\\
+    *         U_{x} & U_{y} & U_{z} & 0 & 0 & 0 & 0\\
+    *         V_{x} & V_{y} & V_{z} & 0 & 0 & 0 & 0\\
     *         \end{pmatrix}
     * \f}
     */
