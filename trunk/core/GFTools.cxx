@@ -1,6 +1,8 @@
 
-#include <GFTools.h>
+#include <memory>
+#include "GFTools.h"
 #include <typeinfo>
+
 TMatrixT<double> GFTools::getSmoothedPos(GFTrack* trk, unsigned int irep, unsigned int ihit) {
 
 	TMatrixT<double> smoothed_state;
@@ -159,7 +161,7 @@ bool GFTools::getSmoothedData(GFTrack* trk, unsigned int irep, unsigned int ihit
 	GFDetPlane fPl;
 	GFDetPlane bPl;
 
-	GFAbsTrackRep* rep = trk->getTrackRep(irep)->clone();
+	std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
 
 	if(trk->getTrackRep(irep)->hasAuxInfo()) {
 		trk->getBK(irep)->getMatrix("fAuxInfo",ihit,auxInfo);
@@ -227,8 +229,6 @@ bool GFTools::getSmoothedData(GFTrack* trk, unsigned int irep, unsigned int ihit
 	rep->extrapolate(smoothing_plane,fSt,fCov);
 	rep->setData(bUpSt,bPl,&bUpCov,bAuxInfoP);
 	rep->extrapolate(smoothing_plane,bSt,bCov);
-
-	delete rep;
 
 	TMatrixT<double> fCovInvert;
 	TMatrixT<double> bCovInvert;
