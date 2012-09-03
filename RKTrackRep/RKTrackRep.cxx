@@ -144,8 +144,8 @@ void RKTrackRep::setData(const TMatrixD& st, const GFDetPlane& pl, const TMatrix
   }
   else {
     if(pl!=fCachePlane){
-      std::cerr << "RKTrackRep::setData() - a fatal error occurred! It was called with a reference plane which is not the same as the one from the last extrapolate(plane,state,cov)-> abort in line " << __LINE__ << std::endl;
-      throw;
+      GFException exc("RKTrackRep::setData() was called with a reference plane which is not the same as the one from the last extrapolate(plane,state,cov).",__LINE__,__FILE__);
+      throw exc;
     }
   }
   GFAbsTrackRep::setData(st,pl,cov);
@@ -157,8 +157,8 @@ void RKTrackRep::setData(const TMatrixD& st, const GFDetPlane& pl, const TMatrix
 const TMatrixD* RKTrackRep::getAuxInfo(const GFDetPlane& pl) {
 
   if(pl!=fCachePlane) {
-    std::cerr << "RKTrackRep::getAuxInfo() - Fatal error: Trying to get auxiliary information with planes mismatch (Information returned does not belong to requested plane)! -> abort in line " << __LINE__ << std::endl;
-	  throw;
+    GFException exc("RKTrackRep::getAuxInfo() - Trying to get auxiliary information with planes mismatch (Information returned does not belong to requested plane)!",__LINE__,__FILE__);
+	  throw exc;
   }
   fAuxInfo.ResizeTo(1,2);
   fAuxInfo(0,0) = fCacheSpu;
