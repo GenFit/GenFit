@@ -39,7 +39,6 @@ class GFPointPath {
   // Constructors/Destructors
   GFPointPath();
   GFPointPath(const TVector3& pos, double path){fPos = pos; fPath = path;}
-  ~GFPointPath();
 
   // Accessors
   const TVector3& getPos() const {return fPos;}
