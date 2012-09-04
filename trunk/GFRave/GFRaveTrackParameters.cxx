@@ -32,18 +32,20 @@ GFRaveTrackParameters::GFRaveTrackParameters() :
   fOriginalRep(NULL),
   fWeight(0),
   fState(1,6),
-  fCov(6,6)
+  fCov(6,6),
+  fHasSmoothedData(false)
 {
   ;
 }
 
 
-GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight, const TMatrixT<double>& state6, const TMatrixT<double>& cov6x6) :
+GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight, const TMatrixT<double>& state6, const TMatrixT<double>& cov6x6, bool isSmoothed) :
   fOriginalTrack(track),
   fOriginalRep(rep),
   fWeight(weight),
   fState(state6),
-  fCov(cov6x6)
+  fCov(cov6x6),
+  fHasSmoothedData(isSmoothed)
 {
   if (fState.GetNrows()!=1 || fState.GetNcols()!=6) {
     GFException exc("GFRaveTrackParameters ==> State is not 1x6!",__LINE__,__FILE__);
@@ -53,6 +55,18 @@ GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep,
     GFException exc("GFRaveTrackParameters ==> Covariance is not 6x6!",__LINE__,__FILE__);
     throw exc;
   }
+}
+
+
+GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight) :
+  fOriginalTrack(track),
+  fOriginalRep(rep),
+  fWeight(weight),
+  fState(1,6),
+  fCov(6,6),
+  fHasSmoothedData(false)
+{
+  ;
 }
 
 
@@ -83,6 +97,7 @@ GFRaveTrackParameters::getPdg() const{
 void
 GFRaveTrackParameters::Print(const Option_t*) const {
   std::cout << "weight: " << getWeight() << "\n";
+  if (!fHasSmoothedData) std::cout << "state and cov are NOT smoothed! \n";
   std::cout << "state: "; getState().Print();
   std::cout << "cov: "; getCov().Print();
   if (hasTrack()) {std::cout << "GFTrack: "; getTrack()->Print();}

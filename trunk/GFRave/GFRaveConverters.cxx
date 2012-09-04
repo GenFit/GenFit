@@ -201,34 +201,27 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
     throw exc;
   }
 
-
   std::vector < std::pair < float, rave::Track > > raveWeightedTracks(raveVertex.weightedTracks());
   std::vector < std::pair < float, rave::Track > > raveSmoothedTracks(raveVertex.weightedRefittedTracks());
 
   int id;
   unsigned int nTrks(raveWeightedTracks.size());
 
-  // if rave vertex has no refitted tracks, refit them!
+  // check if rave vertex has  refitted tracks
+  bool smoothing(true);
   if (! (raveVertex.hasRefittedTracks()) ) {
-
-    GFException exc("RaveToGFVertex ==> rave Vertex has no refitted tracks!",__LINE__,__FILE__);
-    throw exc;
-
-    raveSmoothedTracks.reserve(nTrks);
-    for (unsigned int i=0; i<nTrks; ++i){
-      raveSmoothedTracks.push_back( std::pair < float, rave::Track > (raveWeightedTracks[i].first, raveVertex.refittedTrack(raveWeightedTracks[i].second) ) );
-    }
+    smoothing = false;
   }
 
   // check numbers of tracks and smoothed tracks
-  if (nTrks != raveSmoothedTracks.size()){
+  if (smoothing && nTrks != raveSmoothedTracks.size()){
     GFException exc("RaveToGFVertex ==> number of smoothed tracks != number of tracks",__LINE__,__FILE__);
     throw exc;
   }
 
-  // smoothed track parameters
-  std::vector < GFRaveTrackParameters* > smoothedTracks;
-  smoothedTracks.reserve(nTrks);
+  // (smoothed) track parameters
+  std::vector < GFRaveTrackParameters* > trackParameters;
+  trackParameters.reserve(nTrks);
 
   // convert tracks
   for (unsigned int i=0; i<nTrks; ++i){
@@ -244,20 +237,32 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
       throw exc;
     }
 
-    // convert smoothed track parameters
-    GFRaveTrackParameters* trackparams = new GFRaveTrackParameters(IdGFTrackMap->at(id),
-                                                                   IdGFTrackRepMap->at(id),
-                                                                   raveSmoothedTracks[i].first,
-                                                                   GFRave::Vector6DToTMatrixT(raveSmoothedTracks[i].second.state()),
-                                                                   GFRave::Covariance6DToTMatrixT(raveSmoothedTracks[i].second.error()) );
+    GFRaveTrackParameters* trackparams;
 
-    smoothedTracks.push_back(trackparams);
+    if(smoothing) {
+      // convert smoothed track parameters
+      trackparams = new GFRaveTrackParameters(IdGFTrackMap->at(id), //track
+                                              IdGFTrackRepMap->at(id), //rep
+                                              raveWeightedTracks[i].first, //weight
+                                              GFRave::Vector6DToTMatrixT(raveSmoothedTracks[i].second.state()), //smoothed state
+                                              GFRave::Covariance6DToTMatrixT(raveSmoothedTracks[i].second.error()), //smoothed cov
+                                              true);
+    }
+    else {
+      // convert track parameters, no smoothed tracks available
+      trackparams = new GFRaveTrackParameters(IdGFTrackMap->at(id), //track
+                                              IdGFTrackRepMap->at(id), //rep
+                                              raveWeightedTracks[i].first, //weight
+                                              GFRave::Vector6DToTMatrixT(raveWeightedTracks[i].second.state()), //state
+                                              GFRave::Covariance6DToTMatrixT(raveWeightedTracks[i].second.error()), //cov
+                                              false);
+    }
+    trackParameters.push_back(trackparams);
   }
-
 
   return new GFRaveVertex(GFRave::Point3DToTVector3(raveVertex.position()),
                           GFRave::Covariance3DToTMatrixT(raveVertex.error()),
-                          smoothedTracks,
+                          trackParameters,
                           raveVertex.ndf(), raveVertex.chiSquared(), raveVertex.id());
 }
 
