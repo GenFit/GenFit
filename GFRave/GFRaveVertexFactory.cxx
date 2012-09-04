@@ -110,8 +110,7 @@ void
 GFRaveVertexFactory::setMethod(const std::string & method){
   size_t found = method.find("smoothing:1");
   if (found==std::string::npos){
-    std::cerr << "GFRaveVertexFactory::setMethod(" << method << ") ==> smoothing not turned on! Smoothing has to be turned on! e.g. kalman-smoothing:1\n";
-    throw;
+    std::cerr << "GFRaveVertexFactory::setMethod(" << method << ") ==> smoothing not turned on! GFRaveTrackParameters will be unsmoothed!" << std::endl;
   }
   fFactory->setDefaultMethod(method);
   std::cout << "GFRaveVertexFactory::setMethod ==> set method to " << fFactory->method() << std::endl;
