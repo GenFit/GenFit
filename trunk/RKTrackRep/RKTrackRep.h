@@ -152,14 +152,14 @@ class RKTrackRep : public GFAbsTrackRep {
   void extrapolateToPoint(const TVector3& pos,
          TVector3& poca,
          TVector3& dirInPoca);
-  
+
   //! This method extrapolates to the point of closest approach to a line
   void extrapolateToLine(const TVector3& point1,
          const TVector3& point2,
          TVector3& poca,
          TVector3& dirInPoca,
          TVector3& poca_onwire);
-  
+
   //! make step of h cm along the track, returns the tracklength spanned in this extrapolation
   /** Also returns the position and direction by reference.
   * It does NOT alter the state of the trackrep and starts extrapolating from #fRefPlane.
@@ -290,7 +290,8 @@ class RKTrackRep : public GFAbsTrackRep {
                std::vector<GFPointPath>& points,
                bool& checkJacProj,
                bool calcCov = true,
-               bool onlyOneStep = false);
+               bool onlyOneStep = false,
+               double maxStep = 1.E99);
 
   double estimateStep(std::vector<GFPointPath>& points,
                       const TVector3& pos,
@@ -302,7 +303,8 @@ class RKTrackRep : public GFAbsTrackRep {
                       double& relMomLoss,
                       double& deltaAngle,
                       bool& momLossExceeded,
-                      bool& atPlane) const;
+                      bool& atPlane,
+                      double maxStep = 1.E99) const;
 
   TVector3 poca2Line(const TVector3& extr1,
                      const TVector3& extr2,
@@ -320,7 +322,8 @@ class RKTrackRep : public GFAbsTrackRep {
   double Extrap(const GFDetPlane& plane,
                 M1x7& state7,
                 M7x7* cov=NULL,
-                bool onlyOneStep = false);
+                bool onlyOneStep = false,
+                double maxStep = 1.E99);
   
   //RKTrackRep(const RKTrackRep& rhs){};
   
