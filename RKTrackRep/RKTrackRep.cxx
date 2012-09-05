@@ -609,35 +609,57 @@ void RKTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TM
 
 
 
-void RKTrackRep::extrapolateToPoint(const TVector3& pos, TVector3& poca, TVector3& dirInPoca){
+void RKTrackRep::extrapolateToPoint(const TVector3& pos,
+                                    TVector3& poca,
+                                    TVector3& dirInPoca){
 
 #ifdef DEBUG
   std::cout << "RKTrackRep::extrapolateToPoint()\n";
 #endif
 
-  static const unsigned int maxIt(300);
+  static const unsigned int maxIt(1000);
 
   M1x7 state7;
   getState7(state7);
+  fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
-  double coveredDistance(0.);
+  double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0);
+  TVector3 lastDir(0,0,0);
 
   GFDetPlane pl;
   unsigned int iterations(0);
 
   while(true){
-    fDir.SetXYZ(state7[3], state7[4], state7[5]);
-    pl.setON(pos, fDir);
-    coveredDistance =  this->Extrap(pl, state7, NULL, true);
+    lastStep = step;
+    lastDir = fDir;
 
-    if(fabs(coveredDistance) < MINSTEP) break;
+    pl.setON(pos, fDir);
+    step =  this->Extrap(pl, state7, NULL, true, maxStep);
+    fDir.SetXYZ(state7[3], state7[4], state7[5]);
+
+    // check break conditions
+    poca.SetXYZ(state7[0], state7[1], state7[2]);
+    angle = fabs(fDir.Angle((pos-poca))-TMath::PiOver2()); // angle between direction and connection to point - 90 deg
+    distToPoca = (pos-poca).Mag();
+    if (angle*distToPoca < 0.1*MINSTEP) break;
     if(++iterations == maxIt) {
       GFException exc("RKTrackRep::extrapolateToPoint ==> extrapolation to point failed, maximum number of iterations reached",__LINE__,__FILE__);
       throw exc;
     }
+
+    // if lastStep and step have opposite sign, the real normal vector lies somewhere between the last two normal vectors (i.e. the directions)
+    // -> try mean value of the two (normalization not needed)
+    if (lastStep*step < 0){
+      fDir += lastDir;
+      maxStep = 0.5*fabs(lastStep); // make it converge!
+    }
   }
-  poca.SetXYZ(state7[0], state7[1], state7[2]);
+
   dirInPoca.SetXYZ(state7[3], state7[4], state7[5]);
+
+#ifdef DEBUG
+  std::cout << "RKTrackRep::extrapolateToPoint(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (pos-poca).Mag() << " cm. Angle deviation: " << dirInPoca.Angle((pos-poca))-TMath::PiOver2() << " rad \n";
+#endif
 }
 
 
@@ -649,8 +671,8 @@ TVector3 RKTrackRep::poca2Line(const TVector3& extr1,const TVector3& extr2,const
     throw exc;
   }
 
-  double t = 1./(theWire*theWire)*(point*theWire+extr1*extr1-extr1*extr2);
-  return (extr1+t*theWire);
+  double t = 1./(theWire*theWire) * (point*theWire + extr1*extr1 - extr1*extr2);
+  return (extr1 + t*theWire);
 }
 
 
@@ -664,33 +686,52 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
   std::cout << "RKTrackRep::extrapolateToLine(), (x,y) = (" << point1.X() << ", " << point1.Y() << ")\n";
 #endif
 
-  static const unsigned int maxIt(300);
+  static const unsigned int maxIt(1000);
 
   M1x7 state7;
   getState7(state7);
+  fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
-  double coveredDistance(0.);
+  double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0);
+  TVector3 lastDir(0,0,0);
 
   GFDetPlane pl;
   unsigned int iterations(0);
 
   while(true){
+    lastStep = step;
+    lastDir = fDir;
+
     pl.setO(point1);
-    fDir.SetXYZ(state7[3], state7[4], state7[5]);
     pl.setU(fDir.Cross(point2-point1));
     pl.setV(point2-point1);
-    coveredDistance = this->Extrap(pl, state7, NULL, true);
+    step = this->Extrap(pl, state7, NULL, true, maxStep);
+    fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
-    if(fabs(coveredDistance) < MINSTEP) break;
+    // check break conditions
+    poca.SetXYZ(state7[0], state7[1], state7[2]);
+    poca_onwire = poca2Line(point1,point2,poca);
+    angle = fabs(fDir.Angle((poca_onwire-poca))-TMath::PiOver2()); // angle between direction and connection to point - 90 deg
+    distToPoca = (poca_onwire-poca).Mag();
+    if (angle*distToPoca < 0.1*MINSTEP) break;
     if(++iterations == maxIt) {
       GFException exc("RKTrackRep::extrapolateToLine ==> extrapolation to line failed, maximum number of iterations reached",__LINE__,__FILE__);
       throw exc;
     }
+
+    // if lastStep and step have opposite sign, the real normal vector lies somewhere between the last two normal vectors (i.e. the directions)
+    // -> try mean value of the two (normalization not needed)
+    if (lastStep*step <0){
+      fDir += lastDir;
+      maxStep = 0.5*fabs(lastStep); // make it converge!
+    }
   }
 
-  poca.SetXYZ(state7[0], state7[1], state7[2]);
   dirInPoca.SetXYZ(state7[3], state7[4], state7[5]);
-  poca_onwire = poca2Line(point1,point2,poca);
+
+#ifdef DEBUG
+  std::cout << "RKTrackRep::extrapolateToLine(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (poca_onwire-poca).Mag() << " cm. Angle deviation: " << dirInPoca.Angle((poca_onwire-poca))-TMath::PiOver2() << " rad \n";
+#endif
 }
 
 
@@ -781,7 +822,7 @@ double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
 
 
 
-double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, bool onlyOneStep) {
+double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, bool onlyOneStep, double maxStep) {
 
   static const unsigned int maxNumIt(200);
   unsigned int numIt(0);
@@ -821,7 +862,7 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
 
     bool checkJacProj = true;
 
-    if( ! this->RKutta(plane, fStateJac, coveredDistance, points, checkJacProj, calcCov, onlyOneStep) ) {
+    if( ! this->RKutta(plane, fStateJac, coveredDistance, points, checkJacProj, calcCov, onlyOneStep, maxStep) ) {
       GFException exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
@@ -969,7 +1010,8 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
                          std::vector<GFPointPath>& points,
                          bool& checkJacProj,
                          bool calcCov,
-                         bool onlyOneStep) {
+                         bool onlyOneStep,
+                         double maxStep) {
 
   // important fixed numbers
   static const double EC     = 0.000149896229;  // c/(2*10^12) resp. c/2Tera
@@ -1035,7 +1077,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
 
   // Step estimation (signed)
   fH = GFFieldManager::getFieldVal(fPos);
-  S = estimateStep(points, fPos, fDir, SU, fH, plane, momentum, relMomLoss, deltaAngle, momLossExceeded, atPlane);
+  S = estimateStep(points, fPos, fDir, SU, fH, plane, momentum, relMomLoss, deltaAngle, momLossExceeded, atPlane, maxStep);
   if (fabs(S) < 0.001*MINSTEP) {
     #ifdef DEBUG
       std::cout << " RKutta - step too small -> break \n";
@@ -1191,7 +1233,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
 
     // estimate Step for next loop or linear extrapolation
     Sl = S;	// last S used
-    S = estimateStep(points, fPos, fDir, SU, fH, plane, momentum, relMomLoss, deltaAngle, momLossExceeded, atPlane);
+    S = estimateStep(points, fPos, fDir, SU, fH, plane, momentum, relMomLoss, deltaAngle, momLossExceeded, atPlane, maxStep);
 
     if (atPlane && fabs(S) < MINSTEP) {
       #ifdef DEBUG
@@ -1304,7 +1346,8 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
                                 double& relMomLoss,
                                 double& deltaAngle,
                                 bool& momLossExceeded,
-                                bool& atPlane) const {
+                                bool& atPlane,
+                                double maxStep) const {
 
   static const double Smax      = 10.;          // max. step allowed [cm]
   static const double dAngleMax = 0.05;         // max. deviation of angle between direction before and after the step [rad]
@@ -1400,6 +1443,10 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
 
   // reduce maximum stepsize Step to Smax
   if (fabs(Step) > Smax) Step = StepSign*Smax;
+  if (fabs(Step) > maxStep) {
+    Step = StepSign*maxStep;
+    stopBecauseOfCurvature = true;
+  }
 
   // also limit stepsize according to the change of the momentum direction!
   if (fabs(Step) > SmaxAngle) {
