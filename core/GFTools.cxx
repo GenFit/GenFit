@@ -418,6 +418,42 @@ GFDetPlane GFTools::getSmoothingPlane(GFTrack* trk, unsigned int irep, unsigned 
 
 }
 
+double GFTools::getTrackLength(GFTrack* trk, unsigned int irep, unsigned int startHit, unsigned int endHit){
+
+  if(!trk->getSmoothing()) {
+    GFException exc("Trying to get tracklength from a track without smoothing!",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  if(startHit >= trk->getNumHits() || endHit >= trk->getNumHits()) {
+    GFException exc("Hit number out of bounds while trying to get tracklength!",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  bool inv(false);
+  if(startHit > endHit) {
+    unsigned int biggerOne = startHit;
+    startHit = endHit;
+    endHit = biggerOne;
+    inv = true;
+  }
+
+  if (startHit==0 && endHit==0) endHit = trk->getNumHits()-1;
+  if (startHit == endHit) return 0.;
+
+  double totLen(0), fLen(0), bLen(0);
+
+  for (unsigned int i=startHit; i!=endHit; ++i){
+    trk->getBK(irep)->getNumber("fExtLen", i+1, fLen);
+    trk->getBK(irep)->getNumber("bExtLen", i, bLen);
+    totLen += 0.5*(fLen - bLen);
+  }
+
+  if (inv) return -totLen;
+  return totLen;
+
+}
+
 void GFTools::invertMatrix(const TMatrixT<double>& mat, TMatrixT<double>& inv){
 	inv.ResizeTo(mat);
 

@@ -55,17 +55,19 @@ void GFKalman::processTrack(GFTrack* trk){
         if(mat_keys.at(j) == "fUpSt") already_there = true;
       }
       if(already_there) continue;
+      trk->getBK(i)->bookNumbers("fExtLen"); // extrapolated length from last hit in forward direction
       trk->getBK(i)->bookMatrices("fUpSt");
       trk->getBK(i)->bookMatrices("fUpCov");
+      trk->getBK(i)->bookNumbers("bExtLen"); // extrapolated length from last hit in backward direction
       trk->getBK(i)->bookMatrices("bUpSt");
       trk->getBK(i)->bookMatrices("bUpCov");
-	  if(fSmoothFast); {
-        trk->getBK(i)->bookMatrices("fSt");
-        trk->getBK(i)->bookMatrices("fCov");
-        trk->getBK(i)->bookMatrices("bSt");
-        trk->getBK(i)->bookMatrices("bCov");
-	  }
-	  trk->getBK(i)->bookGFDetPlanes("fPl");
+      if(fSmoothFast) {
+          trk->getBK(i)->bookMatrices("fSt");
+          trk->getBK(i)->bookMatrices("fCov");
+          trk->getBK(i)->bookMatrices("bSt");
+          trk->getBK(i)->bookMatrices("bCov");
+      }
+      trk->getBK(i)->bookGFDetPlanes("fPl");
       trk->getBK(i)->bookGFDetPlanes("bPl");
       if(trk->getTrackRep(i)->hasAuxInfo()) {
         trk->getBK(i)->bookMatrices("fAuxInfo");
@@ -269,24 +271,24 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   TMatrixT<double> state(repDim,1);
   TMatrixT<double> cov(repDim,repDim);;
   GFDetPlane pl;
+
+  double extLen(0.);
+
   /* do an extrapolation, if the trackrep irep is not given
    * at this ihit position. This will usually be the case, but
    * not if the fit turnes around
    */
-  //std::cout << "fitting " << ihit << std::endl;
   if(ihit!=tr->getRepAtHit(irep)){
-    //std::cout << "not same" << std::endl;
     // get the (virtual) detector plane
     pl=hit->getDetPlane(rep);
     //do the extrapolation
-    rep->extrapolate(pl,state,cov);
+    extLen = rep->extrapolate(pl,state,cov);
   }
   else{
-    //std::cout << "same" << std::endl;
-    //    return;
     pl = rep->getReferencePlane();
     state = rep->getState();
     cov = rep->getCov();
+    extLen = 0.;
   }
   
   if(cov[0][0]<1.E-50){ // diagonal elements must be >=0
@@ -336,16 +338,18 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
 
   if(fSmooth) {
     if(direction == 1) {
-    tr->getBK(irep)->setMatrix("fUpSt",ihit,state);
-    tr->getBK(irep)->setMatrix("fUpCov",ihit,cov);
-    if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
-    tr->getBK(irep)->setDetPlane("fPl",ihit,pl);
-  } else {
-    tr->getBK(irep)->setMatrix("bUpSt",ihit,state);
-    tr->getBK(irep)->setMatrix("bUpCov",ihit,cov);
-    if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
-    tr->getBK(irep)->setDetPlane("bPl",ihit,pl);
-  }
+      tr->getBK(irep)->setNumber("fExtLen",ihit,extLen);
+      tr->getBK(irep)->setMatrix("fUpSt",ihit,state);
+      tr->getBK(irep)->setMatrix("fUpCov",ihit,cov);
+      if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
+      tr->getBK(irep)->setDetPlane("fPl",ihit,pl);
+    } else {
+	    tr->getBK(irep)->setNumber("bExtLen",ihit,extLen);
+      tr->getBK(irep)->setMatrix("bUpSt",ihit,state);
+      tr->getBK(irep)->setMatrix("bUpCov",ihit,cov);
+      if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
+      tr->getBK(irep)->setDetPlane("bPl",ihit,pl);
+    }
   }
 
   // calculate filtered chisq
