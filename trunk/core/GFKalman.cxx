@@ -43,6 +43,7 @@ void GFKalman::processTrack(GFTrack* trk){
 #endif
 
   fSmooth = trk->getSmoothing();
+  fSmoothFast = trk->getSmoothingFast();
 
   int nreps = trk->getNumReps();
   for(int i=0; i<nreps; i++) {
@@ -58,7 +59,13 @@ void GFKalman::processTrack(GFTrack* trk){
       trk->getBK(i)->bookMatrices("fUpCov");
       trk->getBK(i)->bookMatrices("bUpSt");
       trk->getBK(i)->bookMatrices("bUpCov");
-      trk->getBK(i)->bookGFDetPlanes("fPl");
+	  if(fSmoothFast); {
+        trk->getBK(i)->bookMatrices("fSt");
+        trk->getBK(i)->bookMatrices("fCov");
+        trk->getBK(i)->bookMatrices("bSt");
+        trk->getBK(i)->bookMatrices("bCov");
+	  }
+	  trk->getBK(i)->bookGFDetPlanes("fPl");
       trk->getBK(i)->bookGFDetPlanes("bPl");
       if(trk->getTrackRep(i)->hasAuxInfo()) {
         trk->getBK(i)->bookMatrices("fAuxInfo");
@@ -285,6 +292,20 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   if(cov[0][0]<1.E-50){ // diagonal elements must be >=0
     GFException exc(COVEXC,__LINE__,__FILE__);
     throw exc;
+  }
+
+  if(fSmooth && fSmoothFast) {
+    if(direction == 1) {
+	    tr->getBK(irep)->setMatrix("fSt",ihit,state);
+	    tr->getBK(irep)->setMatrix("fCov",ihit,cov);
+	    if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
+	    tr->getBK(irep)->setDetPlane("fPl",ihit,pl);
+	  } else {
+	    tr->getBK(irep)->setMatrix("bSt",ihit,state);
+	    tr->getBK(irep)->setMatrix("bCov",ihit,cov);
+	    if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
+	    tr->getBK(irep)->setDetPlane("bPl",ihit,pl);
+	  }
   }
   
 #ifdef DEBUG

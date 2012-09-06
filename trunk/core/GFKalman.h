@@ -153,6 +153,7 @@ private:
   Int_t fNumIt;
   double fBlowUpFactor;
   bool fSmooth;
+  bool fSmoothFast;
 
 
 
