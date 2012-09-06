@@ -114,6 +114,11 @@ namespace GFTools {
 	 */
 	TMatrixT<double> getBiasedSmoothedCov(GFTrack* trk, unsigned int irep, unsigned int ihit);
 
+	/** @bried Get signed tracklength between two hits
+	 * If no arguments are given, the tracklength between first and last hit will be returned.
+	 * The lengths are calculated as mean value between forward and backward extrapolation steps.
+	 */
+	double getTrackLength(GFTrack* trk, unsigned int irep, unsigned int startHit=0, unsigned int endHit=0);
 
 	/** @brief Invert a matrix, throwing GFException when inversion fails.
 	 */
@@ -129,6 +134,8 @@ namespace GFTools {
 	 */
 	double getSmoothedChiSqu(GFTrack* const trk, unsigned int irep, unsigned int ihit);
 
+	/** @brief Set smoothed data at hit nr. ihit to trackrep nr. irep.
+	 */
 	void updateRepSmoothed(GFTrack* const trk, unsigned int irep, unsigned int ihit);
 
 }
