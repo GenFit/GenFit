@@ -28,6 +28,7 @@ GFTrack::GFTrack(GFAbsTrackRep* defaultRep, bool smooth)
 {
   addTrackRep(defaultRep);
   fSmooth = smooth;
+  fSmoothFast = false;
 }
 
 GFTrack::GFTrack() 
@@ -56,6 +57,7 @@ GFTrack::GFTrack(const GFTrack& _tr) {
   fCardinal_rep=_tr.fCardinal_rep;
   fNextHitToFit=_tr.fNextHitToFit;
   fSmooth=_tr.fSmooth;
+  fSmoothFast=_tr.fSmoothFast;
   for(unsigned int i=0;i<_tr.getNumHits();i++) {
     fHits.push_back((_tr.getHit(i))->clone());
   }
@@ -95,6 +97,7 @@ GFTrack& GFTrack::operator=(const GFTrack& _tr) {
   fCardinal_rep=_tr.fCardinal_rep;
   fNextHitToFit=_tr.fNextHitToFit;
   fSmooth=_tr.fSmooth;
+  fSmoothFast=_tr.fSmoothFast;
   for(unsigned int i=0;i<_tr.getNumHits();i++) {
     fHits.push_back((_tr.getHit(i))->clone());
   }

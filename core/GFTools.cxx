@@ -55,7 +55,7 @@ TVector3 GFTools::getSmoothedPosXYZ(GFTrack* trk, unsigned int irep, unsigned in
 
 TMatrixT<double> GFTools::getBiasedSmoothedPos(GFTrack* trk, unsigned int irep, unsigned int ihit) {
 
-TMatrixT<double> smoothed_state;
+  TMatrixT<double> smoothed_state;
 	TMatrixT<double> smoothed_cov;
 	TMatrixT<double> pos;
 
@@ -149,6 +149,8 @@ bool GFTools::getSmoothedData(GFTrack* trk, unsigned int irep, unsigned int ihit
 		return false;
 	}
 
+	std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
+
 	TMatrixT<double> fUpSt;
 	TMatrixT<double> fUpCov;
 	TMatrixT<double> fAuxInfo;
@@ -158,77 +160,125 @@ bool GFTools::getSmoothedData(GFTrack* trk, unsigned int irep, unsigned int ihit
 	TMatrixT<double> bAuxInfo;
 	TMatrixT<double>* bAuxInfoP;
 
-	GFDetPlane fPl;
-	GFDetPlane bPl;
-
-	std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
-
-	if(trk->getTrackRep(irep)->hasAuxInfo()) {
-		trk->getBK(irep)->getMatrix("fAuxInfo",ihit,auxInfo);
-	}
-
-	if(ihit == 0) {
-		trk->getBK(irep)->getMatrix("bUpSt",ihit+1,bUpSt);
-		trk->getBK(irep)->getMatrix("bUpCov",ihit+1,bUpCov);
-		trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
-		trk->getBK(irep)->getDetPlane("bPl",ihit+1,bPl);
-		if(trk->getTrackRep(irep)->hasAuxInfo()) {
-			trk->getBK(irep)->getMatrix("bAuxInfo",ihit+1,bAuxInfo);
-			bAuxInfoP = &bAuxInfo;
-		} else {
-			bAuxInfoP = NULL;
-		}
-		if(bUpSt.GetNrows() == 0) return false;
-		rep->setData(bUpSt,bPl,&bUpCov,bAuxInfoP);
-		rep->extrapolate(smoothing_plane,smoothed_state,smoothed_cov);
-		return true;
-	}
-
-	if(ihit == trk->getNumHits()-1) {
-		trk->getBK(irep)->getMatrix("fUpSt",ihit-1,fUpSt);
-		trk->getBK(irep)->getMatrix("fUpCov",ihit-1,fUpCov);
-		trk->getBK(irep)->getDetPlane("fPl",ihit-1,fPl);
-		trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
-		if(trk->getTrackRep(irep)->hasAuxInfo()) {
-			trk->getBK(irep)->getMatrix("fAuxInfo",ihit-1,fAuxInfo);
-			fAuxInfoP = &fAuxInfo;
-		} else {
-			fAuxInfoP = NULL;
-		}
-		if(fUpSt.GetNrows() == 0) return false;
-		rep->setData(fUpSt,fPl,&fUpCov,fAuxInfoP);
-		rep->extrapolate(smoothing_plane,smoothed_state,smoothed_cov);
-		return true;
-	}
-
-	trk->getBK(irep)->getMatrix("fUpSt",ihit-1,fUpSt);
-	trk->getBK(irep)->getMatrix("fUpCov",ihit-1,fUpCov);
-	trk->getBK(irep)->getMatrix("bUpSt",ihit+1,bUpSt);
-	trk->getBK(irep)->getMatrix("bUpCov",ihit+1,bUpCov);
-	if(trk->getTrackRep(irep)->hasAuxInfo()) {
-		trk->getBK(irep)->getMatrix("fAuxInfo",ihit-1,fAuxInfo);
-		trk->getBK(irep)->getMatrix("bAuxInfo",ihit+1,bAuxInfo);
-		fAuxInfoP = &fAuxInfo;
-		bAuxInfoP = &bAuxInfo;
-	} else {
-		fAuxInfoP = bAuxInfoP = NULL;
-	}
-	trk->getBK(irep)->getDetPlane("fPl",ihit-1,fPl);
-	trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
-	trk->getBK(irep)->getDetPlane("bPl",ihit+1,bPl);
-
-
 	TMatrixT<double> fSt;
 	TMatrixT<double> fCov;
 	TMatrixT<double> bSt;
 	TMatrixT<double> bCov;
 
-	if(fUpSt.GetNrows() == 0 || bUpSt.GetNrows() == 0) return false;
+  GFDetPlane fPl;
+  GFDetPlane bPl;
 
-	rep->setData(fUpSt,fPl,&fUpCov,fAuxInfoP);
-	rep->extrapolate(smoothing_plane,fSt,fCov);
-	rep->setData(bUpSt,bPl,&bUpCov,bAuxInfoP);
-	rep->extrapolate(smoothing_plane,bSt,bCov);
+	if(trk->getTrackRep(irep)->hasAuxInfo()) {
+		trk->getBK(irep)->getMatrix("fAuxInfo",ihit,auxInfo);
+	}
+
+	if(!(trk->getSmoothingFast())) {
+		if(ihit == 0) {
+			trk->getBK(irep)->getMatrix("bUpSt",ihit+1,bUpSt);
+			trk->getBK(irep)->getMatrix("bUpCov",ihit+1,bUpCov);
+			trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
+			trk->getBK(irep)->getDetPlane("bPl",ihit+1,bPl);
+			if(trk->getTrackRep(irep)->hasAuxInfo()) {
+				trk->getBK(irep)->getMatrix("bAuxInfo",ihit+1,bAuxInfo);
+				bAuxInfoP = &bAuxInfo;
+			} else {
+				bAuxInfoP = NULL;
+			}
+			if(bUpSt.GetNrows() == 0) return false;
+			rep->setData(bUpSt,bPl,&bUpCov,bAuxInfoP);
+			rep->extrapolate(smoothing_plane,smoothed_state,smoothed_cov);
+			return true;
+		}
+
+		if(ihit == trk->getNumHits()-1) {
+			trk->getBK(irep)->getMatrix("fUpSt",ihit-1,fUpSt);
+			trk->getBK(irep)->getMatrix("fUpCov",ihit-1,fUpCov);
+			trk->getBK(irep)->getDetPlane("fPl",ihit-1,fPl);
+			trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
+			if(trk->getTrackRep(irep)->hasAuxInfo()) {
+				trk->getBK(irep)->getMatrix("fAuxInfo",ihit-1,fAuxInfo);
+				fAuxInfoP = &fAuxInfo;
+			} else {
+				fAuxInfoP = NULL;
+			}
+			if(fUpSt.GetNrows() == 0) return false;
+			rep->setData(fUpSt,fPl,&fUpCov,fAuxInfoP);
+			rep->extrapolate(smoothing_plane,smoothed_state,smoothed_cov);
+			return true;
+		}
+
+		trk->getBK(irep)->getMatrix("fUpSt",ihit-1,fUpSt);
+		trk->getBK(irep)->getMatrix("fUpCov",ihit-1,fUpCov);
+		trk->getBK(irep)->getMatrix("bUpSt",ihit+1,bUpSt);
+		trk->getBK(irep)->getMatrix("bUpCov",ihit+1,bUpCov);
+		if(trk->getTrackRep(irep)->hasAuxInfo()) {
+			trk->getBK(irep)->getMatrix("fAuxInfo",ihit-1,fAuxInfo);
+			trk->getBK(irep)->getMatrix("bAuxInfo",ihit+1,bAuxInfo);
+			fAuxInfoP = &fAuxInfo;
+			bAuxInfoP = &bAuxInfo;
+		} else {
+			fAuxInfoP = bAuxInfoP = NULL;
+		}
+		trk->getBK(irep)->getDetPlane("fPl",ihit-1,fPl);
+		trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
+		trk->getBK(irep)->getDetPlane("bPl",ihit+1,bPl);
+
+		if(fUpSt.GetNrows() == 0 || bUpSt.GetNrows() == 0) return false;
+
+		rep->setData(fUpSt,fPl,&fUpCov,fAuxInfoP);
+		rep->extrapolate(smoothing_plane,fSt,fCov);
+		rep->setData(bUpSt,bPl,&bUpCov,bAuxInfoP);
+		rep->extrapolate(smoothing_plane,bSt,bCov);
+
+	} else {
+
+		if(ihit == 0) {
+			trk->getBK(irep)->getMatrix("bUpSt",ihit+1,bUpSt);
+			trk->getBK(irep)->getMatrix("bUpCov",ihit+1,bUpCov);
+			trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
+			trk->getBK(irep)->getDetPlane("bPl",ihit+1,bPl);
+			if(trk->getTrackRep(irep)->hasAuxInfo()) {
+				trk->getBK(irep)->getMatrix("bAuxInfo",ihit+1,bAuxInfo);
+				bAuxInfoP = &bAuxInfo;
+			} else {
+				bAuxInfoP = NULL;
+			}
+			if(bUpSt.GetNrows() == 0) return false;
+			rep->setData(bUpSt,bPl,&bUpCov,bAuxInfoP);
+			rep->extrapolate(smoothing_plane,smoothed_state,smoothed_cov);
+			return true;
+		}
+
+		if(ihit == trk->getNumHits()-1) {
+			trk->getBK(irep)->getDetPlane("fPl", ihit, smoothing_plane);
+			trk->getBK(irep)->getMatrix("fSt", ihit, smoothed_state);
+			trk->getBK(irep)->getMatrix("fCov", ihit, smoothed_cov);
+			return true;
+		}
+
+		trk->getBK(irep)->getDetPlane("fPl", ihit, smoothing_plane);
+		trk->getBK(irep)->getDetPlane("bPl", ihit, bPl);
+		trk->getBK(irep)->getMatrix("fSt", ihit, fSt);
+		trk->getBK(irep)->getMatrix("fCov", ihit, fCov);
+
+		if(smoothing_plane == bPl) {
+			trk->getBK(irep)->getMatrix("bSt", ihit, bSt);
+			trk->getBK(irep)->getMatrix("bCov", ihit, bCov);
+		} else {
+			trk->getBK(irep)->getMatrix("bUpSt",ihit+1,bUpSt);
+			trk->getBK(irep)->getMatrix("bUpCov",ihit+1,bUpCov);
+			trk->getBK(irep)->getDetPlane("bPl", ihit+1, bPl);
+			if(trk->getTrackRep(irep)->hasAuxInfo()) {
+				trk->getBK(irep)->getMatrix("bAuxInfo", ihit+1, bAuxInfo);
+				bAuxInfoP = &bAuxInfo;
+			} else {
+				bAuxInfoP = NULL;
+			}
+			rep->setData(bUpSt, bPl, &bUpCov, bAuxInfoP);
+			rep->extrapolate(smoothing_plane, bSt, bCov);
+		}
+
+	}
 
 	TMatrixT<double> fCovInvert;
 	TMatrixT<double> bCovInvert;
@@ -266,8 +316,8 @@ bool GFTools::getBiasedSmoothedData(GFTrack* trk, unsigned int irep, unsigned in
 	TMatrixT<double>* bAuxInfoP;
 	GFDetPlane bPl;
 
-	GFAbsTrackRep* rep = trk->getTrackRep(irep)->clone();
-	
+	std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
+
 	if(trk->getTrackRep(irep)->hasAuxInfo()) {
 		trk->getBK(irep)->getMatrix("fAuxInfo",ihit,auxInfo);
 	}
@@ -276,7 +326,6 @@ bool GFTools::getBiasedSmoothedData(GFTrack* trk, unsigned int irep, unsigned in
 		trk->getBK(irep)->getMatrix("bUpSt",ihit,smoothed_state);
 		trk->getBK(irep)->getMatrix("bUpCov",ihit,smoothed_cov);
 		trk->getBK(irep)->getDetPlane("bPl",ihit,smoothing_plane);
-		delete rep;
 		return true;
 	}
 
@@ -284,39 +333,67 @@ bool GFTools::getBiasedSmoothedData(GFTrack* trk, unsigned int irep, unsigned in
 		trk->getBK(irep)->getMatrix("fUpSt",ihit,smoothed_state);
 		trk->getBK(irep)->getMatrix("fUpCov",ihit,smoothed_cov);
 		trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
-		delete rep;
 		return true;
 	}
 
 	TMatrixT<double> fSt;
 	TMatrixT<double> fCov;
-
-	trk->getBK(irep)->getMatrix("fUpSt",ihit,fSt);
-	trk->getBK(irep)->getMatrix("fUpCov",ihit,fCov);
-	trk->getBK(irep)->getMatrix("bUpSt",ihit+1,bUpSt);
-	trk->getBK(irep)->getMatrix("bUpCov",ihit+1,bUpCov);
-	if(trk->getTrackRep(irep)->hasAuxInfo()) {
-		trk->getBK(irep)->getMatrix("bAuxInfo",ihit+1,bAuxInfo);
-		bAuxInfoP = &bAuxInfo;
-	} else {
-		bAuxInfoP = NULL;
-	}
-	trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
-	trk->getBK(irep)->getDetPlane("bPl",ihit+1,bPl);
-
-
 	TMatrixT<double> bSt;
 	TMatrixT<double> bCov;
 
-	if(bUpSt.GetNrows() == 0) {
-	  delete rep;
-	  return false;
+	if(!(trk->getSmoothingFast())) {
+
+		trk->getBK(irep)->getMatrix("fUpSt",ihit,fSt);
+		trk->getBK(irep)->getMatrix("fUpCov",ihit,fCov);
+		trk->getBK(irep)->getMatrix("bUpSt",ihit+1,bUpSt);
+		trk->getBK(irep)->getMatrix("bUpCov",ihit+1,bUpCov);
+		if(trk->getTrackRep(irep)->hasAuxInfo()) {
+			trk->getBK(irep)->getMatrix("bAuxInfo",ihit+1,bAuxInfo);
+			bAuxInfoP = &bAuxInfo;
+		} else {
+			bAuxInfoP = NULL;
+		}
+		trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
+		trk->getBK(irep)->getDetPlane("bPl",ihit+1,bPl);
+
+		if(bUpSt.GetNrows() == 0) {
+			return false;
+		}
+
+		rep->setData(bUpSt,bPl,&bUpCov,bAuxInfoP);
+		rep->extrapolate(smoothing_plane,bSt,bCov);
+
+	} else {
+
+		trk->getBK(irep)->getMatrix("fUpSt",ihit,fSt);
+		trk->getBK(irep)->getMatrix("fUpCov",ihit,fCov);
+		trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
+		trk->getBK(irep)->getDetPlane("bPl",ihit,bPl);
+
+		if(smoothing_plane == bPl) {
+			trk->getBK(irep)->getMatrix("bSt",ihit,bSt);
+			trk->getBK(irep)->getMatrix("bCov",ihit,bCov);
+		} else {
+			trk->getBK(irep)->getMatrix("bUpSt",ihit+1,bUpSt);
+			trk->getBK(irep)->getMatrix("bUpCov",ihit+1,bUpCov);
+			if(trk->getTrackRep(irep)->hasAuxInfo()) {
+				trk->getBK(irep)->getMatrix("bAuxInfo",ihit+1,bAuxInfo);
+				bAuxInfoP = &bAuxInfo;
+			} else {
+				bAuxInfoP = NULL;
+			}
+			trk->getBK(irep)->getDetPlane("fPl",ihit,smoothing_plane);
+			trk->getBK(irep)->getDetPlane("bPl",ihit+1,bPl);
+
+			if(bUpSt.GetNrows() == 0) {
+				return false;
+			}
+
+			rep->setData(bUpSt,bPl,&bUpCov,bAuxInfoP);
+			rep->extrapolate(smoothing_plane,bSt,bCov);
+		}
+
 	}
-
-	rep->setData(bUpSt,bPl,&bUpCov,bAuxInfoP);
-	rep->extrapolate(smoothing_plane,bSt,bCov);
-
-	delete rep;
 
 	TMatrixT<double> fCovInvert;
 	TMatrixT<double> bCovInvert;
@@ -344,14 +421,13 @@ GFDetPlane GFTools::getSmoothingPlane(GFTrack* trk, unsigned int irep, unsigned 
 void GFTools::invertMatrix(const TMatrixT<double>& mat, TMatrixT<double>& inv){
 	inv.ResizeTo(mat);
 
-  // check if numerical limits are reached (i.e at least one entry < 1E-100 and/or at least one entry > 1E100)
+	// check if numerical limits are reached (i.e at least one entry < 1E-100 and/or at least one entry > 1E100)
 	if (!(mat<1.E100) || !(mat>-1.E100)){
 		GFException e("cannot invert matrix GFTools::invertMatrix(), entries too big (>1e100)",
 				__LINE__,__FILE__);
 		e.setFatal();
-		throw e;
+		throw e;	
 	}
-
 	// do the trivial inversion for 2x2 matrices manually
 	if (mat.GetNrows() == 2){
 	  double det = mat(0,0)*mat(1,1) - mat(1,0)*mat(0,1);
@@ -372,9 +448,9 @@ void GFTools::invertMatrix(const TMatrixT<double>& mat, TMatrixT<double>& inv){
 	// else use TDecompSVD
 	bool status = 0;
 	TDecompSVD invertAlgo(mat);
-	
+
 	invertAlgo.SetTol(1E-50); //this is a hack because a tolerance of 1E-22 does not make any sense for doubles only for floats
-	
+
 	inv = invertAlgo.Invert(status);
 	if(status == 0){
 		GFException e("cannot invert matrix GFTools::invertMatrix(), status = 0",
