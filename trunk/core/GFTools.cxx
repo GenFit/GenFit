@@ -530,7 +530,7 @@ double GFTools::getSmoothedChiSqu(const GFTrack* trk, unsigned int irep, unsigne
 	return smoothedChiSqu(0,0);
 }
 
-unsigned int GFTools::getClosestHit(const GFTrack* trk, unsigned int irep, const TVector3& pos, double& distance, bool checkEachHit){
+unsigned int GFTools::getClosestHit(const GFTrack* trk, unsigned int irep, const TVector3& pos, double& distance, bool checkEveryHit){
 
   if(!trk->getSmoothing()) {
     GFException exc("Trying to get closest hit from a track without smoothing!",__LINE__,__FILE__);
@@ -544,7 +544,7 @@ unsigned int GFTools::getClosestHit(const GFTrack* trk, unsigned int irep, const
 	double minDist(1.E99), dist;
 	unsigned int minId(0);
 
-	if (checkEachHit || nHits<4){
+	if (checkEveryHit || nHits<4){
 		// brute force search
 		for (unsigned int i=0; i<nHits; ++i){
 			hitPos = getSmoothedPosXYZ(trk, irep, i);
