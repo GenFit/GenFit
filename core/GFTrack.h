@@ -332,7 +332,7 @@ public:
   }
 
   //! get GFBookKeeping object for particular track rep (default is cardinal rep)
-  GFBookkeeping* getBK(int index=-1){
+  GFBookkeeping* getBK(int index=-1) const {
     if(index==-1) return fBookkeeping.at(fCardinal_rep);
     assert((unsigned int)index<getNumReps());
     return fBookkeeping.at(index);
@@ -415,11 +415,11 @@ public:
 
   /** @brief Read back if smoothing is/was turned on or off for this track.
    */
-  bool getSmoothing() { return fSmooth; }
+  bool getSmoothing() const { return fSmooth; }
 
   /** @brief Read back if "fast-smoothing" is/was turned on or off for this track.
    */
-  bool getSmoothingFast() { return fSmoothFast; }
+  bool getSmoothingFast() const { return fSmoothFast; }
 
   /** @brief this is needed to blow up the covariance matrix before a fitting pass
    * drops off-diagonal elements and blows up diagonal by blowUpFactor
