@@ -45,26 +45,26 @@ namespace GFTools {
 	
 	/** @brief Get smoothed track position in plane coordinates
 	 */
-	TMatrixT<double> getSmoothedPos(GFTrack* trk, unsigned int irep, unsigned int ihit);
+	TMatrixT<double> getSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
 	 /** @brief Get smoothed track position in global coordinates
 	   */
-	TVector3 getSmoothedPosXYZ(GFTrack* trk, unsigned int irep, unsigned int ihit);
+	TVector3 getSmoothedPosXYZ(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
 	/** @brief Get smoothed track covariance in plane coordinates
 	 */
-	TMatrixT<double> getSmoothedCov(GFTrack* trk, unsigned int irep, unsigned int ihit);
+	TMatrixT<double> getSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
 	/** @brief Get smoothed state vector and state covariance.
 	 */
-	bool getSmoothedData(GFTrack* trk, unsigned int irep, unsigned int ihit, TMatrixT<double>& smoothed_state, TMatrixT<double>& smoothed_cov);
+	bool getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TMatrixT<double>& smoothed_state, TMatrixT<double>& smoothed_cov);
 
 	/** @brief Get smoothed state vector, state covariance and smoothing plane.
 	 *
 	 * The smoothed data returned by this function includes the detector plane in 
 	 * which the data is calculated.
 	 */
-	bool getSmoothedData(GFTrack* trk, unsigned int irep, unsigned int ihit, TMatrixT<double>& smoothed_state, TMatrixT<double>& smoothed_cov, GFDetPlane& smoothing_plane);
+	bool getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TMatrixT<double>& smoothed_state, TMatrixT<double>& smoothed_cov, GFDetPlane& smoothing_plane);
 
 	/** @brief Get smoothed state vector, state covariance and smoothing plane.
 	 *
@@ -81,22 +81,22 @@ namespace GFTools {
 	 * \f]
 	 * The index k,k-1 denotes that the state vector or covariance matrix contains the information of all hits 1,2,....,k-1 and is extrapolated to hit k. The arrow pointing to the right indicates that the information is saved during the forward fit. The index k,k+1 indicates the the state vector or covariance matrix contains the information of all hits N,N-1,...,k+1 and is extrapolated to hit k. The left-poiting arrow indicates that the information is saved during the backward fit.
 	 */
-	bool getSmoothedData(GFTrack* trk, unsigned int irep, unsigned int ihit, TMatrixT<double>& smoothed_state, TMatrixT<double>& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixT<double>& auxInfo);
+	bool getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TMatrixT<double>& smoothed_state, TMatrixT<double>& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixT<double>& auxInfo);
 
 	/** @brief Get smoothing plane.
 	 */
-	GFDetPlane getSmoothingPlane(GFTrack* trk, unsigned int irep, unsigned int ihit);
+	GFDetPlane getSmoothingPlane(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
 	/** @brief Get biased smoothed state vector and state covariance.
 	 */
-	bool getBiasedSmoothedData(GFTrack* trk, unsigned int irep, unsigned int ihit, TMatrixT<double>& smoothed_state, TMatrixT<double>& smoothed_cov);
+	bool getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TMatrixT<double>& smoothed_state, TMatrixT<double>& smoothed_cov);
 
 	/** @brief Get biased smoothed state vector, state covariance and smoothing plane.
 	 *
 	 * The smoothed data returned by this function includes the detector plane in 
 	 * which the data is calculated.
 	 */
-	bool getBiasedSmoothedData(GFTrack* trk, unsigned int irep, unsigned int ihit, TMatrixT<double>& smoothed_state, TMatrixT<double>& smoothed_cov, GFDetPlane& smoothing_plane);
+	bool getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TMatrixT<double>& smoothed_state, TMatrixT<double>& smoothed_cov, GFDetPlane& smoothing_plane);
 
 	/** @brief Get biased smoothed state vector, state covariance and smoothing plane.
 	 *
@@ -104,21 +104,21 @@ namespace GFTools {
 	 * which the data is calculated as well as the auxillary information for this
 	 * plane.
 	 */
-	bool getBiasedSmoothedData(GFTrack* trk, unsigned int irep, unsigned int ihit, TMatrixT<double>& smoothed_state, TMatrixT<double>& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixT<double>& auxInfo);
+	bool getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TMatrixT<double>& smoothed_state, TMatrixT<double>& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixT<double>& auxInfo);
 
 	/** @brief Get biased smoothed track position in plane coordinates
 	 */
-	TMatrixT<double> getBiasedSmoothedPos(GFTrack* trk, unsigned int irep, unsigned int ihit);
+	TMatrixT<double> getBiasedSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
 	/** @brief Get biased smoothed track covariance in plane coordinates
 	 */
-	TMatrixT<double> getBiasedSmoothedCov(GFTrack* trk, unsigned int irep, unsigned int ihit);
+	TMatrixT<double> getBiasedSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
 	/** @bried Get signed tracklength between two hits
 	 * If no arguments are given, the tracklength between first and last hit will be returned.
 	 * The lengths are calculated as mean value between forward and backward extrapolation steps.
 	 */
-	double getTrackLength(GFTrack* trk, unsigned int irep, unsigned int startHit=0, unsigned int endHit=0);
+	double getTrackLength(const GFTrack* trk, unsigned int irep, unsigned int startHit=0, unsigned int endHit=0);
 
 	/** @brief Invert a matrix, throwing GFException when inversion fails.
 	 */
@@ -132,11 +132,25 @@ namespace GFTools {
 	 * m is the measurement vector of the hit. So for a pixel detector that
 	 * measures x and y dim(m) will be 2.
 	 */
-	double getSmoothedChiSqu(GFTrack* const trk, unsigned int irep, unsigned int ihit);
+	double getSmoothedChiSqu(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
 	/** @brief Set smoothed data at hit nr. ihit to trackrep nr. irep.
 	 */
-	void updateRepSmoothed(GFTrack* const trk, unsigned int irep, unsigned int ihit);
+	void updateRepSmoothed(GFTrack* trk, unsigned int irep, unsigned int ihit);
+
+	/** @bried Get the ID of the hit whose smoothed position is closest to pos.
+	 * A simple hill climbing algorithm is employed:
+	 * Starting at either first or last hit (the one with smaller distance to pos),
+	 * the algorithms goes along the hits as long as the distance to pos decreases.
+	 * This might not find the global minimum if the hits are not well sorted
+	 * along the track or if the track is curling. But is is much faster,
+	 * especially for tracks where the closest hit is the first or last hit
+	 * of the track.
+	 *
+	 * If checkEachHit is set to true, the position of every hit is checked against pos.
+	 * This of course needs more computing time, but it is guaranteed to find the global minimum.
+	 */
+	unsigned int getClosestHit(const GFTrack* trk, unsigned int irep, const TVector3& pos, double& distance, bool checkEachHit = false);
 
 }
 
