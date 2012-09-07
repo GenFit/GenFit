@@ -147,10 +147,10 @@ namespace GFTools {
 	 * especially for tracks where the closest hit is the first or last hit
 	 * of the track.
 	 *
-	 * If checkEachHit is set to true, the position of every hit is checked against pos.
+	 * If checkEveryHit is set to true, the position of every hit is checked against pos.
 	 * This of course needs more computing time, but it is guaranteed to find the global minimum.
 	 */
-	unsigned int getClosestHit(const GFTrack* trk, unsigned int irep, const TVector3& pos, double& distance, bool checkEachHit = false);
+	unsigned int getClosestHit(const GFTrack* trk, unsigned int irep, const TVector3& pos, double& distance, bool checkEveryHit = false);
 
 }
 
