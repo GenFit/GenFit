@@ -532,6 +532,11 @@ double GFTools::getSmoothedChiSqu(const GFTrack* trk, unsigned int irep, unsigne
 
 unsigned int GFTools::getClosestHit(const GFTrack* trk, unsigned int irep, const TVector3& pos, double& distance, bool checkEachHit){
 
+  if(!trk->getSmoothing()) {
+    GFException exc("Trying to get closest hit from a track without smoothing!",__LINE__,__FILE__);
+    throw exc;
+  }
+
 	unsigned int nHits = trk->getNumHits();
 	if (nHits == 1) return 0;
 
@@ -550,7 +555,7 @@ unsigned int GFTools::getClosestHit(const GFTrack* trk, unsigned int irep, const
 			}
 		}
 	}
-	else {
+	else { // hill climbing algorithm
 		double distFirst = (pos-getSmoothedPosXYZ(trk, irep, 0)).Mag();
 		double distLast = (pos-getSmoothedPosXYZ(trk, irep, nHits-1)).Mag();
 		if (distFirst <= distLast){
@@ -559,7 +564,7 @@ unsigned int GFTools::getClosestHit(const GFTrack* trk, unsigned int irep, const
 			for (unsigned int i=1; i<nHits-1; ++i){
 				hitPos = getSmoothedPosXYZ(trk, irep, i);
 				dist = (pos-hitPos).Mag();
-				if (dist<minDist) {
+				if (dist<=minDist) {
 					minDist = dist;
 					minId = i;
 				}
@@ -572,7 +577,7 @@ unsigned int GFTools::getClosestHit(const GFTrack* trk, unsigned int irep, const
 			for (unsigned int i=nHits-2; i>1; --i){
 				hitPos = getSmoothedPosXYZ(trk, irep, i);
 				dist = (pos-hitPos).Mag();
-				if (dist<minDist) {
+				if (dist<=minDist) {
 					minDist = dist;
 					minId = i;
 				}
