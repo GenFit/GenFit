@@ -510,6 +510,7 @@ void GFTools::updateRepSmoothed(GFTrack* trk, unsigned int irep, unsigned int ih
 		rep->setData(smoothed_state, smoothing_plane, &smoothed_cov);
 	}
 
+	trk->setRepAtHit(irep, ihit);
 }
 
 double GFTools::getSmoothedChiSqu(const GFTrack* trk, unsigned int irep, unsigned int ihit){
