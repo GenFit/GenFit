@@ -36,6 +36,7 @@
 #include "GFTrackCand.h"
 #include "GFBookkeeping.h"
 
+
 class TVirtualGeoTrack;
 
 /** @brief Track object for genfit. genfit algorithms work on these objects. 
@@ -131,10 +132,10 @@ public:
    * repId == -1 will use cardinal rep
   */
   int getFailedHits(int repId=-1){
-	int theRep;
-	if(repId==-1) theRep=fCardinal_rep;
-	else theRep = repId;
-	return fBookkeeping.at(theRep)->getNumFailed();
+    int theRep;
+    if(repId==-1) theRep=fCardinal_rep;
+    else theRep = repId;
+    return fBookkeeping.at(theRep)->getNumFailed();
   }
 
   std::vector<GFAbsRecoHit*> getHits() {return fHits;}
@@ -160,6 +161,12 @@ public:
    * Note that the new hits are inserted at the end of the present track!
    */
   void mergeHits(GFTrack* trk); 
+
+
+  /** Sort GFAbsRecoHits and GFTrackCand according to the sorting parameters rho of the GFAbsRecoHits.
+   * fRepAtHit is also updated. The bookkeeping and fNextHitToFit is reset.
+   */
+  void sortHits();
 
   /** @brief Clear hit vector. Note that hits will not be deleted!
    * 
@@ -370,7 +377,7 @@ public:
 
   /** @brief get the hit index at which plane,state&cov of rep irep is defined
    */
-  int getRepAtHit(unsigned int irep){
+  int getRepAtHit(unsigned int irep) const {
     assert(irep<getNumReps());
     return fRepAtHit.at(irep);
   }

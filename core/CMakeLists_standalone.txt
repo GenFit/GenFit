@@ -24,7 +24,7 @@ GFPlanarHitPolicy.h GFPseudoSpacepointWireHitPolicy.h GFRecoHitFactory.h GFRecoH
 GFRecoHitProducer.h GFSpacepointHitPolicy.h GFTools.h GFTrackCand.h 
 GFTrack.h GFWireHitPolicy.h GFWirepointHitPolicy.h GFConstField.h
 GFFieldManager.h GFAbsFinitePlane.h GFRectFinitePlane.h
-GFDaf.h GFDafHit.h GFTrackProximity.h)
+GFDaf.h GFDafHit.h GFTrackProximity.h GFAbsRecoHitComparator.h)
 
 set(GENFIT_LINKDEF  genfitLinkDef.h)
 set(GENFIT_DICTIONARY genfitDict.cxx) 

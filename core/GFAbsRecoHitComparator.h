@@ -16,25 +16,28 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "GFAbsRecoHit.h"
 
-ClassImp(GFAbsRecoHit)
+/** @addtogroup genfit
+ * @author Johannes Rauch (Technische Universit&auml;t M&uuml;nchen, author)
+ * */
+/* @{ */
 
 
-GFAbsRecoHit::GFAbsRecoHit(int NparHit) :
-  fHitCoord(NparHit,1),
-  fHitCov(NparHit,NparHit),
-  fNparHit(NparHit),
-  fRho(0.)
-{
-}
+#ifndef GFABSRECOHITCOMPARATOR_H
+#define GFABSRECOHITCOMPARATOR_H
 
-GFAbsRecoHit::GFAbsRecoHit() : fNparHit(-1) {
-}
+/**
+ * Class for hit sorting.
+ */
+class GFAbsRecoHitComparator {
+ public:
+  /**
+   * Comparison operator used in GFTrack::sortHits(). Compares sorting parameter rho.
+   */
+  bool operator() (const std::pair<unsigned int, GFAbsRecoHit*> lhs,
+                   const std::pair<unsigned int, GFAbsRecoHit*> rhs) const {
+    return lhs.second->getRho() < rhs.second->getRho();
+  }
+};
 
-GFAbsRecoHit::~GFAbsRecoHit(){;}
-
-const std::string& GFAbsRecoHit::getPolicyName(){
-  std::cerr << "GFAbsRecoHit::getPolicyName() called for a reco hit, which wasn't derived from GFRecoHitIfc -> abort" << std::endl;
-  throw;
-}
+#endif
