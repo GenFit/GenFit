@@ -360,7 +360,7 @@ bool GFBookkeeping::getNumber(std::string key,
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  num = (((*it).second)[index])[0][0];
+  num = (((*it).second)[index])(0,0);
   return true;
 }
 
