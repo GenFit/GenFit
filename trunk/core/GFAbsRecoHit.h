@@ -78,6 +78,9 @@ protected:
   /// Covariance of raw hit coordinates
   TMatrixT<double> fHitCov;
 
+  /// Sorting parameter used in GFTrack::sortHits()
+  double fRho;
+
  private:
   int fNparHit;
 
@@ -155,7 +158,15 @@ public:
    */
   virtual const GFDetPlane& getDetPlane(GFAbsTrackRep*) = 0; 
    
+  /**
+   * Get sorting parameter rho.
+   */
+  double getRho() {return fRho;}
 
+  /**
+   * Set sorting parameter rho.
+   */
+  void setRho(double rho) {fRho = rho;}
   
   /** @brief Get clone of this object.
    *
@@ -174,7 +185,7 @@ public:
   int getNparHit(){return fNparHit;}
 
  public:
-  ClassDef(GFAbsRecoHit,3)
+  ClassDef(GFAbsRecoHit,4)
 
 };
   

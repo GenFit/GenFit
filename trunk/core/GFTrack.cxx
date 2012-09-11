@@ -21,6 +21,7 @@
 
 #include "GFTrack.h"
 #include "GFException.h"
+#include "GFAbsRecoHitComparator.h"
 #include "TVirtualGeoTrack.h"
 
 GFTrack::GFTrack(GFAbsTrackRep* defaultRep, bool smooth) 
@@ -148,7 +149,65 @@ GFTrack::mergeHits(GFTrack* trk){
 }
 
 
-void 
+void GFTrack::sortHits(){
+
+  unsigned int nHits(getNumHits());
+
+  std::vector< std::pair<unsigned int, GFAbsRecoHit*> > pv;
+  pv.reserve(nHits);
+
+  for (unsigned int i=0; i<nHits; ++i) {
+      pv.push_back( std::pair<unsigned int, GFAbsRecoHit*>(i, fHits[i]) ) ;
+  }
+
+  std::sort(pv.begin(), pv.end(), GFAbsRecoHitComparator());
+
+  // get the indices -> now we know at which position which hit is
+  std::vector<unsigned int> indices;
+  indices.reserve(nHits);
+  for (unsigned int i=0; i<nHits; ++i){
+    indices.push_back(pv[i].first);
+  }
+
+  // test
+  for (unsigned int i=0; i<indices.size(); ++i){
+    std::cout<<indices[i]<<"\n";
+  }
+
+  // now we have to do the actual sorting of everything
+
+  // sort fHits
+  std::vector<GFAbsRecoHit*> sortedHits;
+  sortedHits.reserve(nHits);
+  for (unsigned int i=0; i<nHits; ++i){
+    sortedHits.push_back(fHits[indices[i]]);
+  }
+  fHits = sortedHits;
+
+  // sort trackCand
+  if (nHits == fCand.getNHits()){
+    fCand.sortHits(indices);
+  }
+  else {
+    GFException exc("GFTrack::sortHits ==> Cannot sort GFTrackCand accordingly since it has not the same number of hits as the GFTrack.",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  // sorting the bookkeeping is not yet supported (and probably wouldn't make sense either)
+  clearBookkeeping();
+
+  // update other member variables
+  for (unsigned int i=0; i<fRepAtHit.size(); ++i){
+    fRepAtHit[i] = std::find(indices.begin(), indices.end(), fRepAtHit[i]) - indices.begin();
+  }
+
+  // reset fNextHitToFit
+  fNextHitToFit = 0;
+
+}
+
+
+void
 GFTrack::setCandidate(const GFTrackCand& cand, bool doreset)
 {
   fCand=cand;
@@ -226,11 +285,15 @@ void GFTrack::printBookkeeping(){
 
 void GFTrack::Print(const Option_t* option) const{
   for(unsigned int i=0;i<getNumReps();++i){
+    std::cout << "TrackRep " << i << " (defined at hit " << getRepAtHit(i) << "):\n";
     getTrackRep(i)->Print(option);
     fBookkeeping.at(i)->Print(option);
   }
-  std::cout << "GFTrack has " << getNumHits() << " detector hits." << std::endl;
-  
+  std::cout << "GFTrack has " << getNumHits() << " detector hits. ";
+  if (fSmooth && fSmoothFast ) std::cout << "Fast smoothing is enabled.";
+  else if (fSmooth) std::cout << "Smoothing is enabled.";
+  else std::cout << "Smoothing is disabled.";
+  std::cout << std::endl;
 }
 
 

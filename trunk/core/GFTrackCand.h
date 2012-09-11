@@ -168,6 +168,8 @@ public:
    */
   void sortHits();
 
+  void sortHits(std::vector<unsigned int> indices);
+
   // Operations ----------------------
   void reset();
   void Print(const Option_t* = "") const ;

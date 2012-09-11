@@ -17,6 +17,7 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "GFTrackCand.h"
+#include "GFException.h"
 #include"TDatabasePDG.h"
 #include <algorithm>
 #include <iostream>
@@ -127,22 +128,39 @@ void GFTrackCand::setComplTrackSeed(const TVector3& pos, const TVector3& mom, co
 
 
 void GFTrackCand::sortHits(){
-	int nHits = fDetId.size(); // all 4 private vectors must have the same size.
+	unsigned int nHits = getNHits(); // all 4 private vectors must have the same size.
 
 	//a vector that will be sorted to give after sort indices to sort the other vectors
 	std::vector<std::pair<double, int> > order(nHits);
-	for (int i = 0; i != nHits; ++i){
+	for (unsigned int i = 0; i != nHits; ++i){
 		order[i] = std::make_pair(fRho[i],i);
 	}
 	std::sort(order.begin(), order.end()); // by default sort uses the ".first" value of the pair when sorting a std container of pairs
 
+	std::vector<unsigned int> indices(nHits);
+	for (unsigned int i = 0; i != nHits; ++i){
+	  indices.push_back(order[i].second);
+	}
+
+	sortHits(indices);
+}
+
+
+void GFTrackCand::sortHits(std::vector<unsigned int> indices){
+
+  unsigned int nHits(getNHits());
+  if (indices.size() != nHits){
+    GFException exc("GFTrackCand::sortHits ==> Size of indices != number of hits!",__LINE__,__FILE__);
+    throw exc;
+  }
+
 	//these containers will hold the sorted results. They are created to avoid probably slower in-place sorting
-	std::vector<int> sortedDetId(nHits);
-	std::vector<int> sortedHitId(nHits);
-	std::vector<int> sortedPlaneId(nHits);
+	std::vector<unsigned int> sortedDetId(nHits);
+	std::vector<unsigned int> sortedHitId(nHits);
+	std::vector<unsigned int> sortedPlaneId(nHits);
 	std::vector<double> sortedRho(nHits);
-	for (int i = 0; i != nHits; ++i){
-		int sortIndex = order[i].second;
+	for (unsigned int i = 0; i != nHits; ++i){
+		unsigned int sortIndex = indices[i];
 		sortedDetId[i] = fDetId[sortIndex];
 		sortedHitId[i] = fHitId[sortIndex];
 		sortedPlaneId[i] = fPlaneId[sortIndex];
