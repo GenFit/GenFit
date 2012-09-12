@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 /** @addtogroup genfit
  * @{ */
 
@@ -25,10 +25,14 @@
 #include <vector>
 #include <set>
 #include <iostream>
-#include "assert.h"
+#include <assert.h>
 
-#include "TObject.h"
-#include "TVector3.h"
+#include <TObject.h>
+#include <TVector3.h>
+#include <TMatrixD.h>
+#include <TDatabasePDG.h>
+
+#include <cmath>
 
 /** @brief Track candidate -- a list of cluster indices
  *
@@ -59,67 +63,73 @@ public:
   GFTrackCand();
   ~GFTrackCand();
 
-  /** @brief Initializing constructor
-   *
-   * @param curv Curvature from prefit. There is no stringent definition what
-   * this parameter means at the moment.
-   * @param dip Dip angle from prefit. There is no stringent definition what
-   * this parameter means at the moment.
-   * @param inv Dummy paramter. Has been used to mark inverted tracks 
-   * in the past.
-   * @param detIDs collection of detector IDs. Each detector ID needs
-   * a corresponding GFRecoHitProducer. See RecoHitFactory for details.
-   * @param hitIDs collection of hit indices. 
-   */
-  GFTrackCand(double curv, double dip, double inv, std::vector<unsigned int> detIDs, std::vector<unsigned int> hitIDs);
-  /* @brief same as previous ctor, but with ordering parameters */
-  GFTrackCand(double curv, double dip, double inv, std::vector<unsigned int> detIDs, std::vector<unsigned int> hitIDs, std::vector<double> rhos);
+  //  /** @brief Initializing constructor
+  //   *
+  //   * @param curv Curvature from prefit. There is no stringent definition what
+  //   * this parameter means at the moment.
+  //   * @param dip Dip angle from prefit. There is no stringent definition what
+  //   * this parameter means at the moment.
+  //   * @param inv Dummy paramter. Has been used to mark inverted tracks
+  //   * in the past.
+  //   * @param detIDs collection of detector IDs. Each detector ID needs
+  //   * a corresponding GFRecoHitProducer. See RecoHitFactory for details.
+  //   * @param hitIDs collection of hit indices.
+  //   */
+  //  GFTrackCand(double curv, double dip, double inv, std::vector<unsigned int> detIDs, std::vector<unsigned int> hitIDs);
+  //  /* @brief same as previous ctor, but with ordering parameters */
+  //  GFTrackCand(double curv, double dip, double inv, std::vector<unsigned int> detIDs, std::vector<unsigned int> hitIDs, std::vector<double> rhos);
 
   /* @brief == operator does not check for rho */
   friend bool operator== (const GFTrackCand& lhs, const GFTrackCand& rhs);
 
   // Accessors -----------------------
-  /** @brief Get detector ID and cluster index (hitId) for hit number i 
+  /** @brief Get detector ID and cluster index (hitId) for hit number i
    */
-  void getHit(unsigned int i, 
-	      unsigned int& detId,
-	      unsigned int& hitId) const {
-	assert(i<getNHits());
-	detId=fDetId.at(i);hitId=fHitId.at(i);
+  void getHit(unsigned int i,
+              unsigned int& detId,
+              unsigned int& hitId) const {
+    assert(i < getNHits());
+    detId = fDetId.at(i); hitId = fHitId.at(i);
   }
-  /** @brief Get detector ID and cluster index (hitId) for 
-   * hit number i with ordering parameter rho 
+  /** @brief Get detector ID and cluster index (hitId) for
+   * hit number i with ordering parameter rho
    */
-  void getHit(unsigned int i, 
-	      unsigned int& detId,
-	      unsigned int& hitId,
-	      double &rho) const {
-	assert(i<getNHits());
-	detId=fDetId.at(i);hitId=fHitId.at(i);
-	rho=fRho.at(i);
+  void getHit(unsigned int i,
+              unsigned int& detId,
+              unsigned int& hitId,
+              double& rho) const {
+    assert(i < getNHits());
+    detId = fDetId.at(i); hitId = fHitId.at(i);
+    rho = fRho.at(i);
   }
-  /** @brief Get detector ID and cluster index (hitId) for 
+  /** @brief Get detector ID and cluster index (hitId) for
    * hit number i with plane id
    */
-  void getHitWithPlane(unsigned int i, 
-	      unsigned int& detId,
-	      unsigned int& hitId,
-	      unsigned int& planeId) const {
-	assert(i<getNHits());
-	detId=fDetId.at(i);hitId=fHitId.at(i);
-	planeId=fPlaneId.at(i);
+  void getHitWithPlane(unsigned int i,
+                       unsigned int& detId,
+                       unsigned int& hitId,
+                       unsigned int& planeId) const {
+    assert(i < getNHits());
+    detId = fDetId.at(i); hitId = fHitId.at(i);
+    planeId = fPlaneId.at(i);
   }
 
   unsigned int getNHits() const {return fDetId.size();}
   double getCurv() const {return fCurv;}
   double getDip() const {return fDip;}
-  bool inverted() const {return fInv;}
-  std::vector<unsigned int> GetHitIDs(int detId=-1) const;
-  std::vector<unsigned int> GetDetIDs() const {return fDetId;}
-  std::vector<double>       GetRhos() const {return fRho;}
-  std::set<unsigned int> GetUniqueDetIDs() const {
+  //bool inverted() const {return fInv;} //nobody seems to use it so I commented it out
+  std::vector<unsigned int> getHitIDs(int detId = -1) const;
+  std::vector<unsigned int> GetHitIDs(int detId = -1) const;
+  std::vector<unsigned int> getDetIDs() const {return fDetId;}
+  std::vector<unsigned int> GetDetIDs() const { std::cerr << "the method GFTrackCand::GetDetIDs() is deprecated. Use GFTrackCand::getDetIDs() instead\n"; return fDetId;}
+  std::vector<double>       getRhos() const {return fRho;}
+  std::vector<double>       GetRhos() const {
+    std::cerr << "the method GFTrackCand::GetRhos() is deprecated. Use GFTrackCand::getRhos() instead\n";
+    return fRho;
+  }
+  std::set<unsigned int> getUniqueDetIDs() const {
     std::set<unsigned int> retVal;
-    for(unsigned int i=0;i<fDetId.size();++i){
+    for (unsigned int i = 0; i < fDetId.size(); ++i) {
       retVal.insert(fDetId.at(i));
     }
     return retVal;
@@ -128,39 +138,72 @@ public:
    */
   int getMcTrackId() const {return fMcTrackId;}
   /** @brief get the seed value for track: pos */
-  TVector3 getPosSeed() const {return fPosSeed;}
+  TVector3 getPosSeed() const {
+    std::cerr << "the method GFTrackCand::getPosSeed() is deprecated. Use GFTrackCand::getStateSeed() instead\n";
+    TVector3 posSeed(fState6D[0][0], fState6D[1][0], fState6D[2][0]);
+    return posSeed;
+  }
   /** @brief get the seed value for track: direction */
-  TVector3 getDirSeed() const {return fDirSeed;}
+  TVector3 getDirSeed() const {
+    std::cerr << "the method GFTrackCand::getDirSeed() is deprecated. Use GFTrackCand::getStateSeed() instead\n";
+    TVector3 dirSeed(fState6D[3][0], fState6D[4][0], fState6D[5][0]);
+    return dirSeed;
+  }
   /** @brief get the seed value for track: qoverp */
-  double getQoverPseed() const {return fQoverpSeed;}
-  /** @brief get the seed value for track: error on pos (standard deviation)*/
-  TVector3 getPosError() const {return fPosError;}
-  /** @brief get the seed value for track: error on direction (standard deviation)*/
-  TVector3 getDirError() const {return fDirError;}
+  double getQoverPseed() const {
+    std::cerr << "the method GFTrackCand::getQoverPseed() is deprecated. Use GFTrackCand::getStateSeed() and/or getChargeSeed() instead\n";
+    double p = std::sqrt(fState6D[3][0] * fState6D[3][0] + fState6D[4][0] * fState6D[4][0] + fState6D[5][0] * fState6D[5][0]);
+    return fQ / p;
+  }
+  //  /** @brief get the seed value for track: error on pos (standard deviation)*/
+  //  TVector3 getPosError() const {return fPosError;}
+  //  /** @brief get the seed value for track: error on direction (standard deviation)*/
+  //  TVector3 getDirError() const {return fDirError;}
+  /** returns the 6D seed state; should be in global coordinates */
+  TMatrixD getStateSeed() const {
+    return fState6D;
+  }
+  /** returns the 6D covariance matrix of the seed state; should be in global coordinates */
+  TMatrixD getCovSeed() const {
+    return fCov6D;
+  }
+  double getChargeSeed()const {
+    return fQ;
+  }
   /** @brief get the PDG code*/
   int getPdgCode() const {return fPdg;}
   // Modifiers -----------------------
-  void addHit(unsigned int detId, unsigned int hitId, double rho=0., unsigned int planeId=0);
-  void setCurv(double c){fCurv=c;}
-  void setDip(double d){fDip=d;}
-  void setInverted(bool f=true) {fInv=f;}
+  void addHit(unsigned int detId, unsigned int hitId, double rho = 0., unsigned int planeId = 0);
+  void setCurv(double c) {
+    std::cerr << "the method GFTrackCand::setCurv is deprecated. Use GFTrackCand::set6DSeed instead\n";
+    fCurv = c;
+  }
+  void setDip(double d) {
+    std::cerr << "the method GFTrackCand::setDip is deprecated. Use GFTrackCand::set6DSeed instead\n";
+    fDip = d;
+  }
+  //void setInverted(bool f=true) {fInv=f;} //nobody seems to use it so I commented it out
   /** @brief set the MCT track id, for MC simulations
    */
-  void setMcTrackId(int i){fMcTrackId=i;}
+  void setMcTrackId(int i) {fMcTrackId = i;}
   /** @brief Test if hit already is part of this track candidate
    */
-  bool HitInTrack(unsigned int detId, unsigned int hitId) const;
+  bool hitInTrack(unsigned int detId, unsigned int hitId) const;
   /** @brief set the seed values for track: pos, direction, q/p
    */
-  void setTrackSeed(const TVector3& pos,const TVector3& direction,const double qop){
-    fPosSeed=pos;fDirSeed=direction;fQoverpSeed=qop;
-  }
+  //  void setTrackSeed(const TVector3& pos,const TVector3& direction,const double qop){
+  //    fPosSeed=pos;fDirSeed=direction;fQoverpSeed=qop;
+  //  }
   /** @brief set the seed values for track: pos, momentum, pdgCode, pos error, momentum error (errors are optional and will be set to 1,1,1 if not given)
    */
-  void setComplTrackSeed(const TVector3& pos,const TVector3& mom, const int pdgCode, TVector3 posError = TVector3(1.0,1.0,1.0), TVector3 dirError = TVector3(1.0,1.0,1.0));
-  /** @brief set a particle hypothesis in form of a PDG code
+  void setComplTrackSeed(const TVector3& pos, const TVector3& mom, const int pdgCode, TVector3 posError = TVector3(1.0, 1.0, 1.0), TVector3 dirError = TVector3(1.0, 1.0, 1.0));
+  /** @brief set a particle hypothesis in form of a PDG code this will also set the charge attribute
    */
-  void setPdgCode(int pdgCode){fPdg=pdgCode;}
+  void setPdgCode(int pdgCode) {
+    fPdg = pdgCode;
+    TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(fPdg);
+    fQ = part->Charge() / (3.);
+  }
   void append(const GFTrackCand&);
 
   /** @brief sort the hits that were already added to the trackCand using the rho parameter.
@@ -173,6 +216,28 @@ public:
   // Operations ----------------------
   void reset();
   void Print(const Option_t* = "") const ;
+  /** @brief sets the state to seed the track fitting. State has to be a TMatrixD(6,1). First 3 elements are the staring postion second 3 elements the starting momentum. Everything in global coordinates
+   * charge is the charge hypotheses of the particle charge
+   * ATTENTION: If you set the cov6D covariance matrix of the state remember that there ar VARIANCES not STANDARD DEVIATIONS on the diagonal
+   */
+  void set6DSeed(const TMatrixD& state6D, const double charge, TMatrixD cov6D = -1.0 * TMatrixD(TMatrixD::kUnit, TMatrixD(6, 6))) {
+    fQ = charge;
+    fState6D = state6D;
+    fCov6D = cov6D;
+  }
+  /** @brief This function works the same as set6DSeed but instead of a charge hypothesis you can set a pdg code which will set the charge automatically
+   * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not standard deviations on the diagonal
+   */
+  void set6DSeedAndPdgCode(const TMatrixD& state6D, const int pdgCode, TMatrixD cov6D = -1.0 * TMatrixD(TMatrixD::kUnit, TMatrixD(6, 6))) {
+    setPdgCode(pdgCode);
+    fState6D = state6D;
+    fCov6D = cov6D;
+  }
+//  void setCurvDipPosSeed(const double curvature, const double dipAngle, const TVector3& pos){
+//
+//  };
+//  /** set the errors  */
+//  void setCurvDipPosError(const double curvatureError, const double dipAngleError, const TVector3& posError){};
 
 private:
 
@@ -184,21 +249,26 @@ private:
 
   double fCurv; // curvature from pattern reco
   double fDip;  // dip angle from pattern reco
-  bool fInv;  // true if inverted track
+  //bool fInv;  // true if inverted track //nobody seems to use it so I commented it out
 
-  TVector3 fPosSeed;  //seed value for the track: pos
-  TVector3 fDirSeed;  //direction
-  TVector3 fPosError;  //error on position seed given as a standard deviation
-  TVector3 fDirError;  //error on direction seed given as a standard deviation
-  double fQoverpSeed; //q/p
+//  TVector3 fPosSeed;  //seed value for the track: pos
+//  TVector3 fDirSeed;  //direction
+//  TVector3 fPosError;  //error on position seed given as a standard deviation
+//  TVector3 fDirError;  //error on direction seed given as a standard deviation
+//  double fQoverpSeed; //q/p
+
   int fMcTrackId; //if MC simulation, store the mct track id here
   int fPdg; // particle data groupe's id for a particle
+
+  TMatrixD fState6D; /** global 6D position plus momentum state */
+  TMatrixD fCov6D; /** global 6D position plus momentum covariance matrix */
+  double fQ; /** the charge of the particle in units of elementary charge */
 
 
   // Private Methods -----------------
 
 public:
-  ClassDef(GFTrackCand,7)
+  ClassDef(GFTrackCand, 8)
 };
 
 #endif
