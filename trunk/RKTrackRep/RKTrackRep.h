@@ -66,7 +66,7 @@ class RKTrackRep : public GFAbsTrackRep {
        const TVector3& mom,
        const int& PDGCode);
 
-  RKTrackRep(const GFTrackCand* aGFTrackCandPtr);
+  RKTrackRep(const GFTrackCand* aGFTrackCandPtr, int pdgcode = 0);
 
   virtual ~RKTrackRep();
 

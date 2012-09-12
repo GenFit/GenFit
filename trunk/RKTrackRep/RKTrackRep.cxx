@@ -27,9 +27,9 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include "assert.h"
+#include <assert.h>
 #include "stdlib.h"
-#include "math.h"
+#include <math.h>
 #include "TMath.h"
 #include "TGeoManager.h"
 #include "TDatabasePDG.h"
@@ -99,29 +99,32 @@ RKTrackRep::RKTrackRep(const TVector3& pos,
 }
 
 
-RKTrackRep::RKTrackRep(const GFTrackCand* aGFTrackCandPtr) :
+RKTrackRep::RKTrackRep(const GFTrackCand* const aGFTrackCandPtr, int pdgCode) :
                        GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fCachePlane(), fCacheSpu(1), fAuxInfo(1,2) {
 
+	if (pdgCode == 0){
+		pdgCode = aGFTrackCandPtr->getPdgCode();
+	}
+
   initArrays();
-  setPDG(aGFTrackCandPtr->getPdgCode()); // also sets charge and mass
 
-  double mom = aGFTrackCandPtr->getQoverPseed();
-  if (fabs(mom) > 1.E-3) mom = fabs(fCharge/mom);
-  else mom = 1.E3;
+  setPDG(pdgCode); // also sets charge and mass
 
-  double fac(mom);
+  TMatrixD state6D = aGFTrackCandPtr->getStateSeed();
+  TMatrixD cov6D = aGFTrackCandPtr->getCovSeed();
+  TVector3 posError;
+  TVector3 momError;
+  if( cov6D[0][0] < 0.0 ){ // no valid cov was set in the trackCand so just set a large one
+	  posError.SetXYZ(sqrt(cov6D[0][0]),sqrt(cov6D[1][1]),sqrt(cov6D[2][2]));
+	  momError.SetXYZ(sqrt(cov6D[3][3]),sqrt(cov6D[4][4]),sqrt(cov6D[5][5]));
+  } else {
+	  posError.SetXYZ(sqrt(cov6D[0][0]),sqrt(cov6D[1][1]),sqrt(cov6D[2][2]));
+	  momError.SetXYZ(sqrt(cov6D[3][3]),sqrt(cov6D[4][4]),sqrt(cov6D[5][5]));
+  }
 
-  // get momentum/direction vector
-  TVector3 momVec(aGFTrackCandPtr->getDirSeed());
-  // if the user has set the dirSeed magnitude already to the momentum, the dirError must not be multiplied with the momentum magnitude
-  if (momVec.Mag()-mom < 0.01) fac = 1;
-  // set magnitude
-  momVec.SetMag(mom);
-
-  calcStateCov(aGFTrackCandPtr->getPosSeed(),
-               momVec,
-               aGFTrackCandPtr->getPosError(),
-               aGFTrackCandPtr->getDirError()*fac);
+  TVector3 pos(state6D[0][0],state6D[1][0],state6D[2][0]);
+  TVector3 mom(state6D[3][0],state6D[4][0],state6D[5][0]);
+  calcStateCov(pos, mom, posError, momError);
 }
 
 
