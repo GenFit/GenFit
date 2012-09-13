@@ -297,6 +297,18 @@ void GFTrack::Print(const Option_t* option) const{
 }
 
 
+std::map<GFAbsRecoHit*, unsigned int> GFTrack::getHitMap(){
+  std::map<GFAbsRecoHit*, unsigned int> hitMap;
+  unsigned int nHits = getNumHits();
+
+  for (unsigned int i=0; i<nHits; ++i){
+    hitMap.insert(std::pair<GFAbsRecoHit*, unsigned int>(fHits[i], i));
+  }
+
+  return hitMap;
+}
+
+
 bool GFTrack::getHitsByPlane(std::vector<std::vector<int>*>& retVal){
   for(int i=0;retVal.size();++i){
     delete retVal.at(i);

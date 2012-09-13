@@ -53,6 +53,25 @@ TVector3 GFTools::getSmoothedPosXYZ(const GFTrack* trk, unsigned int irep, unsig
 }
 
 
+TVector3 GFTools::getSmoothedMomXYZ(const GFTrack* trk, unsigned int irep, unsigned int ihit){
+
+  std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
+
+  TMatrixT<double> smoothed_state, smoothed_cov, auxInfo;
+  GFDetPlane smoothing_plane;
+
+  getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
+
+  if(rep->hasAuxInfo()) {
+    rep->setData(smoothed_state, smoothing_plane, &smoothed_cov, &auxInfo);
+  } else {
+    rep->setData(smoothed_state, smoothing_plane, &smoothed_cov);
+  }
+
+  return rep->getMom(smoothing_plane);
+}
+
+
 TMatrixT<double> GFTools::getBiasedSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit) {
 
   TMatrixT<double> smoothed_state;
