@@ -138,7 +138,15 @@ public:
     return fBookkeeping.at(theRep)->getNumFailed();
   }
 
+  /** Get a vector of the track's RecoHits
+   */
   std::vector<GFAbsRecoHit*> getHits() {return fHits;}
+
+  /** Get a map of the track's RecoHits and their hit IDs.
+   * Can be usefull for getting the ID of a certain RecoHit,
+   * since the RecoHit pointers are the keys of the map.
+   */
+  std::map<GFAbsRecoHit*, unsigned int> getHitMap();
 
   const GFTrackCand& getCand() const {return fCand;}
 

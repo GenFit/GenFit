@@ -51,6 +51,10 @@ namespace GFTools {
 	   */
 	TVector3 getSmoothedPosXYZ(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
+  /** @brief Get smoothed momentum in global coordinates
+     */
+  TVector3 getSmoothedMomXYZ(const GFTrack* trk, unsigned int irep, unsigned int ihit);
+
 	/** @brief Get smoothed track covariance in plane coordinates
 	 */
 	TMatrixT<double> getSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit);
