@@ -23,7 +23,7 @@ GFRecoHitFactory.cxx GFRecoHitProducer.cxx GFSpacepointHitPolicy.cxx
 GFTools.cxx GFTrackCand.cxx GFTrack.cxx GFWireHitPolicy.cxx
 GFWirepointHitPolicy.cxx GFConstField.cxx GFFieldManager.cxx
 GFAbsFinitePlane.cxx GFRectFinitePlane.cxx 
-GFDaf.cxx GFDafHit.cxx GFTrackProximity.cxx GFAbsRecoHitComparator.cxx)
+GFDaf.cxx GFDafHit.cxx GFTrackProximity.cxx)
 
 if(RULE_CHECKER_FOUND)
   CHECK_RULES("${GENFIT_SRCS}" "${INCLUDE_DIRECTORIES}" GENFIT_RULES)
@@ -36,7 +36,7 @@ CHANGE_FILE_EXTENSION(*.cxx *.h GENFIT_HEADERS "${GENFIT_SRCS}")
 set(GENFIT_LINKDEF  genfitLinkDef.h)
 set(GENFIT_DICTIONARY ${CMAKE_CURRENT_BINARY_DIR}/genfitDict.cxx) 
 
-SET(GENFIT_HEADERS GFRecoHitIfc.h ${GENFIT_HEADERS})
+SET(GENFIT_HEADERS GFRecoHitIfc.h GFAbsRecoHitComparator.h ${GENFIT_HEADERS})
 
 ROOT_GENERATE_DICTIONARY("${GENFIT_HEADERS}" "${GENFIT_LINKDEF}" "${GENFIT_DICTIONARY}" "${INCLUDE_DIRECTORIES}")
 
