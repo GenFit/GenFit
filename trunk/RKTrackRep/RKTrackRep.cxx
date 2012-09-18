@@ -827,7 +827,7 @@ double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
 
 double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, bool onlyOneStep, double maxStep) {
 
-  static const unsigned int maxNumIt(200);
+  static const unsigned int maxNumIt(500);
   unsigned int numIt(0);
 
   const bool calcCov(cov!=NULL);
@@ -1355,6 +1355,10 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   static const double Smax      = 10.;          // max. step allowed [cm]
   static const double dAngleMax = 0.05;         // max. deviation of angle between direction before and after the step [rad]
   double Step;
+  bool improveEstimation (true);
+
+  momLossExceeded = false;
+  atPlane = false;
 
   #ifdef DEBUG
     std::cout << " RKTrackRep::estimateStep \n";
@@ -1418,6 +1422,7 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
     // if we are near the plane, but not pointing to the active area, make a big step!
     else {
       Step = fDirection*SmaxAngle;
+      improveEstimation = false;
       #ifdef DEBUG
         std::cout << "  we are near the plane, but not pointing to the active area. make a big step! \n";
       #endif
@@ -1426,6 +1431,7 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   // fDirection decides!
   else {
     Step = fabs(Step)*fDirection;
+    improveEstimation = false;
     #ifdef DEBUG
       std::cout << "  select direction according to fDirection. \n";
     #endif
@@ -1485,7 +1491,7 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   }
   
 
-  if (!stopBecauseOfCurvature && !momLossExceeded){
+  if (!stopBecauseOfCurvature && !momLossExceeded && improveEstimation){
     atPlane = true;
     
     // improve step estimation to surface according to curvature
