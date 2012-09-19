@@ -367,16 +367,15 @@ void GFMaterialEffects::noiseCoulomb(const double& mom,
 {
 
   // MULTIPLE SCATTERING; calculate sigma^2
-  //TODO in both sigma2 formulas the charge of the incident particle is missing => MSC for ions will not work correctly
   double sigma2 = 0;
   assert(fMscModelCode == 0 || fMscModelCode == 1);
   if (fMscModelCode == 0) {// PANDA report PV/01-07 eq(43); linear in step length
-    sigma2 = 225.E-6 / (fbeta * fbeta * mom * mom) * fabs(fstep) / fradiationLength * fmatZ / (fmatZ + 1) * log(159.*pow(fmatZ, -1. / 3.)) / log(287.*pow(fmatZ, -0.5)); // sigma^2 = 225E-6/mom^2 * XX0/fbeta^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
+    sigma2 = 225.E-6*fcharge*fcharge / (fbeta * fbeta * mom * mom) * fabs(fstep) / fradiationLength * fmatZ / (fmatZ + 1) * log(159.*pow(fmatZ, -1. / 3.)) / log(287.*pow(fmatZ, -0.5)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/fbeta^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
 
   } else if (fMscModelCode == 1) { //Highland not linear in step length formula taken from PDG book 2011 edition
     double stepOverRadLength = fabs(fstep) / fradiationLength;
     double logCor = (1 + 0.038 * log(stepOverRadLength));
-    sigma2 = 0.0136 * 0.0136 / (fbeta * fbeta * mom * mom) * stepOverRadLength * logCor * logCor;
+    sigma2 = 0.0136 * 0.0136 *fcharge*fcharge / (fbeta * fbeta * mom * mom) * stepOverRadLength * logCor * logCor;
   }
   assert(sigma2 > 0.0);
 
