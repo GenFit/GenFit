@@ -427,7 +427,7 @@ void RKTools::printDim(const double* mat, unsigned int dimX, unsigned int dimY){
     }
     std::cout<<"\n";
   }
-  std::cout<<"\n";
+  std::cout<<std::endl;
 
 }
 
