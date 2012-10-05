@@ -1135,6 +1135,10 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
     H2[0] = fH.X()*PS2;  H2[1] = fH.Y()*PS2;  H2[2] = fH.Z()*PS2;	// H2 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * (A4, B4, C4)
     A6 = B5*H2[2]-C5*H2[1]; B6 = C5*H2[0]-A5*H2[2]; C6 = A5*H2[1]-B5*H2[0]; // (A5, B5, C5) x H2
     
+    #ifdef DEBUG
+      std::cout << "Mag field: "; fH.Print();
+    #endif
+    
     // update paths
     coveredDistance += S;				// add stepsize to way (signed)
     Way  += fabs(S);
@@ -1448,19 +1452,20 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   //
   // Limit stepsize
   //
-  bool stopBecauseOfCurvature(false);
-
   // reduce maximum stepsize Step to Smax
-  if (fabs(Step) > Smax) Step = StepSign*Smax;
+  if (fabs(Step) > Smax) {
+    Step = StepSign*Smax;
+    improveEstimation = false;
+  }
   if (fabs(Step) > maxStep) {
     Step = StepSign*maxStep;
-    stopBecauseOfCurvature = true;
+    improveEstimation = false;
   }
 
   // also limit stepsize according to the change of the momentum direction!
   if (fabs(Step) > SmaxAngle) {
     Step = StepSign*SmaxAngle;
-    stopBecauseOfCurvature = true;
+    improveEstimation = false;
   }
 
   #ifdef DEBUG
@@ -1491,7 +1496,7 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   }
   
 
-  if (!stopBecauseOfCurvature && !momLossExceeded && improveEstimation){
+  if (!momLossExceeded && improveEstimation){
     atPlane = true;
     
     // improve step estimation to surface according to curvature
