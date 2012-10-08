@@ -224,7 +224,7 @@ public:
     fState6D = state6D;
     fCov6D = cov6D;
   }
-  /** @brief sets the state to seed the track fitting. State has to be a TMatrixD(6,1). First 3 elements are the staring postion second 3 elements the starting momentum. Everything in global coordinates
+  /** @brief sets the state to seed the track fitting. State has to be a TVector3 for position and a TVector3 for momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
    * ATTENTION: If you set the cov6D covariance matrix of the state remember that there ar VARIANCES not STANDARD DEVIATIONS on the diagonal
    */
@@ -238,7 +238,7 @@ public:
     fState6D(5,0) = mom[2];
     fCov6D = cov6D;
   }
-  /** @brief This function works the same as set6DSeed but instead of a charge hypothesis you can set a pdg code which will set the charge automatically
+  /** @brief This function works the same as setPosMomSeed but instead of a charge hypothesis you can set a pdg code which will set the charge automatically
    * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not standard deviations on the diagonal
    */
   void setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode, TMatrixD cov6D = -1.0 * TMatrixD(TMatrixD::kUnit, TMatrixD(6, 6))) {
