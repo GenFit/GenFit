@@ -18,7 +18,7 @@
  */
 #include "GFTrackCand.h"
 #include "GFException.h"
-#include"TDatabasePDG.h"
+#include "TDatabasePDG.h"
 #include <algorithm>
 #include <iostream>
 #include <utility>
@@ -27,20 +27,7 @@ ClassImp(GFTrackCand)
 
 GFTrackCand::GFTrackCand():fCurv(0),fDip(0), fQ(0),fMcTrackId(-1),fPdg(0), fState6D(TMatrixD(TMatrixD::kZero,TMatrixD(6,1))),fCov6D(-1.0*TMatrixD(TMatrixD::kUnit,TMatrixD(6,6))){}
 
-GFTrackCand::~GFTrackCand(){}
-
-//GFTrackCand::GFTrackCand(double curv, double dip, double inv, std::vector<unsigned int> detIDs, std::vector<unsigned int> hitIDs)
-//  : fDetId(detIDs),fHitId(hitIDs),fCurv(curv), fDip(dip), fInv(inv),fQoverpSeed(0.), fMcTrackId(-1),fPdg(0)
-//{
-//  assert(fDetId.size()==fHitId.size());
-//  fRho.resize(fDetId.size(),0.);
-//}
-//GFTrackCand::GFTrackCand(double curv, double dip, double inv, std::vector<unsigned int> detIDs, std::vector<unsigned int> hitIDs,std::vector<double> rhos)
-//  : fDetId(detIDs),fHitId(hitIDs),fRho(rhos),fCurv(curv), fDip(dip), fInv(inv),fQoverpSeed(0.), fMcTrackId(-1),fPdg(0)
-//{
-//  assert(fDetId.size()==fHitId.size());
-//  assert(fDetId.size()==fRho.size());
-//}
+GFTrackCand::~GFTrackCand(){} //no members are pointers
 
 void 
 GFTrackCand::addHit(unsigned int detId, unsigned int hitId, double rho, unsigned int planeId)
@@ -132,20 +119,20 @@ void GFTrackCand::append(const GFTrackCand& rhs){
 }
 
 void GFTrackCand::setComplTrackSeed(const TVector3& pos, const TVector3& mom, const int pdgCode, TVector3 posError, TVector3 momError){
-	std::cerr << "the method GFTrackCand::setComplTrackSeed is deprecated. Use GFTrackCand::set6DSeed() or setCurvDipPos() instead\n";
+	std::cerr << "the method GFTrackCand::setComplTrackSeed is deprecated. Use GFTrackCand::set6DSeed() or  instead\n";
 	setPdgCode(pdgCode); //also sets charge
-	fState6D[0][0] = pos[0];
-	fState6D[1][0] = pos[1];
-	fState6D[2][0] = pos[2];
-	fState6D[3][0] = mom[0];
-	fState6D[4][0] = mom[1];
-	fState6D[5][0] = mom[2];
-	fCov6D[0][0] = posError[0]*posError[0];
-	fCov6D[1][1] = posError[1]*posError[1];
-	fCov6D[2][2] = posError[2]*posError[2];
-	fCov6D[3][3] = momError[0]*momError[0];
-	fCov6D[4][4] = momError[1]*momError[1];
-	fCov6D[5][5] = momError[2]*momError[2];
+	fState6D(0,0) = pos[0];
+	fState6D(1,0) = pos[1];
+	fState6D(2,0) = pos[2];
+	fState6D(3,0) = mom[0];
+	fState6D(4,0) = mom[1];
+	fState6D(5,0) = mom[2];
+	fCov6D(0,0) = posError[0]*posError[0];
+	fCov6D(1,1) = posError[1]*posError[1];
+	fCov6D(2,2) = posError[2]*posError[2];
+	fCov6D(3,3) = momError[0]*momError[0];
+	fCov6D(4,4) = momError[1]*momError[1];
+	fCov6D(5,5) = momError[2]*momError[2];
 }
 
 
@@ -190,8 +177,8 @@ void GFTrackCand::sortHits(std::vector<unsigned int> indices){
 		sortedRho[i] = fRho[sortIndex];
 	}
 	//write the changes back to the private data members:
-	std::copy(sortedDetId.begin(), sortedDetId.end(), fDetId.begin());
-	std::copy(sortedHitId.begin(), sortedHitId.end(), fHitId.begin());
-	std::copy(sortedPlaneId.begin(), sortedPlaneId.end(), fPlaneId.begin());
-	std::copy(sortedRho.begin(), sortedRho.end(), fRho.begin());
+	fDetId = sortedDetId;
+	fHitId = sortedHitId;
+	fPlaneId = sortedPlaneId;
+	fRho = sortedRho;
 }
