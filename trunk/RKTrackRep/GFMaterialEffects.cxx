@@ -379,34 +379,25 @@ void GFMaterialEffects::noiseCoulomb(const double& mom,
   }
   assert(sigma2 > 0.0);
 
-
-
   // noiseBefore
   double noiseBefore[7*7];
   memset(noiseBefore,0x00,7*7*sizeof(double));
 
-  // calculate euler angles theta, psi (so that directionBefore' points in z' direction)
-  double psi = 0;
-  if (fabs((*directionBefore)[1]) < 1E-14) {  // numerical case: arctan(+-inf)=+-PI/2
-    if ((*directionBefore)[0] >= 0.) psi = M_PI / 2.;
-    else psi = 3.*M_PI / 2.;
-  } else {
-    if ((*directionBefore)[1] > 0.) psi = M_PI - atan((*directionBefore)[0] / (*directionBefore)[1]);
-    else psi = -atan((*directionBefore)[0] / (*directionBefore)[1]);
-  }
-  // cache sin and cos
-  double sintheta = sqrt(1 - (*directionBefore)[2] * (*directionBefore)[2]); // theta = arccos(directionBefore[2])
-  double costheta = (*directionBefore)[2];
-  double sinpsi = sin(psi);
-  double cospsi = cos(psi);
+  double phi = atan2((*directionBefore)[1],(*directionBefore)[0]);
 
-  // calculate NoiseBefore Matrix R M R^T
-  const double noiseBefore33 =  sigma2 * (cospsi * cospsi + costheta * costheta - costheta * costheta * cospsi * cospsi);
-  const double noiseBefore43 =  sigma2 *  cospsi * sinpsi * sintheta * sintheta;
-  const double noiseBefore53 = -sigma2 *  costheta * sinpsi * sintheta;
-  const double noiseBefore44 =  sigma2 * (sinpsi * sinpsi + costheta * costheta * cospsi * cospsi);
-  const double noiseBefore54 =  sigma2 *  costheta * cospsi * sintheta;
-  const double noiseBefore55 =  sigma2 *  sintheta * sintheta;
+  // cache sin and cos
+  double sinTheta = sqrt(1 - (*directionBefore)[2] * (*directionBefore)[2]); // theta = arccos(directionBefore[2])
+  double cosTheta = (*directionBefore)[2];
+  double sinPhi = sin(phi);
+  double cosPhi = cos(phi);
+
+  // calculate NoiseBefore Matrix
+  const double noiseBefore33 =  sigma2 * (1.0 - sinTheta*sinTheta * cosPhi*cosPhi); //
+  const double noiseBefore43 = -sigma2 * sinTheta*sinTheta * cosPhi * sinPhi; //
+  const double noiseBefore53 = -sigma2 * cosTheta * sinTheta * cosPhi; //
+  const double noiseBefore44 =  sigma2 * (1.0 - sinTheta*sinTheta * sinPhi*sinPhi); //
+  const double noiseBefore54 = -sigma2 * cosTheta * sinTheta * sinPhi; //
+  const double noiseBefore55 =  sigma2 * sinTheta * sinTheta; //
 
   // propagate
   // last column of jac is [0,0,0,0,0,0,1]
@@ -446,33 +437,25 @@ void GFMaterialEffects::noiseCoulomb(const double& mom,
   double noiseAfter[7*7];
   memset(noiseAfter,0x00,7*7*sizeof(double));
 
-  // calculate euler angles theta, psi (so that A' points in z' direction)
-  psi = 0;
-  if (fabs((*directionAfter)[1]) < 1E-14) {  // numerical case: arctan(+-inf)=+-PI/2
-    if ((*directionAfter)[0] >= 0.) psi = M_PI / 2.;
-    else psi = 3.*M_PI / 2.;
-  } else {
-    if ((*directionAfter)[1] > 0.) psi = M_PI - atan((*directionAfter)[0] / (*directionAfter)[1]);
-    else psi = -atan((*directionAfter)[0] / (*directionAfter)[1]);
-  }
+  phi = atan2((*directionAfter)[1],(*directionAfter)[0]);
   // cache sin and cos
-  sintheta = sqrt(1 - (*directionAfter)[2] * (*directionAfter)[2]); // theta = arccos(directionAfter[2])
-  costheta = (*directionAfter)[2];
-  sinpsi = sin(psi);
-  cospsi = cos(psi);
+  sinTheta = sqrt(1 - (*directionAfter)[2] * (*directionAfter)[2]); // theta = arccos(directionAfter[2])
+  cosTheta = (*directionAfter)[2];
+  sinPhi = sin(phi);
+  cosPhi = cos(phi);
 
-  // calculate NoiseAfter Matrix R M R^T
-  noiseAfter[3*7+3] =  sigma2 * (cospsi * cospsi + costheta * costheta - costheta * costheta * cospsi * cospsi);
-  noiseAfter[3*7+4] =  sigma2 * cospsi * sinpsi * sintheta * sintheta; // noiseAfter_ij = noiseAfter_ji
-  noiseAfter[3*7+5] = -sigma2 * costheta * sinpsi * sintheta;
+  // calculate NoiseAfter Matrix
+  noiseAfter[3*7+3] =  sigma2 * (1.0 - sinTheta*sinTheta * cosPhi*cosPhi); //
+  noiseAfter[3*7+4] = -sigma2 * sinTheta*sinTheta * cosPhi * sinPhi; //
+  noiseAfter[3*7+5] = -sigma2 * cosTheta * sinTheta * cosPhi; //
 
   noiseAfter[4*7+3] =  noiseAfter[3*7+4];
-  noiseAfter[4*7+4] =  sigma2 * (sinpsi * sinpsi + costheta * costheta * cospsi * cospsi);
-  noiseAfter[4*7+5] =  sigma2 * costheta * cospsi * sintheta;
+  noiseAfter[4*7+4] =  sigma2 * (1.0 - sinTheta*sinTheta * sinPhi*sinPhi); //
+  noiseAfter[4*7+5] = -sigma2 * cosTheta * sinTheta * sinPhi; //
 
   noiseAfter[5*7+3] =  noiseAfter[3*7+5];
   noiseAfter[5*7+4] =  noiseAfter[4*7+5];
-  noiseAfter[5*7+5] =  sigma2 * sintheta * sintheta;
+  noiseAfter[5*7+5] =  sigma2 * sinTheta * sinTheta; //
 
   //calculate mean of noiseBefore and noiseAfter and update noise
   for (unsigned int i=0; i<7*7; ++i){
