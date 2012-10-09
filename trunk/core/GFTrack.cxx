@@ -160,18 +160,13 @@ void GFTrack::sortHits(){
       pv.push_back( std::pair<unsigned int, GFAbsRecoHit*>(i, fHits[i]) ) ;
   }
 
-  std::sort(pv.begin(), pv.end(), GFAbsRecoHitComparator());
+  std::stable_sort(pv.begin(), pv.end(), GFAbsRecoHitComparator());
 
   // get the indices -> now we know at which position which hit is
   std::vector<unsigned int> indices;
   indices.reserve(nHits);
   for (unsigned int i=0; i<nHits; ++i){
     indices.push_back(pv[i].first);
-  }
-
-  // test
-  for (unsigned int i=0; i<indices.size(); ++i){
-    std::cout<<indices[i]<<"\n";
   }
 
   // now we have to do the actual sorting of everything
