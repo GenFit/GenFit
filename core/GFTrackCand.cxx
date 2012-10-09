@@ -144,7 +144,7 @@ void GFTrackCand::sortHits(){
 	for (unsigned int i = 0; i != nHits; ++i){
 		order[i] = std::make_pair(fRho[i],i);
 	}
-	std::sort(order.begin(), order.end()); // by default sort uses the ".first" value of the pair when sorting a std container of pairs
+	std::stable_sort(order.begin(), order.end()); // by default sort uses the ".first" value of the pair when sorting a std container of pairs
 
 	std::vector<unsigned int> indices(nHits);
 	for (unsigned int i = 0; i != nHits; ++i){
