@@ -25,7 +25,15 @@
 
 ClassImp(GFTrackCand)
 
-GFTrackCand::GFTrackCand():fCurv(0),fDip(0), fQ(0),fMcTrackId(-1),fPdg(0), fState6D(TMatrixD(TMatrixD::kZero,TMatrixD(6,1))),fCov6D(-1.0*TMatrixD(TMatrixD::kUnit,TMatrixD(6,6))){}
+GFTrackCand::GFTrackCand() : 
+  fCurv(0), fDip(0), 
+  fMcTrackId(-1), fPdg(0), 
+  fState6D(TMatrixD(TMatrixD::kZero,TMatrixD(6,1))),
+  fCov6D(-1.0*TMatrixD(TMatrixD::kUnit,TMatrixD(6,6))),
+  fQ(0) 
+{
+  ;
+}
 
 GFTrackCand::~GFTrackCand(){} //no members are pointers
 

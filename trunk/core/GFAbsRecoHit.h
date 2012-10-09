@@ -161,7 +161,7 @@ public:
   /**
    * Get sorting parameter rho.
    */
-  double getRho() {return fRho;}
+  double getRho() const {return fRho;}
 
   /**
    * Set sorting parameter rho.
@@ -182,7 +182,7 @@ public:
 
   virtual const std::string& getPolicyName();
 
-  int getNparHit(){return fNparHit;}
+  int getNparHit() const {return fNparHit;}
 
  public:
   ClassDef(GFAbsRecoHit,4)

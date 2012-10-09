@@ -24,8 +24,8 @@ ClassImp(GFAbsRecoHit)
 GFAbsRecoHit::GFAbsRecoHit(int NparHit) :
   fHitCoord(NparHit,1),
   fHitCov(NparHit,NparHit),
-  fNparHit(NparHit),
-  fRho(0.)
+  fRho(0.),
+  fNparHit(NparHit)
 {
 }
 
