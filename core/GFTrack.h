@@ -131,7 +131,7 @@ public:
   /** @brief return the number of failed Hits in track fit
    * repId == -1 will use cardinal rep
   */
-  int getFailedHits(int repId=-1){
+  int getFailedHits(int repId=-1) const {
     int theRep;
     if(repId==-1) theRep=fCardinal_rep;
     else theRep = repId;
@@ -140,13 +140,13 @@ public:
 
   /** Get a vector of the track's RecoHits
    */
-  std::vector<GFAbsRecoHit*> getHits() {return fHits;}
+  std::vector<GFAbsRecoHit*> getHits() const {return fHits;}
 
   /** Get a map of the track's RecoHits and their hit IDs.
    * Can be usefull for getting the ID of a certain RecoHit,
    * since the RecoHit pointers are the keys of the map.
    */
-  std::map<GFAbsRecoHit*, unsigned int> getHitMap();
+  std::map<GFAbsRecoHit*, unsigned int> getHitMap() const;
 
   const GFTrackCand& getCand() const {return fCand;}
 
@@ -373,7 +373,7 @@ public:
   void getResiduals(unsigned int detId, // which detector?
 		    unsigned int dim,   // which projection?
 		    unsigned int rep,   // which trackrep ?
-		    std::vector<double>& result);
+		    std::vector<double>& result) const;
 		    
 
   /** @brief set the hit index at which plane,state&cov of rep irep is defined

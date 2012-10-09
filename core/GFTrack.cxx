@@ -233,7 +233,7 @@ void
 GFTrack::getResiduals(unsigned int detId, // which detector?
 		    unsigned int dim,   // which projection?
 		    unsigned int repid,   // which trackrep ?
-		    std::vector<double>& result)
+		    std::vector<double>& result) const
 {
 
   unsigned int nhits=getNumHits();
@@ -292,7 +292,7 @@ void GFTrack::Print(const Option_t* option) const{
 }
 
 
-std::map<GFAbsRecoHit*, unsigned int> GFTrack::getHitMap(){
+std::map<GFAbsRecoHit*, unsigned int> GFTrack::getHitMap() const {
   std::map<GFAbsRecoHit*, unsigned int> hitMap;
   unsigned int nHits = getNumHits();
 
