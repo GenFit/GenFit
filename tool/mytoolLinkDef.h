@@ -5,8 +5,11 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-
-
+#pragma link C++ class PixHit+;
 #pragma link C++ class PointHit+;
+#pragma link C++ class PseudoSpacePointWireHit+;
 #pragma link C++ class StripHit+;
+#pragma link C++ class WireHit+;
+#pragma link C++ class WirePointHit+;
+
 #endif

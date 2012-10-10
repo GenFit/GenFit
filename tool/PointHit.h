@@ -11,8 +11,8 @@ public:
 
   // Constructors/Destructors ---------
   PointHit();
-  PointHit(const TVector3& point,const double& res);
-  PointHit(const TVector3& point,const TVector3& res);
+  PointHit(const TVector3& point, const double& res, bool smear=false);
+  PointHit(const TVector3& point, const TVector3& res, bool smear=false);
 
   virtual ~PointHit();
 
@@ -23,6 +23,7 @@ public:
 
 private:
   static const int NparHitRep = 3;
+
 public:
   ClassDef(PointHit,1)
 };
