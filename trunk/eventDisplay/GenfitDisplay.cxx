@@ -324,6 +324,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			bool planar_pixel_hit = false;
 			bool space_hit = false;
 			bool wire_hit = false;
+			bool wirepoint_hit = false;
 			double_t hit_u = 0;
 			double_t hit_v = 0;
 			double_t plane_size = 4;
@@ -347,11 +348,24 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			} else if (hit_type == "GFSpacepointHitPolicy") {
 				space_hit = true;
 				plane_size = 4;
-			} else if (hit_type == "GFWireHitPolicy") {
+			} else if (hit_type == "GFPseudoSpacepointWireHitPolicy") {
+        space_hit = true;
+        plane_size = 4;
+      } else if (hit_type == "GFWireHitPolicy") {
 				wire_hit = true;
 				hit_u = hit_coords(0,0);
+				hit_res_u = hit_cov(0,0);
+				hit_res_v = 4;
 				plane_size = 4;
-			} else {
+			} else if (hit_type == "GFWirepointHitPolicy") {
+        wire_hit = true;
+        wirepoint_hit = true;
+        hit_u = hit_coords(0,0);
+        hit_v = hit_coords(1,0);
+        hit_res_u = hit_cov(0,0);
+        hit_res_v = hit_cov(1,1);
+        plane_size = 4;
+      } else {
 				std::cout << "Track " << i << ", Hit " << j << ": Unknown policy name: skipping hit!" << std::endl;
 				break;
 			}
@@ -395,12 +409,8 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				if(wire_hit) {
 					TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
 					det_shape->IncDenyDestroy();
-					double pseudo_res_0 = fErrorScale*std::sqrt(hit_cov(0,0));
-					if(!drawHits) { // if the hits are also drawn, make the tube smaller to avoid intersecting volumes
-						det_shape->SetShape(new TGeoTube(0, hit_u, plane_size));
-					} else {
-						det_shape->SetShape(new TGeoTube(0, hit_u - pseudo_res_0, plane_size));
-					}
+				  det_shape->SetShape(new TGeoTube(std::max(0., (double)(hit_u-0.0105/2.)), hit_u+0.0105/2., plane_size));
+
 					TVector3 norm = u.Cross(v);
 					TGeoRotation* det_rot = new TGeoRotation("det_rot",	(u.Theta()*180)/TMath::Pi(), (u.Phi()*180)/TMath::Pi(),
 							(norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi(),
@@ -409,7 +419,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					det_shape->SetTransMatrix(*det_trans);
 					det_shape->SetMainColor(kCyan);
 					det_shape->SetMainTransparency(0);
-					if((drawHits && (hit_u - pseudo_res_0 > 0)) || !drawHits) {
+					if((drawHits && (hit_u+0.0105/2 > 0)) || !drawHits) {
 						gEve->AddElement(det_shape);
 					}
 				}
@@ -531,7 +541,10 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					// finished autoscaling -------------------------------------------------------
 
 					// rotate and translate -------------------------------------------------------
-					TGeoMatrix* det_trans = new TGeoGenTrans(o(0),o(1),o(2),1/(pseudo_res_0),1/(pseudo_res_1),1/(pseudo_res_2),det_rot);
+					TGeoMatrix* det_trans = new TGeoGenTrans(o(0),o(1),o(2),
+					                                         std::sqrt(pseudo_res_0/pseudo_res_1/pseudo_res_2), std::sqrt(pseudo_res_1/pseudo_res_0/pseudo_res_2), std::sqrt(pseudo_res_2/pseudo_res_0/pseudo_res_1), // this workaround is necessary due to the "normalization" performed in  TGeoGenTrans::SetScale
+					                                         //1/(pseudo_res_0),1/(pseudo_res_1),1/(pseudo_res_2),
+					                                         det_rot);
 					det_shape->SetTransMatrix(*det_trans);
 					// finished rotating and translating ------------------------------------------
 
@@ -546,6 +559,8 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
 					det_shape->IncDenyDestroy();
 					double pseudo_res_0 = fErrorScale*std::sqrt(hit_cov(0,0));
+					double pseudo_res_1 = plane_size;
+					if (wirepoint_hit) pseudo_res_1 = fErrorScale*std::sqrt(hit_cov(1,1));
 
 					// autoscale if necessary -----------------------------------------------------
 					if(drawAutoScale) {
@@ -560,10 +575,22 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 								std::cout << " to " << fErrorScale << std::endl; 
 							}
 						}
+
+            if(wirepoint_hit && pseudo_res_1 < 1e-5) {
+              std::cout << "Track " << i << ", Hit " << j << ": Invalid wire resolution (< 1e-5), autoscaling not possible!" << std::endl;
+            } else {
+              if(pseudo_res_1 < 0.0049) {
+                double cor = 0.005 / pseudo_res_1;
+                std::cout << "Track " << i << ", Hit " << j << ": Wire covariance too small, rescaling by " << cor;
+                fErrorScale *= cor;
+                pseudo_res_1 *= cor;
+                std::cout << " to " << fErrorScale << std::endl;
+              }
+            }
 					}
 					// finished autoscaling -------------------------------------------------------
 
-					det_shape->SetShape(new TGeoTube(std::min(0., (double)(hit_u - pseudo_res_0)), hit_u + pseudo_res_0, plane_size));
+					det_shape->SetShape(new TGeoTube(std::max(0., (double)(hit_u - pseudo_res_0)), hit_u + pseudo_res_0, pseudo_res_1));
 					TVector3 norm = u.Cross(v);
 
 					// rotate and translate -------------------------------------------------------
