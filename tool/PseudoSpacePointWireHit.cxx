@@ -49,19 +49,21 @@ PseudoSpacePointWireHit::PseudoSpacePointWireHit(const TVector3& pos, const TVec
 
 
   if (smear) {
-    TMatrixD smearVec(3,1);
+    TMatrixD smearVec(NparHitRep,1);
+    TMatrixD smearVecRot(NparHitRep,1);
     smearVec(0,0) = resPerp;
     smearVec(1,0) = resPerp;
     smearVec(2,0) = resWire;
-    smearVec.Mult(rot,smearVec);
+    smearVecRot.Mult(rot,smearVec);
     fHitCoord(0,0) += gRandom->Gaus(0, smearVec(0,0));
     fHitCoord(1,0) += gRandom->Gaus(0, smearVec(1,0));
     fHitCoord(2,0) += gRandom->Gaus(0, smearVec(2,0));
   }
 
   // rotate cov
-  fHitCov.Mult(rot,fHitCov);
-  fHitCov.MultT(fHitCov,rot);
+  TMatrixD hitCovTemp(NparHitRep,NparHitRep);
+  hitCovTemp.Mult(rot,fHitCov);
+  fHitCov.MultT(hitCovTemp,rot);
 
 
   this->setWireDirection(wDir);
