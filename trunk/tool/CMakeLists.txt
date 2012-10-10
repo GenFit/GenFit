@@ -15,7 +15,14 @@ INCLUDE_DIRECTORIES($ENV{ROOTSYS}/include  ${GENFIT}/core ${GENFIT}/RKTrackRep $
 
 AUX_SOURCE_DIRECTORY($ENV{GENFIT}/tool MYTOOL_SRCS)
 
-SET(MYTOOL_HEADERS PointHit.h StripHit.h)
+SET(MYTOOL_HEADERS 
+  PixHit.h
+  PointHit.h 
+  PseudoSpacePointWireHit.h
+  StripHit.h
+  WireHit.h
+  WirePointHit.h
+)
 
 set(MYTOOL_LINKDEF  mytoolLinkDef.h)
 set(MYTOOL_DICTIONARY myToolDict.cxx) 

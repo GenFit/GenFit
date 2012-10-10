@@ -1,28 +1,28 @@
-#ifndef STRIPHIT_HH
-#define STRIPHIT_HH
+#ifndef PIXHIT_HH
+#define PIXHIT_HH
 
 #include "GFRecoHitIfc.h"
 #include "GFPlanarHitPolicy.h"
 
 typedef GFRecoHitIfc<GFPlanarHitPolicy> PlanarRecoHit;
 
-class StripHit : public PlanarRecoHit {
+class PixHit : public PlanarRecoHit {
 public:
 
-  StripHit();
-  StripHit(const TVector3& point,const TVector3& norm, const TVector3& u, double res, bool smear=false);
+  PixHit();
+  PixHit(const TVector3& point,const TVector3& norm, const TVector3& u, double res, bool smear=false);
 
-  virtual ~StripHit();
+  virtual ~PixHit();
 
   virtual GFAbsRecoHit* clone();
   
   virtual TMatrixT<double> getHMatrix(const GFAbsTrackRep* stateVector);
 
 private:
-  static const int NparHitRep = 1;
+  static const int NparHitRep = 2;
 
 public:
-  ClassDef(StripHit,1)
+  ClassDef(PixHit,1)
 
 };
 
