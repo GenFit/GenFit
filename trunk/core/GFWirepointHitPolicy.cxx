@@ -33,7 +33,12 @@
 
 const std::string GFWirepointHitPolicy::fPolicyName = "GFWirepointHitPolicy";
 
-GFWirepointHitPolicy::GFWirepointHitPolicy() : fMaxdistance(1.E50) {;}
+GFWirepointHitPolicy::GFWirepointHitPolicy() :
+    fMaxdistance(1.E50),
+    fLeftRight(0)
+{
+  ;
+}
 
 TMatrixT<double> 
 GFWirepointHitPolicy::hitCoord(GFAbsRecoHit* hit,const GFDetPlane& plane)
@@ -125,12 +130,22 @@ GFWirepointHitPolicy::detPlane(GFAbsRecoHit* hit, GFAbsTrackRep* rep)
    TVector3 U = wiredirection.Cross(dirInPoca);
    U.SetMag(1.);
 
-   // check direction of u
-   if ((poca-poca_onwire)*U < 0) U *= -1.;
+   // check left/right ambiguity
+   if (fLeftRight == 0){ // auto select
+     if ((poca-poca_onwire)*U < 0) U *= -1.;
+   }
+   else if (fLeftRight < 0) U *= -1.;
 
    fDetPlane = GFDetPlane(poca_onwire, U, wiredirection);
 
    return fDetPlane;
+}
+
+void
+GFWirepointHitPolicy::setLeftRightResolution(int lr){
+  if (lr==0) fLeftRight = 0;
+  else if (lr<0) fLeftRight = -1;
+  else fLeftRight = 1;
 }
 
 ClassImp(GFWirepointHitPolicy)
