@@ -17,12 +17,10 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "GFSpacepointHitPolicy.h"
-
 #include "assert.h"
-
 #include "TMath.h"
-
 #include "GFAbsRecoHit.h"
+
 
 const std::string GFSpacepointHitPolicy::fPolicyName = "GFSpacepointHitPolicy";
 
@@ -35,23 +33,20 @@ GFSpacepointHitPolicy::hitCoord(GFAbsRecoHit* hit,const GFDetPlane& plane)
   TVector3 _U;
   TVector3 _V;
 
-  _D[0][0] = (plane.getO())[0];
-  _D[1][0] = (plane.getO())[1];
-  _D[2][0] = (plane.getO())[2];
+  _D(0,0) = plane.getO().X();
+  _D(1,0) = plane.getO().Y();
+  _D(2,0) = plane.getO().Z();
 
   _D *= -1.; 
   _D += hit->getRawHitCoord();
   //now the vector _D points from the origin of the plane to the hit point
 
-
   _U = plane.getU();
   _V = plane.getV();
 
+  returnMat(0,0) = _D(0,0) * _U.X() + _D(1,0) * _U.Y() + _D(2,0) * _U.Z();
+  returnMat(1,0) = _D(0,0) * _V.X() + _D(1,0) * _V.Y() + _D(2,0) * _V.Z();
 
-  returnMat[0][0] = _D[0][0] * _U[0] + _D[1][0] * _U[1] + _D[2][0] * _U[2];
-  returnMat[1][0] = _D[0][0] * _V[0] + _D[1][0] * _V[1] + _D[2][0] * _V[2];
-  //std::cout << "hitCoord="<<std::endl;
-  //returnMat.Print();
   return returnMat;
 }
 
@@ -69,19 +64,18 @@ GFSpacepointHitPolicy::hitCov(GFAbsRecoHit* hit,const GFDetPlane& plane)
   TMatrixT<double> jac(3,2);
   
   // jac = dF_i/dx_j = s_unitvec * t_untivec, with s=u,v and t=x,y,z
-  jac[0][0] = _U[0];
-  jac[1][0] = _U[1];
-  jac[2][0] = _U[2];
-  jac[0][1] = _V[0];
-  jac[1][1] = _V[1];
-  jac[2][1] = _V[2];
+  jac(0,0) = _U.X();
+  jac(1,0) = _U.Y();
+  jac(2,0) = _U.Z();
+  jac(0,1) = _V.X();
+  jac(1,1) = _V.Y();
+  jac(2,1) = _V.Z();
 
   TMatrixT<double> jac_orig = jac;
   TMatrixT<double> jac_t = jac.T();
 
   TMatrixT<double> result=jac_t * (rawCov * jac_orig);
-  //std::cout << "hitCov="<<std::endl;
-  //result.Print();
+
   return  result;
 }
 
@@ -89,7 +83,7 @@ const GFDetPlane&
 GFSpacepointHitPolicy::detPlane(GFAbsRecoHit* hit, GFAbsTrackRep* rep)
 {
   TMatrixT<double> rawcoord = hit->getRawHitCoord();
-  TVector3 point(rawcoord[0][0],rawcoord[1][0],rawcoord[2][0]);
+  TVector3 point(rawcoord(0,0), rawcoord(1,0), rawcoord(2,0));
 
   TVector3 poca,dirInPoca;
   rep->extrapolateToPoint(point,poca,dirInPoca);
