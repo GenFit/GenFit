@@ -42,5 +42,8 @@ root our.root
 pulls p
 p.Loop()
 
+
+In the folder tools/, you will find example implementations of different RecoHits using the different HitPolicies.
+
 Please feel free to add to this very rudimentary readme file
 
