@@ -416,8 +416,8 @@ public:
     }
   }
 
-  //! use planeId information of GFTrackCand and return by ref groups of hit ids which
-  //! are in the same planes.
+  /** @brief Use planeId information of GFTrackCand and return (by reference) groups of hit ids which are in the same planes.
+   */
   bool getHitsByPlane(std::vector<std::vector<int>*>& retVal);
 
   /** @brief Switch smoothing on or off for this track.
