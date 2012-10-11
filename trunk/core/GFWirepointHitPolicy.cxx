@@ -45,8 +45,8 @@ GFWirepointHitPolicy::hitCoord(GFAbsRecoHit* hit,const GFDetPlane& plane)
   // raw x1, y1, z1, x2, y2, z2, rdrift, zreco
   TMatrixT<double> rC = hit->getRawHitCoord();
 
-  returnMat[0][0] = rC[6][0];
-  returnMat[1][0] = rC[7][0];
+  returnMat(0,0) = rC(6,0);
+  returnMat(1,0) = rC(7,0);
   return returnMat;
 }
 
@@ -58,10 +58,10 @@ GFWirepointHitPolicy::hitCov(GFAbsRecoHit* hit,const GFDetPlane& plane)
   TMatrixT<double> returnCov(2,2);
   TMatrixT<double> rawCov = hit->getRawHitCov();
 
-  returnCov[0][0] = rawCov[6][6];
-  returnCov[1][0] = rawCov[7][6];
-  returnCov[0][1] = rawCov[6][7];
-  returnCov[1][1] = rawCov[7][7];
+  returnCov(0,0) = rawCov(6,6);
+  returnCov(1,0) = rawCov(7,6);
+  returnCov(0,1) = rawCov(6,7);
+  returnCov(1,1) = rawCov(7,7);
 
   return  returnCov;
 }
@@ -75,79 +75,62 @@ void GFWirepointHitPolicy::checkPlane(GFAbsRecoHit* hit,const GFDetPlane& plane)
 
   assert(rC.GetNrows()==8);
   
-  TVector3 wire1(rC[0][0], rC[1][0], rC[2][0]);
-  TVector3 wire2(rC[3][0], rC[4][0], rC[5][0]);
+  TVector3 wire1(rC(0,0), rC(1,0), rC(2,0));
+  TVector3 wire2(rC(3,0), rC(4,0), rC(5,0));
   TVector3 wiredirection = wire1 - wire2;
   
   TVector3 vaxis = plane.getV();
   wiredirection.SetMag(1.);
   vaxis.SetMag(1.);
 
-  if(fabs(TMath::Abs(wiredirection.Dot(vaxis)) - 1) > 1e-3)
-    {
-     
-      std::cout << "GFWirepointHitPolicy: plane not valid!!" << std::endl;
-    }
+  if(fabs(TMath::Abs(wiredirection.Dot(vaxis)) - 1) > 1e-3) {
+    std::cout << "GFWireHitPolicy: plane not valid!!" << std::endl;
+  }
 }
 
 
 const GFDetPlane& 
 GFWirepointHitPolicy::detPlane(GFAbsRecoHit* hit, GFAbsTrackRep* rep)
 {
+   //  distance of one (the first) of the wire extremities from the plane
+   //Double_t d_from_refplane =  fDetPlane.dist(wire1).Mag();
+   //if(d_from_refplane < 1e-5) return fDetPlane;
 
-  TMatrixT<double> x=hit->getRawHitCoord();
-  assert(x.GetNrows()==8);
-  TVector3 wire1(x[0][0],x[1][0],x[2][0]);
-  TVector3 wire2(x[3][0],x[4][0],x[5][0]);
+   TMatrixT<double> x = hit->getRawHitCoord();
+   assert(x.GetNrows()==8);
+   TVector3 wire1(x(0,0), x(1,0), x(2,0));
+   TVector3 wire2(x(3,0), x(4,0), x(5,0));
 
-  //  distance of one (the first) of the wire extremities from the plane
-  Double_t d_from_refplane =  fDetPlane.dist(wire1).Mag();
-  if(d_from_refplane < 1e-5) return fDetPlane;
+   // point of closest approach
+   TVector3 poca, poca_onwire, dirInPoca;
+   rep->extrapolateToLine(wire1, wire2, poca, dirInPoca, poca_onwire);
 
-  
-  // point of closest approach
-  TVector3 poca, poca_onwire, dirInPoca;
-  
-  rep->extrapolateToLine(wire1, wire2, poca, dirInPoca, poca_onwire);
-  
-  
-  Double_t distance;
-  distance = TMath::Sqrt(fabs(((wire1-poca).Mag2()*(wire2-wire1).Mag2()-pow((wire1-poca).Dot(wire2-wire1),2))/(wire2-wire1).Mag2()));
-  
-  // check poca inside tube 
-  if(distance > fMaxdistance) {
-    GFException exc("distance poca-wire > maxdistance", __LINE__,__FILE__);	
-    throw exc;    
-  }
-  
-  // find plane
-  // unitary vector along distance
-  // poca (on track), poca_onwire (on wire)
-  TVector3 fromwiretoextr = poca - poca_onwire;     
-  fromwiretoextr.SetMag(1.);
-  // unitary vector along the wire
-  TVector3 wiredirection = wire2 - wire1; 
-  wiredirection.SetMag(1.);
-  
-  // check orthogonality
-  if(fabs(fromwiretoextr * wiredirection) > 1e-3) {
-    GFException exc("fromwiretoextr*wiredirection > 1e-3", __LINE__,__FILE__);	
-    throw exc;    
-  }
-  
-  TVector3 U;
-  U = fromwiretoextr;
-  TVector3 V;
-  V = wiredirection;
-  U.SetMag(1.);
-  V.SetMag(1.);
-  
-  TVector3 O = (wire1 + wire2) * 0.5;
+   // check distance of poca to wire
+   if((poca - poca_onwire).Mag() > fMaxdistance) {
+     GFException exc("GFWireHitPolicy::detPlane(): distance poca-wire > maxdistance", __LINE__,__FILE__);
+     throw exc;
+   }
 
-  
-  fDetPlane = GFDetPlane(O, U, V);
-  
-  return fDetPlane;
+   // unitary vector along the wire (V)
+   TVector3 wiredirection = wire2 - wire1;
+   wiredirection.SetMag(1.);
+
+   // check if direction is parallel to wire
+   if (fabs(wiredirection.Angle(dirInPoca)) < 0.01){
+     GFException exc("GFWireHitPolicy::detPlane(): Cannot construct detector plane, direction is parallel to wire", __LINE__,__FILE__);
+     throw exc;
+   }
+
+   // construct orthogonal vector
+   TVector3 U = wiredirection.Cross(dirInPoca);
+   U.SetMag(1.);
+
+   // check direction of u
+   if ((poca-poca_onwire)*U < 0) U *= -1.;
+
+   fDetPlane = GFDetPlane(poca_onwire, U, wiredirection);
+
+   return fDetPlane;
 }
 
 ClassImp(GFWirepointHitPolicy)
