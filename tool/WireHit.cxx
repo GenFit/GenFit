@@ -63,10 +63,10 @@ WireHit::getHMatrix(const GFAbsTrackRep* stateVector)
 
     return HMatrix;
   }
- else {
-   std::cerr << "WireHit can only handle state vectors of type RKTrackRep -> abort" << std::endl;
-   throw;
- }
+  else {
+    std::cerr << "WireHit can only handle state vectors of type RKTrackRep -> abort" << std::endl;
+    throw;
+  }
  
 }
 

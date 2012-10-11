@@ -18,6 +18,14 @@ public:
   
   virtual TMatrixT<double> getHMatrix(const GFAbsTrackRep* stateVector);
 
+  void setLeftRightResolution(int lr){
+    fPolicy.setLeftRightResolution(lr);
+  }
+
+  int getLeftRightResolution(){
+    return fPolicy.getLeftRightResolution();
+  }
+
 private:
   static const int NparHitRep = 7;
 
