@@ -46,9 +46,11 @@ int main() {
   const double phiDetPlane = 0;         // degree
   const double pointDist = 2;      // cm; approx. distance between hits generated w/ RKTrackRep
   const double pointDistDeg = 5;      // degree; distance between hits generated w/ helix model
-  const double resolution = 0.2;   // cm; resolution of generated hits
-  const double resolutionWire = 1.0;   // cm; resolution of generated hits
+  const double resolution = 0.02;   // cm; resolution of generated hits
+  const double resolutionWire = 5*resolution;   // cm; resolution of generated hits
   const TVector3 wireDir(0,0,1);
+  const double minDrift = 0;
+  const double maxDrift = 2;
   const int pdg = 13;               // particle pdg code
 
   const bool smearPosMom = false;     // init the Reps with smeared pos and mom
@@ -57,7 +59,7 @@ int main() {
   
   const bool HelixTest = true;      // use helix for creating hits
 
-  const bool matFX = true;         // include material effects; can only be disabled for RKTrackRep!
+  const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
   const bool smoothing = true;
   const bool fastSmoothing = true;
 
@@ -73,22 +75,35 @@ int main() {
 
   hitTypes.push_back(0);
   hitTypes.push_back(0);
+  hitTypes.push_back(0);
+  hitTypes.push_back(1);
   hitTypes.push_back(1);
   hitTypes.push_back(1);
   hitTypes.push_back(2);
   hitTypes.push_back(2);
+  hitTypes.push_back(2);
+  hitTypes.push_back(3);
   hitTypes.push_back(3);
   hitTypes.push_back(3);
   hitTypes.push_back(4);
   hitTypes.push_back(4);
+  hitTypes.push_back(4);
+  hitTypes.push_back(4);
+  hitTypes.push_back(4);
+  hitTypes.push_back(4);
   hitTypes.push_back(5);
   hitTypes.push_back(5);
+  hitTypes.push_back(5);
+  hitTypes.push_back(5);
+  hitTypes.push_back(5);
+  hitTypes.push_back(5);
+
 
 
 
   // init fitter
   GFKalman kalman;
-  kalman.setNumIterations(1);
+  kalman.setNumIterations(3);
 
 	gRandom->SetSeed(10);
 
@@ -140,7 +155,7 @@ int main() {
   // main loop
   for (unsigned int iEvent=0; iEvent<nEvents; ++iEvent){
       
-      if (debug || (iEvent+1)%10==0) std::cout << iEvent+1 << std::endl;
+      if (debug || (iEvent+1)%10==0) std::cout << "Event Nr. " << iEvent+1 << std::endl;
 
       // true start values
       TVector3 pos(0, 0, 0);
@@ -154,7 +169,7 @@ int main() {
       TVector3 dir2D(mom);
       dir2D.SetZ(0);
       dir2D.SetMag(1.);
-      double R = 100.*mom.Perp()/(0.03*BField);
+      double R = 100.*mom.Perp()/(0.0299792458*BField);
       double sgn = 1;
       if (charge<0) sgn=-1.;
       TVector3 center = pos + sgn * R * dir2D.Orthogonal();
@@ -240,9 +255,11 @@ int main() {
           planeNorm.SetPhi(planeNorm.Phi()+phiDetPlane);
           TVector3 z(0,0,1);
 
-          TVector3 wirePerp = wireDir.Orthogonal();
-          wirePerp.Rotate(gRandom->Uniform(0,TMath::Pi()), wireDir);
-          wirePerp.SetMag(gRandom->Uniform(0.01,2));
+          TVector3 wirePerp = wireDir.Cross(dir);
+          if (gRandom->Uniform(-1,1) < 0) {
+            wirePerp *= -1.;
+          }
+          wirePerp.SetMag(gRandom->Uniform(minDrift, maxDrift));
 
           switch(hitTypes[i]){
             case 0: // 0: PixHit
