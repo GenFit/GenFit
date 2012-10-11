@@ -56,8 +56,14 @@ public:
   GFWirepointHitPolicy();
  
   // Operations ----------------------
-   /** @brief Get detector plane 
-    */
+  /** @brief Get detector plane
+   * Calls GFAbsTrackRep::extrapolateToLine for POCA.
+   * The detector plane will contain the wire as plane vector v.
+   * The origin of the plane lies on the wire.
+   * The plane vector u will be perpendicular to the track direction at the POCA.
+   * u = +-1 * (wire direction) x (track direction)
+   * The direction of u will be selected according to fLeftRight.
+   */
   const GFDetPlane& detPlane(GFAbsRecoHit*, GFAbsTrackRep*);
 
   /** @brief Hit coordinates in detector plane.
@@ -77,17 +83,28 @@ public:
   double getMaxDistance(){return fMaxdistance;}
   void setMaxDistance(double d){fMaxdistance=d;}
 
+  /**
+   * select how to resolve the left/right ambiguity:
+   * -1: negative (left) side on vector (wire direction) x (track direction)
+   * 0: auto select (take side with smallest distance to track)
+   * 1: positive (right) side on vector (wire direction) x (track direction)
+   */
+  void setLeftRightResolution(int lr);
+  int getLeftRightResolution() const {return fLeftRight;}
+
   const std::string& getName(){return fPolicyName;}
+
  private:
   static const std::string fPolicyName;
 
   // Private Data Members ------------
   GFDetPlane fDetPlane;
   double fMaxdistance;
+  int fLeftRight;
   // Private Methods -----------------
 
  public:
-  ClassDef(GFWirepointHitPolicy,1);
+  ClassDef(GFWirepointHitPolicy,2);
 
 };
 
