@@ -38,7 +38,7 @@
 int main() {
   std::cerr<<"main"<<std::endl;
 
-  const unsigned int nEvents = 1000;
+  const unsigned int nEvents = 100;
   const double BField = 15.;       // kGauss
   const double momentum = 0.5;     // GeV
   const double theta = 110;         // degree
@@ -47,10 +47,13 @@ int main() {
   const double pointDist = 2;      // cm; approx. distance between hits generated w/ RKTrackRep
   const double pointDistDeg = 5;      // degree; distance between hits generated w/ helix model
   const double resolution = 0.02;   // cm; resolution of generated hits
+
   const double resolutionWire = 5*resolution;   // cm; resolution of generated hits
   const TVector3 wireDir(0,0,1);
   const double minDrift = 0;
   const double maxDrift = 2;
+  const bool idealLRResolution = true; // resolve the l/r ambiguities of the wire hits
+
   const int pdg = 13;               // particle pdg code
 
   const bool smearPosMom = false;     // init the Reps with smeared pos and mom
@@ -255,9 +258,11 @@ int main() {
           planeNorm.SetPhi(planeNorm.Phi()+phiDetPlane);
           TVector3 z(0,0,1);
 
+          int lr = 1;
           TVector3 wirePerp = wireDir.Cross(dir);
           if (gRandom->Uniform(-1,1) < 0) {
             wirePerp *= -1.;
+            lr = -1;
           }
           wirePerp.SetMag(gRandom->Uniform(minDrift, maxDrift));
 
@@ -279,11 +284,17 @@ int main() {
               break;
 
             case 4: // 4: WireHit
-              hit = new WireHit(point+wirePerp, point+wirePerp+wireDir, wirePerp.Mag(), resolution, true);
+              hit = new WireHit(point-wirePerp, point-wirePerp+wireDir, wirePerp.Mag(), resolution, true);
+              if (idealLRResolution){
+                ((WireHit*)hit)->setLeftRightResolution(lr);
+              }
               break;
 
             case 5: // 5: WirePointHit
-              hit = new WirePointHit(point+wirePerp, point+wirePerp+wireDir, wirePerp.Mag(), 0, resolution, resolutionWire, true);
+              hit = new WirePointHit(point-wirePerp, point-wirePerp+wireDir, wirePerp.Mag(), 0, resolution, resolutionWire, true);
+              if (idealLRResolution){
+                ((WireHit*)hit)->setLeftRightResolution(lr);
+              }
               break;
 
             default:
