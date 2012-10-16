@@ -105,26 +105,24 @@ RKTrackRep::RKTrackRep(const GFTrackCand* const aGFTrackCandPtr, int pdgCode) :
 	if (pdgCode == 0){
 		pdgCode = aGFTrackCandPtr->getPdgCode();
 	}
+  setPDG(pdgCode); // also sets charge and mass
 
   initArrays();
 
-  setPDG(pdgCode); // also sets charge and mass
-
-  TMatrixD state6D = aGFTrackCandPtr->getStateSeed();
   TMatrixD cov6D = aGFTrackCandPtr->getCovSeed();
-  TVector3 posError;
-  TVector3 momError;
-  if( cov6D[0][0] < 0.0 ){ // no valid cov was set in the trackCand so just set a large one
-	  posError.SetXYZ(sqrt(cov6D[0][0]),sqrt(cov6D[1][1]),sqrt(cov6D[2][2]));
-	  momError.SetXYZ(sqrt(cov6D[3][3]),sqrt(cov6D[4][4]),sqrt(cov6D[5][5]));
-  } else {
-	  posError.SetXYZ(sqrt(cov6D[0][0]),sqrt(cov6D[1][1]),sqrt(cov6D[2][2]));
-	  momError.SetXYZ(sqrt(cov6D[3][3]),sqrt(cov6D[4][4]),sqrt(cov6D[5][5]));
-  }
+  setPosMomCov(aGFTrackCandPtr->getPosSeed(),
+               aGFTrackCandPtr->getMomSeed(),
+               cov6D);
 
-  TVector3 pos(state6D[0][0],state6D[1][0],state6D[2][0]);
-  TVector3 mom(state6D[3][0],state6D[4][0],state6D[5][0]);
-  calcStateCov(pos, mom, posError, momError);
+  if( cov6D[0][0] < 0.0 ){ // no valid cov was set in the trackCand so just set a large one
+    fCov.Zero();
+    static const double value(1.E4);
+    fCov(0,0) = value;
+    fCov(1,1) = value;
+    fCov(2,2) = value;
+    fCov(3,3) = value;
+    fCov(4,4) = value;
+  }
 }
 
 
