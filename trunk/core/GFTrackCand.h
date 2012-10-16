@@ -185,7 +185,7 @@ public:
 
   /** @brief set the seed values for track: pos, momentum, pdgCode, pos error, momentum error (errors are optional and will be set to 1,1,1 if not given)
    */
-  void setComplTrackSeed(const TVector3& pos, const TVector3& mom, int pdgCode, TVector3 posError = TVector3(1.0, 1.0, 1.0), TVector3 dirError = TVector3(1.0, 1.0, 1.0));
+  void setComplTrackSeed(const TVector3& pos, const TVector3& mom, const int pdgCode, TVector3 posError = TVector3(1.0, 1.0, 1.0), TVector3 dirError = TVector3(1.0, 1.0, 1.0));
   /** @brief set a particle hypothesis in form of a PDG code. This will also set the charge attribute
    */
   void setPdgCode(int pdgCode) {
