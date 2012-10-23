@@ -132,7 +132,15 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
       gGeoManager->InitTrack(points.at(i-1).X(), points.at(i-1).Y(), points.at(i-1).Z(),
                              dir.X(), dir.Y(), dir.Z());
 
+      unsigned int nIter(0);
+      static unsigned int maxIt(300);
+
       while (X < dist) {
+
+        if (++nIter > maxIt){
+          GFException exc("GFMaterialEffects::effects ==> maximum number of iterations exceeded",__LINE__,__FILE__);
+          throw exc;
+        }
 
         getMaterialParameters(gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial());
 
@@ -205,7 +213,17 @@ double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
     //gGeoManager->SetVerboseLevel(5);
   #endif
 
+
+  unsigned int nIter(0);
+  static unsigned int maxIt(300);
+
   while (X < maxStep){
+
+    if (++nIter > maxIt){
+      GFException exc("GFMaterialEffects::stepper ==> maximum number of iterations exceeded",__LINE__,__FILE__);
+      throw exc;
+    }
+
     relMomLossStep = 0;
     TGeoMedium* medium = gGeoManager->GetCurrentVolume()->GetMedium();
     assert(medium != NULL);
