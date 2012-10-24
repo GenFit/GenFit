@@ -23,10 +23,10 @@
 #define GFTOOLS_H
 
 #include <cmath>
-#include <GFAbsTrackRep.h>
-#include <GFDetPlane.h>
-#include <GFException.h>
-#include <GFTrack.h>
+#include "GFAbsTrackRep.h"
+#include "GFDetPlane.h"
+#include "GFException.h"
+#include "GFTrack.h"
 #include <TMath.h>
 #include <TMatrixT.h>
 #include <TDecompSVD.h>
