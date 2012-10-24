@@ -23,13 +23,13 @@
 #ifndef GFDAFHIT_H
 #define GFDAFHIT_H
 
-#include<cmath>
-#include<GFAbsRecoHit.h>
-#include<GFAbsTrackRep.h>
-#include<GFDetPlane.h>
-#include<GFTools.h>
-#include<stdlib.h>
-#include<vector>
+#include <cmath>
+#include "GFAbsRecoHit.h"
+#include "GFAbsTrackRep.h"
+#include "GFDetPlane.h"
+#include "GFTools.h"
+#include <stdlib.h>
+#include <vector>
 
 /** @brief Wrapper class for use with GFDaf.
  *
