@@ -23,14 +23,14 @@ along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef GFDAF_H
 #define GFDAF_H
 
-#include<assert.h>
-#include<cmath>
-#include<GFAbsRecoHit.h>
-#include<GFDafHit.h>
-#include<GFKalman.h>
-#include<GFTrack.h>
-#include<stdlib.h>
-#include<vector>
+#include <assert.h>
+#include <cmath>
+#include "GFAbsRecoHit.h"
+#include "GFDafHit.h"
+#include "GFKalman.h"
+#include "GFTrack.h"
+#include <stdlib.h>
+#include <vector>
 
 /** @brief Determinstic Annealing Filter (DAF) implementation. 
  *
