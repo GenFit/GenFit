@@ -39,7 +39,9 @@ PseudoSpacePointWireHit::PseudoSpacePointWireHit(const TVector3& pos, const TVec
   wDir.SetMag(1);
 
   TVector3 xp = wDir.Orthogonal();
+  xp.SetMag(1);
   TVector3 yp = wDir.Cross(xp);
+  yp.SetMag(1);
 
   TMatrixD rot(3,3);
 
@@ -55,9 +57,9 @@ PseudoSpacePointWireHit::PseudoSpacePointWireHit(const TVector3& pos, const TVec
     smearVec(1,0) = resPerp;
     smearVec(2,0) = resWire;
     smearVecRot.Mult(rot,smearVec);
-    fHitCoord(0,0) += gRandom->Gaus(0, smearVec(0,0));
-    fHitCoord(1,0) += gRandom->Gaus(0, smearVec(1,0));
-    fHitCoord(2,0) += gRandom->Gaus(0, smearVec(2,0));
+    fHitCoord(0,0) += gRandom->Gaus(0, smearVecRot(0,0));
+    fHitCoord(1,0) += gRandom->Gaus(0, smearVecRot(1,0));
+    fHitCoord(2,0) += gRandom->Gaus(0, smearVecRot(2,0));
   }
 
   // rotate cov
