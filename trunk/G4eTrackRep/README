@@ -1,7 +1,0 @@
-***WARNING: This is a very early version!***
-It does not work properly yet.
-
-To use the G4eTrackRep, you need to install Geant4 first.
- - make sure that Geant4 you've built with 'All headers in one directory' option
-   (if $G4INSTALL/include is empty, you propably didn't)
- - make sure the environment for Geant4 is set (source 'env.sh' in the $G4INSTALL folder)
