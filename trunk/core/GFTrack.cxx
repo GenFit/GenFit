@@ -25,17 +25,15 @@
 #include "TVirtualGeoTrack.h"
 
 GFTrack::GFTrack(GFAbsTrackRep* defaultRep, bool smooth) 
-  : fTrackReps(NULL),fCardinal_rep(0), fNextHitToFit(0), fSmooth(false)
+  : fTrackReps(NULL),fCardinal_rep(0), fNextHitToFit(0), fSmooth(smooth)
 {
   addTrackRep(defaultRep);
-  fSmooth = smooth;
-  fSmoothFast = false;
 }
 
 GFTrack::GFTrack() 
   : fTrackReps(NULL), fCardinal_rep(0), fNextHitToFit(0), fSmooth(false)
 {
-  //trackReps = new TObjArray(defNumTrackReps);
+  ;
 }
 
 GFTrack::~GFTrack() {
@@ -46,10 +44,10 @@ GFTrack::~GFTrack() {
     delete fTrackReps;
   }
   for(unsigned int i=0;i<fHits.size();i++) {
-    if(fHits.at(i)!=NULL) delete fHits.at(i);
+    if(fHits[i]!=NULL) delete fHits[i];
   }
   for(unsigned int i=0;i<fBookkeeping.size();++i){
-    if(fBookkeeping.at(i)!=NULL) delete fBookkeeping.at(i);
+    if(fBookkeeping[i]!=NULL) delete fBookkeeping[i];
   }
 }
 
@@ -58,7 +56,6 @@ GFTrack::GFTrack(const GFTrack& _tr) {
   fCardinal_rep=_tr.fCardinal_rep;
   fNextHitToFit=_tr.fNextHitToFit;
   fSmooth=_tr.fSmooth;
-  fSmoothFast=_tr.fSmoothFast;
   for(unsigned int i=0;i<_tr.getNumHits();i++) {
     fHits.push_back((_tr.getHit(i))->clone());
   }
@@ -70,13 +67,15 @@ GFTrack::GFTrack(const GFTrack& _tr) {
   fBookkeeping.clear();
 
   for(unsigned int i=0;i<_tr.fBookkeeping.size();++i){
-    assert(_tr.fBookkeeping.at(i)!= NULL) ;
-    fBookkeeping.push_back(new GFBookkeeping(*(_tr.fBookkeeping.at(i))));
+    assert(_tr.fBookkeeping[i]!= NULL) ;
+    fBookkeeping.push_back(new GFBookkeeping(*(_tr.fBookkeeping[i])));
   }
   fRepAtHit = _tr.fRepAtHit;
 }
 
 GFTrack& GFTrack::operator=(const GFTrack& _tr) {
+  if (this == &_tr)
+    return *this;
   if(fTrackReps!=NULL){
     for(unsigned int i=0;i<getNumReps();i++) {
       delete fTrackReps->At(i);
@@ -88,7 +87,7 @@ GFTrack& GFTrack::operator=(const GFTrack& _tr) {
     delete fHits[i];
   }
   for(unsigned int i=0;i<fBookkeeping.size();++i){
-    if(fBookkeeping.at(i)!=NULL) delete fBookkeeping.at(i);
+    if(fBookkeeping[i]!=NULL) delete fBookkeeping[i];
   }
 
   for(unsigned int i=0;i<_tr.getNumReps();++i){
@@ -98,7 +97,6 @@ GFTrack& GFTrack::operator=(const GFTrack& _tr) {
   fCardinal_rep=_tr.fCardinal_rep;
   fNextHitToFit=_tr.fNextHitToFit;
   fSmooth=_tr.fSmooth;
-  fSmoothFast=_tr.fSmoothFast;
   for(unsigned int i=0;i<_tr.getNumHits();i++) {
     fHits.push_back((_tr.getHit(i))->clone());
   }
@@ -107,8 +105,8 @@ GFTrack& GFTrack::operator=(const GFTrack& _tr) {
   for(unsigned int i=0; i<fBookkeeping.size(); ++i) delete fBookkeeping[i];
   fBookkeeping.clear();
   for(unsigned int i=0;i<_tr.fBookkeeping.size();++i){
-    assert(_tr.fBookkeeping.at(i)!= NULL) ;
-    fBookkeeping.push_back(new GFBookkeeping(*(_tr.fBookkeeping.at(i))));
+    assert(_tr.fBookkeeping[i]!= NULL) ;
+    fBookkeeping.push_back(new GFBookkeeping(*(_tr.fBookkeeping[i])));
   }
   fRepAtHit = _tr.fRepAtHit;
 
@@ -125,10 +123,10 @@ GFTrack::reset(){
     }
   }
   for(unsigned int i=0;i<fBookkeeping.size();++i){
-    if(fBookkeeping.at(i)!=NULL) delete fBookkeeping.at(i);
+    if(fBookkeeping[i]!=NULL) delete fBookkeeping[i];
   }
   for(unsigned int i=0;i<fHits.size();i++) {
-    if(fHits.at(i)!=NULL) delete fHits.at(i);
+    if(fHits[i]!=NULL) delete fHits[i];
   }
   fHits.clear();
   fRepAtHit.clear();
@@ -139,8 +137,7 @@ void
 GFTrack::mergeHits(GFTrack* trk){
   unsigned int nhits=trk->getNumHits();
   for(unsigned int i=0;i<nhits;++i){
-    unsigned int detId;
-    unsigned int hitId;
+    int detId, hitId;
     trk->getCand().getHit(i,detId,hitId);
     GFAbsRecoHit* hit=trk->getHit(i);
     addHit(hit,detId,hitId);
@@ -205,11 +202,11 @@ void GFTrack::sortHits(){
 void
 GFTrack::setCandidate(const GFTrackCand& cand, bool doreset)
 {
-  fCand=cand;
+  fCand = cand;
   // reset fits
   if(doreset) {
     for(unsigned int i=0;i<getNumReps();i++) {
-      ((GFAbsTrackRep*)fTrackReps->At(i))->reset();
+      (reinterpret_cast<GFAbsTrackRep*>(fTrackReps->At(i)))->reset();
     }
   }
 }
@@ -221,8 +218,8 @@ GFTrack::fillGeoTrack(TVirtualGeoTrack* geotrk,unsigned int repid) const
   unsigned int n=fCand.getNHits();
   rep->getState().Print();
   for(unsigned int i=0; i<n; ++i){// loop over hits
-    GFDetPlane pl=fHits[i]->getDetPlane(rep);
-    TVector3 pos=rep->getPos(pl);
+    const GFDetPlane& pl( fHits[i]->getDetPlane(rep) );
+    TVector3 pos = rep->getPos(pl);
     std::cout<<pos.X()<<","<<pos.Y()<<","<<pos.Z()<<std::endl;
     geotrk->AddPoint(pos.X(),pos.Y(),pos.Z(),0);
   }// end loop over hits
@@ -230,7 +227,7 @@ GFTrack::fillGeoTrack(TVirtualGeoTrack* geotrk,unsigned int repid) const
 
 
 void 
-GFTrack::getResiduals(unsigned int detId, // which detector?
+GFTrack::getResiduals(int detId, // which detector?
 		    unsigned int dim,   // which projection?
 		    unsigned int repid,   // which trackrep ?
 		    std::vector<double>& result) const
@@ -241,27 +238,23 @@ GFTrack::getResiduals(unsigned int detId, // which detector?
   GFAbsTrackRep* rep=getTrackRep(repid);//->clone();
   assert(rep->getState()==getTrackRep(repid)->getState());
   for(unsigned int ih=0; ih<nhits; ++ih){// loop over hits
-    unsigned int anid;
-    unsigned int dummy;
+    int anid, dummy;
     fCand.getHit(ih,anid,dummy); // check if this is a hit we want to look at
     if(anid==detId){
       GFAbsRecoHit* hit=getHit(ih);
       // extrapolate trackrep there
       int repDim=rep->getDim();
-      TMatrixT<double> state(repDim,1);
-      TMatrixT<double> cov(repDim,repDim);
-      GFDetPlane pl=hit->getDetPlane(rep);
+      TVectorD state(repDim);
+      TMatrixDSym cov(repDim);
+      const GFDetPlane& pl( hit->getDetPlane(rep) );
       
       rep->extrapolate(pl,state,cov);
-      //rep->setState(state);
-      //rep->setReferencePlane(pl);
 
-      TMatrixT<double> H = hit->getHMatrix(rep);
-      TMatrixT<double> m,V;
+      const TMatrixD& H( hit->getHMatrix(rep) );
+      TVectorD m;
+      TMatrixDSym V;
       hit->getMeasurement(rep,pl,state,cov,m,V);
-      double res=(m-(H*state))[dim][0];;
-
-      //std::cout<<res<<std::endl;
+      double res=(m-(H*state))[dim];
 
       result.push_back(res);
     } 
@@ -273,7 +266,7 @@ void GFTrack::printBookkeeping(){
   std::cout << "GFTrack::printBookkeeping()" << std::endl;
   for(unsigned int i=0;i<getNumReps();++i){
     std::cout << "trackRep " << i << ":" << std::endl;    
-    fBookkeeping.at(i)->Print();
+    fBookkeeping[i]->Print();
   }
 
 }
@@ -282,54 +275,65 @@ void GFTrack::Print(const Option_t* option) const{
   for(unsigned int i=0;i<getNumReps();++i){
     std::cout << "TrackRep " << i << " (defined at hit " << getRepAtHit(i) << "):\n";
     getTrackRep(i)->Print(option);
-    fBookkeeping.at(i)->Print(option);
+    fBookkeeping[i]->Print(option);
   }
   std::cout << "GFTrack has " << getNumHits() << " detector hits. ";
-  if (fSmooth && fSmoothFast ) std::cout << "Fast smoothing is enabled.";
-  else if (fSmooth) std::cout << "Smoothing is enabled.";
+  if (fSmooth) std::cout << "Smoothing is enabled.";
   else std::cout << "Smoothing is disabled.";
   std::cout << std::endl;
 }
 
 
-std::map<GFAbsRecoHit*, unsigned int> GFTrack::getHitMap() const {
-  std::map<GFAbsRecoHit*, unsigned int> hitMap;
+void GFTrack::getHitMap(std::map<GFAbsRecoHit*, unsigned int>& hitMap) const {
+  hitMap.clear();
   unsigned int nHits = getNumHits();
 
   for (unsigned int i=0; i<nHits; ++i){
     hitMap.insert(std::pair<GFAbsRecoHit*, unsigned int>(fHits[i], i));
   }
 
-  return hitMap;
+  return;
 }
 
 
-bool GFTrack::getHitsByPlane(std::vector<std::vector<int>*>& retVal){
-  for(int i=0;retVal.size();++i){
-    delete retVal.at(i);
-  }
+bool GFTrack::getHitsByPlane(std::vector< std::vector<int> >& retVal){
+
   retVal.clear();
+
   //this method can only be called when all hits have been loaded
-  assert(fHits.size()==fCand.getNHits());
+  unsigned int nHits = fCand.getNHits();
+  assert(fHits.size() == nHits);
   if(fHits.size() <= 1) return false;
-  unsigned int detId,hitId,planeId;
+
+  int detId, hitId, lastDetId, planeId, lastPlaneId;
+
+  // get info for first hit
   fCand.getHitWithPlane(0,detId,hitId,planeId);
-  //  std::cout << "$$$ " << 0 << " " << detId << " " << hitId << " " << planeId << std::endl;
-  unsigned int lastPlane=planeId;
-  retVal.push_back(new std::vector<int>);
-  retVal.at(0)->push_back(0);
-  for(unsigned int i=1;i<fCand.getNHits();++i){
+
+  lastPlaneId = planeId;
+  lastDetId = detId;
+  std::vector<int> vec;
+  retVal.push_back(vec);
+  retVal[0].reserve(10);
+  retVal[0].push_back(0);
+
+  // loop over hits
+  for(unsigned int i=1; i<nHits; ++i){
     fCand.getHitWithPlane(i,detId,hitId,planeId);
-    //std::cout << "$$$ " << i << " " << detId << " " << hitId << " " << planeId << std::endl;
-    if(lastPlane==planeId){
-      retVal.at(retVal.size()-1)->push_back(i);
+
+    // if the next hit is in the same detector and has the same plane id (but not the default plane id -1), group them together
+    if(planeId != -1 && planeId == lastPlaneId && detId == lastDetId){
+      retVal.back().push_back(i);
     }
     else{
-      lastPlane=planeId;
-      retVal.push_back(new std::vector<int>);
-      retVal.at(retVal.size()-1)->push_back(i);
+      lastPlaneId = planeId;
+      lastDetId = detId;
+      retVal.push_back(vec);
+      retVal.back().reserve(10);
+      retVal.back().push_back(i);
     }
   }
+
   return true;
 }
 
@@ -342,17 +346,8 @@ GFTrack::blowUpCovs(double blowUpFactor){
 
     //dont do it for already compromsied reps, since they wont be fitted anyway
     if(arep->getStatusFlag()==0) {
-      TMatrixT<double> cov = arep->getCov();
-      for(int i=0;i<cov.GetNrows();++i){
-        for(int j=0;j<cov.GetNcols();++j){
-          //if(i!=j){//off diagonal
-          //  cov[i][j]=0.;
-          //}
-          //else{//diagonal
-          cov[i][j] = cov[i][j] * blowUpFactor;
-          //}
-        }
-      }
+      TMatrixDSym cov = arep->getCov();
+      cov *= blowUpFactor;
       arep->setCov(cov);
     }
   }

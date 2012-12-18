@@ -23,7 +23,7 @@
 #ifndef GFCONSTFIELD_H
 #define GFCONSTFIELD_H
 
-#include"GFAbsBField.h"
+#include "GFAbsBField.h"
 
 /** @brief Constant Magnetic field
  *
@@ -35,15 +35,19 @@
 class GFConstField : public GFAbsBField{
  public:
   //! define the constant field in this ctor
-  GFConstField(double b1,double b2, double b3){
-    fF1 = b1;    fF2 = b2;    fF3 = b3;
-  }
+  GFConstField(double b1,double b2, double b3)
+    : fField(b1, b2, b3)
+  { ; }
+
+  GFConstField(const TVector3& field)
+    : fField(field)
+  { ; }
 
   //! return value at position
   TVector3 get(const TVector3& pos) const;
 
  private:
-  double fF1,fF2,fF3;
+  TVector3 fField;
 };
 
 /** @} */ 

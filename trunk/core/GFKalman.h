@@ -26,12 +26,15 @@
 #include <map>
 #include <iostream>
 
-#include "TMatrixT.h"
+#include <Rtypes.h>
+#include <TVectorD.h>
+#include <TMatrixD.h>
+#include <TMatrixDSym.h>
 
-
-class GFAbsRecoHit;
-class GFAbsTrackRep;
-class GFTrack;
+#include "RecoHits/GFAbsRecoHit.h"
+#include "GFAbsTrackRep.h"
+#include "GFTrack.h"
+#include "GFAbsFitter.h"
 
 /** @brief Generic Kalman Filter implementation
  *
@@ -42,45 +45,21 @@ class GFTrack;
  * of the Kalman Filter algebra that uses the genfit interface classes 
  * GFAbsRecoHit and GFAbsTrackRep in order to be independent from the specific
  * detector geometry and the details of the track parameterization /
- * track extraoplation engine.
+ * track extrapolation engine.
  *
  * The Kalman Filter can use hits from several detectors in a single fit 
  * to estimate the parameters of several track representations in parallel.
  */
-class GFKalman {
+class GFKalman : public GFAbsFitter {
 public:
 
-  //friend class KalmanTester; // gives the Tester access to private methods
+  friend class GFDaf;
 
   // Constructors/Destructors ---------
   GFKalman();
   ~GFKalman();
 
-  // Operators
-  /** @brief Operator for use with STL.
-   *
-   * This operator allows to use the std::foreach algorithm with an
-   * STL container o GFTrack* objects.
-   */
-  inline void operator()(GFTrack* track){processTrack(track);}
-  
-  /** @brief Operator for use with STL.
-   *
-   * This operator allows to use the std::foreach algorithm with an
-   * STL container o GFTrack* objects.
-   */
-  inline void operator()(std::pair<int,GFTrack*> tr){processTrack(tr.second);}
-
   // Operations ----------------------
-
-  /** @brief Switch lazy error handling.
-   *
-   * This is a historically left-over method and shall be deleted some time
-   */
-  void setLazy(Int_t flag){
-    static_cast<void>(flag);
-    std::cerr<<"Using outdates setLazy method of class GFKalman:"<<std::endl;
-  }
 
   /** @brief Set number of iterations for Kalman Filter
    *
@@ -89,36 +68,24 @@ public:
   void setNumIterations(Int_t i){fNumIt=i;}
 
   /** @brief Performs fit on a GFTrack.
-   *
    * The hits are processed in the order in which they are stored in the GFTrack
    * object. Sorting of hits in space has to be done before!
    */
-  void processTrack(GFTrack* trk);
+  virtual void processTrack(GFTrack* trk);
 
   /** @brief Performs fit on a GFTrack beginning with the current hit.
    */
-  void fittingPass(GFTrack*,int dir); // continues track from lastHitInFit
+  void fittingPass(GFTrack*,int dir);
 
   /** @brief Calculates chi2 of a given hit with respect to a 
    * given track representation.
    */
   double getChi2Hit(GFAbsRecoHit*, GFAbsTrackRep*);
 
-  /** @brief Sets the inital direction of the track fit (1 for inner to outer,
-   * or -1 for outer to inner). The standard is 1 and is set in the ctor
+  /** @brief Sets the initial direction of the track fit (1 for inner to outer,
+   * or -1 for outer to inner). The standard is 1 and is set in the c'tor
    */
   void setInitialDirection(int d){fInitialDirection=d;}
-
-  /** @brief Set the blowup factor (see blowUpCovs() )
-   */
-  void setBlowUpFactor(double f){fBlowUpFactor=f;}
-  
-  // Protected Methods -----------------
-protected:  
-  /** @brief this is needed to blow up the covariance matrix before a fitting pass
-   * drops off-diagonal elements and blows up diagonal by blowUpFactor
-   */
-  void blowUpCovs(GFTrack* trk);
 
   // Private Methods -----------------
 private:
@@ -136,27 +103,19 @@ private:
    */
   void switchDirection(GFTrack* trk); // switches the direction of propagation for all reps
 
-  /** @brief Calculate Kalman Gain
-   */
-  TMatrixT<double> calcGain(const TMatrixT<double>& cov, 
-						const TMatrixT<double>& HitCov,
-						const TMatrixT<double>& H);
-
   /** @brief this returns the reduced chi2 increment for a hit
    */
-  double chi2Increment(const TMatrixT<double>& r,const TMatrixT<double>& H,
-		       const TMatrixT<double>& cov,const TMatrixT<double>& V);
+  double chi2Increment(const TVectorD& r,const TMatrixD& H,
+		       const TMatrixDSym& cov,const TMatrixDSym& V);
 
+
+  /** @brief Book all neccessary Bookkeeping entries.
+   */
+  void initBookkeeping(GFTrack* trk) const;
 
 
   int fInitialDirection;
   Int_t fNumIt;
-  double fBlowUpFactor;
-  bool fSmooth;
-  bool fSmoothFast;
-
-
-
 
 };
 

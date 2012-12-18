@@ -331,7 +331,7 @@ double SlTrackRep::extrapolate(const GFDetPlane& pl,
  statePred[3]=state3;
  return dist;
 }
-void SlTrackRep::extrapolateToPoint(const TVector3& pos,
+double SlTrackRep::extrapolateToPoint(const TVector3& pos,
 				     TVector3& poca,
 				     TVector3& dirInPoca){
 
@@ -348,9 +348,9 @@ void SlTrackRep::extrapolateToPoint(const TVector3& pos,
   
   poca=pfrom + t * dir;
   dirInPoca=dir.Unit();
-
+  return t;
 }
-void SlTrackRep::extrapolateToLine(const TVector3& point1,
+double SlTrackRep::extrapolateToLine(const TVector3& point1,
 				   const TVector3& point2,
 				   TVector3& poca,
 				   TVector3& dirInPoca,
@@ -376,7 +376,7 @@ void SlTrackRep::extrapolateToLine(const TVector3& point1,
   double t2=(lineDir*poca - lineDir*point1)/(lineDir*lineDir);
   poca_onwire=point1+lineDir*t2;
   dirInPoca=dir;
-  
+  return t;
 }
 TVector3 SlTrackRep::getPos(const GFDetPlane& pl){
   TMatrixT<double> statePred(fState);

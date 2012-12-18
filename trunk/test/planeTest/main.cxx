@@ -1,8 +1,8 @@
-#include<iostream>
+#include <iostream>
 
 #include "GFDetPlane.h"
 #include "GFRectFinitePlane.h"
-#include"TFile.h"
+#include "TFile.h"
 
 int main(){
   GFDetPlane d(TVector3(0.0,0.0,1.),TVector3(1.,1.,0.),TVector3(-1.,1.,0.),

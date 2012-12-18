@@ -16,9 +16,11 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include "GFTrackCand.h"
 #include "GFException.h"
 #include "TDatabasePDG.h"
+
 #include <algorithm>
 #include <iostream>
 #include <utility>
@@ -26,79 +28,131 @@
 ClassImp(GFTrackCand)
 
 GFTrackCand::GFTrackCand() : 
-  fCurv(0), fDip(0), 
-  fMcTrackId(-1), fPdg(0), 
-  fState6D(TMatrixD(TMatrixD::kZero,TMatrixD(6,1))),
-  fCov6D(-1.0*TMatrixD(TMatrixD::kUnit,TMatrixD(6,6))),
+  fMcTrackId(-1),
+  fPdg(0),
+  fState6D(6),
+  fCov6D(-1.0*TMatrixDSym(TMatrixDSym::kUnit,TMatrixDSym(6))),
   fQ(0) 
 {
   ;
 }
 
-GFTrackCand::~GFTrackCand(){} //no members are pointers
+GFTrackCand::~GFTrackCand() {
+  for (unsigned int i=0; i<fHits.size(); ++i) {
+    delete fHits[i];
+  }
+  fHits.clear();
+}
+
+
+GFTrackCand::GFTrackCand( const GFTrackCand& other ) :
+  fMcTrackId(other.fMcTrackId),
+  fPdg(other.fPdg),
+  fState6D(other.fState6D),
+  fCov6D(other.fCov6D),
+  fQ(other.fQ)
+{
+  // deep copy
+  fHits.reserve(other.fHits.size());
+  for (unsigned int i=0; i<other.fHits.size(); ++i) {
+    fHits.push_back( new GFTrackCandHit(*(other.fHits[i])) );
+  }
+}
+
+GFTrackCand&
+GFTrackCand::operator=( const GFTrackCand& other ){
+  fMcTrackId = other.fMcTrackId;
+  fPdg = other.fPdg;
+  fState6D = other.fState6D;
+  fCov6D = other.fCov6D;
+  fQ = other.fQ;
+
+  for (unsigned int i=0; i<fHits.size(); ++i) {
+    delete fHits[i];
+  }
+  fHits.clear();
+  fHits.reserve(other.fHits.size());
+  for (unsigned int i=0; i<other.fHits.size(); ++i) {
+    fHits.push_back( new GFTrackCandHit(*(other.fHits[i])) );
+  }
+
+  return *this;
+}
+
 
 void 
-GFTrackCand::addHit(unsigned int detId, unsigned int hitId, double rho, unsigned int planeId)
+GFTrackCand::addHit(int detId, int hitId, int planeId, double rho)
 {
-	fDetId.push_back(detId);
-	fHitId.push_back(hitId);
-	fPlaneId.push_back(planeId);
-	fRho.push_back(rho);
+	fHits.push_back(new GFTrackCandHit(detId, hitId, planeId, rho));
 }
 
-std::vector<unsigned int> 
+std::vector<int>
 GFTrackCand::getHitIDs(int detId) const {
-	if(detId<0){ // return hits from all detectors
-		return fHitId;
-	}
-	else {
-		std::vector<unsigned int> result;
-		unsigned int n=fHitId.size();
-		for(unsigned int i=0;i<n;++i){
-			if(fDetId[i]==(unsigned int)detId)result.push_back(fHitId[i]);
-		}
-		return result;
-	}
+  std::vector<int> result;
+  for(unsigned int i=0; i<fHits.size(); ++i){
+    if(detId==-2 || fHits[i]->getDetId() == detId) {
+      result.push_back(fHits[i]->getHitId());
+    }
+  }
+  return result;
 }
 
-std::vector<unsigned int>
-GFTrackCand::GetHitIDs(int detId) const {
-	std::cerr << "the method GFTrackCand::GetHitIDs is deprecated. Use GFTrackCand::getHitIDs instead\n";
-	if(detId<0){ // return hits from all detectors
-		return fHitId;
-	}
-	else {
-		std::vector<unsigned int> result;
-		unsigned int n=fHitId.size();
-		for(unsigned int i=0;i<n;++i){
-			if(fDetId[i]==(unsigned int)detId)result.push_back(fHitId[i]);
-		}
-		return result;
-	}
+std::vector<int>
+GFTrackCand::getDetIDs() const {
+  std::vector<int> result;
+  for(unsigned int i=0; i<fHits.size(); ++i){
+    result.push_back(fHits[i]->getDetId());
+  }
+  return result;
 }
+
+std::vector<double>
+GFTrackCand::getRhos() const {
+  std::vector<double> result;
+  for(unsigned int i=0; i<fHits.size(); ++i){
+    result.push_back(fHits[i]->getRho());
+  }
+  return result;
+}
+
+std::set<int>
+GFTrackCand::getUniqueDetIDs() const {
+  std::set<int> retVal;
+  for (unsigned int i = 0; i < fHits.size(); ++i) {
+    retVal.insert(fHits[i]->getDetId());
+  }
+  return retVal;
+}
+
 
 void
 GFTrackCand::reset()
 {
-	fDetId.clear();fHitId.clear();
+  for (unsigned int i=0; i<fHits.size(); ++i) {
+    delete fHits[i];
+  }
+  fHits.clear();
 }
 
-bool GFTrackCand::hitInTrack(unsigned int detId, unsigned int hitId) const
+
+bool GFTrackCand::hitInTrack(int detId, int hitId) const
 {
-	for (unsigned int i = 0; i < fDetId.size(); i++){
-		if (detId == fDetId[i])
-			if (hitId == fHitId[i])
-				return true;
+	for (unsigned int i = 0; i < fHits.size(); ++i){
+		if (detId == fHits[i]->getDetId() && hitId == fHits[i]->getHitId())
+		  return true;
 	}
 	return false;	
 }
 
+
 bool operator== (const GFTrackCand& lhs, const GFTrackCand& rhs){
-	if(lhs.getNHits()!=rhs.getNHits()) return false;
-	bool result=std::equal(lhs.fDetId.begin(),lhs.fDetId.end(),rhs.fDetId.begin());
-	result &=std::equal(lhs.fHitId.begin(),lhs.fHitId.end(),rhs.fHitId.begin());
-	return result;
+	if(lhs.getNHits() != rhs.getNHits()) return false;
+	for (unsigned int i = 0; i < lhs.getNHits(); ++i){
+	  if (lhs.getHit(i) != rhs.getHit(i)) return false;
+	}
+	return true;
 }
+
 
 void GFTrackCand::Print(const Option_t* option) const {
 	std::cout << "======== GFTrackCand::print ========\n";
@@ -108,62 +162,25 @@ void GFTrackCand::Print(const Option_t* option) const {
 	fCov6D.Print(option);
 	std::cout << "q" << fQ << "\n";
 	std::cout << "PDG code= " << fPdg << "\n";
-	assert(fDetId.size()==fHitId.size());
-	std::cout << "detId|hitId|rho ";
-	for(unsigned int i=0;i<fDetId.size();++i){
-		std::cout << fDetId.at(i) << "|" << fHitId.at(i)
-	    		  << "|" << fRho.at(i) << " ";
+  for(unsigned int i=0; i<fHits.size(); ++i){
+    fHits[i]->Print();
 	}
-	std::cout << std::endl;
 }
+
 
 void GFTrackCand::append(const GFTrackCand& rhs){
-	unsigned int detId,hitId;
-	double rho;
-	for(unsigned int i=0;i<rhs.getNHits();++i){
-		rhs.getHit(i,detId,hitId,rho);
-		addHit(detId,hitId,rho);
+	for(unsigned int i=0; i<rhs.getNHits(); ++i){
+		addHit(rhs.getHit(i));
 	}
-}
-
-void GFTrackCand::setComplTrackSeed(const TVector3& pos, const TVector3& mom, const int pdgCode, TVector3 posError, TVector3 momError){
-	std::cerr << "the method GFTrackCand::setComplTrackSeed is deprecated. Use GFTrackCand::set6DSeed() or  instead\n";
-	setPdgCode(pdgCode); //also sets charge
-	fState6D(0,0) = pos[0];
-	fState6D(1,0) = pos[1];
-	fState6D(2,0) = pos[2];
-	fState6D(3,0) = mom[0];
-	fState6D(4,0) = mom[1];
-	fState6D(5,0) = mom[2];
-	fCov6D(0,0) = posError[0]*posError[0];
-	fCov6D(1,1) = posError[1]*posError[1];
-	fCov6D(2,2) = posError[2]*posError[2];
-	fCov6D(3,3) = momError[0]*momError[0];
-	fCov6D(4,4) = momError[1]*momError[1];
-	fCov6D(5,5) = momError[2]*momError[2];
 }
 
 
 void GFTrackCand::sortHits(){
-	const unsigned int nHits = getNHits(); // all 4 private vectors must have the same size.
-
-	//a vector that will be sorted to give after sort indices to sort the other vectors
-	std::vector<std::pair<double, int> > order(nHits);
-	for (unsigned int i = 0; i != nHits; ++i){
-		order[i] = std::make_pair(fRho[i],i);
-	}
-	std::stable_sort(order.begin(), order.end()); // by default sort uses the ".first" value of the pair when sorting a std container of pairs
-
-	std::vector<unsigned int> indices(nHits);
-	for (unsigned int i = 0; i != nHits; ++i){
-		indices[i] = order[i].second;
-	}
-
-	sortHits(indices);
+	std::stable_sort(fHits.begin(), fHits.end(), compareTrackCandHits);
 }
 
 
-void GFTrackCand::sortHits(std::vector<unsigned int> indices){
+void GFTrackCand::sortHits(const std::vector<unsigned int>& indices){
 
 	const unsigned int nHits(getNHits());
 	if (indices.size() != nHits){
@@ -173,20 +190,10 @@ void GFTrackCand::sortHits(std::vector<unsigned int> indices){
 	}
 
 	//these containers will hold the sorted results. They are created to avoid probably slower in-place sorting
-	std::vector<unsigned int> sortedDetId(nHits);
-	std::vector<unsigned int> sortedHitId(nHits);
-	std::vector<unsigned int> sortedPlaneId(nHits);
-	std::vector<double> sortedRho(nHits);
-	for (unsigned int i = 0; i != nHits; ++i){
-		unsigned int sortIndex = indices[i];
-		sortedDetId[i] = fDetId[sortIndex];
-		sortedHitId[i] = fHitId[sortIndex];
-		sortedPlaneId[i] = fPlaneId[sortIndex];
-		sortedRho[i] = fRho[sortIndex];
+	std::vector<GFTrackCandHit*> sortedHits(nHits);
+	for (unsigned int i=0; i<nHits; ++i){
+		sortedHits[i] = fHits[indices[i]];
 	}
 	//write the changes back to the private data members:
-	fDetId = sortedDetId;
-	fHitId = sortedHitId;
-	fPlaneId = sortedPlaneId;
-	fRho = sortedRho;
+	fHits = sortedHits;
 }

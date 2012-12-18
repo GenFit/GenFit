@@ -4,7 +4,7 @@
 // Base Class Headers ----------------
 #include "GFRecoHitIfc.h"
 #include "GFPlanarHitPolicy.h"
-#include"GFDetPlane.h"
+#include "GFDetPlane.h"
 
 // Collaborating Class Headers -------
 #include <ostream> // remove if you do not need streaming op

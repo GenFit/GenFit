@@ -24,8 +24,10 @@
 #ifndef GFFIELDMANAGER_H
 #define GFFIELDMANAGER_H
 
-#include"GFAbsBField.h"
-#include<iostream>
+#include "GFAbsBField.h"
+#include <iostream>
+#include <stdexcept>
+#include <string>
 
 /** @brief Singleton which provides access to magnetic field for track representations
  *
@@ -43,25 +45,28 @@ class GFFieldManager{
  public:
   GFAbsBField* getField(){
     if(fField==NULL){
-      std::cerr << "Appareantly GFFieldManager hasnt been initialized with a correct GFAbsBField pointer -> abort" << std::endl;
-      throw;
+      std::string msg("GFFieldManager hasn't been initialized with a correct GFAbsBField pointer!");
+      std::runtime_error err(msg);
+      throw err;
     }
     return fField;
   }
 
   static TVector3 getFieldVal(const TVector3& x){
     if(fInstance==NULL){
-      std::cerr << "Appareantly GFFieldManager hasnt been instantiated yet, call getInstance() and init() before getFieldVal() -> abort" << std::endl;
-      throw;
+      std::string msg("GFFieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!");
+      std::runtime_error err(msg);
+      throw err;
     }
     if(fField==NULL){
-      std::cerr << "Appareantly GFFieldManager hasnt been initialized with a correct GFAbsBField pointer -> abort" << std::endl;
-      throw;
+      std::string msg("GFFieldManager hasn't been initialized with a correct GFAbsBField pointer!");
+      std::runtime_error err(msg);
+      throw err;
     }
     return fField->get(x);
   }
 
-  //! set the magntic field here. Magnetic field classes must be derived from GFAbsBField
+  //! set the magnetic field here. Magnetic field classes must be derived from GFAbsBField.
   void init(GFAbsBField* b) {
     fField=b;
   }

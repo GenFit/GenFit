@@ -1,8 +1,8 @@
-#include<iostream>
+#include <iostream>
 
 #include "GFDetPlane.h"
-#include"TFile.h"
-#include"TROOT.h"
+#include "TFile.h"
+#include "TROOT.h"
 
 int main(){
   TFile *f = TFile::Open("plane.root");

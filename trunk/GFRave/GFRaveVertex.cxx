@@ -44,7 +44,7 @@ GFRaveVertex::GFRaveVertex() :
 }
 
 
-GFRaveVertex::GFRaveVertex(const TVector3 & pos, const TMatrixT<double> & cov,
+GFRaveVertex::GFRaveVertex(const TVector3 & pos, const TMatrixDSym& cov,
                            const std::vector < GFRaveTrackParameters* > & smoothedTracks,
                            double ndf, double chi2, int id) :
   fPos(pos),

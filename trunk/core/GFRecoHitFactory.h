@@ -28,8 +28,8 @@
 #ifndef GFRECOHITFACTORY_H
 #define GFRECOHITFACTORY_H
 
-#include<vector>
-#include<map>
+#include <vector>
+#include <map>
 
 #include "GFRecoHitProducer.h"
 #include "GFTrackCand.h"
@@ -77,7 +77,7 @@ public:
    */
   GFAbsRecoHit*              createOne (int detID,int index);
 
-  /** @brief Creat a collection of RecoHits
+  /** @brief Create a collection of RecoHits
    *
    * This is the standard way to prepare the hit collection for a Track. The
    * resulting collection can contain hits from several detectors. The order

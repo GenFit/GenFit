@@ -24,13 +24,16 @@
 #ifndef GFMATERIALEFFECTS_H
 #define GFMATERIALEFFECTS_H
 
-#include<iostream>
 #include "RKTools.h"
-#include "TObject.h"
-#include <vector>
-#include "TVector3.h"
-#include "TMatrixT.h"
 #include "GFPointPath.h"
+#include <GFAbsMaterialInterface.h>
+
+#include <iostream>
+#include <vector>
+
+#include <TObject.h>
+#include <TVector3.h>
+
 
 /** @brief  Contains stepper and energy loss/noise matrix calculation
  *
@@ -57,6 +60,9 @@ public:
   static GFMaterialEffects* getInstance();
   static void destruct();
 
+  //! set the material interface here. Material interface classes must be derived from GFAbsMaterialInterface.
+  void init(GFAbsMaterialInterface* matIfc);
+
   void setNoEffects(bool opt = true) {fNoEffects = opt;}
 
   void setEnergyLossBetheBloch(bool opt = true) {fEnergyLossBetheBloch = opt; fNoEffects = false;}
@@ -72,12 +78,11 @@ public:
   void setMscModel(const std::string& modelName);
 
 
-  //! Calculates energy loss in the travelled path, optional calculation of noise matrix
+  //! Calculates energy loss in the traveled path, optional calculation of noise matrix
   double effects(const std::vector<GFPointPath>& points,
                  const double& mom,
                  const int& pdg,
                  double& xx0,
-                 const bool& doNoise = false,
                  double* noise7x7 = NULL,
                  const double* jacobian7x7 = NULL,
                  const TVector3* directionBefore = NULL,
@@ -89,12 +94,8 @@ public:
   */
   double stepper(const double& maxStep, // maximum step. unsigned!
                  const double& maxAngleStep, // maximum step due to curvature. unsigned!
-                 const double& posx,
-                 const double& posy,
-                 const double& posz,
-                 const double& dirx,
-                 const double& diry,
-                 const double& dirz,
+                 const TVector3& pos,
+                 const TVector3& dir,
                  const double& mom, // momentum
                  double& relMomLoss, // relative momloss for the step will be added
                  const int& pdg);
@@ -103,9 +104,6 @@ public:
 private:
   //! sets fcharge, fmass and calculates fbeta, fgamma, fgammasquare;
   void getParticleParameters(double mom);
-
-  //! sets fmatDensity, fmatZ, fmatA, fradiationLength, fmEE;
-  void getMaterialParameters(TGeoMaterial* mat);
 
   //! Returns energy loss
   /**  Uses Bethe Bloch formula to calculate energy loss.
@@ -211,8 +209,10 @@ private:
 
   int fMscModelCode; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
 
+  GFAbsMaterialInterface* fMaterialInterface;
+
 public:
-  ClassDef(GFMaterialEffects, 2);
+  ClassDef(GFMaterialEffects, 3);
 
 };
 

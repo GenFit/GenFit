@@ -17,7 +17,7 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include"GFAbsFinitePlane.h"
+#include "GFAbsFinitePlane.h"
 
 GFAbsFinitePlane::~GFAbsFinitePlane(){
 

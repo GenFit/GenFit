@@ -24,7 +24,7 @@
 #include "TMatrixD.h"
 
 #include "Nystrom.h"
-#include "GFAbsRecoHit.h"
+#include "RecoHits/GFAbsRecoHit.h"
 #include "GFAbsBField.h"
 #include "LSLEQM.h"
 #include "AbsNystromEQM.h"
@@ -47,11 +47,11 @@ LSLTrackRep::LSLTrackRep(double z, double x, double y,
   : GFAbsTrackRep(5), s(0), _acc(1E-2), _adaptive(false)
 {
   s=z;
-  fState[0][0]=x;
-  fState[1][0]=y;
-  fState[2][0]=dxdz;
-  fState[3][0]=dydz;
-  fState[4][0]=invp;
+  fState[0]=x;
+  fState[1]=y;
+  fState[2]=dxdz;
+  fState[3]=dydz;
+  fState[4]=invp;
 
   fCov[0][0]=sigx;
   fCov[1][1]=sigy;
@@ -88,11 +88,11 @@ LSLTrackRep::init(const TVector3& pos,
 		  GFAbsBField* field) 
 {
   s=pos.Z();
-  fState[0][0]=pos.X();
-  fState[1][0]=pos.Y();
-  fState[2][0]=dxdz;
-  fState[3][0]=dydz;
-  fState[4][0]=invp;
+  fState[0]=pos.X();
+  fState[1]=pos.Y();
+  fState[2]=dxdz;
+  fState[3]=dydz;
+  fState[4]=invp;
 
   fCov[0][0]=sigx;
   fCov[1][1]=sigy;
@@ -116,7 +116,7 @@ LSLTrackRep::SetBField(GFAbsBField* b)
 
 double
 LSLTrackRep::extrapolate(const GFDetPlane& pl, 
-			 TMatrixT<double>& statePred)
+			 TVectorD& statePred)
 {
   statePred.ResizeTo(fDimension,1);
   double sExtrapolateTo=pl.getO().Z();
@@ -129,9 +129,9 @@ LSLTrackRep::extrapolate(const GFDetPlane& pl,
   //std::cout<<"s before extrapolation: "<<s<<std::endl;
   //std::cout<<"s_to: "<<sExtrapolateTo<<std::endl;
 
-  TVectorT<double> u(3);u[0]=fState[0][0];u[1]=fState[1][0];u[2]=s;
-  TVectorT<double> uprim(3);uprim[0]=fState[2][0];uprim[1]=fState[3][0];uprim[2]=1.;
-  TVectorT<double> par(1);par[0]=fState[4][0];
+  TVectorT<double> u(3);u[0]=fState[0];u[1]=fState[1];u[2]=s;
+  TVectorT<double> uprim(3);uprim[0]=fState[2];uprim[1]=fState[3];uprim[2]=1.;
+  TVectorT<double> par(1);par[0]=fState[4];
 
   TVectorT<double> unew(3);unew=u;
   TVectorT<double> uprimnew(3);uprimnew=uprim;
@@ -139,11 +139,11 @@ LSLTrackRep::extrapolate(const GFDetPlane& pl,
 		       u, uprim, par,
 		       unew, uprimnew);
   // write results into statePred
-  statePred[0][0]=unew[0];
-  statePred[1][0]=unew[1];
-  statePred[2][0]=uprimnew[0];
-  statePred[3][0]=uprimnew[1];
-  statePred[4][0]=fState[4][0];
+  statePred[0]=unew[0];
+  statePred[1]=unew[1];
+  statePred[2]=uprimnew[0];
+  statePred[3]=uprimnew[1];
+  statePred[4]=fState[4];
   //std::cout<<"unew[2]=z="<<unew[2];
   //std::cout<<"s after extrapolation: "<<s<<std::endl;
   return l;
@@ -151,8 +151,8 @@ LSLTrackRep::extrapolate(const GFDetPlane& pl,
 
 /*
 void LSLTrackRep::extrapolate(const GFDetPlane& pl,
-			      const TMatrixT<double>& stateFrom, 
-			      TMatrixT<double>& stateResult) {
+			      const TVectorD& stateFrom,
+			      TVectorD& stateResult) {
   stateResult.ResizeTo(5,1);
   double s=
   Nystrom rungeKutta(_eqm);
@@ -182,36 +182,37 @@ void LSLTrackRep::extrapolate(const GFDetPlane& pl,
 
 double
 LSLTrackRep::extrapolate(const GFDetPlane& pl, 
-			 TMatrixT<double>& statePred,
-			 TMatrixT<double>& covPred)
+			 TVectorD& statePred,
+			 TMatrixDSym& covPred)
 {
   statePred.ResizeTo(fDimension,1);
   covPred.ResizeTo(fDimension,fDimension);
-  TMatrixT<double> jacobian;
+  TMatrixD jacobian;
   //std::cout << "Extr from To: " << s << " " << sExtrapolateTo << std::endl;
   double l=extrapolate(pl,statePred);
   // covPred=JCovJ^T with J being Jacobian
   jacobian.ResizeTo(5,5);
   Jacobian(pl,statePred,jacobian);
-  TMatrixT<double> dummy(fCov,TMatrixT<double>::kMultTranspose,jacobian);
-  covPred=jacobian*dummy;
+  covPred=fCov;
+  covPred.Similarity(jacobian);
   return l;
 }
 
-void
+double
 LSLTrackRep::extrapolateToPoint(const TVector3& p,
 			       TVector3& poca,
 			       TVector3& normVec){
   GFDetPlane plane;
   int dim = getDim();
-  TMatrixT<double> statePred(dim,1);
-  TMatrixT<double> covPred(dim,dim);
+  TVectorD statePred(dim,1);
+  TMatrixDSym covPred(dim);
   plane.setO(p);
   plane.setU(TVector3(1,0,0));
   plane.setV(TVector3(0,1,0));
-  extrapolate(plane,statePred,covPred);
-  poca.SetXYZ(statePred[0][0],statePred[1][0],plane.getO().Z());
-  normVec.SetXYZ(statePred[2][0],statePred[3][0],plane.getO().Z());
+  double length = extrapolate(plane,statePred,covPred);
+  poca.SetXYZ(statePred[0],statePred[1],plane.getO().Z());
+  normVec.SetXYZ(statePred[2],statePred[3],plane.getO().Z());
+  return length;
 }
 
 
@@ -225,24 +226,24 @@ LSLTrackRep::stepalong(double h){
 
 void
 LSLTrackRep::Jacobian(const GFDetPlane& pl,
-		      const TMatrixT<double>& statePred,
-		      TMatrixT<double>& jacResult){
+		      const TVectorD& statePred,
+		      TMatrixD& jacResult){
   
-  TMatrixT<double> difPred(statePred);
+  TVectorD difPred(statePred);
   // do column wise differntiation:
   for(int icol=0;icol<5;++icol){
     // choose step
-    double h=TMath::Abs(fState[icol][0])*1.e-4;
+    double h=TMath::Abs(fState[icol])*1.e-4;
     if(h<1e-13)h=1.e-13;
     // vary the state
-    fState[icol][0]+=h;
+    fState[icol]+=h;
     extrapolate(pl,difPred);
     // difference:
     difPred-=statePred;
     // remove variation from state
-    fState[icol][0]-=h;
+    fState[icol]-=h;
     // fill jacobian with difference quotient
-    for(int irow=0;irow<5;++irow)jacResult[irow][icol]=difPred[irow][0]/h;
+    for(int irow=0;irow<5;++irow)jacResult[irow][icol]=difPred[irow]/h;
   }
 }
 		
@@ -251,27 +252,26 @@ TVector3
 LSLTrackRep::getPos(const GFDetPlane& pl)
 {
   double z=pl.getO().Z();
-  TMatrixT<double> statePred(fState);
+  TVectorD statePred(fState);
   GFDetPlane p(TVector3(0,0,z),TVector3(1,0,0),TVector3(0,1,0));
   extrapolate(p,statePred);
-  return TVector3(statePred[0][0],statePred[1][0],z);
+  return TVector3(statePred[0],statePred[1],z);
 }
  
 TVector3 
 LSLTrackRep::getMom(const GFDetPlane& pl)
 {
   double z=pl.getO().Z();
-  TMatrixT<double> statePred(fState);
+  TVectorD statePred(fState);
   //statePred.Print();
   GFDetPlane p(TVector3(0,0,z),TVector3(1,0,0),TVector3(0,1,0));
   extrapolate(p,statePred);
   //statePred.Print();
-  TVector3 result(statePred[2][0],statePred[3][0],1);
-  if(TMath::Abs(statePred[4][0])!=0){
-    result.SetMag(1./TMath::Abs(statePred[4][0]));
+  TVector3 result(statePred[2],statePred[3],1);
+  if(TMath::Abs(statePred[4])!=0){
+    result.SetMag(1./TMath::Abs(statePred[4]));
   }
   else result.SetMag(100);
-  if(fInverted)result=(-1.)*result;
   return result;
 }
 
@@ -279,16 +279,15 @@ void
 LSLTrackRep::getPosMom(const GFDetPlane& pl,TVector3& pos,TVector3& mom)
 {
   double z=pl.getO().Z();
-  TMatrixT<double> statePred(fState);
+  TVectorD statePred(fState);
   GFDetPlane p(TVector3(0,0,z),TVector3(1,0,0),TVector3(0,1,0));
   extrapolate(p,statePred);
-  pos.SetXYZ(statePred[0][0],statePred[1][0],z);
-  mom.SetXYZ(statePred[2][0],statePred[3][0],1);
-  if(TMath::Abs(statePred[4][0])!=0){
-    mom.SetMag(1./TMath::Abs(statePred[4][0]));
+  pos.SetXYZ(statePred[0],statePred[1],z);
+  mom.SetXYZ(statePred[2],statePred[3],1);
+  if(TMath::Abs(statePred[4])!=0){
+    mom.SetMag(1./TMath::Abs(statePred[4]));
   }
   else mom.SetMag(100);
-  if(fInverted)mom=(-1.)*mom;
 }
 
 
@@ -303,32 +302,31 @@ LSLTrackRep::getGlobal() {// (x,y,z,px,py,pz)
 }
 
 
-TMatrixT<double> 
+TMatrixDSym
 LSLTrackRep::getGlobalCov(){ // covariances
-  TMatrixT<double> L(6,5);
-  double xp=fState[2][0];
-  double yp=fState[3][0];
+  TMatrixD L(6,5);
+  double xp=fState[2];
+  double yp=fState[3];
   double no=xp*xp+yp*yp+1;
   double sq=sqrt(no);
   double sq3inv=1/(sq*sq*sq);
   double q=getCharge();
-  double p=q/fState[4][0];
+  double p=q/fState[4];
   L[0][0]=1;
   L[1][1]=1;
   L[3][2]=p*(1+yp*yp)*sq3inv;
   L[3][3]=-p*xp*yp*sq3inv;
-  L[3][4]=-p/(2.*fState[4][0])*xp/sq;
+  L[3][4]=-p/(2.*fState[4])*xp/sq;
   L[4][2]=p*(1+xp*xp)*sq3inv;
   L[4][3]=-p*xp*yp*sq3inv;
-  L[4][4]=-p/(2.*fState[4][0])*yp/sq;
+  L[4][4]=-p/(2.*fState[4])*yp/sq;
   L[5][2]=-p*xp*sq3inv;
   L[5][3]=-p*yp*sq3inv;
-  L[5][4]=-p/(2.*fState[4][0])/sq;
+  L[5][4]=-p/(2.*fState[4])/sq;
   
   // calculate new cov;
-  TMatrixT<double> LT(TMatrixD::kTransposed,L);
-  TMatrixT<double> dum(fCov,TMatrixD::kMult,LT);
-  TMatrixT<double> result(L,TMatrixD::kMult,dum);
+  TMatrixDSym result(fCov);
+  result.Similarity(L);
 
   // set sigma_z by hand: 
   result[2][2]=0.01;

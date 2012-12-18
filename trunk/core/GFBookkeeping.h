@@ -22,71 +22,120 @@
 #ifndef GFBOOKKEEPING_H
 #define GFBOOKKEEPING_H
 
-#include"TObject.h"
-#include"TMatrixT.h"
-#include<vector>
-#include<cassert>
-#include<iostream>
-#include<utility>
-#include<map>
-#include"GFDetPlane.h"
+#include <TObject.h>
+#include <TVectorD.h>
+#include <TMatrixD.h>
+#include <TMatrixDSym.h>
+#include <vector>
+#include <iostream>
+#include <map>
+#include "GFDetPlane.h"
+
+
+enum GFBKKey {
+  // forward info ------
+  GFBKKey_fSt,
+  GFBKKey_fCov,
+  GFBKKey_fUpSt,
+  GFBKKey_fUpCov,
+  GFBKKey_fPl,
+  GFBKKey_fAuxInfo,
+  GFBKKey_fExtLen,
+  // add further forward keys here
+
+  // backward info ------
+  GFBKKey_bSt=1000,
+  GFBKKey_bCov,
+  GFBKKey_bUpSt,
+  GFBKKey_bUpCov,
+  GFBKKey_bPl,
+  GFBKKey_bAuxInfo,
+  GFBKKey_bExtLen,
+  // add further backward keys here
+
+  // other info ------
+  GFBKKey_dafWeight=2000
+  // add further other keys here
+};
+
 
 class GFBookkeeping : public TObject {
  private:
 
-  //the string keys will in general be different, so this cant
+  //the string keys will in general be different, so this can't
   //be unified to one container
-  std::map<std::string, TMatrixT<double>* > fMatrices;
-  std::map<std::string, GFDetPlane* > fPlanes;
-  /* this is a work-around: we want to save doubles, but ROOT has problems
-   * with TObjects that contain map<string,double*>. We take a 1x1 matrix
-   * as a work-around to hold the double internally */
-  std::map<std::string, TMatrixT<double>* > fNumbers;
+  std::map<GFBKKey, std::vector<TVectorD> > fVectors;
+  std::map<GFBKKey, std::vector<TMatrixD> > fMatrices;
+  std::map<GFBKKey, std::vector<TMatrixDSym> > fSymMatrices;
+  std::map<GFBKKey, std::vector<GFDetPlane> > fPlanes;
+  std::map<GFBKKey, std::vector<double> > fNumbers;
   std::vector< unsigned int > fFailedHits;
   int fNhits;
 
  public:
+  /** @brief Keep all keys and clear only the data.
+   * Resize the data vectors to fNhits.
+   * Also clears fFailedHits.
+   */
   void reset();
+
+  /** @brief Set number of hits, clear data but keep keys.
+   */
   void setNhits(int n){fNhits=n; reset();}
 
-  void bookMatrices(std::string key);
-  void bookGFDetPlanes(std::string key);
-  void bookNumbers(std::string key,double val=0.);
+  void bookVectors(const GFBKKey& key);
+  void bookMatrices(const GFBKKey& key);
+  void bookSymMatrices(const GFBKKey& key);
+  void bookGFDetPlanes(const GFBKKey& key);
+  void bookNumbers(const GFBKKey& key,double val=0.);
 
-  void setMatrix(std::string key,unsigned int index,const TMatrixT<double>& mat);
-  void setDetPlane(std::string key,unsigned int index,const GFDetPlane& pl);
-  void setNumber(std::string key,unsigned int index, const double& num);
+  void setVector(const GFBKKey& key,unsigned int index,const TVectorD& mat);
+  void setMatrix(const GFBKKey& key,unsigned int index,const TMatrixD& mat);
+  void setSymMatrix(const GFBKKey& key,unsigned int index,const TMatrixDSym& mat);
+  void setDetPlane(const GFBKKey& key,unsigned int index,const GFDetPlane& pl);
+  void setNumber(const GFBKKey& key,unsigned int index, const double& num);
 
-  bool getMatrix(std::string key, unsigned int index, TMatrixT<double>& mat) const;
-  bool getDetPlane(std::string key, unsigned int index, GFDetPlane& pl)  const;
-  bool getNumber(std::string key, unsigned int index, double& num) const;
+  const TVectorD&    getVector(const GFBKKey& key, unsigned int index) const;
+  const TMatrixD&    getMatrix(const GFBKKey& key, unsigned int index) const;
+  const TMatrixDSym& getSymMatrix(const GFBKKey& key, unsigned int index) const;
+  const GFDetPlane&  getDetPlane(const GFBKKey& key, unsigned int index)  const;
+  double             getNumber(const GFBKKey& key, unsigned int index) const;
 
-  std::vector< std::string > getMatrixKeys() const;
-  std::vector< std::string > getGFDetPlaneKeys() const;
-  std::vector< std::string > getNumberKeys() const;
+  std::vector<GFBKKey> getVectorKeys() const;
+  std::vector<GFBKKey> getMatrixKeys() const;
+  std::vector<GFBKKey> getSymMatrixKeys() const;
+  std::vector<GFBKKey> getGFDetPlaneKeys() const;
+  std::vector<GFBKKey> getNumberKeys() const;
 
   void addFailedHit(unsigned int);
-  unsigned int hitFailed(unsigned int);
+  /** @brief How often did hit nr. iHit fail
+   */
+  unsigned int hitFailed(unsigned int iHit);
   unsigned int getNumFailed();
 
   GFBookkeeping(){fNhits=-1;}
   GFBookkeeping(const GFBookkeeping&);
-  virtual ~GFBookkeeping(){clearAll();}
 
+  /** @brief clear fVectors, fMatrices, fSymMatrices, fPlanes, fNumbers
+   */
   void clearAll();
+
+  /** @brief clear fFailedHits
+   */
   void clearFailedHits();
 
   void Print(const Option_t* = "") const;
 
  private:
-  //protect from call of not yet defined assignement operator
+  //protect from call of not yet defined assignment operator
   GFBookkeeping& operator=(const GFBookkeeping&){
     return *this;
   }
 
  public:
-  ClassDef(GFBookkeeping,2)
+  ClassDef(GFBookkeeping,4)
 
 };
+
 
 #endif

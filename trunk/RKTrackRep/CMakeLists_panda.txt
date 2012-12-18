@@ -17,15 +17,25 @@ ${ROOT_LIBRARY_DIR}
 
 link_directories( ${LINK_DIRECTORIES})
 
-set(GENFIT_RK_SRCS RKTrackRep.cxx GFMaterialEffects.cxx GFPointPath.h RKTools.cxx)
+set(GENFIT_RK_SRCS 
+	RKTrackRep.cxx 
+	GFTGeoMaterialInterface.cxx
+	GFMaterialEffects.cxx 
+	GFPointPath.h 
+	RKTools.cxx)
+
+set(GENFIT_RK_HEADERS
+	RKTrackRep.h 
+	GFAbsMaterialInterface.h
+	GFTGeoMaterialInterface.h
+	GFMaterialEffects.h 
+	GFPointPath.h 
+	RKTools.h
+)
 
 if(RULE_CHECKER_FOUND)
   CHECK_RULES("${GENFIT_RK_SRCS}" "${INCLUDE_DIRECTORIES}" GENFIT_RK_RULES)
 endif(RULE_CHECKER_FOUND)
-
-# fill list of header files from list of source files
-# by exchanging the file extension
-CHANGE_FILE_EXTENSION(*.cxx *.h GENFIT_RK_HEADERS "${GENFIT_RK_SRCS}")
 
 set(GENFIT_RK_LINKDEF  genfitRKLinkDef.h)
 set(GENFIT_RK_DICTIONARY ${CMAKE_CURRENT_BINARY_DIR}/genfitRKDict.cxx) 

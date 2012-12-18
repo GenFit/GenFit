@@ -60,21 +60,21 @@ public:
 
   // Operations ----------------------
 
-  virtual double extrapolate(const GFDetPlane&, TMatrixT<double>& statePred);
+  virtual double extrapolate(const GFDetPlane&, TVectorT<double>& statePred);
   //virtual void extrapolate(const GFDetPlane&, 
   //			   const TMatrixT<double>& stateFrom 
   //			   TMatrixT<double>& stateResult);
 
   virtual double extrapolate(const GFDetPlane&, 
-			   TMatrixT<double>& statePred,
-			   TMatrixT<double>& covPred);
+			   TVectorT<double>& statePred,
+			   TMatrixTSym<double>& covPred);
 
   //these two are overriding GFAbsTrackRep methods
-  void extrapolateToPoint(const TVector3& pos,
+  double extrapolateToPoint(const TVector3& pos,
 			 TVector3& poca,
 			 TVector3& normVec);
 
-  void extrapolateToLine(const TVector3& point1,
+  double extrapolateToLine(const TVector3& point1,
 	 		 const TVector3& point2,
 			 TVector3& poca,
 			 TVector3& normVec,
@@ -88,7 +88,7 @@ public:
   virtual TVector3 getPos(const GFDetPlane&) ;
   virtual TVector3 getMom(const GFDetPlane&) ;
   virtual void getPosMom(const GFDetPlane&,TVector3& pos,TVector3& mom) ;
-  virtual void getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mom,TMatrixT<double>& cov);
+  virtual void getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mom,TMatrixTSym<double>& cov);
   virtual double getCharge()const {return fCharge;}
   //FairGeaneProNew* getPropagator() {return _geane;}
   int getPDG() {return fPdg;};
@@ -113,7 +113,7 @@ private:
   void pocaLine2Line(const TVector3& point1,const TVector3& line1,const TVector3& point2, const TVector3& line2,TVector3& result1,TVector3& result2);
 
  public:
-  ClassDef(GeaneTrackRep2,2)
+  ClassDef(GeaneTrackRep2,3)
 
 };
 

@@ -1,38 +1,66 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 #check for ENV variables that are needed
-IF(NOT DEFINED ENV{ROOTSYS})
-   MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
-ENDIF(NOT DEFINED ENV{ROOTSYS})
-#IF(NOT DEFINED ENV{GENFIT})
-#   MESSAGE(FATAL_ERROR "You did not set the environment variable GENFIT.") 
-#ENDIF(NOT DEFINED ENV{GENFIT})
+FIND_PROGRAM(ROOT_CONFIG root-config $ENV{ROOTSYS}/bin)
 
-INCLUDE_DIRECTORIES($ENV{ROOTSYS}/include ${GENFIT}/core)
+IF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")
+  MESSAGE(FATAL_ERROR "Could not find root-config executable.")
+ENDIF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")
 
-set(GENFIT_SRCS GFAbsRecoHit.cxx GFAbsTrackRep.cxx GFBookkeeping.cxx
-GFDetPlane.cxx GFException.cxx GFKalman.cxx GFPlanarHitPolicy.cxx GFPseudoSpacepointWireHitPolicy.cxx
-GFRecoHitFactory.cxx GFRecoHitProducer.cxx GFSpacepointHitPolicy.cxx
-GFTools.cxx GFTrackCand.cxx GFTrack.cxx GFWireHitPolicy.cxx
-GFWirepointHitPolicy.cxx GFConstField.cxx GFFieldManager.cxx
-GFAbsFinitePlane.cxx GFRectFinitePlane.cxx
-GFDaf.cxx GFDafHit.cxx GFTrackProximity.cxx)
+Execute_process(COMMAND ${ROOT_CONFIG} --cflags
+	OUTPUT_VARIABLE ROOT_CFLAGS
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-set(GENFIT_HEADERS  GFAbsBField.h GFAbsRecoHit.h GFAbsTrackRep.h
-GFBookkeeping.h GFDetPlane.h GFException.h GFKalman.h
-GFPlanarHitPolicy.h GFPseudoSpacepointWireHitPolicy.h GFRecoHitFactory.h GFRecoHitIfc.h
-GFRecoHitProducer.h GFSpacepointHitPolicy.h GFTools.h GFTrackCand.h 
-GFTrack.h GFWireHitPolicy.h GFWirepointHitPolicy.h GFConstField.h
-GFFieldManager.h GFAbsFinitePlane.h GFRectFinitePlane.h
-GFDaf.h GFDafHit.h GFTrackProximity.h GFAbsRecoHitComparator.h)
+#SET(CMAKE_VERBOSE_MAKEFILE ON)
+
+SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wshadow -ftree-vectorize -ffast-math -ftree-vectorizer-verbose=0 ${ROOT_CFLAGS}")
+
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag(-march=native HAS_MARCH_NATIVE)
+IF(HAS_MARCH_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+ENDIF(HAS_MARCH_NATIVE)
+
+INCLUDE_DIRECTORIES(${GENFIT}/core)
+
+set(GENFIT_SRCS 
+	GFAbsFitter.cxx
+	GFAbsTrackRep.cxx 
+	GFBookkeeping.cxx
+	GFDetPlane.cxx 
+	GFException.cxx 
+	GFKalman.cxx 
+	GFRecoHitFactory.cxx 
+	GFRecoHitProducer.cxx 
+	GFTools.cxx 
+	GFTrackCand.cxx 
+	GFTrackCandHit.cxx  
+	GFTrack.cxx 
+	GFConstField.cxx 
+	GFFieldManager.cxx
+	GFAbsFinitePlane.cxx 
+	GFRectFinitePlane.cxx
+	GFDaf.cxx 
+	GFTrackProximity.cxx
+	RecoHits/GFAbsPlanarHit.cxx 
+	RecoHits/GFAbsProlateSpacepointHit.cxx
+	RecoHits/GFAbsRecoHit.cxx
+	RecoHits/GFAbsSpacepointHit.cxx
+	RecoHits/GFAbsWireHit.cxx
+	RecoHits/GFAbsWirepointHit.cxx 
+	RecoHits/GFDafHit.cxx
+	RecoHits/GFDafWireHit.cxx
+)
+
+string (REPLACE ".cxx" ".h" GENFIT_HEADERS "${GENFIT_SRCS}")
+
 
 set(GENFIT_LINKDEF  genfitLinkDef.h)
 set(GENFIT_DICTIONARY genfitDict.cxx) 
 
 FIND_PROGRAM(ROOT_CINT_EXECUTABLE
 	NAMES rootcint
-	PATHS $ENV{ROOTSYS}/bin
-	NO_DEFAULT_PATH)
+	PATHS $ENV{ROOTSYS}/bin)
 
 ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY}
 	COMMAND ${ROOT_CINT_EXECUTABLE}
@@ -40,10 +68,7 @@ ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY}
       	-I${GENFIT}/core ${GENFIT_HEADERS} ${GENFIT_LINKDEF}
       	DEPENDS ${GENFIT_HEADERS} ${GENFIT_LINKDEF})
       	
-message(${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY})
-
 SET(GENFIT_SRCS ${GENFIT_SRCS} ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY})
-#SET(GENFIT_SRCS ${GENFIT_SRCS} ${GENFIT_DICTIONARY})
 
 ################ install ###################
 
@@ -53,8 +78,8 @@ Execute_process(COMMAND root-config --glibs --cflags
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 
-
 ADD_LIBRARY(genfit SHARED ${GENFIT_SRCS})
+
 TARGET_LINK_LIBRARIES(genfit ${ROOT_LIBS}  -lGeom -lVMC -lEG)
 
 INSTALL(TARGETS genfit DESTINATION ${GENFITLIBINSTALLDIR})

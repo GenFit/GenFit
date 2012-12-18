@@ -16,7 +16,7 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include"GFException.h"
+#include "GFException.h"
 
 bool GFException::fQuiet = false;
 
@@ -39,7 +39,7 @@ void GFException::setNumbers(std::string _numbersLabel,
 }
 
 void GFException::setMatrices(std::string _matricesLabel,
-				  const std::vector< TMatrixT<double> >& _matrices) {
+				  const std::vector<TMatrixD>& _matrices) {
   fMatricesLabel = _matricesLabel;
   fMatrices = _matrices;
 }
@@ -51,27 +51,27 @@ const char* GFException::what() const throw(){
 
 void GFException::info() {
   if(fQuiet) return;
-  if(fNumbers.size() == 0 && fMatrices.size() == 0) return;//do nothing
+  if(fNumbers.empty() && fMatrices.empty()) return; //do nothing
   std::cout << "GFException Info Output" << std::endl;
   std::cout << "===========================" << std::endl;
   if(fNumbersLabel != "") {
 	std::cout << "Numbers Label String:" << std::endl;
 	std::cout << fNumbersLabel << std::endl;
   }
-  if(fNumbers.size() > 0) {
+  if(!fNumbers.empty()) {
 	std::cout << "---------------------------" << std::endl;
 	std::cout << "Numbers:" << std::endl;
-	for(unsigned int i=0;i<fNumbers.size(); i++ ) std::cout << fNumbers.at(i) << std::endl;
+	for(unsigned int i=0;i<fNumbers.size(); ++i ) std::cout << fNumbers[i] << std::endl;
   }
   if(fMatricesLabel != "") {
 	std::cout << "---------------------------" << std::endl;
 	std::cout << "Matrices Label String:" << std::endl;
 	std::cout << fMatricesLabel << std::endl;
   }
-  if(fMatrices.size() > 0) {
+  if(!fMatrices.empty()) {
 	std::cout << "---------------------------" << std::endl;
 	std::cout << "Matrices:" << std::endl;
-	for(unsigned int i=0;i<fMatrices.size(); i++ ) fMatrices.at(i).Print();
+	for(unsigned int i=0;i<fMatrices.size(); ++i ) fMatrices[i].Print();
   }
   std::cout << "===========================" << std::endl;  
 }

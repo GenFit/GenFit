@@ -1,10 +1,10 @@
 
 #include "RKTools.h"
+
 #include <iostream>
-#include <string>
-#include <stdio.h>
-#include "stdlib.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 void RKTools::J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7){
 
@@ -273,7 +273,7 @@ void RKTools::J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5){
 }
 
 
-void RKTools::J_MMTxcov7xJ_MM(const M7x7& J_MM, const M7x7& cov7, M7x7& out7){
+void RKTools::J_MMTxcov7xJ_MM(const M7x7& J_MM, M7x7& cov7){
 
   // it is assumed that the last column of J_MM is [0,0,0,0,0,0,1]
 
@@ -317,30 +317,32 @@ void RKTools::J_MMTxcov7xJ_MM(const M7x7& J_MM, const M7x7& cov7, M7x7& out7){
   double JTC33 = J_MM[4] * cov7[35] + J_MM[7+4] * cov7[35+1] + J_MM[14+4] * cov7[35+2] + J_MM[21+4] * cov7[35+3] + J_MM[28+4] * cov7[35+4] + J_MM[35+4] * cov7[35+5] + J_MM[42+4] * cov7[42+5];
   double JTC34 = J_MM[4] * cov7[42] + J_MM[7+4] * cov7[42+1] + J_MM[14+4] * cov7[42+2] + J_MM[21+4] * cov7[42+3] + J_MM[28+4] * cov7[42+4] + J_MM[35+4] * cov7[42+5] + J_MM[42+4] * cov7[42+6];
 
+  double out7_40 = (J_MM[5] * cov7[0] + J_MM[7+5] * cov7[7] + J_MM[14+5] * cov7[14] + J_MM[21+5] * cov7[21] + J_MM[28+5] * cov7[28] + J_MM[35+5] * cov7[35] + J_MM[42+5] * cov7[42]) * J_MM[5] + (J_MM[5] * cov7[7] + J_MM[7+5] * cov7[7+1] + J_MM[14+5] * cov7[14+1] + J_MM[21+5] * cov7[21+1] + J_MM[28+5] * cov7[28+1] + J_MM[35+5] * cov7[35+1] + J_MM[42+5] * cov7[42+1]) * J_MM[7+5] + (J_MM[5] * cov7[14] + J_MM[7+5] * cov7[14+1] + J_MM[14+5] * cov7[14+2] + J_MM[21+5] * cov7[21+2] + J_MM[28+5] * cov7[28+2] + J_MM[35+5] * cov7[35+2] + J_MM[42+5] * cov7[42+2]) * J_MM[14+5] + (J_MM[5] * cov7[21] + J_MM[7+5] * cov7[21+1] + J_MM[14+5] * cov7[21+2] + J_MM[21+5] * cov7[21+3] + J_MM[28+5] * cov7[28+3] + J_MM[35+5] * cov7[35+3] + J_MM[42+5] * cov7[42+3]) * J_MM[21+5] + (J_MM[5] * cov7[28] + J_MM[7+5] * cov7[28+1] + J_MM[14+5] * cov7[28+2] + J_MM[21+5] * cov7[28+3] + J_MM[28+5] * cov7[28+4] + J_MM[35+5] * cov7[35+4] + J_MM[42+5] * cov7[42+4]) * J_MM[28+5] + (J_MM[5] * cov7[35] + J_MM[7+5] * cov7[35+1] + J_MM[14+5] * cov7[35+2] + J_MM[21+5] * cov7[35+3] + J_MM[28+5] * cov7[35+4] + J_MM[35+5] * cov7[35+5] + J_MM[42+5] * cov7[42+5]) * J_MM[35+5] + (J_MM[5] * cov7[42] + J_MM[7+5] * cov7[42+1] + J_MM[14+5] * cov7[42+2] + J_MM[21+5] * cov7[42+3] + J_MM[28+5] * cov7[42+4] + J_MM[35+5] * cov7[42+5] + J_MM[42+5] * cov7[42+6]) * J_MM[42+5];
+
   // last row
-  out7[6]    =  JTC6;
-  out7[7+6]  =  JTC13;
-  out7[14+6] =  JTC20;
-  out7[21+6] =  JTC27;
-  out7[28+6] =  JTC34;
-  out7[35+6] =  J_MM[5] * cov7[42] + J_MM[7+5] * cov7[42+1] + J_MM[14+5] * cov7[42+2] + J_MM[21+5] * cov7[42+3] + J_MM[28+5] * cov7[42+4] + J_MM[35+5] * cov7[42+5] + J_MM[42+5] * cov7[42+6];
-  out7[42+6] = cov7[42+6];
+  cov7[6]    = JTC6;
+  cov7[7+6]  = JTC13;
+  cov7[14+6] = JTC20;
+  cov7[21+6] = JTC27;
+  cov7[28+6] = JTC34;
+  cov7[35+6] = J_MM[5] * cov7[42] + J_MM[7+5] * cov7[42+1] + J_MM[14+5] * cov7[42+2] + J_MM[21+5] * cov7[42+3] + J_MM[28+5] * cov7[42+4] + J_MM[35+5] * cov7[42+5] + J_MM[42+5] * cov7[42+6];
+  //cov7[42+6] = cov7[42+6];
 
   // loops are vectorizable by the compiler!
-  for (int i=0; i<6; ++i) out7[i]    = JTC0  * J_MM[i] + JTC1  * J_MM[7+i] + JTC2  * J_MM[14+i] + JTC3  * J_MM[21+i] + JTC4  * J_MM[28+i] + JTC5  * J_MM[35+i] + JTC6  * J_MM[42+i];
-  for (int i=1; i<6; ++i) out7[7+i]  = JTC7  * J_MM[i] + JTC8  * J_MM[7+i] + JTC9  * J_MM[14+i] + JTC10 * J_MM[21+i] + JTC11 * J_MM[28+i] + JTC12 * J_MM[35+i] + JTC13 * J_MM[42+i];
-  for (int i=2; i<6; ++i) out7[14+i] = JTC14 * J_MM[i] + JTC15 * J_MM[7+i] + JTC16 * J_MM[14+i] + JTC17 * J_MM[21+i] + JTC18 * J_MM[28+i] + JTC19 * J_MM[35+i] + JTC20 * J_MM[42+i];
-  for (int i=3; i<6; ++i) out7[21+i] = JTC21 * J_MM[i] + JTC22 * J_MM[7+i] + JTC23 * J_MM[14+i] + JTC24 * J_MM[21+i] + JTC25 * J_MM[28+i] + JTC26 * J_MM[35+i] + JTC27 * J_MM[42+i];
-  for (int i=4; i<6; ++i) out7[28+i] = JTC28 * J_MM[i] + JTC29 * J_MM[7+i] + JTC30 * J_MM[14+i] + JTC31 * J_MM[21+i] + JTC32 * J_MM[28+i] + JTC33 * J_MM[35+i] + JTC34 * J_MM[42+i];
-  out7[35+5] = (J_MM[5] * cov7[0] + J_MM[7+5] * cov7[7] + J_MM[14+5] * cov7[14] + J_MM[21+5] * cov7[21] + J_MM[28+5] * cov7[28] + J_MM[35+5] * cov7[35] + J_MM[42+5] * cov7[42]) * J_MM[5] + (J_MM[5] * cov7[7] + J_MM[7+5] * cov7[7+1] + J_MM[14+5] * cov7[14+1] + J_MM[21+5] * cov7[21+1] + J_MM[28+5] * cov7[28+1] + J_MM[35+5] * cov7[35+1] + J_MM[42+5] * cov7[42+1]) * J_MM[7+5] + (J_MM[5] * cov7[14] + J_MM[7+5] * cov7[14+1] + J_MM[14+5] * cov7[14+2] + J_MM[21+5] * cov7[21+2] + J_MM[28+5] * cov7[28+2] + J_MM[35+5] * cov7[35+2] + J_MM[42+5] * cov7[42+2]) * J_MM[14+5] + (J_MM[5] * cov7[21] + J_MM[7+5] * cov7[21+1] + J_MM[14+5] * cov7[21+2] + J_MM[21+5] * cov7[21+3] + J_MM[28+5] * cov7[28+3] + J_MM[35+5] * cov7[35+3] + J_MM[42+5] * cov7[42+3]) * J_MM[21+5] + (J_MM[5] * cov7[28] + J_MM[7+5] * cov7[28+1] + J_MM[14+5] * cov7[28+2] + J_MM[21+5] * cov7[28+3] + J_MM[28+5] * cov7[28+4] + J_MM[35+5] * cov7[35+4] + J_MM[42+5] * cov7[42+4]) * J_MM[28+5] + (J_MM[5] * cov7[35] + J_MM[7+5] * cov7[35+1] + J_MM[14+5] * cov7[35+2] + J_MM[21+5] * cov7[35+3] + J_MM[28+5] * cov7[35+4] + J_MM[35+5] * cov7[35+5] + J_MM[42+5] * cov7[42+5]) * J_MM[35+5] + (J_MM[5] * cov7[42] + J_MM[7+5] * cov7[42+1] + J_MM[14+5] * cov7[42+2] + J_MM[21+5] * cov7[42+3] + J_MM[28+5] * cov7[42+4] + J_MM[35+5] * cov7[42+5] + J_MM[42+5] * cov7[42+6]) * J_MM[42+5];
+  for (int i=0; i<6; ++i) cov7[i]    = JTC0  * J_MM[i] + JTC1  * J_MM[7+i] + JTC2  * J_MM[14+i] + JTC3  * J_MM[21+i] + JTC4  * J_MM[28+i] + JTC5  * J_MM[35+i] + JTC6  * J_MM[42+i];
+  for (int i=1; i<6; ++i) cov7[7+i]  = JTC7  * J_MM[i] + JTC8  * J_MM[7+i] + JTC9  * J_MM[14+i] + JTC10 * J_MM[21+i] + JTC11 * J_MM[28+i] + JTC12 * J_MM[35+i] + JTC13 * J_MM[42+i];
+  for (int i=2; i<6; ++i) cov7[14+i] = JTC14 * J_MM[i] + JTC15 * J_MM[7+i] + JTC16 * J_MM[14+i] + JTC17 * J_MM[21+i] + JTC18 * J_MM[28+i] + JTC19 * J_MM[35+i] + JTC20 * J_MM[42+i];
+  for (int i=3; i<6; ++i) cov7[21+i] = JTC21 * J_MM[i] + JTC22 * J_MM[7+i] + JTC23 * J_MM[14+i] + JTC24 * J_MM[21+i] + JTC25 * J_MM[28+i] + JTC26 * J_MM[35+i] + JTC27 * J_MM[42+i];
+  for (int i=4; i<6; ++i) cov7[28+i] = JTC28 * J_MM[i] + JTC29 * J_MM[7+i] + JTC30 * J_MM[14+i] + JTC31 * J_MM[21+i] + JTC32 * J_MM[28+i] + JTC33 * J_MM[35+i] + JTC34 * J_MM[42+i];
+  cov7[35+5] = out7_40;
 
   // symmetric part
-  out7[7]  = out7[1];
-  out7[14] = out7[2];  out7[14+1] = out7[9];
-  out7[21] = out7[3];  out7[21+1] = out7[10];  out7[21+2] = out7[17];
-  out7[28] = out7[4];  out7[28+1] = out7[11];  out7[28+2] = out7[18];  out7[28+3] = out7[25];
-  out7[35] = out7[5];  out7[35+1] = out7[12];  out7[35+2] = out7[19];  out7[35+3] = out7[26];  out7[35+4] = out7[33];
-  out7[42] = out7[6];  out7[42+1] = out7[13];  out7[42+2] = out7[20];  out7[42+3] = out7[27];  out7[42+4] = out7[34];  out7[42+5] = out7[41];
+  cov7[7]  = cov7[1];
+  cov7[14] = cov7[2];  cov7[14+1] = cov7[9];
+  cov7[21] = cov7[3];  cov7[21+1] = cov7[10];  cov7[21+2] = cov7[17];
+  cov7[28] = cov7[4];  cov7[28+1] = cov7[11];  cov7[28+2] = cov7[18];  cov7[28+3] = cov7[25];
+  cov7[35] = cov7[5];  cov7[35+1] = cov7[12];  cov7[35+2] = cov7[19];  cov7[35+3] = cov7[26];  cov7[35+4] = cov7[33];
+  cov7[42] = cov7[6];  cov7[42+1] = cov7[13];  cov7[42+2] = cov7[20];  cov7[42+3] = cov7[27];  cov7[42+4] = cov7[34];  cov7[42+5] = cov7[41];
 
 }
 

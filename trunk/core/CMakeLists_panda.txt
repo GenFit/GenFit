@@ -17,13 +17,35 @@ ${ROOT_LIBRARY_DIR}
 
 link_directories( ${LINK_DIRECTORIES})
 
-set(GENFIT_SRCS GFAbsRecoHit.cxx GFAbsTrackRep.cxx GFBookkeeping.cxx
-GFDetPlane.cxx GFException.cxx GFKalman.cxx GFPlanarHitPolicy.cxx GFPseudoSpacepointWireHitPolicy.cxx
-GFRecoHitFactory.cxx GFRecoHitProducer.cxx GFSpacepointHitPolicy.cxx
-GFTools.cxx GFTrackCand.cxx GFTrack.cxx GFWireHitPolicy.cxx
-GFWirepointHitPolicy.cxx GFConstField.cxx GFFieldManager.cxx
-GFAbsFinitePlane.cxx GFRectFinitePlane.cxx 
-GFDaf.cxx GFDafHit.cxx GFTrackProximity.cxx)
+set(GENFIT_SRCS 
+	GFAbsFitter.cxx
+	GFAbsTrackRep.cxx 
+	GFBookkeeping.cxx
+	GFDetPlane.cxx 
+	GFException.cxx 
+	GFKalman.cxx 
+	GFRecoHitFactory.cxx 
+	GFRecoHitProducer.cxx 
+	GFTools.cxx 
+	GFTrackCand.cxx 
+	GFTrackCandHit.cxx  
+	GFTrack.cxx 
+	GFConstField.cxx 
+	GFFieldManager.cxx
+	GFAbsFinitePlane.cxx 
+	GFRectFinitePlane.cxx
+	GFDaf.cxx 
+	GFTrackProximity.cxx
+	RecoHits/GFAbsPlanarHit.cxx 
+	RecoHits/GFAbsProlateSpacepointHit.cxx
+	RecoHits/GFAbsRecoHit.cxx
+	RecoHits/GFAbsSpacepointHit.cxx
+	RecoHits/GFAbsWireHit.cxx
+	RecoHits/GFAbsWirepointHit.cxx 
+	RecoHits/GFDafHit.cxx
+	RecoHits/GFDafWireHit.cxx
+)
+
 
 if(RULE_CHECKER_FOUND)
   CHECK_RULES("${GENFIT_SRCS}" "${INCLUDE_DIRECTORIES}" GENFIT_RULES)
@@ -35,8 +57,6 @@ CHANGE_FILE_EXTENSION(*.cxx *.h GENFIT_HEADERS "${GENFIT_SRCS}")
 
 set(GENFIT_LINKDEF  genfitLinkDef.h)
 set(GENFIT_DICTIONARY ${CMAKE_CURRENT_BINARY_DIR}/genfitDict.cxx) 
-
-SET(GENFIT_HEADERS GFRecoHitIfc.h GFAbsRecoHitComparator.h ${GENFIT_HEADERS})
 
 ROOT_GENERATE_DICTIONARY("${GENFIT_HEADERS}" "${GENFIT_LINKDEF}" "${GENFIT_DICTIONARY}" "${INCLUDE_DIRECTORIES}")
 

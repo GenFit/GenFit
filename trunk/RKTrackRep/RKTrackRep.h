@@ -28,13 +28,14 @@
 #ifndef RKTRACKREP_H
 #define RKTRACKREP_H
 
-
-#include "GFAbsTrackRep.h"
-#include "GFDetPlane.h"
-#include "GFTrackCand.h"
 #include "GFPointPath.h"
 #include "RKTools.h"
+
+#include <GFAbsTrackRep.h>
+#include <GFDetPlane.h>
+#include <GFTrackCand.h>
 #include <TMatrixD.h>
+#include <TMatrixDSym.h>
 
 /** @brief Track Representation module based on a Runge-Kutta algorithm including a full material model
  *
@@ -46,7 +47,7 @@
  * The code was taken from the Phast analysis package of the COMPASS experiment
  * (Sergei Gerrassimov @ CERN).
  *
- * The state is 5D: (q/p, u', v', u,v)
+ * The state is 5D: (q/p, u', v', u, v)
  */
 
 
@@ -60,6 +61,11 @@ class RKTrackRep : public GFAbsTrackRep {
        const TVector3& mom,
        const TVector3& poserr,
        const TVector3& momerr,
+       const int& PDGCode);
+
+  RKTrackRep(const TVector3& pos,
+       const TVector3& mom,
+       const TMatrixDSym cov,
        const int& PDGCode);
 
   RKTrackRep(const TVector3& pos,
@@ -141,20 +147,20 @@ class RKTrackRep : public GFAbsTrackRep {
     * \f}
     */
   double extrapolate(const GFDetPlane&, 
-         TMatrixD& statePred,
-         TMatrixD& covPred);
+         TVectorD& statePred,
+         TMatrixDSym& covPred);
 
   //! returns the tracklength spanned in this extrapolation
   double extrapolate(const GFDetPlane&, 
-         TMatrixD& statePred);
+         TVectorD& statePred);
 
   //! This method is to extrapolate the track to point of closest approach to a point in space
-  void extrapolateToPoint(const TVector3& pos,
+  double extrapolateToPoint(const TVector3& pos,
          TVector3& poca,
          TVector3& dirInPoca);
 
   //! This method extrapolates to the point of closest approach to a line
-  void extrapolateToLine(const TVector3& point1,
+  double extrapolateToLine(const TVector3& point1,
          const TVector3& point2,
          TVector3& poca,
          TVector3& dirInPoca,
@@ -186,14 +192,14 @@ class RKTrackRep : public GFAbsTrackRep {
 
   void getPosMomCov(const GFDetPlane& pl,
                     TVector3& pos, TVector3& mom,
-                    TMatrixD& cov);
+                    TMatrixDSym& cov);
 
   //! Returns charge
   double getCharge()const {return fCharge;}
 
   int getPDG() {return fPdg;};
 
-  //! Set propagation direction. (-1,0,1) -> (backward prop,decide myself,forward)
+  //! Set propagation direction. (-1, 0, 1) -> (backward prop, decide myself, forward)
   void setPropDir(int dir);
 
   //! Switch propagation direction. Has no effect if propdir is set to 0.
@@ -207,9 +213,9 @@ class RKTrackRep : public GFAbsTrackRep {
     * the plane #pl is the same as the plane of the last extrapolation (i.e. #fCachePlane), where #fCacheSpu was calculated.
     * Hence, if the argument #pl is not equal to #fCachePlane, an error message is shown an an exception is thrown.
     */
-  void setData(const TMatrixD& st,
+  void setData(const TVectorD& st,
                const GFDetPlane& pl,
-               const TMatrixD* cov=NULL,
+               const TMatrixDSym* cov=NULL,
                const TMatrixD* aux=NULL);
 
   //! Sets state, plane and covariance from position, momentum and 6x6 covariance
@@ -217,7 +223,7 @@ class RKTrackRep : public GFAbsTrackRep {
     */
   void setPosMomCov(const TVector3& pos,
                     const TVector3& mom,
-                    const TMatrixD& cov);
+                    const TMatrixDSym& cov);
 
   void disableMaterialEffects(bool opt = true){fNoMaterial = opt;}
 
@@ -240,64 +246,74 @@ class RKTrackRep : public GFAbsTrackRep {
                  const TVector3& mom);
 
   void getState7(M1x7& state7);
-  void getState7(M1x7& state7, const TMatrixD& state5, const GFDetPlane& pl, const double& spu);
-  TMatrixD getState5(const M1x7& state7, const GFDetPlane& pl, double& spu);
+  void getState7(M1x7& state7, const TVectorD& state5, const GFDetPlane& pl, const double& spu);
+  TVectorD getState5(const M1x7& state7, const GFDetPlane& pl, double& spu);
 
   void transformPM7(const TMatrixD& in5x5,
                     M7x7& out7x7,
                     const GFDetPlane& pl,
-                    const TMatrixD& state5,
+                    const TVectorD& state5,
                     const double& spu,
                     TMatrixD* Jac = NULL);
 
-  void transformPM6(const TMatrixD& in5x5,
+  void transformPM6(const TMatrixDSym& in5x5,
                     M6x6& out6x6,
                     const GFDetPlane& pl,
-                    const TMatrixD& state5,
+                    const TVectorD& state5,
                     const double& spu,
                     TMatrixD* Jac = NULL);
 
   void transformM7P(const M7x7& in7x7,
-                    TMatrixD& out5x5,
+                    TMatrixDSym& out5x5,
                     const GFDetPlane& pl,
                     const M1x7& state7,
                     TMatrixD* Jac = NULL);
 
   void transformM6P(const M6x6& in6x6,
-                    TMatrixD& out5x5,
+                    TMatrixDSym& out5x5,
                     const GFDetPlane& pl,
                     const M1x7& state7,
                     TMatrixD* Jac = NULL);
 
+  //! protect from call to not yet implemented = operator
   RKTrackRep& operator=(const RKTrackRep*){
     return *this;
   };
 
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successfull and the plane is reached, the function returns true.
-    * The argument P has to contain the state (#P[0] - #P[6]) and a unity matrix (#P[7] - #P[55]) 
-    * with the last column multiplied wit q/p (hence #P[55] is not 1 but q/p).  
-    * Propagated state and the jacobian (with the last column multiplied wit q/p) of the extrapolation are written to #P.
-    * In the main loop of the Runge Kutta algorithm, the steppers in  #fEffect are called
+    * Propagated state and the jacobian of the extrapolation are written to #state7 and #cov.
+    * The jacobian is only calculated if #cov != NULL.
+    * In the main loop of the Runge Kutta algorithm, the #estimateStep() is called
     * and may reduce the estimated stepsize so that a maximum momentum loss will not be exceeded.
-    * If this is the case, RKutta() will only propagate the reduced distance and then return. This is to ensure that 
+    * If this is the case, #RKutta() will only propagate the reduced distance and then return. This is to ensure that
     * material effects, which are calculated after the propagation, are taken into account properly.
-    * 
     */
   bool RKutta (const GFDetPlane& plane,
-               M8x7& P,
+               M1x7& state7,
+               M7x7* cov,
                double& coveredDistance,
                std::vector<GFPointPath>& points,
                bool& checkJacProj,
-               bool calcCov = true,
                bool onlyOneStep = false,
                double maxStep = 1.E99);
+
+  //! The actual Runge Kutta propagation
+  /** propagate #state7 with step #S. Fills #SA (Start directions derivatives dA/S).
+   *  If #cov is NULL, only the state is propagated,
+   *  otherwise also the 7x7 jacobian (#cov) is calculated.
+   *  If #varField is false, the magnetic field will only be evaluated at the starting position.
+   */
+  void RKPropagate(M1x7& state7,
+                   M7x7* cov,
+                   M1x3& SA,
+                   double S,
+                   bool varField = true) const;
 
   double estimateStep(std::vector<GFPointPath>& points,
                       const TVector3& pos,
                       const TVector3& dir,
                       const M1x4& SU,
-                      const TVector3& MagField,
                       const GFDetPlane& plane,
                       const double& mom,
                       double& relMomLoss,
@@ -311,13 +327,14 @@ class RKTrackRep : public GFAbsTrackRep {
                      const TVector3& point) const;
     
   //! Handles propagation and material effects
-  /** extrapolate(), extrapolateToPoint() and extrapolateToLine() call this function.
-    * Extrap() needs a plane as an argument, hence extrapolateToPoint() and extrapolateToLine() create virtual detector planes.
-    * In this function, RKutta() is called and the resulting points and point paths are filtered 
-    * so that the direction doesn't change and tiny steps are filtered out. After the propagation the material effects are called via the GFMaterialEffects singleton.
-    * Extrap() will loop until the plane is reached, unless the propagation fails or the maximum number of 
+  /** #extrapolate(), #extrapolateToPoint() and #extrapolateToLine() call this function.
+    * #Extrap() needs a plane as an argument, hence #extrapolateToPoint() and #extrapolateToLine() create virtual detector planes.
+    * In this function, #RKutta() is called and the resulting points and point paths are filtered
+    * so that the direction doesn't change and tiny steps are filtered out.
+    * After the propagation the material effects are called via the #GFMaterialEffects singleton.
+    * #Extrap() will loop until the plane is reached, unless the propagation fails or the maximum number of
     * iterations is exceeded.
-    * fXX0 is also updated here.
+    * #fXX0 is also updated here.
     */
   double Extrap(const GFDetPlane& plane,
                 M1x7& state7,
@@ -325,35 +342,30 @@ class RKTrackRep : public GFAbsTrackRep {
                 bool onlyOneStep = false,
                 double maxStep = 1.E99);
   
-  //RKTrackRep(const RKTrackRep& rhs){};
   
   // data members
   
-  int fDirection;   // (-1,0,1) -> (backward prop,decide myself,forward)
+  int fDirection;   // (-1, 0, 1) -> (backward prop, decide myself, forward)
   bool fNoMaterial; // don't calculate material effects if true
     
   //! PDG particle code
   int fPdg;
-  //! Mass (in GeV)
-  double fMass;
   //! Charge
   double fCharge;
 
+  double fSpu;
+
   GFDetPlane fCachePlane; //!
   double fCacheSpu; //!
-  double fSpu;
-  TMatrixD fAuxInfo;
+  TMatrixD fAuxInfo; //!
 
   // vectors for getState, transform, Extrap etc. functions. Saves a lot of TVector3 constructions/destructions
-  TVector3 fO, fU, fV, fW; //!
   TVector3 fPos, fDir; //!
   TVector3 fpTilde; //!
   TVector3 fDirectionBefore, fDirectionAfter; //!
-  TVector3 fH; //!
 
   // auxiliary variables and arrays
   // needed in Extrap()
-  M8x7 fStateJac; //!
   M7x7 fNoise; //!
   M7x7 fOldCov; //!
   // needed in transform...
@@ -363,7 +375,7 @@ class RKTrackRep : public GFAbsTrackRep {
   M6x5 fJ_Mp_6x5; //!
 
  public:
-  ClassDef(RKTrackRep, 7)
+  ClassDef(RKTrackRep, 10)
 
 };
 

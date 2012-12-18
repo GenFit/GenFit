@@ -27,20 +27,18 @@
 
 #pragma link C++ class GFAbsTrackRep+;
 #pragma link C++ class GFDafHit+;
-#pragma link C++ class GFPlanarHitPolicy+;
-#pragma link C++ class GFPseudoSpacepointWireHitPolicy+;
-#pragma link C++ class GFSpacepointHitPolicy+;
-#pragma link C++ class GFWirepointHitPolicy+;
-#pragma link C++ class GFWireHitPolicy+;
-#pragma link C++ class GFRecoHitIfc<GFPlanarHitPolicy>+;
-#pragma link C++ class GFRecoHitIfc<GFPseudoSpacepointWireHitPolicy>+;
-#pragma link C++ class GFRecoHitIfc<GFSpacepointHitPolicy>+;
-#pragma link C++ class GFRecoHitIfc<GFWirepointHitPolicy>+;
-#pragma link C++ class GFRecoHitIfc<GFWireHitPolicy>+;
+#pragma link C++ class GFDafWireHit+;
+#pragma link C++ class GFAbsPlanarHit+;
+#pragma link C++ class GFAbsProlateSpacepointHit+;
+#pragma link C++ class GFAbsSpacepointHit+;
+#pragma link C++ class GFAbsWireHit+;
+#pragma link C++ class GFAbsWirepointHit+;
 #pragma link C++ class GFAbsRecoHit+;
 #pragma link C++ class GFTrackCand+;
+#pragma link C++ class GFTrackCandHit+;
 #pragma link C++ class GFTrack+;
 #pragma link C++ class GFDetPlane+;
+// GFBookkeeping has a custom streamer, the auto-generated one is sloooow (root 5.34).
 #pragma link C++ class GFBookkeeping-;
 #pragma link C++ class GFAbsFinitePlane+;
 #pragma link C++ class GFRectFinitePlane+;

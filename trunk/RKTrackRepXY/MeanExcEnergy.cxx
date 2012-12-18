@@ -16,10 +16,10 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include"MeanExcEnergy.h"
-#include"assert.h"
-#include"math.h"
-#include"TGeoMaterial.h"
+#include "MeanExcEnergy.h"
+#include "assert.h"
+#include "math.h"
+#include "TGeoMaterial.h"
 
 /*
 Reference for elemental mean excitation energies at:
