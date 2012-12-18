@@ -9,6 +9,7 @@
 #include <GFTrack.h>
 #include <GFMaterialEffects.h>
 #include <RKTrackRep.h>
+#include <GFTGeoMaterialInterface.h>
 #include <GeaneTrackRep2.h>
 #include <GFRectFinitePlane.h>
 #include <TApplication.h>
@@ -32,14 +33,14 @@
 #include "TGeant3.h"
 
 #include "PixHit.h"
-#include "PointHit.h"
+#include "SpacepointHit.h"
 
 //#define VALGRIND
 
 int main() {
   std::cerr<<"main"<<std::endl;
 
-  const unsigned int nEvents = 10000;
+  const unsigned int nEvents = 1000;
   const double BField = 15.;       // kGauss
   const double momentum = 0.1;     // GeV
   const double theta = 150;         // degree
@@ -66,10 +67,9 @@ int main() {
   // init fitter
   GFKalman kalman;
   kalman.setNumIterations(3);
-  //kalman.setBlowUpFactor(50.);
 
-  // init mersenne twister with TUUID
-	TRandom3 rand(10);
+  // init mersenne twister
+	gRandom->SetSeed(10);
 
 #ifndef VALGRIND
   // init event display
@@ -81,6 +81,7 @@ int main() {
   TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
   GFFieldManager::getInstance()->init(new GFConstField(0.,0.,BField));
+  GFMaterialEffects::getInstance()->init(new GFTGeoMaterialInterface());
 
   // init Geane
   if (GEANEhits || testRep==2 || testRep==3) {
@@ -134,8 +135,8 @@ int main() {
       // true start values
       TVector3 pos(0, 0, 0);
       TVector3 mom(1.,0,0);
-      mom.SetPhi(rand.Uniform(0.,2*TMath::Pi()));
-      //mom.SetTheta(rand.Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
+      mom.SetPhi(gRandom->Uniform(0.,2*TMath::Pi()));
+      //mom.SetTheta(gRandom->Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
       mom.SetTheta(theta*TMath::Pi()/180);
       mom.SetMag(momentum);
 
@@ -160,13 +161,13 @@ int main() {
       TVector3 posM(pos);
       TVector3 momM(mom);
       if (smearPosMom) {
-        posM.SetX(rand.Gaus(posM.X(),posSmear));
-        posM.SetY(rand.Gaus(posM.Y(),posSmear));
-        posM.SetZ(rand.Gaus(posM.Z(),posSmear));
+        posM.SetX(gRandom->Gaus(posM.X(),posSmear));
+        posM.SetY(gRandom->Gaus(posM.Y(),posSmear));
+        posM.SetZ(gRandom->Gaus(posM.Z(),posSmear));
 
-        momM.SetX(rand.Gaus(momM.X(),momSmear));
-        momM.SetY(rand.Gaus(momM.Y(),momSmear));
-        momM.SetZ(rand.Gaus(momM.Z(),momSmear)); 
+        momM.SetX(gRandom->Gaus(momM.X(),momSmear));
+        momM.SetY(gRandom->Gaus(momM.Y(),momSmear));
+        momM.SetZ(gRandom->Gaus(momM.Z(),momSmear));
       }
 
         
@@ -182,7 +183,7 @@ int main() {
       					      
       // remember original initial plane and state					  
       GFDetPlane referencePlane;
-      TMatrixT<double> referenceState(rephits->getState());
+      TVectorT<double> referenceState(rephits->getState());
       
       // create smeared hits
       std::vector<GFAbsRecoHit*> hits;
@@ -216,11 +217,11 @@ int main() {
             else{
               double AtW = dir*referencePlane.getNormal();
               if (AtW<0) AtW *= -1.;
-              referenceState[0][0] = charge/momentum;
-              referenceState[1][0] = -1.*dir*referencePlane.getU()/AtW;
-              referenceState[2][0] = -1.*dir*referencePlane.getV()/AtW;
-              referenceState[3][0] = (point-referencePlane.getO())*referencePlane.getU();
-              referenceState[4][0] = (point-referencePlane.getO())*referencePlane.getV();
+              referenceState[0] = charge/momentum;
+              referenceState[1] = -1.*dir*referencePlane.getU()/AtW;
+              referenceState[2] = -1.*dir*referencePlane.getV()/AtW;
+              referenceState[3] = (point-referencePlane.getO())*referencePlane.getU();
+              referenceState[4] = (point-referencePlane.getO())*referencePlane.getV();
               //std::cout<<"referenceState[2][0] "<<referenceState[2][0]<<"\n";
             }
           }
@@ -230,18 +231,15 @@ int main() {
               planeNorm.SetTheta(thetaDetPlane*TMath::Pi()/180);
               TVector3 z(0,0,1);
               //z.SetTheta(thetaDetPlane*TMath::Pi()/180+TMath::PiOver2());
-              PixHit* hit = new PixHit(GFDetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)), 
+              PixHit* hit = new PixHit(point,
+                                       planeNorm,
+                                       planeNorm.Cross(z),
                                        resolution,
-                                       rand.Gaus(0,resolution),
-                                       rand.Gaus(0,resolution));
+                                       true);
               hits.push_back(hit);
             }
             else {
-              TVector3 smearedPos(point);
-              smearedPos.SetX(rand.Gaus(smearedPos.X(),resolution));
-              smearedPos.SetY(rand.Gaus(smearedPos.Y(),resolution));
-              smearedPos.SetZ(rand.Gaus(smearedPos.Z(),resolution)); 
-              PointHit* hit = new PointHit(smearedPos, TVector3(resolution,resolution,resolution));
+              SpacepointHit* hit = new SpacepointHit(point, resolution, true);
               hits.push_back(hit);
             }
           //}
@@ -359,27 +357,27 @@ int main() {
 		  if ((mom-getMom).Mag() > epsilon) {std::cout<<"mom mismatch 2\n"; mom.Print(); getMom.Print();}
 
 		  // calculate pulls  
-		  TMatrixT<double> state(rep->getState());
-		  TMatrixT<double> cov(rep->getCov());
+		  TVectorT<double> state(rep->getState());
+		  TMatrixTSym<double> cov(rep->getCov());
 		  
 		  if (debug) {
         state.Print();
         cov.Print();
 		  }
 
-      hmomRes->Fill( (charge/state[0][0]-momentum));
-      hupRes->Fill(  (state[1][0]-referenceState[1][0]));
-      hvpRes->Fill(  (state[2][0]-referenceState[2][0]));
-      huRes->Fill(   (state[3][0]-referenceState[3][0]));
-      hvRes->Fill(   (state[4][0]-referenceState[4][0]));
+      hmomRes->Fill( (charge/state[0]-momentum));
+      hupRes->Fill(  (state[1]-referenceState[1]));
+      hvpRes->Fill(  (state[2]-referenceState[2]));
+      huRes->Fill(   (state[3]-referenceState[3]));
+      hvRes->Fill(   (state[4]-referenceState[4]));
 
 		  if (cov[0][0]>0) {
-		    hqopPu->Fill( (state[0][0]-referenceState[0][0]) / sqrt(cov[0][0]) );
+		    hqopPu->Fill( (state[0]-referenceState[0]) / sqrt(cov[0][0]) );
         pVal->Fill(   rep->getPVal());
-        hupPu->Fill(  (state[1][0]-referenceState[1][0]) / sqrt(cov[1][1]) );
-        hvpPu->Fill(  (state[2][0]-referenceState[2][0]) / sqrt(cov[2][2]) );
-        huPu->Fill(   (state[3][0]-referenceState[3][0]) / sqrt(cov[3][3]) );
-        hvPu->Fill(   (state[4][0]-referenceState[4][0]) / sqrt(cov[4][4]) );
+        hupPu->Fill(  (state[1]-referenceState[1]) / sqrt(cov[1][1]) );
+        hvpPu->Fill(  (state[2]-referenceState[2]) / sqrt(cov[2][2]) );
+        huPu->Fill(   (state[3]-referenceState[3]) / sqrt(cov[3][3]) );
+        hvPu->Fill(   (state[4]-referenceState[4]) / sqrt(cov[4][4]) );
 		  }
 		  
 		  // print covariance

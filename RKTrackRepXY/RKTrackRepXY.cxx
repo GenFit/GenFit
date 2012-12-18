@@ -16,19 +16,19 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include"RKTrackRepXY.h"
+#include "RKTrackRepXY.h"
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include"assert.h"
-#include"math.h"
-#include"TMath.h"
-#include"TGeoManager.h"
-#include"TDatabasePDG.h"
-#include"MeanExcEnergy.h"
-#include"energyLoss.h"
-#include"GFException.h"
-#include"GFFieldManager.h"
+#include "assert.h"
+#include "math.h"
+#include "TMath.h"
+#include "TGeoManager.h"
+#include "TDatabasePDG.h"
+#include "MeanExcEnergy.h"
+#include "energyLoss.h"
+#include "GFException.h"
+#include "GFFieldManager.h"
 
 RKTrackRepXY::~RKTrackRepXY(){
 }
@@ -191,7 +191,7 @@ double RKTrackRepXY::getStep(const double& zFinal, const double& distance, const
   return (pos+X*dir).Z();
 }
 
-void RKTrackRepXY::extrapolateToPoint(const TVector3& pos,
+double RKTrackRepXY::extrapolateToPoint(const TVector3& pos,
 				   TVector3& poca,
 				   TVector3& dirInPoca){
   GFDetPlane d;
@@ -200,12 +200,13 @@ void RKTrackRepXY::extrapolateToPoint(const TVector3& pos,
   d.setO(0.,0.,pos.Z());
   TMatrixT<double> s(5,1);
   TMatrixT<double> c(5,5);
-  extrapolate(d,s,c);
+  double length = extrapolate(d,s,c);
   poca.SetXYZ(s[0][0],s[1][0],pos.Z());
   dirInPoca.SetXYZ(0.,0.,1.);
+  return length;
 }
   
-void RKTrackRepXY::extrapolateToLine(const TVector3& point1,
+double RKTrackRepXY::extrapolateToLine(const TVector3& point1,
 				   const TVector3& point2,
 				   TVector3& poca,
 				   TVector3& dirInPoca,
@@ -223,11 +224,12 @@ void RKTrackRepXY::extrapolateToLine(const TVector3& point1,
   d.setO(0.,0.,z);
   TMatrixT<double> s(5,1);
   TMatrixT<double> c(5,5);
-  extrapolate(d,s,c);
+  double length = extrapolate(d,s,c);
   poca.SetXYZ(s[0][0],s[1][0],z);
   dirInPoca.SetXYZ(0.,0.,1.);
   double t = 1./((point2-point1)*(point2-point1))*(poca*(point2-point1)+point1*point1-point1*point2);
   poca_onwire = point1+t*(point2-point1);
+  return length;
 }
 
 

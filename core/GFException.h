@@ -29,7 +29,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "TMatrixT.h"
+#include "TMatrixD.h"
 
 /** @brief Exception class for error handling in GENFIT (provides storage for diagnostic information)
  *
@@ -57,7 +57,7 @@ class GFException : public std::exception
   std::string fNumbersLabel;
   std::string fMatricesLabel;
   std::vector<double> fNumbers;
-  std::vector< TMatrixT<double> > fMatrices;
+  std::vector<TMatrixD> fMatrices;
 
   bool fFatal;
 
@@ -80,7 +80,7 @@ class GFException : public std::exception
   /** @brief set list of numbers with description */
   void setNumbers (std::string, const std::vector<double>&);
   /** @brief set list of matrices with description */
-  void setMatrices(std::string, const std::vector< TMatrixT<double> >&);
+  void setMatrices(std::string, const std::vector<TMatrixD>&);
 
   /** @brief print information in the exception object */
   void info();

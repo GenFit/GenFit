@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 
 #check for ENV variables that are needed
@@ -10,12 +10,26 @@ ENDIF(NOT DEFINED ENV{ROOTSYS})
 #ENDIF(NOT DEFINED ENV{GENFIT})
 
 
-INCLUDE_DIRECTORIES($ENV{ROOTSYS}/include  ${GENFIT}/core ${GENFIT}/RKTrackRep)
+INCLUDE_DIRECTORIES(
+	$ENV{ROOTSYS}/include  
+	${GENFIT}/core 
+	${GENFIT}/RKTrackRep
+)
 
 
-AUX_SOURCE_DIRECTORY($ENV{GENFIT}/RKTrackRep GENFIT_RK_SRCS)
+AUX_SOURCE_DIRECTORY(
+	$ENV{GENFIT}/RKTrackRep 
+	GENFIT_RK_SRCS
+)
 
-SET(GENFIT_RK_HEADERS RKTrackRep.h GFMaterialEffects.h GFPointPath.h RKTools.h)
+SET(GENFIT_RK_HEADERS 
+	RKTrackRep.h 
+	GFAbsMaterialInterface.h
+	GFTGeoMaterialInterface.h
+	GFMaterialEffects.h 
+	GFPointPath.h 
+	RKTools.h
+)
 
 set(GENFIT_RK_LINKDEF  genfitRKLinkDef.h)
 set(GENFIT_RK_DICTIONARY genfitRKDict.cxx) 
@@ -44,6 +58,14 @@ Execute_process(COMMAND root-config --glibs --cflags
 
 
 ADD_LIBRARY(genfitRK SHARED ${GENFIT_RK_SRCS})
-TARGET_LINK_LIBRARIES(genfitRK ${ROOT_LIBS} -L${GENFITLIBDIR} -lgenfit -lGeom -lVMC -lEG)
+TARGET_LINK_LIBRARIES(genfitRK 
+	${ROOT_LIBS} 
+	-L${GENFITLIBDIR} 
+	-lgenfit 
+	-lGeom 
+	-lVMC 
+	-lEG
+)
+
 INSTALL(TARGETS genfitRK DESTINATION ${GENFITLIBINSTALLDIR} )
 

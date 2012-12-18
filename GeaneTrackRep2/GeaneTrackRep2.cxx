@@ -26,7 +26,7 @@
 #include <cassert>
 
 // Collaborating Class Headers --------
-#include "GFAbsRecoHit.h"
+#include "RecoHits/GFAbsRecoHit.h"
 #include "GFException.h"
 #include "TGeant3.h"
 #include "TDatabasePDG.h"
@@ -62,9 +62,9 @@ GeaneTrackRep2::GeaneTrackRep2(const GFDetPlane& plane,
   TVector3 v=fRefPlane.getV();
   TVector3 w=u.Cross(v);
 
-  fState[3][0] = 0.;
-  fState[4][0] = 0.;
-  fState[0][0] = fCharge/mom.Mag();
+  fState[3] = 0.;
+  fState[4] = 0.;
+  fState[0] = fCharge/mom.Mag();
   double pu,pv,pw;
   pu = mom*u;
   pv = mom*v;
@@ -75,15 +75,15 @@ GeaneTrackRep2::GeaneTrackRep2(const GFDetPlane& plane,
     exc.setFatal();
     throw exc;
   }
-  fState[1][0] = pu/pw;
-  fState[2][0] = pv/pw;
+  fState[1] = pu/pw;
+  fState[2] = pv/pw;
   if(pw>0.){
     //set spu
-    fState[5][0] = 1.;
+    fState[5] = 1.;
   }
   else{
     //set spu
-    fState[5][0] = -1.;
+    fState[5] = -1.;
   }
   fCov[3][3] = poserr.X()*poserr.X() * u.X()*u.X() +
     poserr.Y()*poserr.Y() * u.Y()*u.Y() +
@@ -116,9 +116,9 @@ GeaneTrackRep2::~GeaneTrackRep2()
 
 double
 GeaneTrackRep2::extrapolate(const GFDetPlane& pl, 
-			   TMatrixT<double>& statePred)
+			    TVectorT<double>& statePred)
 {
-  TMatrixT<double> covPred(6,6);
+  TMatrixTSym<double> covPred(6);
   return  extrapolate(pl,statePred,covPred);
   //! TODO: make this faster by neglecting covariances ?
 }
@@ -126,8 +126,8 @@ GeaneTrackRep2::extrapolate(const GFDetPlane& pl,
 
 double
 GeaneTrackRep2::extrapolate(const GFDetPlane& pl, 
-			   TMatrixT<double>& statePred,
-			   TMatrixT<double>& covPred)
+			    TVectorT<double>& statePred,
+			    TMatrixTSym<double>& covPred)
 {
   if(fabs(getMom(fRefPlane).Theta()/TMath::Pi()*180.) < THETACUT){
     GFException exc("GEANE propagation not possible for p.theta<THETACUT",__LINE__,__FILE__);
@@ -142,7 +142,7 @@ GeaneTrackRep2::extrapolate(const GFDetPlane& pl,
     throw;
   }
 
-  statePred.ResizeTo(fDimension,1);covPred.ResizeTo(fDimension,fDimension);
+  statePred.ResizeTo(fDimension);covPred.ResizeTo(fDimension,fDimension);
   TVector3 oto=pl.getO();TVector3 uto=pl.getU();TVector3 vto=pl.getV();
 
   TVector3 ofrom=fRefPlane.getO();TVector3 ufrom=fRefPlane.getU();TVector3 vfrom=fRefPlane.getV();
@@ -167,21 +167,21 @@ GeaneTrackRep2::extrapolate(const GFDetPlane& pl,
   //convert covariance from q/p to 1/p
   ein[0] /= fCharge*fCharge;ein[1] *= fCharge;ein[2] *= fCharge;ein[3] *= fCharge;ein[4] *= fCharge;
 
-  if(fState[3][0]==0)fState[3][0]=1E-4;
-  if(fState[4][0]==0)fState[4][0]=1E-4;
+  if(fState[3]==0)fState[3]=1E-4;
+  if(fState[4]==0)fState[4]=1E-4;
   gMC3->Eufilp(1, ein, pli, plf);
 
   TVector3 x1vect;
   Float_t x1[3];Float_t x2[3];Float_t p1[3];Float_t p2[3];
 
-  x1vect = ofrom + fState[3][0]*ufrom + fState[4][0]*vfrom;
+  x1vect = ofrom + fState[3]*ufrom + fState[4]*vfrom;
   x1vect.GetXYZ(x1);
   double mom = 1.e30;
   //double pOVERpw = sqrt(1.+fState[1][0]*fState[1][0]+fState[2][0]*fState[2][0]);
-  if(fabs(fState[0][0])>1.e-30) mom = 1./fabs(fState[0][0]);
+  if(fabs(fState[0])>1.e-30) mom = 1./fabs(fState[0]);
 
   //momentum in 'local mars'
-  TVector3 p1vect = fState[5][0]*(wfrom+fState[1][0]*ufrom+fState[2][0]*vfrom);
+  TVector3 p1vect = fState[5]*(wfrom+fState[1]*ufrom+fState[2]*vfrom);
   p1vect.SetMag(mom);
 
   p1vect.GetXYZ(p1);
@@ -239,10 +239,10 @@ GeaneTrackRep2::extrapolate(const GFDetPlane& pl,
     }
   }
   TVector3 d(x2[0]-oto.X(),x2[1]-oto.Y(),x2[2]-oto.Z());
-  statePred[3][0] = d*uto;
-  statePred[4][0] = d*vto;
+  statePred[3] = d*uto;
+  statePred[4] = d*vto;
   TVector3 p2vect(p2[0],p2[1],p2[2]);
-  statePred[0][0] = fCharge/p2vect.Mag();
+  statePred[0] = fCharge/p2vect.Mag();
   double pu,pv,pw;
   pu = p2vect*uto;
   pv = p2vect*vto;
@@ -254,19 +254,19 @@ GeaneTrackRep2::extrapolate(const GFDetPlane& pl,
     throw exc;
   }
   if(pw>0.){
-    statePred[5][0]=1.;
-    statePred[1][0] = pu/fabs(pw);
-    statePred[2][0] = pv/fabs(pw);
+    statePred[5]=1.;
+    statePred[1] = pu/fabs(pw);
+    statePred[2] = pv/fabs(pw);
   }
   else{
-    statePred[5][0]=-1.;
-    statePred[1][0] = -1.*pu/fabs(pw);
-    statePred[2][0] = -1.*pv/fabs(pw);
+    statePred[5]=-1.;
+    statePred[1] = -1.*pu/fabs(pw);
+    statePred[2] = -1.*pv/fabs(pw);
   }
   return trklength;
 }
 
-void
+double
 GeaneTrackRep2::extrapolateToPoint(const TVector3& pos,
 				 TVector3& poca,
 				 TVector3& normVec){
@@ -318,7 +318,7 @@ GeaneTrackRep2::extrapolateToPoint(const TVector3& pos,
   }
   mypos.GetXYZ(x1);
   mymom.GetXYZ(p1);
-  Float_t maxlen[1] = {2.*((mypos-pos).Mag())};
+  Float_t maxlen[1] = {(Float_t)(2.*((mypos-pos).Mag()))};
   gMC3->Eufill(1, ein, maxlen);
 
 
@@ -450,10 +450,11 @@ GeaneTrackRep2::extrapolateToPoint(const TVector3& pos,
   poca.SetXYZ(result.GetX(),result.GetY(),result.GetZ());
   normVec = result.GetJVer().Cross( result.GetKVer() );
   */
+  return gMC3->TrackLength();
 }
 
 
-void 
+double
 GeaneTrackRep2::extrapolateToLine(const TVector3& point1,
 				 const TVector3& point2,
 				 TVector3& poca,
@@ -513,7 +514,7 @@ GeaneTrackRep2::extrapolateToLine(const TVector3& point1,
   TVector3 pointOnWireClosestToMyPos;
   poca2Line(point1,point2,mypos,pointOnWireClosestToMyPos);
 
-  Float_t maxlen[1] = {2.*((mypos-pointOnWireClosestToMyPos).Mag())};
+  Float_t maxlen[1] = {(Float_t)(2.*((mypos-pointOnWireClosestToMyPos).Mag()))};
   gMC3->Eufill(1, ein, maxlen);
 
   //point1 muss pocaOnWire sein
@@ -568,7 +569,7 @@ GeaneTrackRep2::extrapolateToLine(const TVector3& point1,
   }
   normVec.SetMag(1.);
 
-
+  return gMC3->TrackLength();
 }
 
 void GeaneTrackRep2::poca2Line(const TVector3& extr1,const TVector3& extr2,const TVector3& point,TVector3& result){
@@ -604,36 +605,36 @@ void GeaneTrackRep2::pocaLine2Line(const TVector3& point1,const TVector3& line1,
 TVector3 
 GeaneTrackRep2::getPos(const GFDetPlane& pl)
 {
-  TMatrixT<double> statePred(fState);
+  TVectorT<double> statePred(fState);
   if(pl!=fRefPlane)extrapolate(pl,statePred);
-  return pl.getO()+(statePred[3][0]*pl.getU())+(statePred[4][0]*pl.getV());
+  return pl.getO()+(statePred[3]*pl.getU())+(statePred[4]*pl.getV());
 }
  
 TVector3 
 GeaneTrackRep2::getMom(const GFDetPlane& pl)
 {
-  TMatrixT<double> statePred(fState);
+  TVectorT<double> statePred(fState);
   if(pl!=fRefPlane)extrapolate(pl,statePred);
   //pl.Print();
   //statePred.Print();
 
-  TVector3 mom = statePred[5][0]*(pl.getNormal()+statePred[1][0]*pl.getU()+statePred[2][0]*pl.getV());
-  mom.SetMag(1./fabs(statePred[0][0]));
+  TVector3 mom = statePred[5]*(pl.getNormal()+statePred[1]*pl.getU()+statePred[2]*pl.getV());
+  mom.SetMag(1./fabs(statePred[0]));
   return mom;
 }
 void
 GeaneTrackRep2::getPosMom(const GFDetPlane& pl,TVector3& pos, TVector3& mom)
 {
-  TMatrixT<double> statePred(fState);
+  TVectorT<double> statePred(fState);
   if(pl!=fRefPlane)extrapolate(pl,statePred);
-  mom = statePred[5][0]*(pl.getNormal()+statePred[1][0]*pl.getU()+statePred[2][0]*pl.getV());
-  mom.SetMag(1./fabs(statePred[0][0]));
-  pos = pl.getO()+(statePred[3][0]*pl.getU())+(statePred[4][0]*pl.getV());
+  mom = statePred[5]*(pl.getNormal()+statePred[1]*pl.getU()+statePred[2]*pl.getV());
+  mom.SetMag(1./fabs(statePred[0]));
+  pos = pl.getO()+(statePred[3]*pl.getU())+(statePred[4]*pl.getV());
 }
 
 
 void
-GeaneTrackRep2::getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mom,TMatrixT<double>& cov){
+GeaneTrackRep2::getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mom,TMatrixTSym<double>& cov){
   cov.ResizeTo(6,6);
   std::cerr<<"insert brain here " << __FILE__ << " " << __LINE__
 	   << " ->abort" <<std::endl;

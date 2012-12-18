@@ -39,7 +39,7 @@ GFRaveTrackParameters::GFRaveTrackParameters() :
 }
 
 
-GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight, const TMatrixT<double>& state6, const TMatrixT<double>& cov6x6, bool isSmoothed) :
+GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed) :
   fOriginalTrack(track),
   fOriginalRep(rep),
   fWeight(weight),
@@ -47,12 +47,12 @@ GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep,
   fCov(cov6x6),
   fHasSmoothedData(isSmoothed)
 {
-  if (fState.GetNrows()!=1 || fState.GetNcols()!=6) {
-    GFException exc("GFRaveTrackParameters ==> State is not 1x6!",__LINE__,__FILE__);
+  if (fState.GetNrows() != 6) {
+    GFException exc("GFRaveTrackParameters ==> State is not 6D!",__LINE__,__FILE__);
     throw exc;
   }
-  if (fCov.GetNrows()!=6 || fCov.GetNcols()!=6) {
-    GFException exc("GFRaveTrackParameters ==> Covariance is not 6x6!",__LINE__,__FILE__);
+  if (fCov.GetNrows()!=6) {
+    GFException exc("GFRaveTrackParameters ==> Covariance is not 6D!",__LINE__,__FILE__);
     throw exc;
   }
 }
@@ -72,13 +72,13 @@ GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep,
 
 TVector3
 GFRaveTrackParameters::getPos() const {
-  return TVector3(fState[0][0], fState[0][1], fState[0][2]);
+  return TVector3(fState[0], fState[1], fState[2]);
 }
 
 
 TVector3
 GFRaveTrackParameters::getMom() const {
-  return TVector3(fState[0][3], fState[0][4], fState[0][5]);
+  return TVector3(fState[3], fState[4], fState[5]);
 }
 
 

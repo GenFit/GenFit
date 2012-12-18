@@ -5,7 +5,12 @@
 #include <cmath>
 #include <exception>
 #include <iostream>
-#include <GFAbsRecoHit.h>
+#include <RecoHits/GFAbsRecoHit.h>
+#include <RecoHits/GFAbsPlanarHit.h>
+#include <RecoHits/GFAbsProlateSpacepointHit.h>
+#include <RecoHits/GFAbsSpacepointHit.h>
+#include <RecoHits/GFAbsWireHit.h>
+#include <RecoHits/GFAbsWirepointHit.h>
 #include <GFAbsTrackRep.h>
 #include <GFConstField.h>
 #include <GFDetPlane.h>
@@ -29,6 +34,7 @@
 #include <TGeoTube.h>
 #include <TMath.h>
 #include <TMatrixT.h>
+#include <TMatrixTSym.h>
 #include <TMatrixDEigen.h>
 #include <TROOT.h>
 #include <TVector2.h>
@@ -78,12 +84,12 @@ void GenfitDisplay::reset() {
 
 	for(unsigned int i = 0; i < fEvents.size(); i++) {
 
-		for(unsigned int j = 0; j < fEvents.at(i)->size(); j++) {
+		for(unsigned int j = 0; j < fEvents[i]->size(); j++) {
 
-			delete fEvents.at(i)->at(j);
+			delete fEvents[i]->at(j);
 
 		}
-		delete fEvents.at(i);
+		delete fEvents[i];
 	}
 
 	fEvents.clear();
@@ -97,7 +103,7 @@ void GenfitDisplay::addEvent(std::vector<GFTrack*>& evts) {
 
 	for(unsigned int i = 0; i < evts.size(); i++) {
 
-		vec->push_back(new GFTrack(*(evts.at(i))));
+		vec->push_back(new GFTrack(*(evts[i])));
 
 	}
 
@@ -153,8 +159,8 @@ void GenfitDisplay::open() {
 
 	// parse the global options
 	for(size_t i = 0; i < fOption.length(); i++) {
-		if(fOption.at(i) == 'X') drawSilent = true;
-		if(fOption.at(i) == 'G') drawGeometry = true;
+		if(fOption[i] == 'X') drawSilent = true;
+		if(fOption[i] == 'G') drawGeometry = true;
 	}
 
 	// draw the geometry, does not really work yet. If it's fixed, the docu in the header file should be changed.
@@ -204,14 +210,14 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 	if(fOption != "") {
 		for(size_t i = 0; i < fOption.length(); i++) {
-			if(fOption.at(i) == 'A') drawAutoScale = true;
-			if(fOption.at(i) == 'D') drawDetectors = true;
-			if(fOption.at(i) == 'H') drawHits = true;
-			if(fOption.at(i) == 'M') drawTrackMarkers = true;
-			if(fOption.at(i) == 'P') drawPlanes = true;
-			if(fOption.at(i) == 'S') drawScaleMan = true;
-			if(fOption.at(i) == 'T') drawTrack = true;
-			if(fOption.at(i) == 'R') drawRawHits = true;
+			if(fOption[i] == 'A') drawAutoScale = true;
+			if(fOption[i] == 'D') drawDetectors = true;
+			if(fOption[i] == 'H') drawHits = true;
+			if(fOption[i] == 'M') drawTrackMarkers = true;
+			if(fOption[i] == 'P') drawPlanes = true;
+			if(fOption[i] == 'S') drawScaleMan = true;
+			if(fOption[i] == 'T') drawTrack = true;
+			if(fOption[i] == 'R') drawRawHits = true;
 		}
 	}
 	// finished parsing the option string -------------------------------------------------------------
@@ -239,13 +245,12 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 
 
-	for(unsigned int i = 0; i < fEvents.at(id)->size(); i++) { // loop over all tracks in an event
+	for(unsigned int i = 0; i < fEvents[id]->size(); i++) { // loop over all tracks in an event
 
-		GFTrack* track = fEvents.at(id)->at(i);
+		GFTrack* track = fEvents[id]->at(i);
 
-		GFAbsTrackRep* rep;
-		int irep = 0;
-		rep = track->getTrackRep(irep);
+		GFAbsTrackRep* rep(track->getCardinalRep());
+		unsigned int irep = track->getCardinalRepID();
 
 		unsigned int numhits = track->getNumHits();
 		double charge = rep->getCharge();
@@ -261,7 +266,6 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			std::cout << std::endl;
 		}
 
-    TVector3 plane_pos;
 		TVector3 track_pos;
 		TVector3 old_track_pos;
 
@@ -269,8 +273,8 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 		// saving the initial state of the representation -----------------------------------------
 		GFDetPlane initial_plane = rep->getReferencePlane();
-		TMatrixT<double> initial_state(rep->getState());
-		TMatrixT<double> initial_cov(rep->getCov());
+		TVectorT<double> initial_state(rep->getState());
+		TMatrixTSym<double> initial_cov(rep->getCov());
 		TMatrixT<double> initial_auxInfo;
 		if (rep->hasAuxInfo()) {
 		  initial_auxInfo.ResizeTo(*(rep->getAuxInfo(initial_plane)));
@@ -285,11 +289,21 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 			// get the hit infos ------------------------------------------------------------------
 			if(smoothing) {
-				TMatrixT<double> state;
-				TMatrixT<double> cov;
+				TVectorT<double> state;
+				TMatrixTSym<double> cov;
 				TMatrixT<double> auxInfo;
-				GFTools::getSmoothedData(track, irep, j, state, cov, plane, auxInfo);
-				rep->setData(state, plane, &cov, &auxInfo);
+				try{
+          GFTools::getBiasedSmoothedData(track, irep, j, state, cov, plane, auxInfo);
+          rep->setData(state, plane, &cov, &auxInfo);
+        }catch(GFException& e) {
+          std::cerr << "Error: Exception caught (getSmoothedData): Hit " << j << " in Track " << i << " skipped!" << std::endl;
+          std::cerr << e.what();
+          if (e.isFatal()) {
+            std::cerr<<"Fatal exception, skipping rest of the track"<<std::endl;
+            break;
+          }
+          else continue;
+        }
 			} else {
 				try{
 					plane = hit->getDetPlane(rep);
@@ -298,7 +312,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					std::cerr << "Error: Exception caught (getDetPlane): Hit " << j << " in Track " << i << " skipped!" << std::endl;
 					std::cerr << e.what();
 					if (e.isFatal()) {
-					  std::cerr<<"Fatal exception, skipping track"<<std::endl;
+					  std::cerr<<"Fatal exception, skipping rest of the track"<<std::endl;
 					  break;
 					}
 					else continue;
@@ -306,9 +320,8 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			}
 			
 			track_pos = rep->getPos(plane);
-			plane_pos = plane.getO();
-			TMatrixT<double> hit_coords;
-			TMatrixT<double> hit_cov;
+			TVectorT<double> hit_coords;
+			TMatrixTSym<double> hit_cov;
 			hit->getMeasurement(rep,plane,rep->getState(),rep->getCov(),hit_coords,hit_cov);
 
 			// finished getting the hit infos -----------------------------------------------------
@@ -317,8 +330,6 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			TVector3 o = plane.getO();
 			TVector3 u = plane.getU();
 			TVector3 v = plane.getV();
-
-			std::string hit_type = hit->getPolicyName();
 
 			bool planar_hit = false;
 			bool planar_pixel_hit = false;
@@ -333,38 +344,33 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 			int hit_coords_dim = hit_coords.GetNrows();
 
-			if(hit_type == "GFPlanarHitPolicy") {
+			if(dynamic_cast<GFAbsPlanarHit*>(hit) != NULL) {
 				planar_hit = true;
 				if(hit_coords_dim == 1) {
-					hit_u = hit_coords(0,0);
+					hit_u = hit_coords(0);
 					hit_res_u = hit_cov(0,0);
 				} else if(hit_coords_dim == 2) {
 					planar_pixel_hit = true;
-					hit_u = hit_coords(0,0);
-					hit_v = hit_coords(1,0);
+					hit_u = hit_coords(0);
+					hit_v = hit_coords(1);
 					hit_res_u = hit_cov(0,0);
 					hit_res_v = hit_cov(1,1);
 				}
-			} else if (hit_type == "GFSpacepointHitPolicy") {
+			} else if (dynamic_cast<GFAbsSpacepointHit*>(hit) != NULL) {
 				space_hit = true;
 				plane_size = 4;
-			} else if (hit_type == "GFPseudoSpacepointWireHitPolicy") {
-        space_hit = true;
-        plane_size = 4;
-      } else if (hit_type == "GFWireHitPolicy") {
+      } else if (dynamic_cast<GFAbsWireHit*>(hit) != NULL) {
 				wire_hit = true;
-				hit_u = hit_coords(0,0);
+				hit_u = hit_coords(0);
+				hit_v = v*(track_pos-o); // move the covariance tube so that the track goes through it
 				hit_res_u = hit_cov(0,0);
 				hit_res_v = 4;
 				plane_size = 4;
-			} else if (hit_type == "GFWirepointHitPolicy") {
-        wire_hit = true;
-        wirepoint_hit = true;
-        hit_u = hit_coords(0,0);
-        hit_v = hit_coords(1,0);
-        hit_res_u = hit_cov(0,0);
-        hit_res_v = hit_cov(1,1);
-        plane_size = 4;
+				if (dynamic_cast<GFAbsWirepointHit*>(hit) != NULL) {
+				  wirepoint_hit = true;
+				  hit_v = hit_coords(1);
+				  hit_res_v = hit_cov(1,1);
+				}
       } else {
 				std::cout << "Track " << i << ", Hit " << j << ": Unknown policy name: skipping hit!" << std::endl;
 				break;
@@ -375,7 +381,9 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 			// draw planes if corresponding option is set -----------------------------------------
 			if(drawPlanes || (drawDetectors && planar_hit)) {
-				TEveBox* box = boxCreator(plane_pos, u, v, plane_size, plane_size, 0.01);
+			  TVector3 move(0,0,0);
+			  if (wire_hit) move = v*(v*(track_pos-o)); // move the plane along the wire until the track goes through it
+				TEveBox* box = boxCreator(o + move, u, v, plane_size, plane_size, 0.01);
 				if (drawDetectors && planar_hit) {
 					box->SetMainColor(kCyan);
 				} else {
@@ -415,10 +423,14 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					TGeoRotation* det_rot = new TGeoRotation("det_rot",	(u.Theta()*180)/TMath::Pi(), (u.Phi()*180)/TMath::Pi(),
 							(norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi(),
 							(v.Theta()*180)/TMath::Pi(), (v.Phi()*180)/TMath::Pi()); // move the tube to the right place and rotate it correctly
-					TGeoMatrix* det_trans = new TGeoCombiTrans(o(0),o(1),o(2),det_rot);
+					TVector3 move = v*(v*(track_pos-o)); // move the tube along the wire until the track goes through it
+					TGeoMatrix* det_trans = new TGeoCombiTrans(o(0) + move.X(),
+                                                     o(1) + move.Y(),
+                                                     o(2) + move.Z(),
+                                                     det_rot);
 					det_shape->SetTransMatrix(*det_trans);
 					det_shape->SetMainColor(kCyan);
-					det_shape->SetMainTransparency(0);
+					det_shape->SetMainTransparency(25);
 					if((drawHits && (hit_u+0.0105/2 > 0)) || !drawHits) {
 						gEve->AddElement(det_shape);
 					}
@@ -433,7 +445,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				if(planar_hit) {
 					if(!planar_pixel_hit) {
 						TEveBox* hit_box;
-						hit_box = boxCreator((plane_pos + hit_u*u), u, v, fErrorScale*std::sqrt(hit_res_u), plane_size, 0.0105);
+						hit_box = boxCreator((o + hit_u*u), u, v, fErrorScale*std::sqrt(hit_res_u), plane_size, 0.0105);
 						hit_box->SetMainColor(kYellow);
 						hit_box->SetMainTransparency(0);
 						gEve->AddElement(hit_box);
@@ -468,7 +480,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 						// calculate the semiaxis of the error ellipse ----------------------------
 						det_shape->SetShape(new TGeoEltu(pseudo_res_0, pseudo_res_1, 0.0105));
-						TVector3 pix_pos = plane_pos + hit_u*u + hit_v*v;
+						TVector3 pix_pos = o + hit_u*u + hit_v*v;
 						TVector3 u_semiaxis = (pix_pos + eVec(0,0)*u + eVec(1,0)*v)-pix_pos;
 						TVector3 v_semiaxis = (pix_pos + eVec(0,1)*u + eVec(1,1)*v)-pix_pos;
 						TVector3 norm = u.Cross(v);
@@ -597,7 +609,10 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					TGeoRotation* det_rot = new TGeoRotation("det_rot",	(u.Theta()*180)/TMath::Pi(), (u.Phi()*180)/TMath::Pi(),
 							(norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi(),
 							(v.Theta()*180)/TMath::Pi(), (v.Phi()*180)/TMath::Pi());
-					TGeoMatrix* det_trans = new TGeoCombiTrans(o(0),o(1),o(2),det_rot);
+					TGeoMatrix* det_trans = new TGeoCombiTrans(o(0) + hit_v*v.X(),
+                                                     o(1) + hit_v*v.Y(),
+                                                     o(2) + hit_v*v.Z(),
+                                                     det_rot);
 					det_shape->SetTransMatrix(*det_trans);
 					// finished rotating and translating ------------------------------------------
 

@@ -24,13 +24,12 @@
 #ifndef GFTRACK_H 
 #define GFTRACK_H
 
-#include"assert.h"
-#include<map>
+#include "assert.h"
+#include <map>
 
 #include "GFAbsTrackRep.h"
-#include "GFAbsRecoHit.h"
+#include "RecoHits/GFAbsRecoHit.h"
 
-#include "TClonesArray.h"
 #include "TObjArray.h"
 
 #include "GFTrackCand.h"
@@ -58,49 +57,9 @@ class TVirtualGeoTrack;
  *
  * The GFTRack takes ownership over the GFAbsRecoHit pointers it holds.
  */
-class GFTrack : public TObject {   
-private:
+class GFTrack : public TObject {
   
-  
-  /** @brief Collection of track representations
-   * 
-   * this array is only to be added to in the addTrackRep method
-   * because the synchronized construction of bookkeeping objects
-   * and repAtHit array is ensured there. NEVER delete elements from
-   * this array!
-   * If this functionality will be need, it has to be done synchronized
-   * with bookkeeping!!
-   */
-  TObjArray* fTrackReps; //->
-
-  /** @brief Collection of RecoHits
-   */
-  std::vector<GFAbsRecoHit*> fHits; //!
-  
-  /** @brief Collection of Bookeeping objects for failed hits
-   * in every trackrep
-   */
-  std::vector<GFBookkeeping*> fBookkeeping;
-
-  /** @brief repAtHit keeps track of at which hit index which rep
-   * is currently defined, to avoid null extrapolations
-   */
-  std::vector<int> fRepAtHit;
-
-  /** @brief Helper to store the indices of the hits in the track. 
-   * See GFTrackCand for details.
-   */
-  GFTrackCand fCand; // list of hits
-    
-  static const int fDefNumTrackReps = 10; //!
-  unsigned int fCardinal_rep; // THE selected rep, default=0;
-
-  unsigned int fNextHitToFit;
-
-  bool fSmooth;
-  bool fSmoothFast;
-  
-public:
+ public:
   
   /** @brief Default constructor -- needed for compatibility with ROOT */
   GFTrack(); 
@@ -108,7 +67,7 @@ public:
   /** @brief Copy constructor */
   GFTrack(const GFTrack&); 
 
-  /** @brief assignement operator */
+  /** @brief assignment operator */
   GFTrack& operator=(const GFTrack&);
 
   /** @brief Initializing constructor
@@ -140,13 +99,13 @@ public:
 
   /** Get a vector of the track's RecoHits
    */
-  std::vector<GFAbsRecoHit*> getHits() const {return fHits;}
+  const std::vector<GFAbsRecoHit*>& getHits() const {return fHits;}
 
   /** Get a map of the track's RecoHits and their hit IDs.
-   * Can be usefull for getting the ID of a certain RecoHit,
+   * Can be useful for getting the ID of a certain RecoHit,
    * since the RecoHit pointers are the keys of the map.
    */
-  std::map<GFAbsRecoHit*, unsigned int> getHitMap() const;
+  void getHitMap(std::map<GFAbsRecoHit*, unsigned int>&) const;
 
   const GFTrackCand& getCand() const {return fCand;}
 
@@ -162,9 +121,6 @@ public:
    *
    * All hits from trk will be merged into this GFTrack. 
    * trk will be empty afterwards.
-   *
-   * Kalman::continueTrack can be used to include the newly added hits 
-   * in the fit.
    *
    * Note that the new hits are inserted at the end of the present track!
    */
@@ -184,7 +140,7 @@ public:
 
   /** @brief Clear TrackRep vector. Note that the Reps will not be deleted!
    * 
-   * Be carefull not to create memory leaks here. 
+   * Be careful not to create memory leaks here.
    */
   void releaseTrackReps(){ fTrackReps->SetOwner(kFALSE); fTrackReps->Clear();} 
 
@@ -202,7 +158,7 @@ public:
     return reinterpret_cast<GFAbsTrackRep*>(fTrackReps->At(id));
   }
 
-  /** @brief Get number of track represenatations
+  /** @brief Get number of track representations
    */
   unsigned int getNumReps() const {
     return fTrackReps->GetEntriesFast();
@@ -212,9 +168,11 @@ public:
    *
    * The user has to choose which track rep should be considered the
    * best one after the fit. Usually the track representation giving the 
-   * smallest chi2 is choosen. By default the first in the list is returned.
+   * smallest chi2 is chosen. By default the first in the list is returned.
    */
-  GFAbsTrackRep* getCardinalRep() const {return ((GFAbsTrackRep*)fTrackReps->At(fCardinal_rep));}
+  GFAbsTrackRep* getCardinalRep() const {
+    return reinterpret_cast<GFAbsTrackRep*>(fTrackReps->At(fCardinal_rep));
+  }
   
   /** @brief Get ID of the cardinal track representation
    */  
@@ -250,7 +208,7 @@ public:
    *
    * Cardinal representation is used.
    */
-  void getPosMomCov(TVector3& pos,TVector3& mom,TMatrixT<double>& cov){
+  void getPosMomCov(TVector3& pos, TVector3& mom, TMatrixDSym& cov){
     getCardinalRep()->getPosMomCov(pos,mom,cov);
   }
 
@@ -259,7 +217,7 @@ public:
    * The track will be extrapolated to GFDetPlane to get everything there.
    * The track will not be modified. Cardinal representation is used.
    */
-  void getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mom,TMatrixT<double>& cov){
+  void getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixDSym& cov){
     getCardinalRep()->getPosMomCov(pl,pos,mom,cov);
   }
 
@@ -306,25 +264,25 @@ public:
   // ---------------------
 
   void addFailedHit(unsigned int irep,unsigned int id){
-    assert(irep<fBookkeeping.size());
     fBookkeeping.at(irep)->addFailedHit(id);
-  }
-
-  /** @brief deprecated!
-   */
-  inline void addHit(GFAbsRecoHit* theHit) { 
-    fHits.push_back(theHit);
   }
   
   /** @brief Add single hit. Updates the GFTrackCand
    */
   void addHit(GFAbsRecoHit* theHit, 
-	      unsigned int detId,
-	      unsigned int hitId,
-	      double rho=0.,
-	      unsigned int planeId=0){
+              int detId,
+              int hitId,
+              int planeId = -1,
+              double rho = 0.){
     fHits.push_back(theHit);
-    fCand.addHit(detId,hitId,rho,planeId);
+    fCand.addHit(detId,hitId,planeId,rho);
+  }
+
+  /** @brief Add single hit. Updates the GFTrackCand with default Ids
+   */
+  void addHit(GFAbsRecoHit* theHit){
+    fHits.push_back(theHit);
+    fCand.addHit(new GFTrackCandHit); // add default TrackCandHit
   }
 
   /** @brief Add collection of hits
@@ -335,7 +293,7 @@ public:
     fHits = hits;
   }
 
-  /** @brief Add track represenation
+  /** @brief Add track representation
    *
    * The given track representation has to contain starting values for fit!
    */
@@ -348,7 +306,7 @@ public:
 
   //! get GFBookKeeping object for particular track rep (default is cardinal rep)
   GFBookkeeping* getBK(int index=-1) const {
-    if(index==-1) return fBookkeeping.at(fCardinal_rep);
+    if(index==-1) return fBookkeeping[fCardinal_rep];
     assert((unsigned int)index<getNumReps());
     return fBookkeeping.at(index);
   }
@@ -356,7 +314,7 @@ public:
   //! set track candidate
   void setCandidate(const GFTrackCand& cand, bool doreset=false);
   
-  /** @brief Choose cardinal track represenatation
+  /** @brief Choose cardinal track representation
    *
    * @sa getCardinalRep
    */
@@ -370,31 +328,29 @@ public:
    * @param rep which track representation?
    * @param result results are written to this vector
    */
-  void getResiduals(unsigned int detId, // which detector?
-		    unsigned int dim,   // which projection?
-		    unsigned int rep,   // which trackrep ?
-		    std::vector<double>& result) const;
+  void getResiduals(int detId, // which detector?
+                    unsigned int dim,   // which projection?
+                    unsigned int rep,   // which trackrep ?
+                    std::vector<double>& result) const;
 		    
 
-  /** @brief set the hit index at which plane,state&cov of rep irep is defined
+  /** @brief set the hit index at which plane, state & cov of rep irep is defined
    */
   void setRepAtHit(unsigned int irep,int ihit){
-    assert(irep<getNumReps());
     fRepAtHit.at(irep) = ihit;
   }
 
-  /** @brief get the hit index at which plane,state&cov of rep irep is defined
+  /** @brief get the hit index at which plane, state & cov of rep irep is defined
    */
   int getRepAtHit(unsigned int irep) const {
-    assert(irep<getNumReps());
     return fRepAtHit.at(irep);
   }
 
-  /** @brief clear the hit indices at which plane,state&cov of reps are defined
+  /** @brief clear the hit indices at which plane, state & cov of reps are defined
    */
   void clearRepAtHit(){
     for(unsigned int i=0;i<getNumReps();++i){
-      fRepAtHit.at(i)=-1;
+      fRepAtHit[i]=-1;
     }
   }
 
@@ -406,44 +362,79 @@ public:
 
   void clearBookkeeping(){
     for(unsigned int i=0;i<getNumReps();++i){
-      fBookkeeping.at(i)->clearAll();
+      fBookkeeping[i]->clearAll();
     }
   }
 
   void clearFailedHits(){
     for(unsigned int i=0;i<getNumReps();++i){
-      fBookkeeping.at(i)->clearFailedHits();
+      fBookkeeping[i]->clearFailedHits();
     }
   }
 
-  /** @brief Use planeId information of GFTrackCand and return (by reference) groups of hit ids which are in the same planes.
+  /** @brief Use planeId information of #GFTrackCand and return (by reference)
+   * groups of hit indices (ranging from 0 to #getNumHits()) which are in the same planes and in the same detector.
+   * Only hits which are subsequent in the #GFTrackCand can be grouped together.
+   * Hits with default planeId -1 will not be grouped together!
    */
-  bool getHitsByPlane(std::vector<std::vector<int>*>& retVal);
+  bool getHitsByPlane(std::vector< std::vector<int> >& retVal);
 
   /** @brief Switch smoothing on or off for this track.
-   *
-   *  The "fast" parameter allows for a different method when retrieving the smoothed
-   *  values with GFTools::get(biased)SmoothedData(), but is more demanding with regards
-   *  to memory requirements.
    */
-  void setSmoothing(bool smooth = true, bool fast = false) { fSmooth = smooth; fSmoothFast = fast;}
+  void setSmoothing(bool smooth = true) { fSmooth = smooth;}
 
   /** @brief Read back if smoothing is/was turned on or off for this track.
    */
   bool getSmoothing() const { return fSmooth; }
 
-  /** @brief Read back if "fast-smoothing" is/was turned on or off for this track.
-   */
-  bool getSmoothingFast() const { return fSmoothFast; }
-
-  /** @brief this is needed to blow up the covariance matrix before a fitting pass
-   * drops off-diagonal elements and blows up diagonal by blowUpFactor
+  /** @brief this is needed to blow up the covariance matrix by #blowUpFactor before a fitting pass
    */
   void blowUpCovs(double blowUpFactor);
 
 
-public:
-  ClassDef(GFTrack,3)
+ private:
+
+  /** @brief Collection of track representations
+   *
+   * this array is only to be added to in the addTrackRep method
+   * because the synchronized construction of bookkeeping objects
+   * and repAtHit array is ensured there. NEVER delete elements from
+   * this array!
+   * If this functionality will be need, it has to be done synchronized
+   * with bookkeeping!!
+   */
+  TObjArray* fTrackReps; //->
+
+  /** @brief Collection of RecoHits
+   */
+  std::vector<GFAbsRecoHit*> fHits; //!
+
+  /** @brief Collection of #GFBookeeping objects for failed hits
+   * in every trackrep
+   */
+  std::vector<GFBookkeeping*> fBookkeeping;
+
+  /** @brief repAtHit keeps track of at which hit index which rep
+   * is currently defined, to avoid null extrapolations
+   */
+  std::vector<int> fRepAtHit;
+
+  /** @brief Helper to store the indices of the hits in the track.
+   * See #GFTrackCand for details.
+   */
+  GFTrackCand fCand; // list of hits
+
+  static const int fDefNumTrackReps = 10; //!
+  unsigned int fCardinal_rep; // THE selected rep, default = 0;
+
+  unsigned int fNextHitToFit;
+
+  bool fSmooth;
+
+
+ public:
+  ClassDef(GFTrack,4)
+
 };
 
 #endif 

@@ -30,6 +30,7 @@
 class GFTrack;
 class GFAbsTrackRep; 
 class TVector3;
+
 //!Calculates poca between two tracks, changes the state of the track!
 TVector3 trackProximity(GFTrack* trk1, GFTrack* trk2);  
 //!Calculates poca between two track reps, changes the state of the trackrep!

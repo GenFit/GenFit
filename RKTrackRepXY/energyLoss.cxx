@@ -17,10 +17,10 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include"energyLoss.h"
-#include"math.h"
-#include"assert.h"
-#include<iostream>
+#include "energyLoss.h"
+#include "math.h"
+#include "assert.h"
+#include <iostream>
 
 float energyLoss(float beta,float charge,float density,float ZoverA,float MEE){
   //std::cout << "beta " << beta << " charge " << charge << " density " << density << " ZoverA " << ZoverA<< " " << MEE << std::endl;

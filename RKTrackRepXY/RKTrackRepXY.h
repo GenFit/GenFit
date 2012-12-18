@@ -49,11 +49,11 @@ public:
 			   TMatrixT<double>& covPred);
 
   
-  virtual void extrapolateToPoint(const TVector3& pos,
+  virtual double extrapolateToPoint(const TVector3& pos,
 				 TVector3& poca,
 				 TVector3& dirInPoca);
   
-  virtual void extrapolateToLine(const TVector3& point1,
+  virtual double extrapolateToLine(const TVector3& point1,
 				 const TVector3& point2,
 				 TVector3& poca,
 				 TVector3& dirInPoca,

@@ -19,18 +19,16 @@
 
 #include "GFMaterialEffects.h"
 #include "GFException.h"
+
 #include <iostream>
+#include <stdexcept>
 #include <string>
-#include "stdlib.h"
+#include <stdlib.h>
+#include <math.h>
+#include <assert.h>
 
-#include "TDatabasePDG.h"
-#include "TGeoMedium.h"
-#include "TGeoMaterial.h"
-#include "TGeoManager.h"
-#include "TMath.h"
-
-#include "math.h"
-#include "assert.h"
+#include <TDatabasePDG.h>
+#include <TMath.h>
 
 
 //#define DEBUG
@@ -38,8 +36,6 @@
 
 GFMaterialEffects* GFMaterialEffects::finstance = NULL;
 
-float MeanExcEnergy_get(int Z);
-float MeanExcEnergy_get(TGeoMaterial*);
 
 
 GFMaterialEffects::GFMaterialEffects():
@@ -61,12 +57,14 @@ GFMaterialEffects::GFMaterialEffects():
   fpdg(0),
   fcharge(0),
   fmass(0),
-  fMscModelCode(0)
+  fMscModelCode(0),
+  fMaterialInterface(NULL)
 {
 }
 
 GFMaterialEffects::~GFMaterialEffects()
 {
+  if (fMaterialInterface != NULL) delete fMaterialInterface;
 }
 
 GFMaterialEffects* GFMaterialEffects::getInstance()
@@ -82,6 +80,16 @@ void GFMaterialEffects::destruct()
     finstance = NULL;
   }
 }
+
+void GFMaterialEffects::init(GFAbsMaterialInterface* matIfc){
+  if (fMaterialInterface != NULL) {
+    std::string msg("GFMaterialEffects::initMaterialInterface(): Already initialized! ");
+    std::runtime_error err(msg);
+  }
+  fMaterialInterface = matIfc;
+}
+
+
 
 void GFMaterialEffects::setMscModel(const std::string& modelName)
 {
@@ -102,14 +110,21 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
                                   const double& mom,
                                   const int& pdg,
                                   double& xx0,
-                                  const bool& doNoise,
                                   double* noise,
                                   const double* jacobian,
                                   const TVector3* directionBefore,
                                   const TVector3* directionAfter)
 {
 
+  if (fMaterialInterface == NULL) {
+    std::string msg("GFMaterialEffects hasn't been initialized with a correct GFAbsMaterialInterface pointer!");
+    std::runtime_error err(msg);
+    throw err;
+  }
+
   if (fNoEffects) return 0.;
+
+  bool doNoise(jacobian!=NULL);
 
   fpdg = pdg;
   getParticleParameters(mom);
@@ -117,20 +132,18 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
   double momLoss = 0.;
   unsigned int nPoints(points.size());
 
-  for (unsigned int i = 1; i < nPoints; ++i) { // loop over points
+  for (unsigned int i = 0; i < nPoints-1; ++i) { // loop over points
 
-    TVector3 dir(points.at(i).getPos() - points.at(i-1).getPos()); // straight line from one point to the next
-    double dist = dir.Mag(); // straight line distance
+    double dist = points[i].getDist(points[i+1]); // straight line distance
 
     if (dist > 1.E-8) { // do material effects only if distance is not too small
 
-      dir.SetMag(1.);
       double X(0.); // path already gone through material (straight line)
       double step(0); // straight line step
-      double realPath = points.at(i-1).getPath(); // real (curved) distance, signed
+      double realPath = points[i].getPath(); // real (curved) distance, signed
       
-      gGeoManager->InitTrack(points.at(i-1).X(), points.at(i-1).Y(), points.at(i-1).Z(),
-                             dir.X(), dir.Y(), dir.Z());
+      fMaterialInterface->initTrack(points[i].X(),  points[i].Y(),  points[i].Z(),
+                                    (points[i+1].X()-points[i].X())/dist, (points[i+1].Y()-points[i].Y())/dist, (points[i+1].Z()-points[i].Z())/dist);
 
       unsigned int nIter(0);
       static unsigned int maxIt(300);
@@ -142,10 +155,8 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
           throw exc;
         }
 
-        getMaterialParameters(gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial());
-
-        gGeoManager->FindNextBoundaryAndStep(dist - X);
-        step = gGeoManager->GetStep();
+        fMaterialInterface->getMaterialParameters(fmatDensity, fmatZ, fmatA, fradiationLength, fmEE);
+        step = fMaterialInterface->findNextBoundaryAndStep(dist - X);
         fstep = fabs(step * realPath / dist); // the actual path is curved, not straight!
         if (fstep <= 0.) continue;
         
@@ -180,16 +191,18 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
 
 double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
                                   const double& maxAngleStep,
-                                  const double& posx,
-                                  const double& posy,
-                                  const double& posz,
-                                  const double& dirx,
-                                  const double& diry,
-                                  const double& dirz,
+                                  const TVector3& pos,
+                                  const TVector3& dir,
                                   const double& mom,
                                   double& relMomLoss,
                                   const int& pdg)
 {
+
+  if (fMaterialInterface == NULL) {
+    std::string msg("GFMaterialEffects hasn't been initialized with a correct GFAbsMaterialInterface pointer!");
+    std::runtime_error err(msg);
+    throw err;
+  }
 
   static const double maxRelMomLoss = .005; // maximum relative momentum loss allowed
   static const double minStep = 1.E-4; // 1 µm
@@ -201,18 +214,10 @@ double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
   fpdg = pdg;
   double X(minStep);
   double relMomLossStep(0);
-  TGeoMaterial* mat(NULL);
   getParticleParameters(mom);
 
-  gGeoManager->InitTrack(posx+minStep*dirx,
-                         posy+minStep*diry,
-                         posz+minStep*dirz,
-                         dirx, diry, dirz);
-
-  #ifdef DEBUG
-    //gGeoManager->SetVerboseLevel(5);
-  #endif
-
+  fMaterialInterface->initTrack(pos.X()+minStep*dir.X(), pos.Y()+minStep*dir.Y(), pos.Z()+minStep*dir.Z(),
+                                dir.X(), dir.Y(), dir.Z());
 
   unsigned int nIter(0);
   static unsigned int maxIt(300);
@@ -225,19 +230,14 @@ double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
     }
 
     relMomLossStep = 0;
-    TGeoMedium* medium = gGeoManager->GetCurrentVolume()->GetMedium();
-    assert(medium != NULL);
-    mat = medium->GetMaterial();
-    gGeoManager->FindNextBoundaryAndStep(maxStep-X);
-    fstep = gGeoManager->GetStep();
+    fMaterialInterface->getMaterialParameters(fmatDensity, fmatZ, fmatA, fradiationLength, fmEE);
+    fstep = fMaterialInterface->findNextBoundaryAndStep(maxStep-X);
 
     #ifdef DEBUG
       std::cout<<"     gGeoManager->GetStep() = " << gGeoManager->GetStep() << "       fstep = " << fstep << "\n";
     #endif
 
     if (fstep <= 0.) continue;
-
-    getMaterialParameters(mat);
 
     if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
 
@@ -259,16 +259,6 @@ double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
   }
 
   return X;
-}
-
-
-void GFMaterialEffects::getMaterialParameters(TGeoMaterial* mat)
-{
-  fmatDensity      = mat->GetDensity();
-  fmatZ            = mat->GetZ();
-  fmatA            = mat->GetA();
-  fradiationLength = mat->GetRadLen();
-  fmEE             = MeanExcEnergy_get(mat);
 }
 
 
@@ -330,8 +320,6 @@ void GFMaterialEffects::noiseBetheBloch(const double& mom,
     sigma2E += zeta * Emax * (1. - fbeta * fbeta / 2.); // eV^2
   }
   else { // Urban/Landau approximation
-    double alpha = 0.996;
-    double sigmaalpha = 15.76;
     // calculate number of collisions Nc
     double I = 16. * pow(fmatZ, 0.9); // eV
     double f2 = 0.;
@@ -348,6 +336,7 @@ void GFMaterialEffects::noiseBetheBloch(const double& mom,
     double Nc = (Sigma1 + Sigma2 + Sigma3) * fabs(fstep);
 
     if (Nc > 50.) { // truncated Landau distribution
+      double sigmaalpha = 15.76;
       // calculate sigmaalpha  (see GEANT3 manual W5013)
       double RLAMED = -0.422784 - fbeta * fbeta - log(zeta / Emax);
       double RLAMAX =  0.60715 + 1.1934 * RLAMED + (0.67794 + 0.052382 * RLAMED) * exp(0.94753 + 0.74442 * RLAMED);
@@ -364,6 +353,7 @@ void GFMaterialEffects::noiseBetheBloch(const double& mom,
       if (sigmaalpha > 54.6) sigmaalpha = 54.6;
       sigma2E += sigmaalpha * sigmaalpha * zeta * zeta; // eV^2
     } else { // Urban model
+      static const double alpha = 0.996;
       double Ealpha  = I / (1. - (alpha * Emax / (Emax + I))); // eV
       double meanE32 = I * (Emax + I) / Emax * (Ealpha - I); // eV^2
       sigma2E += fabs(fstep) * (Sigma1 * e1 * e1 + Sigma2 * e2 * e2 + Sigma3 * meanE32); // eV^2
@@ -499,7 +489,7 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
 
   double BCUT = 10000.; // energy up to which soft bremsstrahlung energy loss is calculated
 
-  double THIGH = 100., CHIGH = 50.;
+  static const double THIGH = 100., CHIGH = 50.;
   double dedxBrems = 0.;
 
   if (BCUT > 0.) {
@@ -585,9 +575,9 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
       if (FAC <= 0.) return 0.;
       dedxBrems = FAC * S;
 
-      double RAT;
 
       if (mom > THIGH) {
+        double RAT;
         if (BCUT < THIGH) {
           RAT = BCUT / mom;
           S = (1. - 0.5 * RAT + 2.*RAT * RAT / 9.);
@@ -625,12 +615,10 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
       }
     }
 
-    double E0;
-
     if (ETA < 0.0001) factor = 1.E-10;
     else if (ETA > 0.9999) factor = 1.;
     else {
-      E0 = BCUT / mom;
+      double E0 = BCUT / mom;
       if (E0 > 1.) E0 = 1.;
       if (E0 < 1.E-8) factor = 1.;
       else factor = ETA * (1. - pow(1. - E0, 1. / ETA)) / E0;
@@ -664,36 +652,3 @@ void GFMaterialEffects::noiseBrems(const double& mom,
 
 ClassImp(GFMaterialEffects)
 
-
-/*
-Reference for elemental mean excitation energies at:
-http://physics.nist.gov/PhysRefData/XrayMassCoef/tab1.html
-*/
-
-const int MeanExcEnergy_NELEMENTS = 93; // 0 = vacuum, 1 = hydrogen, 92 = uranium
-const float MeanExcEnergy_vals[] = {1.e15, 19.2, 41.8, 40.0, 63.7, 76.0, 78., 82.0, 95.0, 115.0, 137.0, 149.0, 156.0, 166.0, 173.0, 173.0, 180.0, 174.0, 188.0, 190.0, 191.0, 216.0, 233.0, 245.0, 257.0, 272.0, 286.0, 297.0, 311.0, 322.0, 330.0, 334.0, 350.0, 347.0, 348.0, 343.0, 352.0, 363.0, 366.0, 379.0, 393.0, 417.0, 424.0, 428.0, 441.0, 449.0, 470.0, 470.0, 469.0, 488.0, 488.0, 487.0, 485.0, 491.0, 482.0, 488.0, 491.0, 501.0, 523.0, 535.0, 546.0, 560.0, 574.0, 580.0, 591.0, 614.0, 628.0, 650.0, 658.0, 674.0, 684.0, 694.0, 705.0, 718.0, 727.0, 736.0, 746.0, 757.0, 790.0, 790.0, 800.0, 810.0, 823.0, 823.0, 830.0, 825.0, 794.0, 827.0, 826.0, 841.0, 847.0, 878.0, 890.0};
-
-float MeanExcEnergy_get(int Z)
-{
-  assert(Z >= 0 && Z < MeanExcEnergy_NELEMENTS);
-  return MeanExcEnergy_vals[Z];
-}
-
-float MeanExcEnergy_get(TGeoMaterial* mat)
-{
-  if (mat->IsMixture()) {
-    double logMEE = 0.;
-    double denom  = 0.;
-    TGeoMixture* mix = (TGeoMixture*)mat;
-    for (int i = 0; i < mix->GetNelements(); ++i) {
-      int index = int(floor((mix->GetZmixt())[i]));
-      logMEE += 1. / (mix->GetAmixt())[i] * (mix->GetWmixt())[i] * (mix->GetZmixt())[i] * log(MeanExcEnergy_get(index));
-      denom  += (mix->GetWmixt())[i] * (mix->GetZmixt())[i] * 1. / (mix->GetAmixt())[i];
-    }
-    logMEE /= denom;
-    return exp(logMEE);
-  } else { // not a mixture
-    int index = int(floor(mat->GetZ()));
-    return MeanExcEnergy_get(index);
-  }
-}

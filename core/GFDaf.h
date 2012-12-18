@@ -23,14 +23,12 @@ along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef GFDAF_H
 #define GFDAF_H
 
-#include <assert.h>
-#include <cmath>
-#include "GFAbsRecoHit.h"
-#include "GFDafHit.h"
+#include "RecoHits/GFAbsRecoHit.h"
+#include "RecoHits/GFDafHit.h"
 #include "GFKalman.h"
 #include "GFTrack.h"
-#include <stdlib.h>
 #include <vector>
+
 
 /** @brief Determinstic Annealing Filter (DAF) implementation. 
  *
@@ -48,7 +46,7 @@ along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
  * So to retrieve for example the weight of hit 10, fitted with track representation 2,
  * use GFTrack::getBK(2)->getNumber("dafWeight", 10,  double& wght).
  */
-class GFDaf: GFKalman {
+class GFDaf : public GFAbsFitter {
 	public:
 
 		GFDaf();
@@ -58,29 +56,12 @@ class GFDaf: GFKalman {
 		 */
 		void processTrack(GFTrack* trk);
 
-		/** @brief Return the weights present after the track was processed.
-		 *
-		 * WARNING: This function is deprecated! Use the bookkeeping instead.
-		 *		
-		 * The DAF uses special effective hits defined in the class GFDafHit. A
-		 * GFDafHit is a wrapper class and contains all the real hits from one plane.
-		 * The structure of the return vector of getWeights allows to reconstruct in
-		 * what way the hits were grouped: the outermost vector represents the track
-		 * representation, there is one entry per track representation. The middle
-		 * vector represents the effective hits, and the innermost vector contains
-		 * the real hits contained in the corresponding effective hit.
-		 */
-		const std::vector<std::vector<std::vector<double> > > getWeights() { 
-			std::cout<<"Warning: Using deprecated GFDaf::getWeights()! The weights of the hits are accessible in the bookkeeping of the track which was fitted, the key is \"dafWeight\""<<std::endl;
-			return fWeights; 
-		};
-
-		/** @brief Set the probabilty cut for the weight calculation for the hits. 
+		/** @brief Set the probability cut for the weight calculation for the hits.
 		 *
 		 * Currently supported are the values 0.01 0.005, and 0.001. The 
-		 * corresponding chi2 cuts for different hits dimensionalities are hardcoded 
+		 * corresponding chi2 cuts for different hits dimensionalities are hard-coded
 		 * in the implementation because I did not yet figure out how to calculate 
-		 * them. Please feel very welcome to change the implementtion if you know how
+		 * them. Please feel very welcome to change the implementation if you know how
 		 * to do it.
 		 */
 		void setProbCut(double prob_cut);
@@ -88,13 +69,13 @@ class GFDaf: GFKalman {
 		/** @brief Configure the annealing scheme.
 		 *
 		 * In the current implementation you need to provide at least one temperatures
-		 * and not more then ten tempertatures.
+		 * and not more then ten temperatures.
 		 */
 		void setBetas(double b1,double b2=-1,double b3=-1.,double b4=-1.,double b5=-1.,double b6=-1.,double b7=-1.,double b8=-1.,double b9=-1.,double b10=-1.);
 
 	private:
 
-		/** @brief Initialize the GFDafHit and their weights before the fit.
+		/** @brief Initialize the GFDafHits and their weights before the fit.
 		 */
 		std::vector<GFDafHit*> initHitsWeights(GFTrack* trk);
 
@@ -104,14 +85,15 @@ class GFDaf: GFKalman {
 
 		/** @brief Copy the smoothing matrices from the source track to the target.
 		 */
-		void copySmoothing(GFTrack* source, GFTrack* target, int target_ire);
+		void copySmoothing(const GFTrack* source, GFTrack* target, int target_irep);
 
-		void saveWeights(GFTrack* trk, const std::vector<std::vector<std::vector<double> > >& weights) const;
+		void saveWeights(GFTrack* trk, const GFTrack* DafTrack, const std::vector<std::vector<std::vector<double> > >& weights) const;
 
 		std::vector<std::vector<std::vector<double> > > fWeights;
 		std::vector<double> fBeta;
 		std::map<int,double>  fchi2Cuts;
 
+		GFKalman fKalman;
 };
 
 #endif

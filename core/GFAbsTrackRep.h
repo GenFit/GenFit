@@ -24,16 +24,18 @@
 #ifndef GFABSTRACKREP_H
 #define GFABSTRACKREP_H
 
-#include<vector>
-#include<list>
-#include<iostream>
+#include <vector>
+#include <list>
+#include <iostream>
 
-#include "TMatrixT.h"
-#include "TVector3.h"
-#include "TMath.h"
+#include <TVectorD.h>
+#include <TMatrixD.h>
+#include <TMatrixDSym.h>
+#include <TMath.h>
 
 #include "GFDetPlane.h"
 
+class TVector3;
 class GFAbsRecoHit;    
 
 /** @brief Base Class for genfit track representations. 
@@ -47,16 +49,13 @@ class GFAbsRecoHit;
  * - A track representation is a specific parameterization of a trajectory. 
  * It contains the parameters that describe the track at some point and 
  * code for the extrapolation of the track parameters through space. 
- * The actual extrapolation code is not part of genfit but has to be supplied
- * in some additional package (e.g. GEANE). LSLTrackRep is a very basic example
- * of a track representation.
  * - A Track is a collection of RecoHits (see GFAbsRecoHit) plus a collection
  * of track representation objects. The hits can be from different detectors.
  * There can be several representations of the same track. This makes it 
  * possible to perform several fits in parallel, for example to compare 
  * different parameterizations or to fit different particle hypotheses.
  *
- * All track tepresentations must inherit GFAbsTrackRep to be available 
+ * All track representations must inherit GFAbsTrackRep to be available
  * in genfit. Algorithms in genfit use this class as interface to 
  * access track parameters
  *
@@ -80,55 +79,19 @@ class GFAbsRecoHit;
 
 class GFAbsTrackRep : public TObject{
 
-  /*----- Data members -----*/
- protected:
-  //! Dimensionality of track representation
-  unsigned int fDimension;
-
-  //! The vector of track parameters
-  TMatrixT<double> fState;
-  
-  //! The covariance matrix
-  TMatrixT<double> fCov;   
-
-  //! chiSqu of the track fit
-  double           fChiSqu;
-  double           fForwardChiSqu;
-  unsigned int     fNdf;
-
-  //! status of track representation: 0 means everything's OK
-  int fStatusFlag; 
-  //! specifies the direction of flight of the particle
-  bool fInverted;   
-
-  //!state, cov and plane for first and last point in fit
-  TMatrixT<double> fFirstState; 
-  TMatrixT<double> fFirstCov;
-
-  TMatrixT<double> fLastState; 
-  TMatrixT<double> fLastCov;
-  GFDetPlane fFirstPlane;  
-  GFDetPlane fLastPlane;  
-
-  // detector plane where the track parameters are given
-  GFDetPlane         fRefPlane;
-
-  double fXX0;
-
-
  public:
   virtual GFAbsTrackRep* clone() const = 0;
 
   virtual GFAbsTrackRep* prototype() const = 0;
   
-  //! returns the tracklength spanned in this extrapolation
+  //! returns the track-length spanned in this extrapolation
   /*! There is a default implementation in GFAbsTrackRep.cxx which just drops
-     the predicted covaraiance. If your trackrep has a way to extrapolate
+     the predicted covariance. If your trackrep has a way to extrapolate
      without giving a correct cov (that would be faster probably), please
      overwrite it.
      This method does NOT alter the state of the object!
   */
-  virtual double extrapolate(const GFDetPlane& plane, TMatrixT<double>& statePred);
+  virtual double extrapolate(const GFDetPlane& plane, TVectorD& statePred);
 
 
  public:
@@ -150,7 +113,7 @@ class GFAbsTrackRep : public TObject{
       with complicated hit topology.
       This method does NOT alter the state of the object!
    */
-  virtual void extrapolateToPoint(const TVector3& point,
+  virtual double extrapolateToPoint(const TVector3& point,
          TVector3& poca,
          TVector3& normVec);
 
@@ -163,7 +126,7 @@ class GFAbsTrackRep : public TObject{
    * execution if it is ever called.
    * This method does NOT alter the state of the object!
    */
-  virtual void extrapolateToLine(const TVector3& point1, 
+  virtual double extrapolateToLine(const TVector3& point1,
          const TVector3& point2,
          TVector3& poca,
          TVector3& normVec,
@@ -180,13 +143,13 @@ class GFAbsTrackRep : public TObject{
            TVector3& point,
            TVector3& dir);
 
-  //! Extrapolates the track to the given detectorplane
+  //! Extrapolates the track to the given detector-plane
   /*! Results are put into statePred and covPred
       This method does NOT alter the state of the object!
    */ 
   virtual double extrapolate(const GFDetPlane& plane,
-           TMatrixT<double>& statePred,
-           TMatrixT<double>& covPred)=0;
+           TVectorD& statePred,
+           TMatrixDSym& covPred)=0;
   
   //! This changes the state and cov and plane of the rep
   /*! This method extrapolates to to the plane and sets the results of state,
@@ -199,14 +162,14 @@ class GFAbsTrackRep : public TObject{
   
   virtual void Print(const Option_t* = "") const;
 
-  inline TMatrixT<double> getState() const {
+  inline const TVectorD& getState() const {
     return fState;
   }
-  inline TMatrixT<double> getCov() const {
+  inline const TMatrixDSym& getCov() const {
     return fCov;
   }
 
-  double getStateElem(int i) const {return fState(i,0);}
+  double getStateElem(int i) const {return fState(i);}
   double getCovElem(int i, int j) const {return fCov(i,j);}
 
   
@@ -220,7 +183,7 @@ class GFAbsTrackRep : public TObject{
    * default implementation in cxx file, if a ConcreteTrackRep can 
    * not implement this functionality
    */
-  virtual void getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mom,TMatrixT<double>& cov);
+  virtual void getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixDSym& cov);
 
   virtual double getCharge()const =0;
 
@@ -232,23 +195,24 @@ class GFAbsTrackRep : public TObject{
 
   TVector3 getPos() {return getPos(fRefPlane);}
   TVector3 getMom() {return getMom(fRefPlane);}
-  void getPosMomCov(TVector3& pos,TVector3& mom,TMatrixT<double>& c){
+
+  void getPosMomCov(TVector3& pos, TVector3& mom, TMatrixDSym& c){
     getPosMomCov(fRefPlane,pos,mom,c);
   }
 
-  inline TMatrixT<double> getFirstState() const {
+  inline const TVectorD& getFirstState() const {
     return fFirstState;
   }
-  inline TMatrixT<double> getFirstCov() const {
+  inline const TMatrixDSym& getFirstCov() const {
     return fFirstCov;
   }
   inline GFDetPlane getFirstPlane() const {
     return fFirstPlane;
   }
-  inline TMatrixT<double> getLastState() const {
+  inline const TVectorD& getLastState() const {
     return fLastState;
   }
-  inline TMatrixT<double> getLastCov() const {
+  inline const TMatrixDSym& getLastCov() const {
     return fLastCov;
   }
   inline GFDetPlane getLastPlane() const {
@@ -284,34 +248,34 @@ class GFAbsTrackRep : public TObject{
    * This is used to update the track representation after the update of the 
    * Kalman filter was calculated.\n
    * \n
-   * IMPORTANT: One should be able to set the track representation to arbitraty
+   * IMPORTANT: One should be able to set the track representation to arbitrary
    * values using this method. If the track representation needs additional 
    * information beside the state vector, the plane and the covariance, it has
    * to be handed over via the "aux" Matrix. GFAbsTrackRep::getAuxInfo() should
    * return the appropriate information. This is mandatory if smoothing is used.
    */
-  virtual void setData(const TMatrixT<double>& st, const GFDetPlane& pl, const TMatrixT<double>* cov=NULL, const TMatrixT<double>* aux=NULL){
-    fState=st;
-    fRefPlane=pl;
-    if(cov!=NULL) fCov=*cov;
+  virtual void setData(const TVectorD& st, const GFDetPlane& pl, const TMatrixDSym* cov=NULL, const TMatrixD* aux=NULL){
+    fState = st;
+    if (&fRefPlane != &pl) fRefPlane = pl; // Copy reference plane only if it changed.
+    if(cov!=NULL) fCov = *cov;
     static_cast<void>(aux);
   }
-  inline void setCov(const TMatrixT<double>& aCov) {
+  inline void setCov(const TMatrixDSym& aCov) {
     fCov=aCov;
   }
-  inline void setFirstState(const TMatrixT<double>& aState) {
+  inline void setFirstState(const TVectorD& aState) {
     fFirstState = aState;
   }
-  inline void setFirstCov(const TMatrixT<double>& aCov) {
+  inline void setFirstCov(const TMatrixDSym& aCov) {
     fFirstCov = aCov;
   }
   inline void setFirstPlane(const GFDetPlane& aPlane) {
-    fFirstPlane = aPlane;;
+    fFirstPlane = aPlane;
   }
-  inline void setLastState(const TMatrixT<double>& aState) {
+  inline void setLastState(const TVectorD& aState) {
     fLastState = aState;
   }
-  inline void setLastCov(const TMatrixT<double>& aCov) {
+  inline void setLastCov(const TMatrixDSym& aCov) {
     fLastCov = aCov;
   }
   inline void setLastPlane(const GFDetPlane& aPlane) {
@@ -323,7 +287,7 @@ class GFAbsTrackRep : public TObject{
    * default implementation in cxx file, if a ConcreteTrackRep can
    * not implement this functionality
    */
-  virtual void setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixT<double>& cov);
+  virtual void setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov);
 
   const GFDetPlane& getReferencePlane() const {return fRefPlane;}
 
@@ -351,34 +315,31 @@ class GFAbsTrackRep : public TObject{
   
   virtual void switchDirection() = 0;
 
-  //! Deprecated. Should be removed soon.
-  bool setInverted(bool f=true){fInverted=f; return true;}
-  
   inline bool getStatusFlag() {
     return fStatusFlag;
   }
 
   virtual void reset();
 
-  /** @brief See if the track representation has auxillary information stored.
+  /** @brief See if the track representation has auxiliary information stored.
    * 
-   * See if auxillary information is stored in the track representation. See the
+   * See if auxiliary information is stored in the track representation. See the
    * documentation of GFAbsTrackRep::getAuxInfo() for details.
    */
   virtual bool hasAuxInfo() {
     return false;
   }
 
-  /** @brief Get auxillary information from the track representation.
+  /** @brief Get auxiliary information from the track representation.
    *
-   * AuxInfo is a mechanism which allows creators of track repersentations to
+   * AuxInfo is a mechanism which allows creators of track representations to
    * hand out any information they like (as long as it is compatible with a
-   * TMatrixT<double>). It should be used if setData requires additional 
+   * TMatrixD). It should be used if setData requires additional 
    * information to update the representation, but it can also be used for
    * debugging information if needed. See also the documentation of 
    * GFAbsTrackRep::setData().
    */
-  virtual const TMatrixT<double>* getAuxInfo(const GFDetPlane&) {
+  virtual const TMatrixD* getAuxInfo(const GFDetPlane&) {
     return NULL;
   }
 
@@ -391,7 +352,41 @@ class GFAbsTrackRep : public TObject{
   void Abort(std::string method);
 
 
-  ClassDef(GFAbsTrackRep,4)
+  /*----- Data members -----*/
+ protected:
+  //! Dimensionality of track representation
+  unsigned int fDimension;
+
+  //! The vector of track parameters
+  TVectorD fState;
+
+  //! The covariance matrix
+  TMatrixDSym fCov;
+
+  //! chiSqu of the track fit
+  double       fChiSqu;
+  double       fForwardChiSqu;
+  unsigned int fNdf;
+
+  //! status of track representation: 0 means everything's OK
+  int fStatusFlag;
+
+  //!state, cov and plane for first and last point in fit
+  TVectorD    fFirstState;
+  TMatrixDSym fFirstCov;
+
+  TVectorD    fLastState;
+  TMatrixDSym fLastCov;
+  GFDetPlane  fFirstPlane;
+  GFDetPlane  fLastPlane;
+
+  // detector plane where the track parameters are given
+  GFDetPlane  fRefPlane;
+
+  double fXX0;
+
+
+  ClassDef(GFAbsTrackRep,5)
 
 };
 

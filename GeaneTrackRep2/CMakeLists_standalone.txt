@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 
 #check for ENV variables that are needed
@@ -13,7 +13,7 @@ ENDIF(NOT DEFINED ENV{ROOTSYS})
 #ENDIF(NOT DEFINED ENV{GENFIT})
 
 
-INCLUDE_DIRECTORIES($ENV{ROOTSYS}/include  ${GENFIT}/core ${GENFIT}/GeaneTrackRep2 ${VMC}/TGeant3)
+INCLUDE_DIRECTORIES(${GENFIT}/core ${GENFIT}/GeaneTrackRep2 $ENV{VMC}/TGeant3)
 
 
 
@@ -50,5 +50,5 @@ Execute_process(COMMAND root-config --glibs --cflags
 
 ADD_LIBRARY(genfitGeane SHARED ${GENFIT_GEANE_SRCS})
 TARGET_LINK_LIBRARIES(genfitGeane -L${GENFITLIBDIR} -lgenfit  ${ROOT_LIBS} -lGeom -lVMC -lEG)
-INSTALL(TARGETS genfitGeane DESTINATION ${GENFITLIBINSTALLDIR} )
+#INSTALL(TARGETS genfitGeane LIBRARY DESTINATION ${GENFITLIBINSTALLDIR} )
 

@@ -28,28 +28,30 @@
 #ifndef GFPOINTPATH_H
 #define GFPOINTPATH_H
 
-#include "math.h"
-#include "TVector3.h"
-#include "TGeoMaterial.h"
-
+#include <TVector3.h>
+#include <math.h>
 
 class GFPointPath {
 
  public:
   // Constructors/Destructors
   GFPointPath();
-  GFPointPath(const TVector3& pos, double path){fPos = pos; fPath = path;}
+  GFPointPath(const TVector3& pos, double path);
+  GFPointPath(double posX, double posY, double posZ,
+              double path);
 
   // Accessors
-  const TVector3& getPos() const {return fPos;}
-  double X() const {return fPos.X();}
-  double Y() const {return fPos.Y();}
-  double Z() const {return fPos.Z();}
+  double X() const {return fX;}
+  double Y() const {return fY;}
+  double Z() const {return fZ;}
   double getPath() const {return fPath;}
   double getAbsPath() const {return fabs(fPath);}
 
+  //! get straight line distance to another pointPath
+  double getDist(const GFPointPath& to) const;
+
   // Modifiers
-  void setPos(TVector3& pos){fPos = pos;}
+  void setPos(const TVector3& pos){ fX=pos.X();  fY=pos.Y();  fZ=pos.Z();}
   void setPath(double path){fPath = path;}
 
   // Functions
@@ -57,7 +59,7 @@ class GFPointPath {
   void Print() const;
 
  private:
-  TVector3 fPos; // position
+  double fX,  fY,  fZ;  // position
   double fPath; // pathlength to next position (signed)
 };
 

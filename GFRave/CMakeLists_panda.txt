@@ -2,18 +2,16 @@
 # the array .
 # The extension is already found.  Any number of sources could be listed here.
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 #check for ENV variables that are needed
+IF(NOT DEFINED ENV{RAVEPATH})
+   MESSAGE(FATAL_ERROR "You did not define the environment variable RAVEPATH which is needed to find rave. GFRave will not be built.") 
+ENDIF(NOT DEFINED ENV{RAVEPATH})  
+SET(RAVEPATH $ENV{RAVEPATH})
 IF(NOT DEFINED ENV{ROOTSYS})
    MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
 ENDIF(NOT DEFINED ENV{ROOTSYS})
-
-IF(NOT DEFINED ENV{RAVEPATH})
-   MESSAGE(FATAL_ERROR "RAVEPATH is not set!") 
-ENDIF(NOT DEFINED ENV{RAVEPATH})  
-SET(RAVEPATH $ENV{RAVEPATH})
-
 
 # get compiler flags from rave
 INCLUDE(UsePkgConfig)

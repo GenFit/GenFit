@@ -16,31 +16,30 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "GFAbsTrackRep.h"
-#include <iostream>
-#include <assert.h>
 
-GFAbsTrackRep::GFAbsTrackRep() : fDimension(5),fState(5,1), fCov(5,5), fChiSqu(0), fNdf(0), fStatusFlag(0), fInverted(false), fFirstState(5,1), fFirstCov(5,5), fLastState(5,1), fLastCov(5,5), fXX0(-1.)
+#include "GFAbsTrackRep.h"
+
+GFAbsTrackRep::GFAbsTrackRep() : fDimension(5),fState(5), fCov(5), fChiSqu(0), fForwardChiSqu(0), fNdf(0), fStatusFlag(0), fFirstState(5), fFirstCov(5), fLastState(5), fLastCov(5), fXX0(-1.)
 {
 }
 
-GFAbsTrackRep::GFAbsTrackRep(int dim) : fDimension(dim), fState(dim,1), fCov(dim,dim), fChiSqu(0), fNdf(0), fStatusFlag(0), fInverted(false), fFirstState(dim,1), fFirstCov(dim,dim), fLastState(dim,1), fLastCov(dim,dim), fXX0(-1.)
+GFAbsTrackRep::GFAbsTrackRep(int dim) : fDimension(dim), fState(dim), fCov(dim), fChiSqu(0), fForwardChiSqu(0), fNdf(0), fStatusFlag(0), fFirstState(dim), fFirstCov(dim), fLastState(dim), fLastCov(dim), fXX0(-1.)
 {
 }
 
 GFAbsTrackRep::~GFAbsTrackRep() {}
 
 double GFAbsTrackRep::extrapolate(const GFDetPlane& plane){
-  TMatrixT<double> statePred(fDimension,1);
-  TMatrixT<double> covPred(fDimension,fDimension);
+  TVectorD statePred(fDimension);
+  TMatrixDSym covPred(fDimension);
   double retVal = extrapolate(plane,statePred,covPred);
   setData(statePred,plane,&covPred);
   return retVal;
 }
 
 //default implentation might be overwritten, please see the doxy docu
-double GFAbsTrackRep::extrapolate(const GFDetPlane& plane, TMatrixT<double>& statePred){
-  TMatrixT<double> cov(fDimension,fDimension);
+double GFAbsTrackRep::extrapolate(const GFDetPlane& plane, TVectorD& statePred){
+  TMatrixDSym cov(fDimension);
   return extrapolate(plane,statePred,cov);
 }
 
@@ -53,18 +52,20 @@ void GFAbsTrackRep::Abort(std::string method){
   throw;
 }
 
-void GFAbsTrackRep::extrapolateToPoint(const TVector3& point,
+double GFAbsTrackRep::extrapolateToPoint(const TVector3& point,
 				    TVector3& poca,
 				    TVector3& normVec){
-  Abort("extrapolateToPoca()");
+  Abort("extrapolateToPoint()");
+  return 0.;
 }
 
-void GFAbsTrackRep::extrapolateToLine(const TVector3& point1, 
+double GFAbsTrackRep::extrapolateToLine(const TVector3& point1,
 									const TVector3& point2,
 									TVector3& poca,
 									TVector3& normVec,
 									TVector3& poca_onwire){
   Abort("extrapolateToLine()");
+  return 0.;
 }
   
 
@@ -82,19 +83,18 @@ int GFAbsTrackRep::getPDG(){
 }
 
 
-void GFAbsTrackRep::getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mom,TMatrixT<double>& cov){
+void GFAbsTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixDSym& cov){
   Abort("getPosMomCov()");
 }
 
-void GFAbsTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixT<double>& cov){
+void GFAbsTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov){
   Abort("setPosMomCov()");
 }
 
 void
 GFAbsTrackRep::reset(){
   std::cout<<"GFAbsTrackRep::reset"<<std::endl;
-  TVector3 nullVec(0.,0.,0.);
-  fRefPlane.set(nullVec,nullVec,nullVec);
+  fRefPlane.reset();
   fState.Zero();
   fCov.Zero();
   fFirstState.Zero();

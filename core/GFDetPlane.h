@@ -32,22 +32,22 @@
 #ifndef GFDETPLANE_H
 #define GFDETPLANE_H
 
-#include"GFAbsFinitePlane.h"
+#include "GFAbsFinitePlane.h"
 
 #include "TObject.h"
-
 #include "TVector3.h"
-#include "TPolyMarker3D.h"
-#include "TPolyLine3D.h"
+
+class TPolyMarker3D;
+class TPolyLine3D;
 
 /** @brief Detector plane genfit geometry class
  *
  * A detector plane is the principle object to define coordinate systems for
  * track fitting in genfit. Since a particle trajectory is a 
  * one-dimensional object (regardless of any specific parameterization)
- * positions with repect to the track are always meassured in a plane.
+ * positions with respect to the track are always measured in a plane.
  *
- * Which plane is choosen depends on the type of detector. Fixed plane 
+ * Which plane is chosen depends on the type of detector. Fixed plane
  * detectors have their detector plane defined by their mechanical setup. While
  * wire chambers or time projection chambers might want to define a detector 
  * plane more flexibly.
@@ -61,51 +61,60 @@ public:
 
   // Constructors/Destructors ---------
   GFDetPlane(GFAbsFinitePlane* finite=NULL);
+
   GFDetPlane(const TVector3& o,
-	     const TVector3& u,
-	     const TVector3& v,
-	     GFAbsFinitePlane* finite=NULL);
+             const TVector3& u,
+             const TVector3& v,
+             GFAbsFinitePlane* finite=NULL);
+
   GFDetPlane(const TVector3& o,
-	     const TVector3& n,
-	     GFAbsFinitePlane* finite=NULL);
+             const TVector3& n,
+             GFAbsFinitePlane* finite=NULL);
+
   virtual ~GFDetPlane();
+
   GFDetPlane(const GFDetPlane&);
+
   GFDetPlane& operator=(const GFDetPlane&);
+
   // Accessors -----------------------
-  TVector3 getO() const {return fO;}
-  TVector3 getU() const {return fU;}
-  TVector3 getV() const {return fV;}
+  const TVector3& getO() const {return fO;}
+  const TVector3& getU() const {return fU;}
+  const TVector3& getV() const {return fV;}
 
   // Modifiers -----------------------
   void set(const TVector3& o,
-	   const TVector3& u,
-	   const TVector3& v); 
-
+           const TVector3& u,
+           const TVector3& v);
   void setO(const TVector3& o);
-  void setO(double,double,double);
+  void setO(double, double, double);
   void setU(const TVector3& u);
-  void setU(double,double,double);
+  void setU(double, double, double);
   void setV(const TVector3& v);
-  void setV(double,double,double);
-  void setUV(const TVector3& u,const TVector3& v);
-  void setON(const TVector3& o,const TVector3& n);
+  void setV(double, double, double);
+  void setUV(const TVector3& u, const TVector3& v);
+  void setON(const TVector3& o, const TVector3& n);
 
   //! Optionally, set the finite plane definition. This is most important for
-  //! avoiding fake intersection points in fitting of loopers. This should
+  //! avoiding fake intersection points in fitting of curlers. This should
   //! be implemented for silicon detectors most importantly.
   void setFinitePlane(GFAbsFinitePlane* finite){fFinitePlane=finite;}
 
   // Operations ----------------------
   TVector3 getNormal() const;
-  void setNormal(TVector3 n);
-  void setNormal(double,double,double);
+  void setNormal(const TVector3& n);
+  void setNormal(double, double, double);
   void setNormal(const double& theta, const double& phi);
+
   //! projecting a direction onto the plane:
   TVector2 project(const TVector3& x) const;
+
   //! transform from Lab system into plane
   TVector2 LabToPlane(const TVector3& x) const;
+
   //! transform from plane coordinates to lab system
   TVector3 toLab(const TVector2& x) const;
+
   // get vector from point to plane (normal)
   TVector3 dist(const TVector3& point) const;
   
@@ -116,7 +125,7 @@ public:
   void Print(const Option_t* = "") const;
 
   //! for poor attempts of making an event display. There is a lot of room for improvements.
-  void getGraphics(double mesh, double length, TPolyMarker3D **pl, TPolyLine3D **plLine,TPolyLine3D **u, TPolyLine3D **v, TPolyLine3D **n=NULL);
+  void getGraphics(double mesh, double length, TPolyMarker3D **pl, TPolyLine3D **plLine,TPolyLine3D **u, TPolyLine3D **v, TPolyLine3D **n=NULL) const;
 
   //! this operator is called very often in Kalman filtering. It checks equality of planes
   //! by comparing the 9 double values that define them.
@@ -124,12 +133,14 @@ public:
   //! returns NOT ==
   friend bool operator!= (const GFDetPlane& lhs, const GFDetPlane& rhs);
 
-  double distance(TVector3) const;
-  double distance(double,double,double) const;
+  //! absolute distance from a point to the plane
+  double distance(const TVector3& point) const;
+  double distance(double, double, double) const;
 
 
   //! intersect in the active area? C.f. GFAbsFinitePlane
-  bool inActive(const TVector3& point, const TVector3& dir) const{
+  bool inActive(const TVector3& point, const TVector3& dir) const {
+    if(fFinitePlane==NULL) return true;
     return this->inActive( this->straightLineToPlane(point,dir));
   }
 
@@ -144,7 +155,19 @@ public:
     return inActive(v.X(),v.Y());
   }
   
-private:
+  bool isFinite() const {
+    if (fFinitePlane != NULL) return true;
+    return false;
+  }
+
+  // delete fFinitePlane and set O, U, V to default values
+  void reset();
+
+
+ private:
+
+  // Private Methods -----------------
+  void sane(); // ensures orthonormal coordinates
 
   // Private Data Members ------------
   // origin
@@ -155,9 +178,6 @@ private:
 
   GFAbsFinitePlane* fFinitePlane;
 
-  // Private Methods -----------------
-
-  void sane(); // ensures orthnormal coordinates
 public:
   ClassDef(GFDetPlane,2)
 

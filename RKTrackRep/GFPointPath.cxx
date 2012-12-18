@@ -17,20 +17,45 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "GFPointPath.h"
 #include <iostream>
 #include <string>
-#include "stdlib.h"
-#include "GFPointPath.h"
+#include <stdlib.h>
+#include <math.h>
+
+GFPointPath::GFPointPath()
+  : fX(0),  fY(0),  fZ(0),
+    fPath(0)
+{
+  ;
+}
+
+GFPointPath::GFPointPath(const TVector3& pos, double path)
+  : fX(pos.X()),  fY(pos.Y()),  fZ(pos.Z()),
+    fPath(path)
+{
+  ;
+}
+
+GFPointPath::GFPointPath(double posX, double posY, double posZ,
+                         double path)
+: fX(posX),  fY(posY),  fZ(posZ),
+  fPath(path)
+{
+;
+}
 
 
-GFPointPath::GFPointPath() :
-  fPos(0,0,0), fPath(0) {
-
+double
+GFPointPath::getDist(const GFPointPath& to) const {
+  return sqrt(pow(fX - to.X(), 2) +
+              pow(fY - to.Y(), 2) +
+              pow(fZ - to.Z(), 2));
 }
 
 
 void GFPointPath::Print() const {
-  std::cout << "  GFPointPath at "; fPos.Print();
+  std::cout << "  GFPointPath at "; TVector3(fX, fY, fZ).Print();
   std::cout << "   Path to next point = "<< fPath <<" cm \n";
 }
 

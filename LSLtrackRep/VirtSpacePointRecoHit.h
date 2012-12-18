@@ -27,11 +27,8 @@
 #ifndef VIRTSPACEPOINTRECOHIT_H
 #define VIRTSPACEPOINTRECOHIT_H
 
-#include "GFRecoHitIfc.h"
-#include "GFSpacepointHitPolicy.h"
+#include "GFAbsSpacepointHit.h"
 
-/** @brief Define a hit policy template specialization */
-typedef GFRecoHitIfc<GFSpacepointHitPolicy> SpacepointRecoHit;
 
 /** @brief A basic space point reco hit. Uses a TVector3 for initialization
  *
@@ -43,7 +40,7 @@ typedef GFRecoHitIfc<GFSpacepointHitPolicy> SpacepointRecoHit;
  * It is also a good example which can be used to develop more 
  * realistic RecoHits.
  */
-class VirtSpacePointRecoHit : public SpacepointRecoHit {
+class VirtSpacePointRecoHit : public GFAbsSpacepointHit {
 public:
  
   // Constructors/Destructors ---------
@@ -70,7 +67,7 @@ public:
    *
    * @sa GFAbsRecoHit::getHMatrix
    */
-  virtual TMatrixT<double> getHMatrix(const GFAbsTrackRep* stateVector);
+  virtual const TMatrixT<double>& getHMatrix(const GFAbsTrackRep* stateVector);
 
 
 private:

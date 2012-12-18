@@ -40,7 +40,8 @@
 #include "GFRaveVertex.h"
 
 #include "TVector3.h"
-#include "TMatrixT.h"
+#include "TVectorD.h"
+#include "TMatrixDSym.h"
 
 #include <iostream>
 
@@ -87,13 +88,13 @@ namespace GFRave
   TVector3 Point3DToTVector3(const rave::Point3D &);
   TVector3 Vector3DToTVector3(const rave::Vector3D &);
 
-  TMatrixT<double> Covariance3DToTMatrixT(const rave::Covariance3D &);
-  TMatrixT<double> Vector6DToTMatrixT(const rave::Vector6D &);
-  TMatrixT<double> Covariance6DToTMatrixT(const rave::Covariance6D &);
+  TMatrixDSym Covariance3DToTMatrixDSym(const rave::Covariance3D &);
+  TVectorD Vector6DToTVectorD(const rave::Vector6D &);
+  TMatrixDSym Covariance6DToTMatrixDSym(const rave::Covariance6D &);
 
   // ROOT to RAVE
   rave::Point3D TVector3ToPoint3D(const TVector3 &);
-  rave::Covariance3D TMatrixTToCovariance3D(const TMatrixT<double> &);
+  rave::Covariance3D TMatrixDSymToCovariance3D(const TMatrixDSym &);
 
 }
 

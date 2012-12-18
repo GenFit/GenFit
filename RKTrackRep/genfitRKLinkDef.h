@@ -25,5 +25,7 @@
 
 #pragma link C++ class RKTrackRep-;
 #pragma link C++ class GFMaterialEffects+;
+#pragma link C++ class GFAbsMaterialInterface+;
+#pragma link C++ class GFTGeoMaterialInterface+;
 
 #endif

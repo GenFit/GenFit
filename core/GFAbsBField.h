@@ -38,8 +38,8 @@ public:
   GFAbsBField(){;}
   virtual ~GFAbsBField(){;}
 
-  //! override this is you concrete implementation
-  virtual TVector3 get(const TVector3&) const =0;
+  //! override this in your concrete implementation
+  virtual TVector3 get(const TVector3&) const = 0;
  
 };
 

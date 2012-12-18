@@ -36,18 +36,22 @@
  * Finite detector planes could have any shape, e.g. rectangular, trapezoidal, ...
  * Define them by inheriting from this class. Example, see GFRectFinitePlane
  * This is an optional feature for the GFDetPlane class for avoiding fake intersection points in
- * the fitting of loopers.
+ * the fitting of curlers.
  */
 
 class GFAbsFinitePlane : public TObject {
-public:
+ public:
   //! Returns whether a u,v point is in the active plane or not. Needs to be implemented
   //! in child class.
   virtual bool inActive(const double& u,const double& v)const = 0;
+
   virtual void Print(const Option_t* = "") const = 0;
+
   //! Deep copy ctor for polymorphic class.
   virtual GFAbsFinitePlane* clone() const = 0;
+
   virtual ~GFAbsFinitePlane();
+
   ClassDef(GFAbsFinitePlane,1)
 };
 

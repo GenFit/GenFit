@@ -50,7 +50,7 @@ class GFRaveVertex : public TObject
   public:
     // constructors, destructors
     GFRaveVertex();
-    GFRaveVertex(const TVector3 & pos, const TMatrixT<double> & cov,
+    GFRaveVertex(const TVector3 & pos, const TMatrixDSym & cov,
                  const std::vector < GFRaveTrackParameters* > & smoothedTracks,
                  double ndf, double chi2, int id = -1);
 
@@ -73,7 +73,7 @@ class GFRaveVertex : public TObject
     /**
      * get 3x3 covariance (error) of position.
      */
-    TMatrixT<double> getCov() const {return fCov;}
+    TMatrixDSym getCov() const {return fCov;}
 
     double getNdf() const {return fNdf;}
     double getChi2() const {return fChi2;}
@@ -92,7 +92,7 @@ class GFRaveVertex : public TObject
   private:
 
     TVector3 fPos; // position of the vertex
-    TMatrixT<double> fCov; // error of the vertex position
+    TMatrixDSym fCov; // error of the vertex position
     double fNdf;
     double fChi2;
     int fId; // id of the rave::vertex the GFVertex is created from
