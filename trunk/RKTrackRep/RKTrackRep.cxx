@@ -59,7 +59,7 @@ void RKTrackRep::Streamer(TBuffer &R__b)
 }
 
 
-RKTrackRep::RKTrackRep() : GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fPdg(0), fCharge(0), fCachePlane(), fCacheSpu(1), fSpu(1), fAuxInfo(1,2) {
+RKTrackRep::RKTrackRep() : GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fPdg(0), fCharge(0), fSpu(1), fCachePlane(), fCacheSpu(1), fAuxInfo(1,2) {
   initArrays();
 }
 
@@ -1469,7 +1469,7 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   // fDirection decides!
   else {
     if (Step * fDirection < 0){
-      Step *= fDirection*SmaxAngle;
+      Step = fDirection*SmaxAngle;
       improveEstimation = false;
       #ifdef DEBUG
         std::cout << "  invert Step according to fDirection and set Step to fDirection*SmaxAngle. \n";
