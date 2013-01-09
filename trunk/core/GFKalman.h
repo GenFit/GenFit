@@ -77,11 +77,6 @@ public:
    */
   void fittingPass(GFTrack*,int dir);
 
-  /** @brief Calculates chi2 of a given hit with respect to a 
-   * given track representation.
-   */
-  double getChi2Hit(GFAbsRecoHit*, GFAbsTrackRep*);
-
   /** @brief Sets the initial direction of the track fit (1 for inner to outer,
    * or -1 for outer to inner). The standard is 1 and is set in the c'tor
    */
@@ -103,7 +98,7 @@ private:
    */
   void switchDirection(GFTrack* trk); // switches the direction of propagation for all reps
 
-  /** @brief this returns the reduced chi2 increment for a hit
+  /** @brief this returns the chi2 increment for a hit. Needs the residuum r and cov from the predicted state as input
    */
   double chi2Increment(const TVectorD& r,const TMatrixD& H,
 		       const TMatrixDSym& cov,const TMatrixDSym& V);
