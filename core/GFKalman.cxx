@@ -167,14 +167,13 @@ double GFKalman::chi2Increment(const TVectorD& r,
                                const TMatrixDSym& cov,
                                const TMatrixDSym& V){
 
-  // residuals covariances: Rinv = R^-1 = (V - HCH^T)^-1
+  // residuals covariances: Rinv = R^-1 = (V + HCH^T)^-1 this formula is only true for predicted states and covs
   TMatrixDSym Rinv(cov);
   Rinv.Similarity(H);
 
-  Rinv -= V; // this is now  -R = HCH^T - V
-  GFTools::invertMatrix(Rinv); // this is now  -R^(-1)
-  double chisq = Rinv.Similarity(r); // -chisq = r^T -R^(-1) r
-  chisq *= -1.;
+  Rinv += V; // this is now  R = HCH^T + V
+  GFTools::invertMatrix(Rinv); // this is now  R^(-1)
+  double chisq = Rinv.Similarity(r); // chisq = r^T R^(-1) r
 
   if(TMath::IsNaN(chisq)){
     GFException exc("chi2 is nan",__LINE__,__FILE__);
@@ -186,34 +185,7 @@ double GFKalman::chi2Increment(const TVectorD& r,
     exc.setMatrices("V, R^(-1), cov",matrices);
     throw exc;
   }
-
   return chisq;
-}
-
-
-double
-GFKalman::getChi2Hit(GFAbsRecoHit* hit, GFAbsTrackRep* rep)
-{
-  // get prototypes for matrices
-  int repDim=rep->getDim();
-  TVectorD state(repDim);
-  TMatrixDSym cov(repDim);;
-  const GFDetPlane& pl(hit->getDetPlane(rep));
-  rep->extrapolate(pl,state,cov);
-
-
-  const TMatrixD& H = hit->getHMatrix(rep);
-  TVectorD m;
-  TMatrixDSym V;
-  hit->getMeasurement(rep,pl,state,cov,m,V);
-
-  TVectorD res = m-(H*state);
-  assert(res.GetNrows()>0);
-
-  //this is where chi2 is calculated
-  double chi2 = chi2Increment(res,H,cov,V);
-
-  return chi2/res.GetNrows();
 }
 
   
@@ -276,6 +248,16 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   hit->getMeasurement(rep,pl,state,cov,m,V);
   TVectorD res = m-(H*state);
 
+  // calculate chisq increment from prediction
+  double chi2 = chi2Increment(res,H,cov,V);
+  int ndf = res.GetNrows();
+  if (direction == -1) {
+    rep->addChiSqu( chi2 );
+  }
+  if (direction == 1) {
+    rep->addForwardChiSqu( chi2 );
+  }
+  rep->addNDF( ndf );
   // calculate kalman gain ------------------------------
   // calculate covsum (V + HCH^T)
   TMatrixDSym HcovHt(cov);
@@ -319,18 +301,7 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
     }
   }
 
-  // calculate filtered chisq
-  // filtered residual
-  res = m-(H*state);
-  double chi2 = chi2Increment(res,H,cov,V);
-  int ndf = res.GetNrows();
-  if (direction == -1) {
-    rep->addChiSqu( chi2 );
-  }
-  if (direction == 1) {
-    rep->addForwardChiSqu( chi2 );
-  }
-  rep->addNDF( ndf );
+
 
   // update TrackRep
   rep->setData(state,pl,&cov);
