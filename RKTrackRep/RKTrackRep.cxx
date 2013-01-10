@@ -30,6 +30,9 @@
 #include <GFFieldManager.h>
 #include <GFMaterialEffects.h>
 
+//root stuff
+#include <TMath.h>
+
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
 //#define DEBUG
 
