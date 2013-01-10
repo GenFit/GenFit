@@ -31,7 +31,7 @@
 #include <TVectorD.h>
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
-#include <TMath.h>
+#include <Math/ProbFunc.h>
 
 #include "GFDetPlane.h"
 
@@ -226,16 +226,23 @@ class GFAbsTrackRep : public TObject{
   }
   //! returns chi2/ndf
   inline double getRedChiSqu() const {
-    if(getNDF()>0) return getChiSqu()/getNDF();
-    return 0;
+    if(getNDF()>0) {
+      return getChiSqu()/getNDF();
+    } else {
+      return 0;
+    }
   }
-  // returns p-value
+  /** @brief returns the p value
+   */
   inline double getPVal() const {
-    return TMath::Prob(getChiSqu(), getNDF());
+    return ROOT::Math::chisquared_cdf_c(getChiSqu(), getNDF()); //Prob only works with integer ndfs so here chisquared_cdf_c is needed
   }
-  inline unsigned int getNDF() const {
-    if(fNdf>getDim())  return fNdf-getDim();
-    return 0;
+  inline double getNDF() const {
+    if(fNdf>getDim()){
+      return fNdf-getDim();
+    } else {
+      return 0;
+    }
   }
   /** @brief  X/X0 (total fraction of radiation length passed), cumulated during last extrapolation.
    *  The fitter has to reset XX0 via resetXX0()
@@ -297,7 +304,7 @@ class GFAbsTrackRep : public TObject{
   inline void setForwardChiSqu(double aChiSqu) {
     fForwardChiSqu = aChiSqu;
   }
-  inline void setNDF(unsigned int n) {
+  inline void setNDF(double n) {
     fNdf = n;
   }
   inline void addChiSqu(double aChiSqu) {
@@ -306,7 +313,7 @@ class GFAbsTrackRep : public TObject{
   inline void addForwardChiSqu(double aChiSqu) {
     fForwardChiSqu += aChiSqu;
   }
-  inline void addNDF(unsigned int n) {
+  inline void addNDF(double n) {
     fNdf += n;
   }
   inline void setStatusFlag(int _val) {
@@ -366,7 +373,7 @@ class GFAbsTrackRep : public TObject{
   //! chiSqu of the track fit
   double       fChiSqu;
   double       fForwardChiSqu;
-  unsigned int fNdf;
+  double	   fNdf; // DAF needs non integer ndf
 
   //! status of track representation: 0 means everything's OK
   int fStatusFlag;
