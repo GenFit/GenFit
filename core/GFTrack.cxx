@@ -18,7 +18,7 @@
 */
 #include <assert.h>
 #include <iostream>
-
+#include <algorithm> //need for stable_sort
 #include "GFTrack.h"
 #include "GFException.h"
 #include "GFAbsRecoHitComparator.h"

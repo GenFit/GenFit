@@ -245,6 +245,12 @@ class GFTrack : public TObject {
    */
   double getRedChiSqu() const {return getCardinalRep()->getRedChiSqu();}
 
+  /** @brief Get p value
+   *
+   * Cardinal representation is used.
+   */
+  double getPVal() const {return getCardinalRep()->getPVal();}
+
   /** @brief Get charge from fit
    *
    * Cardinal representation is used.
