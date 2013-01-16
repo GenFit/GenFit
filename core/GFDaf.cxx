@@ -25,9 +25,10 @@
 #include <assert.h>
 #include <cmath>
 
+
 //root stuff
 #include <TMath.h>
-
+#include <Math/QuantFuncMathCore.h>
 //#define DEBUG
 
 
@@ -63,7 +64,7 @@ void GFDaf::processTrack(GFTrack* trk) {
 	GFTrack* mini_trk = new GFTrack();
 	mini_trk->setSmoothing();
 
-	for(unsigned int j=0; j != nDafHits; j++){
+	for( int j=0; j != nDafHits; ++j){
 		mini_trk->addHit(eff_hits[j], 0, j); // using dummy det and hit id, they are never used anyway
 	}
 
@@ -78,8 +79,9 @@ void GFDaf::processTrack(GFTrack* trk) {
 		}
 
 		mini_trk->addTrackRep(trk->getTrackRep(iRep)); // mini_trk uses the original trackRep here. No copy is made!
-
-		for(unsigned int iBeta=0; iBeta<fBeta.size(); iBeta++) { // loop over betas
+		std::vector<std::vector<double> > oldWeights;
+		bool oneLastIter = false;
+		for( int iBeta=0; iBeta != c_maxIter; ++iBeta) { // loop over. If no convergence is reached after 10 iterations just stop.
 
 #ifdef DEBUG
 			std::cout<<"GFDaf::processTrack, trackRep nr. " << iRep << ", beta = " << fBeta[iBeta] << std::endl;
@@ -97,6 +99,7 @@ void GFDaf::processTrack(GFTrack* trk) {
 				break;
 			}
 
+			oldWeights = fWeights[iRep];
 			try{
 				fWeights[iRep] = calcWeights(mini_trk, fBeta[iBeta]);
 			} catch(GFException& e) {
@@ -105,14 +108,21 @@ void GFDaf::processTrack(GFTrack* trk) {
 				mini_trk->getTrackRep(0)->setStatusFlag(1);
 				break;
 			}
-
+			if( oneLastIter == true){
+				break;
+			}
+			if( isConvergent(oldWeights, iRep)){
+#ifdef DEBUG
+				std::cout << "convergence reached in iteration " << iBeta << "\n";
+#endif
+				oneLastIter = true;
+			}
+#ifdef DEBUG
+			if( iBeta == c_maxIter-1 ){	std::cout << "giving up after 10 iterations\n";	}
+#endif
 		} // end loop over betas
 
 		if(trk->getSmoothing()) copySmoothing(mini_trk, trk, iRep);
-
-
-
-
 
 		mini_trk->releaseTrackReps();
 
@@ -128,7 +138,7 @@ void GFDaf::processTrack(GFTrack* trk) {
 		double totalChi2 = 0;
 		double forwardTotalChi2 = 0;
 
-		for( int i = 0 ; i != trk->getNumHits(); ++i ){
+		for( unsigned int i = 0 ; i != trk->getNumHits(); ++i ){
 			GFAbsRecoHit* aRecoHit = trk->getHit(i);
 			const TMatrixD& H(aRecoHit->getHMatrix(aTrkRep) );
 			TVectorD statePredForward = aBK->getVector(GFBKKey_fSt, i);
@@ -219,19 +229,21 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 			try{
 				TVectorD m;
 				TMatrixDSym Vorig;
-				eff_hit->getMeasurement(trk->getTrackRep(0), pl, smoothedState, smoothedCov, m, Vorig, j); // can throw a GFException
 
+				eff_hit->getMeasurement(trk->getTrackRep(0), pl, smoothedState, smoothedCov, m, Vorig, j); // can throw a GFException
+				int hitDim = m.GetNoElements();
 				TMatrixDSym V( beta * Vorig);
 				TVectorD resid(m - x_smoo);
 				TMatrixDSym Vinv;
 				GFTools::invertMatrix(V, Vinv, detV); // can throw a GFException
 
-				phi.push_back((1./(pow(2.*TMath::Pi(),V.GetNrows()/2.)*sqrt(*detV)))*exp(-0.5*Vinv.Similarity(resid)));
+				phi.push_back((1./(std::pow(2.*TMath::Pi(),hitDim/2)*sqrt(*detV)))*exp(-0.5*Vinv.Similarity(resid))); // std::pow(double, int) from <cmath> is faster than pow(double, double) from <math.h> when the exponent actually _is_ an integer.
 				phi_sum += phi[j];
-
-				double cutVal = fchi2Cuts[V.GetNrows()];
+//				std::cerr << "hitDim " << hitDim << " fchi2Cuts[hitDim] " << fchi2Cuts[hitDim] << std::endl;
+				double cutVal = fchi2Cuts[hitDim];
 				assert(cutVal>1.E-6);
-				phi_cut += (1./(pow(2.*TMath::Pi(),V.GetNrows()/2.)*sqrt(*detV)))*exp(-0.5*cutVal/beta);
+				//the follwing assumes that in the compeating hits (real hits in one DAF hit) could have different V otherwise calculation could be simplified
+				phi_cut += (1./(std::pow(2.*TMath::Pi(),hitDim/2)*sqrt(*detV)))*exp(-0.5*cutVal/beta);
 			}
 			catch(GFException& e) {
 				delete detV;
@@ -257,35 +269,24 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 
 };
 
-void GFDaf::setProbCut(double val){
+void GFDaf::setProbCut(const double prob_cut){
+	for ( int i = 1; i != 6; ++i){
+		addProbCut(prob_cut, i);
+	}
+}
 
-	if(fabs(val-0.01)<1.E-10){
-		fchi2Cuts[1] = 6.63;
-		fchi2Cuts[2] = 9.21;
-		fchi2Cuts[3] = 11.34;
-		fchi2Cuts[4] = 13.23;
-		fchi2Cuts[5] = 15.09;
-	}
-	else   if(fabs(val-0.005)<1.E-10){
-		fchi2Cuts[1] = 7.88;
-		fchi2Cuts[2] = 10.60;
-		fchi2Cuts[3] = 12.84;
-		fchi2Cuts[4] = 14.86;
-		fchi2Cuts[5] = 16.75;
-	}
-	else   if(fabs(val-0.001)<1.E-10){
-		fchi2Cuts[1] = 10.83;
-		fchi2Cuts[2] = 13.82;
-		fchi2Cuts[3] = 16.27;
-		fchi2Cuts[4] = 18.47;
-		fchi2Cuts[5] = 20.51;
-	}
-	else{
-		GFException exc("GFDafsetProbCut() value is not supported",__LINE__,__FILE__);
+void GFDaf::addProbCut(const double prob_cut, const int measDim){
+	if ( prob_cut > 1.0 || prob_cut < 0.0){
+		GFException exc("GFDaf::addProbCut prob_cut is not between 0 and 1",__LINE__,__FILE__);
 		exc.setFatal();
 		throw exc;
 	}
-
+	if ( measDim < 1){
+		GFException exc("GFDaf::addProbCut measDim must be > 0",__LINE__,__FILE__);
+		exc.setFatal();
+		throw exc;
+	}
+	fchi2Cuts[measDim] = ROOT::Math::chisquared_quantile_c( prob_cut, measDim);
 }
 
 void GFDaf::setBetas(double b1,double b2,double b3,double b4,double b5,double b6,double b7,double b8,double b9,double b10){
@@ -318,6 +319,7 @@ void GFDaf::setBetas(double b1,double b2,double b3,double b4,double b5,double b6
 			}
 		}
 	}
+	fBeta.resize(c_maxIter,fBeta.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
 }
 
 std::vector<GFDafHit*> GFDaf::initHitsWeights(GFTrack* trk) {
@@ -452,5 +454,21 @@ void GFDaf::saveWeights(GFTrack* trk, const GFTrack* DafTrack, const std::vector
 		assert(hit_i == trk->getNumHits());
 	}
 
+}
+
+bool GFDaf::isConvergent(const std::vector<std::vector<double> >& oldWeights, int iRep) const{
+	const int n = oldWeights.size();
+	const std::vector<std::vector<double> >& newWeights = fWeights[iRep];
+	assert(n == int(newWeights.size()));
+	for( int i = 0; i != n; ++i){
+		const int m = oldWeights[i].size();
+		assert(m == int(newWeights[i].size()));
+		for( int j = 0; j != m; ++j){
+			if( fdim( oldWeights[i][j] , newWeights[i][j]) > 0.001 ){ //Moritz just made the value up. has to be tested if good
+				return false;
+			}
+		}
+	}
+	return true;
 }
 

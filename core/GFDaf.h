@@ -27,7 +27,9 @@ along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 #include "RecoHits/GFDafHit.h"
 #include "GFKalman.h"
 #include "GFTrack.h"
+#include "GFAbsFitter.h"
 #include <vector>
+#include <map>
 
 
 /** @brief Determinstic Annealing Filter (DAF) implementation. 
@@ -58,13 +60,14 @@ class GFDaf : public GFAbsFitter {
 
 		/** @brief Set the probability cut for the weight calculation for the hits.
 		 *
-		 * Currently supported are the values 0.01 0.005, and 0.001. The 
-		 * corresponding chi2 cuts for different hits dimensionalities are hard-coded
-		 * in the implementation because I did not yet figure out how to calculate 
-		 * them. Please feel very welcome to change the implementation if you know how
-		 * to do it.
+		 * By default the cut values for measurements of dimensionality from 1 to 5 are calculated.
+		 * If you what to have cut values for an arbitrary measurement dimensionality use
+		 * addProbCut(double prob_cut, int maxDim);
 		 */
-		void setProbCut(double prob_cut);
+		void setProbCut(const double prob_cut);
+
+		/** Set the probability cut for the weight calculation for the hits for a specific measurement dimensionality*/
+		void addProbCut(const double prob_cut, const int measDim);
 
 		/** @brief Configure the annealing scheme.
 		 *
@@ -78,6 +81,11 @@ class GFDaf : public GFAbsFitter {
 		/** @brief Initialize the GFDafHits and their weights before the fit.
 		 */
 		std::vector<GFDafHit*> initHitsWeights(GFTrack* trk);
+
+		/** @brief check if convergence is met so the main iteration (over the betas) can be left
+		 * the convergence criteria is the largest change in the weights
+		 */
+		bool isConvergent(const std::vector<std::vector<double> >& oldWeights, int iRep) const;
 
 		/** @brief Calculate the weights for the next fitting pass.
 		  */
@@ -94,6 +102,8 @@ class GFDaf : public GFAbsFitter {
 		std::map<int,double>  fchi2Cuts;
 
 		GFKalman fKalman;
+		/** The maximal number of iterations in the main DAF loop. If the weights do not converge the loop will end after c_maxIter iterations*/
+		const static int c_maxIter = 10;
 };
 
 #endif
