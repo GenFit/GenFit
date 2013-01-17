@@ -73,7 +73,7 @@ GFDetPlane::GFDetPlane(const GFDetPlane& rhs) {
 GFDetPlane& GFDetPlane::operator=(const GFDetPlane& rhs) {
   if (this == &rhs)
     return *this;
-  if(fFinitePlane!=NULL) {
+  if(fFinitePlane != NULL) {
     delete fFinitePlane;
   }
   if(rhs.fFinitePlane != NULL){
@@ -370,5 +370,9 @@ void GFDetPlane::reset() {
   fO.SetXYZ(0.,0.,0.);
   fU.SetXYZ(1.,0.,0.);
   fV.SetXYZ(0.,1.,0.);
-  if(fFinitePlane!=NULL) delete fFinitePlane;
+  if(fFinitePlane!=NULL) {
+    delete fFinitePlane;
+    fFinitePlane = NULL;
+  }
 }
+
