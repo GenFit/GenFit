@@ -83,6 +83,7 @@ void GFMaterialEffects::destruct()
 
 void GFMaterialEffects::init(GFAbsMaterialInterface* matIfc){
   if (fMaterialInterface != NULL) {
+    std::cerr << "GFMaterialEffects::initMaterialInterface(): Already initialized!" << std::endl;
     std::string msg("GFMaterialEffects::initMaterialInterface(): Already initialized! ");
     std::runtime_error err(msg);
   }
@@ -117,6 +118,7 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
 {
 
   if (fMaterialInterface == NULL) {
+    std::cerr << "GFMaterialEffects hasn't been initialized with a correct GFAbsMaterialInterface pointer!" << std::endl;
     std::string msg("GFMaterialEffects hasn't been initialized with a correct GFAbsMaterialInterface pointer!");
     std::runtime_error err(msg);
     throw err;
@@ -199,6 +201,7 @@ double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
 {
 
   if (fMaterialInterface == NULL) {
+    std::cerr << "GFMaterialEffects hasn't been initialized with a correct GFAbsMaterialInterface pointer!" << std::endl;
     std::string msg("GFMaterialEffects hasn't been initialized with a correct GFAbsMaterialInterface pointer!");
     std::runtime_error err(msg);
     throw err;
