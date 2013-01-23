@@ -55,7 +55,7 @@ GFTrackCand::GFTrackCand( const GFTrackCand& other ) :
   // deep copy
   fHits.reserve(other.fHits.size());
   for (unsigned int i=0; i<other.fHits.size(); ++i) {
-    fHits.push_back( new GFTrackCandHit(*(other.fHits[i])) );
+    fHits.push_back( (other.fHits[i])->clone() );
   }
 }
 
@@ -73,7 +73,7 @@ GFTrackCand::operator=( const GFTrackCand& other ){
   fHits.clear();
   fHits.reserve(other.fHits.size());
   for (unsigned int i=0; i<other.fHits.size(); ++i) {
-    fHits.push_back( new GFTrackCandHit(*(other.fHits[i])) );
+    fHits.push_back( (other.fHits[i])->clone() );
   }
 
   return *this;
