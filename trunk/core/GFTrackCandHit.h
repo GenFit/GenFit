@@ -32,6 +32,8 @@
 class GFTrackCandHit : public TObject {
  public:
 
+  virtual GFTrackCandHit* clone() const {return new GFTrackCandHit(*this);}
+
   // Constructors/Destructors ---------
   GFTrackCandHit(int detId   = -1,
                  int hitId   = -1,
