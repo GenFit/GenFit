@@ -33,7 +33,7 @@ static int instCount(0);
 #endif
 
 GFRaveVertex::GFRaveVertex() :
-  fCov(3,3),
+  //fCov(3,3),   // there is a root bug which causes seg faults when deserializing TMatrixDSyms which have been given a size before: https://savannah.cern.ch/bugs/?100026
   fNdf(0),
   fChi2(0),
   fId(-1)
