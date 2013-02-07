@@ -818,7 +818,7 @@ double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
 
   TVector3 dest;
 
-  static const unsigned int maxIt(30);
+  static const unsigned int maxIt(1000);
   double coveredDistance(0.);
 
   M1x7 state7;
@@ -835,9 +835,10 @@ double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
     dest = pos + (h - coveredDistance) * dir;
 
     pl.setON(dest, dir);
-    coveredDistance += this->Extrap(pl, state7);
+    coveredDistance += this->Extrap(pl, state7, NULL, true);
 
     if(fabs(h - coveredDistance)<MINSTEP) break;
+
     if(++iterations == maxIt) {
       GFException exc("RKTrackRep::stepalong ==> maximum number of iterations reached",__LINE__,__FILE__);
       throw exc;
@@ -848,6 +849,68 @@ double RKTrackRep::stepalong(double h, TVector3& pos, TVector3& dir){
   dir.SetXYZ(state7[3], state7[4], state7[5]);
 
   return coveredDistance;
+}
+
+
+
+double RKTrackRep::extrapolateToCylinder(double radius, TVector3& pos, TVector3& mom){
+
+#ifdef DEBUG
+  std::cout << "RKTrackRep::extrapolateToCylinder()\n";
+#endif
+
+  TVector3 dest, normal;
+
+  static const unsigned int maxIt(1000);
+  double coveredDistance(0.);
+
+  M1x7 state7;
+  getState7(state7);
+
+  GFDetPlane pl;
+  unsigned int iterations(0);
+
+  while(true){
+    pos.SetXYZ(state7[0], state7[1], state7[2]);
+    mom.SetXYZ(state7[3], state7[4], state7[5]);
+    mom.SetMag(1.);
+
+    // solve quadratic equation
+    double a = pow(mom.X(), 2) + pow(mom.Y(), 2);
+    double b = 2. * (pos.X()*mom.X() + pos.Y()*mom.Y());
+    double c = pow(pos.X(), 2) + pow(pos.Y(), 2) - radius*radius;
+    double term = sqrt(b*b - 4.*a*c);
+    double k1 = (-1.*b + term)/(2.*a);
+    double k2 = (-1.*b - term)/(2.*a);
+
+    // select smallest absolute solution -> closest cylinder surface
+    double k = k1;
+    if (fabs(k2)<fabs(k))
+      k = k2;
+
+
+    dest = pos + k * mom;
+    normal = dest; // normal vector on cylinder surface
+    normal.SetZ(0);
+    normal.SetMag(1.);
+
+    pl.setON(dest, normal);
+    coveredDistance += this->Extrap(pl, state7, NULL, true);
+
+    if(fabs(k)<MINSTEP) break;
+
+    if(++iterations == maxIt) {
+      GFException exc("RKTrackRep::extrapolateToCylinder ==> maximum number of iterations reached",__LINE__,__FILE__);
+      throw exc;
+    }
+  }
+
+  pos.SetXYZ(state7[0], state7[1], state7[2]);
+  mom.SetXYZ(state7[3], state7[4], state7[5]);
+  mom.SetMag(fCharge/state7[6]);
+
+  return coveredDistance;
+
 }
 
 

@@ -174,6 +174,8 @@ class RKTrackRep : public GFAbsTrackRep {
          TVector3& point,
          TVector3& dir);
 
+  double extrapolateToCylinder(double radius, TVector3& pos, TVector3& mom);
+
   //! Returns position of the track in the plane  
   /** If #GFDetPlane equals the reference plane #fRefPlane, returns current position; otherwise it extrapolates 
     * the track to the plane and returns the position.

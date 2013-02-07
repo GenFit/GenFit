@@ -143,6 +143,8 @@ class GFAbsTrackRep : public TObject{
            TVector3& point,
            TVector3& dir);
 
+  virtual double extrapolateToCylinder(double radius, TVector3& pos, TVector3& mom) = 0;
+
   //! Extrapolates the track to the given detector-plane
   /*! Results are put into statePred and covPred
       This method does NOT alter the state of the object!
