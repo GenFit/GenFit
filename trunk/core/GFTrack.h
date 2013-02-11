@@ -237,7 +237,7 @@ class GFTrack : public TObject {
    *
    * Cardinal representation is used.
    */
-  unsigned int getNDF() const {return getCardinalRep()->getNDF();}
+  double getNDF() const {return getCardinalRep()->getNDF();}
 
   /** @brief Get chi2/NDF
    *
