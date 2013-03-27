@@ -62,7 +62,8 @@ class GFRaveVertexFactory {
 
   /**
    * Set the reconstruction method. See http://projects.hepforge.org/rave/trac/wiki/RaveMethods
-   * Smoothing has to be turned on! e.g. kalman-smoothing:1
+   * If "smoothing" is turned on (e.g. kalman-smoothing:1), the track parameters are recalculated with the contraint
+   * that they go through the fitted vertex position.
    */
   void setMethod(const std::string & method);
 
