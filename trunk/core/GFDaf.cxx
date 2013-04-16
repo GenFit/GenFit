@@ -122,7 +122,9 @@ void GFDaf::processTrack(GFTrack* trk) {
 #endif
 		} // end loop over betas
 
-		if(trk->getSmoothing()) copySmoothing(mini_trk, trk, iRep);
+		if(mini_trk->getTrackRep(0)->getStatusFlag() == 0 && trk->getSmoothing()){
+			copySmoothing(mini_trk, trk, iRep);
+		}
 
 		mini_trk->releaseTrackReps();
 
@@ -133,6 +135,9 @@ void GFDaf::processTrack(GFTrack* trk) {
 	// Calculate the total chi2 and ndf of the DAF fit for all reps with all the stuff that is now in the book keeping
 	for(int iRep=0; iRep != nTrkReps; ++iRep) { // loop over trackreps
 		GFAbsTrackRep* aTrkRep = trk->getTrackRep(iRep);
+		if (aTrkRep->getStatusFlag() != 0){ // not cacluate stuff for track reps that failed during thy
+			continue;
+		}
 		GFBookkeeping* aBK =  trk->getBK(iRep);
 		double ndf = 0;
 		double totalChi2 = 0;
