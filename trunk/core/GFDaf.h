@@ -76,6 +76,8 @@ class GFDaf : public GFAbsFitter {
 		 */
 		void setBetas(double b1,double b2=-1,double b3=-1.,double b4=-1.,double b5=-1.,double b6=-1.,double b7=-1.,double b8=-1.,double b9=-1.,double b10=-1.);
 
+		void resolveWireHitAmbi(bool resolve = true);
+
 	private:
 
 		/** @brief Initialize the GFDafHits and their weights before the fit.
@@ -100,6 +102,8 @@ class GFDaf : public GFAbsFitter {
 		std::vector<std::vector<std::vector<double> > > fWeights;
 		std::vector<double> fBeta;
 		std::map<int,double>  fchi2Cuts;
+
+		bool fResolveLRAmbi;
 
 		GFKalman fKalman;
 		/** The maximal number of iterations in the main DAF loop. If the weights do not converge the loop will end after c_maxIter iterations*/

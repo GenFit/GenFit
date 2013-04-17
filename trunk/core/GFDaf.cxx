@@ -37,7 +37,7 @@ GFDaf::GFDaf(){
 	setBetas(81.,8.,4.,1.,1.,1.);
 	setProbCut(0.01);
 	fKalman.setNumIterations(1);
-
+	fResolveLRAmbi = true;
 };
 
 void GFDaf::processTrack(GFTrack* trk) {
@@ -105,6 +105,7 @@ void GFDaf::processTrack(GFTrack* trk) {
 			} catch(GFException& e) {
 				std::cerr<<e.what();
 				e.info();
+				std::cerr << "calc weights failed" << std::endl;
 				mini_trk->getTrackRep(0)->setStatusFlag(1);
 				break;
 			}
@@ -221,12 +222,11 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 		TVectorD smoothedState;
 		TMatrixDSym smoothedCov;
 		GFDetPlane pl;
+
 		GFTools::getBiasedSmoothedData(trk, 0, i, smoothedState, smoothedCov, pl);
 
 		const TMatrixD& H( trk->getHit(i)->getHMatrix(trk->getTrackRep(0)) );
 		TVectorD x_smoo(H * smoothedState);
-
-
 
 		for(unsigned int j=0; j<nEffHits; j++) {
 			double* detV = new double(0);
@@ -344,7 +344,7 @@ std::vector<GFDafHit*> GFDaf::initHitsWeights(GFTrack* trk) {
 		}
 
 		GFDafHit* eff_hit;
-		if (hits.size()==1 && dynamic_cast<GFAbsWireHit*>(hits[0]) != NULL){
+		if (hits.size()==1 && dynamic_cast<GFAbsWireHit*>(hits[0]) != NULL && fResolveLRAmbi == true){
 			eff_hit = new GFDafWireHit(dynamic_cast<GFAbsWireHit*>(hits[0]));
 		}
 		else eff_hit = new GFDafHit(hits);
@@ -475,5 +475,9 @@ bool GFDaf::isConvergent(const std::vector<std::vector<double> >& oldWeights, in
 		}
 	}
 	return true;
+}
+
+void GFDaf::resolveWireHitAmbi(bool resolve){
+	fResolveLRAmbi = resolve;
 }
 

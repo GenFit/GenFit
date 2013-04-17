@@ -168,12 +168,12 @@ void GFTrackCand::Print(const Option_t* option) const {
 }
 
 
+
 void GFTrackCand::append(const GFTrackCand& rhs){
 	for(unsigned int i=0; i<rhs.getNHits(); ++i){
 		addHit(rhs.getHit(i)->clone());
 	}
 }
-
 
 void GFTrackCand::sortHits(){
 	std::stable_sort(fHits.begin(), fHits.end(), compareTrackCandHits);
