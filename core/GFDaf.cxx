@@ -105,7 +105,7 @@ void GFDaf::processTrack(GFTrack* trk) {
 			} catch(GFException& e) {
 				std::cerr<<e.what();
 				e.info();
-				std::cerr << "calc weights failed" << std::endl;
+				//std::cerr << "calc weights failed" << std::endl;
 				mini_trk->getTrackRep(0)->setStatusFlag(1);
 				break;
 			}
