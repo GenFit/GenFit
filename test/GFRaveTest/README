@@ -1,3 +1,0 @@
-In the LD_LIBRARY_PATH, the library paths to RAVE and CLHEP have to be included!
-Otherwise you will get linker errors.
-

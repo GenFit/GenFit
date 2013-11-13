@@ -1,0 +1,9 @@
+to build the examples, first build genfit.
+with 'make tests', you can build the examples.
+The binaries will be in *youBuildDir*/bin/
+
+Most of the examples need a geometry.
+It can be built via
+'root makeGeom.C'
+
+The output ('genfitGeom.root') has to be put into the *youBuildDir*/bin/ directory.

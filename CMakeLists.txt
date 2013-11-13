@@ -1,49 +1,315 @@
-cmake_minimum_required(VERSION 2.8)
+# #require a certain version
+CMAKE_MINIMUM_REQUIRED( VERSION 2.6 )
 
-IF(NOT DEFINED ENV{ROOTSYS})
-   MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
-ENDIF(NOT DEFINED ENV{ROOTSYS})
+# declare the project name
+PROJECT(genfit2)
 
-FIND_PROGRAM(ROOT_CONFIG root-config $ENV{ROOTSYS}/bin)
+# set project version
+SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
+SET( ${PROJECT_NAME}_VERSION_MINOR 0 )
+SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 
-IF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")
-  MESSAGE(FATAL_ERROR "Could not find root-config executable.")
-ENDIF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")
+# define path to macros and settings
+LIST( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
+# include the macros and settings
+INCLUDE(settings)
+INCLUDE(macros)
 
-Execute_process(COMMAND ${ROOT_CONFIG} --cflags
-	OUTPUT_VARIABLE ROOT_CFLAGS
-    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+FIND_PACKAGE(ROOT REQUIRED COMPONENTS Geom)
 
-include(macros.cmake)
 
-#SET(CMAKE_VERBOSE_MAKEFILE ON)
+IF(NOT DEFINED ENV{RAVEPATH})
+   	MESSAGE("You did not define the environment variable RAVEPATH which is needed to find rave. GFRave will not be built.") 
+ELSE()
+	MESSAGE("Environment variable RAVEPATH is set. Try to build GFRave.") 
+	# get compiler flags from rave
+	INCLUDE(FindPkgConfig)
+	SET(ENV{PKG_CONFIG_PATH} $ENV{RAVEPATH})
+	pkg_search_module(RAVE rave REQUIRED)
+	
+	# turn comma separated lists into space separated strings
+	string (REPLACE ";" " " RAVE_LDFLAGS_STR "${RAVE_LDFLAGS}")
+	string (REPLACE ";" " " RAVE_INCLUDE_DIRS_STR "${RAVE_INCLUDE_DIRS}")
+	string (REPLACE ";" " " RAVE_CFLAGS_STR "${RAVE_CFLAGS}")
+	
+	SET (CMAKE_CXX_FLAGS ${RAVE_CFLAGS_STR})
+	
+	SET(GF_INC_DIRS
+		./GFRave/include/
+	)
+	
+	AUX_SOURCE_DIRECTORY( ./GFRave/src  library_sources )
+ENDIF()
 
-SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wshadow -ftree-vectorize -ffast-math -ftree-vectorizer-verbose=0 ${ROOT_CFLAGS}")
+
+# Set GENFIT include directories
+SET(GF_INC_DIRS
+	./core/include/ 
+	./eventDisplay/include/
+	./fields/include/
+	./finitePlanes/include/ 
+	./fitters/include/
+	./GBL/include/
+	./measurements/include/ 
+	./trackReps/include/
+	./utilities/include/
+    ${GF_INC_DIRS}
+)
+
+
+#search for boost, provide some information to user
+FIND_PACKAGE(Boost)
+IF (Boost_FOUND)
+    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+    MESSAGE("-- Boost is found at: ${Boost_INCLUDE_DIR}")
+    INSTALL( DIRECTORY 
+	    ${GF_INC_DIRS}
+	    DESTINATION ./include/genfit PATTERN ".svn" EXCLUDE 
+	 )
+ELSE()
+    MESSAGE( " Boost was not found on your system, using the one shipped with GENFIT.")
+    INCLUDE_DIRECTORIES(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/extern/ )
+    INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/extern/ ${GF_INC_DIRS}  DESTINATION ./include/genfit PATTERN ".svn" EXCLUDE )
+ENDIF()
+
+
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
+# Uncomment for coverage analysis.
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+#SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+#SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
 
 include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag(-march=native HAS_MARCH_NATIVE)
-IF(HAS_MARCH_NATIVE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-ENDIF(HAS_MARCH_NATIVE)
+check_cxx_compiler_flag(-std=c++03 HAS_STD_FLAG)
+check_cxx_compiler_flag(--std=c++03 HAS_STD_FLAG_ALTERNATIVE)
+if (HAS_STD_FLAG)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++03")
+elseif (HAS_STD_FLAG_ALTERNATIVE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++03")
+else()
+  message("Neither --std=c++03 nor -std=c++03 seem to work.  Moving on.")
+endif()
 
-IF(NOT DEFINED ENV{GENFIT})
-  SET(ENV{GENFIT} "${CMAKE_SOURCE_DIR}")
-ENDIF(NOT DEFINED ENV{GENFIT})
-get_filename_component(GENFIT $ENV{GENFIT} REALPATH)
-
-SET(GENFITLIBDIR ${GENFIT}/lib)
-SET(GENFITLIBINSTALLDIR ${GENFITLIBDIR})
-SET(LIBRARY_OUTPUT_PATH ${GENFITLIBDIR})
+# require proper c++, standard is C++03, flag reads: c++98
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ansi -pedantic -Wno-long-long -Wshadow "   )
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g3")
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -O3 -g3")
 
 
-add_subdirectory(core)
-#add_subdirectory(GeaneTrackRep2)
-add_subdirectory(RKTrackRep)
-#add_subdirectory(GFFastKalman)
-#add_subdirectory(RKTrackRepXY)
-#add_subdirectory(LSLtrackRep)
-#add_subdirectory(SlTrackRep)
-#add_subdirectory(G4eTrackRep)
-#add_subdirectory(GFRave)
-add_subdirectory(RecoHitExamples)
+# include directories 
+INCLUDE_DIRECTORIES( 
+	BEFORE 
+	${GF_INC_DIRS}
+	${ROOT_INCLUDE_DIRS})
 
+
+# add a target to generate API documentation with Doxygen
+FIND_PACKAGE(Doxygen)
+
+if(DOXYGEN_FOUND)
+    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile @ONLY)
+
+    ADD_CUSTOM_TARGET(doc
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc
+        COMMENT "Generating API documentation with Doxygen" VERBATIM)
+ELSE()
+    MESSAGE( STATUS "Doxygen not installed or found -- API documentation can't be generated!" )
+ENDIF(DOXYGEN_FOUND)
+
+
+# declare the ROOT library path
+LINK_DIRECTORIES(${ROOT_LIBRARY_DIR})
+
+
+# add the list of source code files -- careful, when a new file is added!
+AUX_SOURCE_DIRECTORY( ./core/src          library_sources )
+AUX_SOURCE_DIRECTORY( ./eventDisplay/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./fields/src        library_sources )
+AUX_SOURCE_DIRECTORY( ./finitePlanes/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./fitters/src       library_sources )
+AUX_SOURCE_DIRECTORY( ./GBL/src           library_sources )
+AUX_SOURCE_DIRECTORY( ./measurements/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./trackReps/src     library_sources )
+AUX_SOURCE_DIRECTORY( ./utilities/src     library_sources )
+
+
+# Dictionary generation.  For the time being, we list classes one-by-one.
+MACRO (ROOT_GENERATE_DICTIONARY INFILES INCLUDE_DIRS_IN LINKDEF_FILE OUTFILE)
+  set (INCLUDE_DIRS)
+  foreach (_current_FILE ${INCLUDE_DIRS_IN})
+    set(INCLUDE_DIRS ${INCLUDE_DIRS} -I${_current_FILE})   
+  endforeach (_current_FILE ${INCLUDE_DIRS_IN})
+
+  STRING(REGEX REPLACE "^(.*)\\.(.*)$" "\\1.h" OUTFILE_H "${OUTFILE}")
+  SET (OUTFILES ${OUTFILE} ${OUTFILE_H})
+
+  ADD_CUSTOM_COMMAND(OUTPUT ${OUTFILES}
+    COMMAND ${ROOT_CINT_EXECUTABLE}
+    ARGS -f ${OUTFILE} -c ${INCLUDE_DIRS} ${INFILES} ${LINKDEF_FILE} DEPENDS ${INFILES} ${LINKDEF_FILE})
+
+  STRING(REGEX REPLACE "/" "" OUTFILE_NO_SLASH "${OUTFILE}")
+  ADD_CUSTOM_TARGET(generate_${OUTFILE_NO_SLASH} DEPENDS ${OUTFILE})
+ENDMACRO (ROOT_GENERATE_DICTIONARY)
+
+SET(CORE_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsFinitePlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsFitterInfo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsHMatrix.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsTrackRep.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/DetPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/FitStatus.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MaterialProperties.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasuredStateOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementFactory.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementProducer.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/StateOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/ThinScatterer.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/Track.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackCand.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackCandHit.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackPoint.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/finitePlanes/include/RectangularFinitePlane.h
+)
+ROOT_GENERATE_DICTIONARY("${CORE_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/core/src/coreLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cpp" "${library_sources}")
+
+SET(EVENTDISPLAY_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include/EventDisplay.h
+)
+ROOT_GENERATE_DICTIONARY("${EVENTDISPLAY_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/fitters/include;${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/src/eventDisplayLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/eventDisplayRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/eventDisplayRootDict.cpp" "${library_sources}")
+
+SET(FITTERS_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/AbsKalmanFitter.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFittedStateOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFitStatus.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/ReferenceStateOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFitterRefTrack.h
+
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFitter.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFitterInfo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/DAF.h
+)
+ROOT_GENERATE_DICTIONARY("${FITTERS_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/fitters/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/fitters/src/fittersLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp" "${library_sources}")
+
+SET(GBL_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GFGbl.h
+)
+ROOT_GENERATE_DICTIONARY("${GBL_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/GBL/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/GBL/src/GBLLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/GBLRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/GBLRootDict.cpp" "${library_sources}")
+
+SET(MEASUREMENTS_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixPhi.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixU.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixUnit.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixV.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixUV.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/FullMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/PlanarMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/ProlateSpacepointMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/SpacepointMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WireMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WirePointMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WireTrackCandHit.h
+)
+ROOT_GENERATE_DICTIONARY("${MEASUREMENTS_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/measurements/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/measurements/src/measurementsLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cpp" "${library_sources}")
+
+SET(TRACKREPS_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include/RKTrackRep.h
+)
+ROOT_GENERATE_DICTIONARY("${TRACKREPS_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/trackReps/src/trackRepsLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp" "${library_sources}")
+
+SET(UTILITIES_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/HelixTrackModel.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/MeasurementCreator.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/mySpacepointDetectorHit.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/mySpacepointMeasurement.h
+)
+ROOT_GENERATE_DICTIONARY("${UTILITIES_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/utilities/include;${CMAKE_CURRENT_SOURCE_DIR}/measurements/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/utilities/src/utilitiesLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cpp" "${library_sources}")
+
+if(DEFINED ENV{RAVEPATH})
+	SET(GFRAVE_DICTIONARY_SOURCES
+	  ${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include/GFRaveTrackParameters.h
+	  ${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include/GFRaveVertex.h
+	)
+	ROOT_GENERATE_DICTIONARY("${GFRAVE_DICTIONARY_SOURCES}"
+	                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include"
+				 "${CMAKE_CURRENT_SOURCE_DIR}/GFRave/src/GFRaveLinkDef.h"
+				 "${CMAKE_CURRENT_BINARY_DIR}/GFRaveRootDict.cpp")
+	SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/GFRaveRootDict.cpp" "${library_sources}")
+endif()
+
+
+# install
+ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources})
+INSTALL( TARGETS ${PROJECT_NAME} DESTINATION lib )
+
+
+# link ROOT libraries
+if(DEFINED ENV{RAVEPATH})
+	TARGET_LINK_LIBRARIES(
+		${PROJECT_NAME}
+		${ROOT_LIBS}  
+  		${RAVE_LDFLAGS_STR}
+  		-I${RAVE_INCLUDE_DIRS_I}
+  	)
+else()
+	TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS})
+endif()
+
+
+# the examples, build with "make tests"
+ADD_CUSTOM_TARGET( tests )
+MACRO( ADD_GENFIT_TEST _testname )
+   ADD_EXECUTABLE( ${_testname} EXCLUDE_FROM_ALL ${ARGN} )
+   ADD_DEPENDENCIES( tests  ${_testname} )
+   TARGET_LINK_LIBRARIES( ${_testname} ${PROJECT_NAME}  ${ROOT_LIBS} -lGeom )
+    #INSTALL( TARGETS ${_testname} DESTINATION ${EXECUTABLE_INSTALL_DIR})
+ENDMACRO( ADD_GENFIT_TEST )
+
+ADD_GENFIT_TEST( fitterTests               test/fitterTests/main.cpp)
+ADD_GENFIT_TEST( minimalFittingExample     test/minimalFittingExample/main.cpp)
+ADD_GENFIT_TEST( measurementFactoryExample test/measurementFactoryExample/main.cpp)
+ADD_GENFIT_TEST( streamerTest              test/streamerTest/main.cpp)
+ADD_GENFIT_TEST( unitTests                 test/unitTests/main.cpp)
+if(DEFINED ENV{RAVEPATH})
+  ADD_GENFIT_TEST( vertexingTest           test/vertexingTest/main.cpp)
+  ADD_GENFIT_TEST( vertexingTestRead       test/vertexingTest/read.cpp)
+endif()
+
+# generate and install following configuration files
+#GENERATE_PACKAGE_CONFIGURATION_FILES( genfitConfig.cmake genfitConfigVersion.cmake )
