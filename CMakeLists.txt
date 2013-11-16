@@ -182,8 +182,8 @@ SET(CORE_DICTIONARY_SOURCES
 ROOT_GENERATE_DICTIONARY("${CORE_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/core/src/coreLinkDef.h"
-			 "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cpp")
-SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cpp" "${library_sources}")
+			 "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cc")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cc" "${library_sources}")
 
 SET(EVENTDISPLAY_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include/EventDisplay.h
@@ -191,8 +191,8 @@ SET(EVENTDISPLAY_DICTIONARY_SOURCES
 ROOT_GENERATE_DICTIONARY("${EVENTDISPLAY_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/fitters/include;${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/src/eventDisplayLinkDef.h"
-			 "${CMAKE_CURRENT_BINARY_DIR}/eventDisplayRootDict.cpp")
-SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/eventDisplayRootDict.cpp" "${library_sources}")
+			 "${CMAKE_CURRENT_BINARY_DIR}/eventDisplayRootDict.cc")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/eventDisplayRootDict.cc" "${library_sources}")
 
 SET(FITTERS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/AbsKalmanFitter.h
@@ -208,8 +208,8 @@ SET(FITTERS_DICTIONARY_SOURCES
 ROOT_GENERATE_DICTIONARY("${FITTERS_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/fitters/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/fitters/src/fittersLinkDef.h"
-			 "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp")
-SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp" "${library_sources}")
+			 "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cc")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cc" "${library_sources}")
 
 SET(GBL_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GFGbl.h
@@ -217,8 +217,8 @@ SET(GBL_DICTIONARY_SOURCES
 ROOT_GENERATE_DICTIONARY("${GBL_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/GBL/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/GBL/src/GBLLinkDef.h"
-			 "${CMAKE_CURRENT_BINARY_DIR}/GBLRootDict.cpp")
-SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/GBLRootDict.cpp" "${library_sources}")
+			 "${CMAKE_CURRENT_BINARY_DIR}/GBLRootDict.cc")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/GBLRootDict.cc" "${library_sources}")
 
 SET(MEASUREMENTS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixPhi.h
@@ -237,8 +237,8 @@ SET(MEASUREMENTS_DICTIONARY_SOURCES
 ROOT_GENERATE_DICTIONARY("${MEASUREMENTS_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/measurements/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/measurements/src/measurementsLinkDef.h"
-			 "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cpp")
-SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cpp" "${library_sources}")
+			 "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cc")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cc" "${library_sources}")
 
 SET(TRACKREPS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include/RKTrackRep.h
@@ -246,8 +246,8 @@ SET(TRACKREPS_DICTIONARY_SOURCES
 ROOT_GENERATE_DICTIONARY("${TRACKREPS_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/trackReps/src/trackRepsLinkDef.h"
-			 "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp")
-SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp" "${library_sources}")
+			 "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cc")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cc" "${library_sources}")
 
 SET(UTILITIES_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/HelixTrackModel.h
@@ -258,8 +258,8 @@ SET(UTILITIES_DICTIONARY_SOURCES
 ROOT_GENERATE_DICTIONARY("${UTILITIES_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/utilities/include;${CMAKE_CURRENT_SOURCE_DIR}/measurements/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/utilities/src/utilitiesLinkDef.h"
-			 "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cpp")
-SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cpp" "${library_sources}")
+			 "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cc")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cc" "${library_sources}")
 
 if(DEFINED ENV{RAVEPATH})
 	SET(GFRAVE_DICTIONARY_SOURCES
@@ -269,8 +269,8 @@ if(DEFINED ENV{RAVEPATH})
 	ROOT_GENERATE_DICTIONARY("${GFRAVE_DICTIONARY_SOURCES}"
 	                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include"
 				 "${CMAKE_CURRENT_SOURCE_DIR}/GFRave/src/GFRaveLinkDef.h"
-				 "${CMAKE_CURRENT_BINARY_DIR}/GFRaveRootDict.cpp")
-	SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/GFRaveRootDict.cpp" "${library_sources}")
+				 "${CMAKE_CURRENT_BINARY_DIR}/GFRaveRootDict.cc")
+	SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/GFRaveRootDict.cc" "${library_sources}")
 endif()
 
 
@@ -301,14 +301,14 @@ MACRO( ADD_GENFIT_TEST _testname )
     #INSTALL( TARGETS ${_testname} DESTINATION ${EXECUTABLE_INSTALL_DIR})
 ENDMACRO( ADD_GENFIT_TEST )
 
-ADD_GENFIT_TEST( fitterTests               test/fitterTests/main.cpp)
-ADD_GENFIT_TEST( minimalFittingExample     test/minimalFittingExample/main.cpp)
-ADD_GENFIT_TEST( measurementFactoryExample test/measurementFactoryExample/main.cpp)
-ADD_GENFIT_TEST( streamerTest              test/streamerTest/main.cpp)
-ADD_GENFIT_TEST( unitTests                 test/unitTests/main.cpp)
+ADD_GENFIT_TEST( fitterTests               test/fitterTests/main.cc)
+ADD_GENFIT_TEST( minimalFittingExample     test/minimalFittingExample/main.cc)
+ADD_GENFIT_TEST( measurementFactoryExample test/measurementFactoryExample/main.cc)
+ADD_GENFIT_TEST( streamerTest              test/streamerTest/main.cc)
+ADD_GENFIT_TEST( unitTests                 test/unitTests/main.cc)
 if(DEFINED ENV{RAVEPATH})
-  ADD_GENFIT_TEST( vertexingTest           test/vertexingTest/main.cpp)
-  ADD_GENFIT_TEST( vertexingTestRead       test/vertexingTest/read.cpp)
+  ADD_GENFIT_TEST( vertexingTest           test/vertexingTest/main.cc)
+  ADD_GENFIT_TEST( vertexingTestRead       test/vertexingTest/read.cc)
 endif()
 
 # generate and install following configuration files
