@@ -9,9 +9,15 @@ SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
 SET( ${PROJECT_NAME}_VERSION_MINOR 0 )
 SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 
-# set install destinations
-set( LIBRARY_OUTPUT_DIRECTORY ./lib )
-set( INCLUDE_OUTPUT_DIRECTORY ./include/genfit )
+# install destinations can be passed via the command line:
+# cmake -DLIBRARY_OUTPUT_DIRECTORY:PATH=.... -DINCLUDE_OUTPUT_DIRECTORY:PATH=....
+# otherwise, set default install destinations
+IF(NOT DEFINED LIBRARY_OUTPUT_DIRECTORY)
+	set( LIBRARY_OUTPUT_DIRECTORY ./lib )
+ENDIF()
+IF(NOT DEFINED INCLUDE_OUTPUT_DIRECTORY)
+	set( INCLUDE_OUTPUT_DIRECTORY ./include/genfit )
+ENDIF()
 
 # define path to macros and settings
 LIST( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
@@ -22,20 +28,35 @@ INCLUDE(macros)
 FIND_PACKAGE(ROOT REQUIRED COMPONENTS Geom)
 
 
-IF(NOT DEFINED ENV{RAVEPATH})
-   	MESSAGE("You did not define the environment variable RAVEPATH which is needed to find rave. GFRave will not be built.") 
-ELSE()
+# either, the environment variable RAVEPATH has to be specified, and RAVE's pkgConfig will be used to determine everything we need
+# or, RAVE_LDFLAGS, RAVE_INCLUDE_DIRS and RAVE_CFLAGS have to be set via the command-line
+
+
+IF(DEFINED ENV{RAVEPATH})
 	MESSAGE("Environment variable RAVEPATH is set. Try to build GFRave.") 
 	# get compiler flags from rave
 	INCLUDE(FindPkgConfig)
 	SET(ENV{PKG_CONFIG_PATH} $ENV{RAVEPATH})
 	pkg_search_module(RAVE rave REQUIRED)
 	
+	SET(RAVE True)
+ELSEIF(DEFINED RAVE_LDFLAGS)
+	IF(DEFINED RAVE_INCLUDE_DIRS)
+		IF(DEFINED RAVE_CFLAGS)
+			MESSAGE("RAVE_LDFLAGS, RAVE_INCLUDE_DIRS and RAVE_CFLAGS are set. Try to build GFRave.") 
+			SET(RAVE True)
+		ENDIF()
+	ENDIF()
+ELSE()
+   	MESSAGE("You did not define the environment variable RAVEPATH which is needed to find rave. GFRave will not be built.") 
+ENDIF()
+
+IF(DEFINED RAVE)
 	# turn comma separated lists into space separated strings
 	string (REPLACE ";" " " RAVE_LDFLAGS_STR "${RAVE_LDFLAGS}")
 	string (REPLACE ";" " " RAVE_INCLUDE_DIRS_STR "${RAVE_INCLUDE_DIRS}")
 	string (REPLACE ";" " " RAVE_CFLAGS_STR "${RAVE_CFLAGS}")
-	
+
 	SET (CMAKE_CXX_FLAGS ${RAVE_CFLAGS_STR})
 	
 	SET(GF_INC_DIRS
@@ -44,7 +65,6 @@ ELSE()
 	
 	AUX_SOURCE_DIRECTORY( ./GFRave/src  library_sources )
 ENDIF()
-
 
 # Set GENFIT include directories
 SET(GF_INC_DIRS
@@ -269,7 +289,7 @@ ROOT_GENERATE_DICTIONARY("${UTILITIES_DICTIONARY_SOURCES}"
 			 "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cc")
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cc" "${library_sources}")
 
-if(DEFINED ENV{RAVEPATH})
+if(DEFINED RAVE)
 	SET(GFRAVE_DICTIONARY_SOURCES
 	  ${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include/GFRaveTrackParameters.h
 	  ${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include/GFRaveVertex.h
@@ -289,7 +309,7 @@ INSTALL( TARGETS ${PROJECT_NAME}
 )
 
 # link ROOT libraries
-if(DEFINED ENV{RAVEPATH})
+if(DEFINED RAVE)
 	TARGET_LINK_LIBRARIES(
 		${PROJECT_NAME}
 		${ROOT_LIBS}  
@@ -315,7 +335,7 @@ ADD_GENFIT_TEST( minimalFittingExample     test/minimalFittingExample/main.cc)
 ADD_GENFIT_TEST( measurementFactoryExample test/measurementFactoryExample/main.cc)
 ADD_GENFIT_TEST( streamerTest              test/streamerTest/main.cc)
 ADD_GENFIT_TEST( unitTests                 test/unitTests/main.cc)
-if(DEFINED ENV{RAVEPATH})
+if(DEFINED RAVE)
   ADD_GENFIT_TEST( vertexingTest           test/vertexingTest/main.cc)
   ADD_GENFIT_TEST( vertexingTestRead       test/vertexingTest/read.cc)
 endif()
