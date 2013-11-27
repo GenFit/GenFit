@@ -9,6 +9,10 @@ SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
 SET( ${PROJECT_NAME}_VERSION_MINOR 0 )
 SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 
+# set install destinations
+set( LIBRARY_OUTPUT_DIRECTORY ./lib )
+set( INCLUDE_OUTPUT_DIRECTORY ./include/genfit )
+
 # define path to macros and settings
 LIST( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 # include the macros and settings
@@ -56,20 +60,22 @@ SET(GF_INC_DIRS
     ${GF_INC_DIRS}
 )
 
-
 #search for boost, provide some information to user
 FIND_PACKAGE(Boost)
 IF (Boost_FOUND)
     INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
     MESSAGE("-- Boost is found at: ${Boost_INCLUDE_DIR}")
-    INSTALL( DIRECTORY 
-	    ${GF_INC_DIRS}
-	    DESTINATION ./include/genfit PATTERN ".svn" EXCLUDE 
+    INSTALL( DIRECTORY ${GF_INC_DIRS}
+    	DESTINATION ${INCLUDE_OUTPUT_DIRECTORY}
+	    PATTERN ".svn" EXCLUDE 
 	 )
 ELSE()
     MESSAGE( " Boost was not found on your system, using the one shipped with GENFIT.")
     INCLUDE_DIRECTORIES(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/extern/ )
-    INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/extern/ ${GF_INC_DIRS}  DESTINATION ./include/genfit PATTERN ".svn" EXCLUDE )
+    INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/extern/ ${GF_INC_DIRS}  
+    	DESTINATION ${INCLUDE_OUTPUT_DIRECTORY}
+    	PATTERN ".svn" EXCLUDE 
+    )
 ENDIF()
 
 
@@ -100,6 +106,8 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ansi -pedantic -Wno-long-long -Ws
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g3")
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -O3 -g3")
+
+
 
 
 # include directories 
@@ -276,8 +284,9 @@ endif()
 
 # install
 ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources})
-INSTALL( TARGETS ${PROJECT_NAME} DESTINATION lib )
-
+INSTALL( TARGETS ${PROJECT_NAME} 
+	LIBRARY DESTINATION ${LIBRARY_OUTPUT_DIRECTORY}
+)
 
 # link ROOT libraries
 if(DEFINED ENV{RAVEPATH})
