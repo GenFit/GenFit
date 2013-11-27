@@ -741,6 +741,8 @@ double Track::getTrackLen(AbsTrackRep* rep, int startId, int endId) const {
 
   endId += 1;
 
+  if (rep == NULL)
+    rep = getCardinalRep();
 
   double trackLen(0);
   StateOnPlane state;
@@ -782,6 +784,8 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
 
   endId += 1;
 
+  if (rep == NULL)
+    rep = getCardinalRep();
 
   double tof(0);
   double trackLen(0);

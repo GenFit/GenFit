@@ -193,10 +193,10 @@ class Track : public TObject {
   void deleteMeasurementInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
   void deleteFitterInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
 
-  //! get TrackLength between to trackPoints
-  double getTrackLen(AbsTrackRep* rep, int startId = 0, int endId = -1) const;
-  //! get time of flight in ns between to trackPoints
-  double getTOF(AbsTrackRep* rep, int startId = 0, int endId = -1) const;
+  //! get TrackLength between to trackPoints (if NULL, for cardinal rep)
+  double getTrackLen(AbsTrackRep* rep = NULL, int startId = 0, int endId = -1) const;
+  //! get time of flight in ns between to trackPoints (if NULL, for cardinal rep)
+  double getTOF(AbsTrackRep* rep = NULL, int startId = 0, int endId = -1) const;
 
   //! Helper function: For all KalmanFitterInfos belonging to rep (if NULL, for all reps),
   //! call the fixWeights() function, so that e.g. the DAF will not alter weights anymore.
