@@ -260,6 +260,20 @@ void Track::setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep) {
 }
 
 
+void Track::setStateSeed(const TVector3& pos, const TVector3& mom) {
+  stateSeed_.ResizeTo(6);
+
+  stateSeed_(0) = pos.X();
+  stateSeed_(1) = pos.Y();
+  stateSeed_(2) = pos.Z();
+
+  stateSeed_(3) = mom.X();
+  stateSeed_(4) = mom.Y();
+  stateSeed_(5) = mom.Z();
+}
+
+
+
 void Track::insertPoint(TrackPoint* point, int id) {
 
   point->setTrack(this);

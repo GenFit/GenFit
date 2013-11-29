@@ -21,6 +21,7 @@
 
 #include "TrackPoint.h"
 #include "Exception.h"
+#include "KalmanFitterInfo.h"
 
 #include <iostream>
 
@@ -169,6 +170,11 @@ AbsFitterInfo* TrackPoint::getFitterInfo(const AbsTrackRep* rep) const {
     return fitterInfos_.at(track_->getCardinalRep());
   }
   return fitterInfos_.at(rep);
+}
+
+
+KalmanFitterInfo* TrackPoint::getKalmanFitterInfo(const AbsTrackRep* rep) const {
+  return dynamic_cast<KalmanFitterInfo*>(getFitterInfo(rep));
 }
 
 
