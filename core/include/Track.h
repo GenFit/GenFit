@@ -144,6 +144,7 @@ class Track : public TObject {
 
   const TVectorD& getStateSeed() const {return stateSeed_;}
   void setStateSeed(const TVectorD& s) {stateSeed_.ResizeTo(s); stateSeed_ = s;}
+  void setStateSeed(const TVector3& pos, const TVector3& mom);
 
   const TMatrixDSym& getCovSeed() const {return covSeed_;}
   void setCovSeed(const TMatrixDSym& c) {covSeed_.ResizeTo(c); covSeed_ = c;}
