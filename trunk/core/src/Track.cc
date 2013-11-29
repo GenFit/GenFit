@@ -98,6 +98,15 @@ Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
 }
 
 
+Track::Track(AbsTrackRep* trackRep, const TVector3& posSeed, const TVector3& momSeed) :
+  cardinalRep_(0), fitStatuses_(), stateSeed_(6),
+  covSeed_(TMatrixDSym::kUnit, TMatrixDSym(6))
+{
+  addTrackRep(trackRep);
+  setStateSeed(posSeed, momSeed);
+}
+
+
 Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym& covSeed) :
   cardinalRep_(0), fitStatuses_(), stateSeed_(stateSeed), covSeed_(covSeed)
 {

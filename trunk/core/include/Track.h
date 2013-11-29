@@ -91,6 +91,7 @@ class Track : public TObject {
   Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMeasurement>& factory, AbsTrackRep* rep = NULL);
 
   Track(AbsTrackRep* trackRep, const TVectorD& stateSeed);
+  Track(AbsTrackRep* trackRep, const TVector3& posSeed, const TVector3& momSeed);
   Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym& covSeed);
 
   Track(const Track&); // copy constructor
