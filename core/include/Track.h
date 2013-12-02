@@ -163,6 +163,9 @@ class Track : public TObject {
 
   void deletePoint(int id);
 
+  //! Creates a new TrackPoint contaioning the measurement, and adds it to the track
+  void insertMeasurement(AbsMeasurement* measurement, int id = -1);
+
   /**
    * @brief Merge two tracks.
    *
