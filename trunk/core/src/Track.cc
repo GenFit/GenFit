@@ -426,6 +426,11 @@ void Track::deletePoint(int id) {
 }
 
 
+void Track::insertMeasurement(AbsMeasurement* measurement, int id) {
+  insertPoint(new TrackPoint(measurement, this), id);
+}
+
+
 void Track::mergeTrack(const Track* other, int id) {
 
   #ifdef DEBUG
