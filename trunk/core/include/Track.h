@@ -37,6 +37,8 @@
 
 namespace genfit {
 
+class KalmanFitStatus;
+
 /**
  * @brief Helper class for TrackPoint sorting, used in Track::sort().
  */
@@ -141,6 +143,12 @@ class Track : public TObject {
   bool hasFitStatus(const AbsTrackRep* rep = NULL) const;
   //! Get FitStatus for a AbsTrackRep. Per default, return FitStatus for cardinalRep.
   FitStatus* getFitStatus(const AbsTrackRep* rep = NULL) const {if (rep == NULL) rep = getCardinalRep(); return fitStatuses_.at(rep);}
+
+  //! Check if track has a KalmanFitStatus for given AbsTrackRep. Per default, check for cardinal rep.
+  bool hasKalmanFitStatus(const AbsTrackRep* rep = NULL) const;
+  //! If FitStatus is a KalmanFitStatus, return it. Otherwise return NULL
+  KalmanFitStatus* getKalmanFitStatus(const AbsTrackRep* rep = NULL) const;
+
   void setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep);
 
   const TVectorD& getStateSeed() const {return stateSeed_;}
@@ -172,13 +180,13 @@ class Track : public TObject {
    * The TrackPoint objects of other will be cloned and inserted
    * after id (per default, they will be appended at the end).
    * The other Track will not be altered, the TrackPoint objects will be (deep) copied.
-   * Only copies the TrackPoint objects, NOT the AbsTrackRep, FitStatus, seed state and other objets of the other track.
+   * Only copies the TrackPoint objects, NOT the AbsTrackRep, FitStatus, seed state and other objects of the other track.
    */
   void mergeTrack(const Track* other, int id = -1);
 
   void addTrackRep(AbsTrackRep* trackRep);
 
-  //! Delete a AbsTrackRep and all corresponding AbsFitterInfo objets in every TrackPoint.
+  //! Delete a AbsTrackRep and all corresponding AbsFitterInfo objects in every TrackPoint.
   void deleteTrackRep(int id);
 
   void setCardinalRep(int id);

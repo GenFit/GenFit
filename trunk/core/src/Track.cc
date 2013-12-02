@@ -21,7 +21,8 @@
 
 #include "Exception.h"
 #include "KalmanFitterInfo.h"
-#include <PlanarMeasurement.h>
+#include "KalmanFitStatus.h"
+#include "PlanarMeasurement.h"
 
 #include <algorithm>
 #include <iostream>
@@ -258,6 +259,22 @@ bool Track::hasFitStatus(const AbsTrackRep* rep) const {
     return false;
 
   return (fitStatuses_.at(rep) != NULL);
+}
+
+
+bool Track::hasKalmanFitStatus(const AbsTrackRep* rep) const {
+  if (rep == NULL)
+    rep = getCardinalRep();
+
+  if (fitStatuses_.find(rep) == fitStatuses_.end())
+    return false;
+
+  return (dynamic_cast<KalmanFitStatus*>(fitStatuses_.at(rep)) != NULL);
+}
+
+
+KalmanFitStatus* Track::getKalmanFitStatus(const AbsTrackRep* rep) const {
+  return dynamic_cast<KalmanFitStatus*>(getFitStatus(rep));
 }
 
 
