@@ -63,13 +63,36 @@ GFRaveVertexFactory::~GFRaveVertexFactory(){
 
 
 void
-GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFvertices, const std::vector < genfit::Track* > & GFTracks, bool use_beamspot ){
+GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFvertices,
+    const std::vector < genfit::Track* > & GFTracks,
+    bool use_beamspot ){
 
   clearMap();
 
   try{
     RaveToGFVertices(GFvertices,
-                     factory_->create(GFTracksToTracks(GFTracks, IdGFTrackStateMap_, 0),
+                     factory_->create(GFTracksToTracks(GFTracks, NULL, IdGFTrackStateMap_, 0),
+                                      use_beamspot),
+                     IdGFTrackStateMap_);
+  }
+  catch(Exception & e){
+    std::cerr << e.what();
+  }
+
+}
+
+
+void
+GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFvertices,
+    const std::vector < genfit::Track* > & GFTracks,
+    std::vector < genfit::MeasuredStateOnPlane* > & GFStates,
+    bool use_beamspot ){
+
+  clearMap();
+
+  try{
+    RaveToGFVertices(GFvertices,
+                     factory_->create(GFTracksToTracks(GFTracks, &GFStates, IdGFTrackStateMap_, 0),
                                       use_beamspot),
                      IdGFTrackStateMap_);
   }

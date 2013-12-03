@@ -58,8 +58,11 @@ namespace genfit {
    * also builds a map of unique ids to genfit::Tracks; These ids are stored in the rave::tracks. They are counted from startID.
    * The map has to be passed to the GFRavePropagator, so that it can access the trackreps of the genfit::Tracks corresponding to the
    * rave::tracks.
+   * If a vector of MeasuredStateOnPlane is provided, they will be used (instead of the tracks fitted states) to calculate the rave::Track parameters.
+   * Ownership over MeasuredStateOnPlane will be taken.
    */
   std::vector < rave::Track > GFTracksToTracks(const std::vector < genfit::Track* > & GFTracks,
+                                               std::vector < genfit::MeasuredStateOnPlane* > * GFStates, // = NULL
                                                std::map<int, genfit::trackAndState>& IdGFTrackStateMap,
                                                int startID = 0);
 

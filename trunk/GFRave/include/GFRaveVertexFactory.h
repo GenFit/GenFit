@@ -32,6 +32,7 @@
 
 #include "GFRaveVertex.h"
 #include "Track.h"
+#include "MeasuredStateOnPlane.h"
 
 #include <vector>
 
@@ -68,6 +69,8 @@ class GFRaveVertexFactory {
 
   // functions
   void findVertices ( std::vector <  genfit::GFRaveVertex* > *, const std::vector < genfit::Track* > &, bool use_beamspot=false );
+  //! MeasuredStateOnPlanes will be used (instead of the tracks fitted states) to calculate the rave::Track parameters. takes ownership of MeasuredStateOnPlanes.
+  void findVertices ( std::vector <  genfit::GFRaveVertex* > *, const std::vector < genfit::Track* > &, std::vector < genfit::MeasuredStateOnPlane* > &, bool use_beamspot=false );
 
   void setBeamspot(const TVector3 & pos, const TMatrixDSym & cov);
 
