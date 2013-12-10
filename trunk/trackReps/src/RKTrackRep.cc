@@ -627,6 +627,15 @@ void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, 
   transformPM6(state, *((M6x6*) cov.GetMatrixArray()));
 }
 
+
+TMatrixDSym RKTrackRep::get6DCov(const MeasuredStateOnPlane& state) const {
+  TMatrixDSym cov;
+  transformPM6(state, *((M6x6*) cov.GetMatrixArray()));
+
+  return cov;
+}
+
+
 double RKTrackRep::getCharge(const StateOnPlane& state) const {
 
   if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
