@@ -198,6 +198,9 @@ class AbsTrackRep : public TObject {
   //! Get the 6D state vector (x, y, z, p_x, p_y, p_z).
   virtual TVectorD get6DState(const StateOnPlane& state) const;
 
+  //! Get the 6D covariance.
+  virtual TMatrixDSym get6DCov(const MeasuredStateOnPlane& state) const = 0;
+
   //! Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance.
   virtual void getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const = 0;
 
