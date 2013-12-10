@@ -60,6 +60,7 @@ class MeasuredStateOnPlane : public StateOnPlane {
   void setCov(const TMatrixDSym& cov) {if(cov_.GetNrows() == 0) cov_.ResizeTo(cov); cov_ = cov;}
 
   // Shortcuts to TrackRep functions
+  TMatrixDSym get6DCov() const {return getRep()->get6DCov(*this);};
   void getPosMomCov(TVector3& pos, TVector3& mom, TMatrixDSym& cov) const {getRep()->getPosMomCov(*this, pos, mom, cov);}
   void get6DStateCov(TVectorD& stateVec, TMatrixDSym& cov) const {getRep()->get6DStateCov(*this, stateVec, cov);}
   double getMomVar() const {return getRep()->getMomVar(*this);}
