@@ -886,6 +886,47 @@ double RKTrackRep::getRadiationLenght() const {
 }
 
 
+double RKTrackRep::getTOF() const {
+
+  // Todo: test
+
+  if (RKSteps_.size() == 0) {
+    Exception exc("RKTrackRep::getTOF ==> cache is empty.",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  double m = getMass(lastStartState_); // GeV
+  double m2 = m*m;
+  static const double c = TMath::Ccgs(); // cm/s
+  double p1(0), p2(0), trackLen(0), beta(0);
+
+  double tof(0);
+
+  p1 = lastStartState_.getMomMag();
+
+  for (unsigned int i = 0; i<RKSteps_.size(); ++i) {
+    trackLen = RKSteps_[i].matStep_.stepSize_; // [cm]
+    p2 = momMag(RKSteps_[i].state7_);
+
+    if (fabs(p1-p2) < 1E-6) {
+      double p = (p1+p2)/2.;
+      beta = p / sqrt(m2 + p*p);
+      tof += 1.E9 * trackLen / (c*beta); // [ns]
+    }
+    else {
+      // assume linear momentum loss
+      tof += 1.E9 / c / (p1 - p2) * trackLen *
+             (sqrt(m2 + p1*p1) - sqrt(m2 + p2*p2) +
+              m * log( p1/p2 * (m + sqrt(m2 + p2*p2)) / (m + sqrt(m2 + p1*p1)) ) ); // [ns]
+    }
+
+    p1 = p2;
+  }
+
+  return tof;
+}
+
+
 void RKTrackRep::setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const {
 
   if (state.getRep() != this){
@@ -2436,6 +2477,12 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
 
     lastStartState_.setStatePlane(state.getState(), state.getPlane());
   }
+}
+
+
+double RKTrackRep::momMag(const M1x7& state7) const {
+  double momMag2 = state7[3]*state7[3] + state7[4]*state7[4] + state7[5]*state7[5];
+  return sqrt(momMag2);
 }
 
 
