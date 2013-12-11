@@ -240,6 +240,9 @@ class AbsTrackRep : public TObject {
   //! Get the accumulated X/X0 (path / radiation length) of the material crossed in the last extrapolation.
   virtual double getRadiationLenght() const = 0;
 
+  //! Get the time of flight [ns] of the last extrapolation
+  virtual double getTOF() const = 0;
+
   /**
    * @brief Calculate Jacobian of transportation numerically.
    * Slow but accurate. Can be used to validate (semi)analytic calculations.

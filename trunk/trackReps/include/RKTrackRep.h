@@ -133,6 +133,8 @@ class RKTrackRep : public AbsTrackRep {
 
   virtual double getRadiationLenght() const;
 
+  virtual double getTOF() const;
+
 
   virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const;
   virtual void setPosMom(StateOnPlane& state, const TVectorD& state6) const;
@@ -245,6 +247,7 @@ class RKTrackRep : public AbsTrackRep {
 
   void checkCache(const StateOnPlane& state, const SharedPlanePtr* plane) const;
 
+  double momMag(const M1x7& state7) const;
 
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
