@@ -117,6 +117,7 @@ class Track : public TObject {
    * @brief Shortcut to get FittedStates.
    *
    * Uses getPointWithMeasurementAndFitterInfo(id, rep).
+   * Gets the fitted state at trackpoint id for the track representation rep.
    * Per default, the fitted state of the fitterInfo of the first TrackPoint
    * with one or more AbsMeasurement and AbsFitterInfo objects
    * is returned. If no AbsTrackRep is specified, the AbsFitterInfo of the cardinal rep will be used.
