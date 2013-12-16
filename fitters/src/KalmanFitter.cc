@@ -336,40 +336,28 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   if (!tp->hasRawMeasurements())
     return;
 
+  SharedPlanePtr plane;
+  bool oldWeightsFixed(false);
+  std::vector<double> oldWeights;
+
   // construct measurementsOnPlane if forward fit
   if (direction == 1) {
     // remember old weights
-    std::vector<double> oldWeights = fi->getWeights();
-    bool oldWeightsFixed = fi->areWeightsFixed();
+    oldWeights = fi->getWeights();
+    oldWeightsFixed = fi->areWeightsFixed();
 
     // delete outdated stuff
     fi->deleteForwardInfo();
     fi->deleteBackwardInfo();
     fi->deleteMeasurementInfo();
 
-    // construct new MeasurementsOnPlane
-    const std::vector< genfit::AbsMeasurement* >& rawMeasurements =  tp->getRawMeasurements();
     // construct plane with first measurement
-    SharedPlanePtr plane = rawMeasurements[0]->constructPlane(*currentState_);
-    for (std::vector< genfit::AbsMeasurement* >::const_iterator it = rawMeasurements.begin(); it != rawMeasurements.end(); ++it) {
-      fi->addMeasurementsOnPlane((*it)->constructMeasurementsOnPlane(rep, plane));
-    }
-    if (oldWeights.size() == fi->getNumMeasurements()) {
-      fi->setWeights(oldWeights);
-      fi->fixWeights(oldWeightsFixed);
-      if (debugLvl_ > 0) {
-        std::cout << "set old weights \n";
-      }
-    }
-    assert(fi->getPlane() == plane);
-    assert(fi->checkConsistency());
+    const std::vector< genfit::AbsMeasurement* >& rawMeasurements =  tp->getRawMeasurements();
+    plane = rawMeasurements[0]->constructPlane(*currentState_);
   }
-  const SharedPlanePtr plane = fi->getPlane();
+  else
+    plane = fi->getPlane();
 
-  if (debugLvl_ > 0) {
-    std::cout << "its plane is at R = " << plane->getO().Perp()
-        << " with normal pointing along (" << plane->getNormal().X() << ", " << plane->getNormal().Y() << ", " << plane->getNormal().Z() << ")" << std::endl;
-  }
 
 
   // Extrapolate
@@ -385,10 +373,34 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   // unique_ptr takes care of disposing of the old prediction, takes ownership of state.
   fi->setPrediction(state, direction);
 
+
+  // construct new MeasurementsOnPlane
+  if (direction == 1) {
+    const std::vector< genfit::AbsMeasurement* >& rawMeasurements =  tp->getRawMeasurements();
+    for (std::vector< genfit::AbsMeasurement* >::const_iterator it = rawMeasurements.begin(); it != rawMeasurements.end(); ++it) {
+      fi->addMeasurementsOnPlane((*it)->constructMeasurementsOnPlane(*state));
+    }
+    if (oldWeights.size() == fi->getNumMeasurements()) {
+      fi->setWeights(oldWeights);
+      fi->fixWeights(oldWeightsFixed);
+      if (debugLvl_ > 0) {
+        std::cout << "set old weights \n";
+      }
+    }
+    assert(fi->getPlane() == plane);
+    assert(fi->checkConsistency());
+  }
+
+  if (debugLvl_ > 0) {
+    std::cout << "its plane is at R = " << plane->getO().Perp()
+        << " with normal pointing along (" << plane->getNormal().X() << ", " << plane->getNormal().Y() << ", " << plane->getNormal().Z() << ")" << std::endl;
+  }
+
+
+  // update(s)
   TVectorD stateVector(state->getState());
   TMatrixDSym cov(state->getCov());
 
-  // update(s)
   double chi2inc = 0;
   double ndfInc = 0;
   const std::vector<MeasurementOnPlane *> measurements = getMeasurements(fi, tp, direction);

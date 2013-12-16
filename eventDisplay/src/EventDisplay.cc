@@ -618,8 +618,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
           // draw planar hits, with distinction between strip and pixel hits ----------------
           if (full_hit) {
 
-            StateOnPlane dummy;
-            MeasuredStateOnPlane sop = *(static_cast<const FullMeasurement*>(m)->constructMeasurementsOnPlane(rep, static_cast<const FullMeasurement*>(m)->constructPlane(dummy))[0]);
+            StateOnPlane dummy(rep);
+            StateOnPlane dummy2(TVectorD(rep->getDim()), static_cast<const FullMeasurement*>(m)->constructPlane(dummy), rep);
+            MeasuredStateOnPlane sop = *(static_cast<const FullMeasurement*>(m)->constructMeasurementsOnPlane(dummy2)[0]);
             sop.getCov()*=errorScale_;
 
             MeasuredStateOnPlane prevSop(sop);

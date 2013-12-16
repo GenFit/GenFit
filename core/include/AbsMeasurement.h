@@ -69,16 +69,22 @@ class AbsMeasurement : public TObject {
   /**
    * Construct (virtual) detector plane (use state's AbsTrackRep).
    * It's possible to make corrections to the plane here.
+   * The state should be defined somewhere near the measurement.
+   * For virtual planes, the state will be extrapolated to the POCA to point (SpacepointMeasurement)
+   * or line (WireMeasurement), and from this info the plane will be constructed.
    */
   virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const = 0;
 
   /**
-   * Construct MeasurementOnPlane on given plane wrt. given AbsTrackRep.
-   * The AbsMeasurement has to be projected onto the plane.
-   * It's possible to make corrections to the coordinates here.
+   * Construct MeasurementOnPlane on plane of the state
+   * and wrt the states TrackRep.
+   * The state will usually be the prediction or reference state,
+   * and has to be defined AT the measurement.
+   * The AbsMeasurement will be projected onto the plane.
+   * It's possible to make corrections to the coordinates here (e.g. by using the state coordinates).
    * Usually the vector will contain only one element. But in the case of e.g. a WireMeasurement, it will be 2 (left and right).
    */
-  virtual std::vector<genfit::MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const = 0;
+  virtual std::vector<genfit::MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const = 0;
 
   /**
    * Returns a new AbsHMatrix object. Caller must take ownership.

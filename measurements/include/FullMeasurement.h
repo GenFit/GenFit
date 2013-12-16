@@ -51,7 +51,7 @@ class FullMeasurement : public AbsMeasurement {
 
   virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
 
-  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const;
+  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const;
 
   virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
 

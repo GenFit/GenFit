@@ -86,7 +86,7 @@ SharedPlanePtr WireMeasurement::constructPlane(const StateOnPlane& state) const 
 }
 
 
-std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(const AbsTrackRep* rep, const SharedPlanePtr& plane) const
+std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(const StateOnPlane& state) const
 {
   double mR = rawHitCoords_(6);
   double mL = -mR;
@@ -94,11 +94,11 @@ std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(c
 
   MeasurementOnPlane* mopL = new MeasurementOnPlane(TVectorD(1, &mL),
 			 TMatrixDSym(1, &V),
-			 plane, rep, constructHMatrix(rep));
+			 state.getPlane(), state.getRep(), constructHMatrix(state.getRep()));
 
   MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(1, &mR),
        TMatrixDSym(1, &V),
-       plane, rep, constructHMatrix(rep));
+       state.getPlane(), state.getRep(), constructHMatrix(state.getRep()));
 
   // set left/right weights
   if (leftRight_ < 0) {
