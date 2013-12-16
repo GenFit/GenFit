@@ -77,11 +77,7 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMea
   stateSeed_ = trackCand.getStateSeed();
 
   // initial guess for cov
-  double resolution = sqrt(factoryHits[0]->getRawHitCov().Max());
-  for (int i = 0; i < 3; ++i)
-    covSeed_(i,i) = resolution*resolution;
-  for (int i = 3; i < 6; ++i)
-    covSeed_(i,i) = pow(resolution / factoryHits.size() / sqrt(3), 2);
+  covSeed_ = trackCand.getCovSeed();
 
   // fill cache
   fillPointsWithMeasurement();

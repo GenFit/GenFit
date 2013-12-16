@@ -131,9 +131,16 @@ int main() {
       momM.SetMag(gRandom->Gaus(mom.Mag(), momMagSmear*mom.Mag()));
     }
 
+    // initial guess for cov
+    TMatrixDSym covSeed(6);
+    for (int i = 0; i < 3; ++i)
+      covSeed(i,i) = resolution*resolution;
+    for (int i = 3; i < 6; ++i)
+      covSeed(i,i) = pow(resolution / nMeasurements / sqrt(3), 2);
+
 
     // set start values and pdg to cand
-    myCand.setPosMomSeedAndPdgCode(posM, momM, pdg);
+    myCand.setPosMomSeedAndPdgCode(posM, momM, pdg, covSeed);
 
 
     // create track
