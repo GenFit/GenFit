@@ -58,6 +58,7 @@ TrackPoint::TrackPoint(AbsMeasurement* rawMeasurement, Track* track) :
 
 
 TrackPoint::TrackPoint(const TrackPoint& rhs) :
+  TObject(rhs),
   sortingParameter_(rhs.sortingParameter_), track_(rhs.track_), thinScatterer_(NULL)
 {
   // clone rawMeasurements

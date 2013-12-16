@@ -63,6 +63,7 @@ DetPlane::~DetPlane(){
 
 
 DetPlane::DetPlane(const DetPlane& rhs) :
+  TObject(rhs),
   o_(rhs.o_),
   u_(rhs.u_),
   v_(rhs.v_)

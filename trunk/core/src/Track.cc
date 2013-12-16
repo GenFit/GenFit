@@ -115,8 +115,9 @@ Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym
 }
 
 
-Track::Track(const Track& rhs)
-  : cardinalRep_(rhs.cardinalRep_), stateSeed_(rhs.stateSeed_), covSeed_(rhs.covSeed_)
+Track::Track(const Track& rhs) :
+  TObject(rhs),
+  cardinalRep_(rhs.cardinalRep_), stateSeed_(rhs.stateSeed_), covSeed_(rhs.covSeed_)
 {
   assert(rhs.checkConsistency());
 
