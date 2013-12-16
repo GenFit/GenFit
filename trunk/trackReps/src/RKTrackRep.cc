@@ -629,7 +629,7 @@ void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, 
 
 
 TMatrixDSym RKTrackRep::get6DCov(const MeasuredStateOnPlane& state) const {
-  TMatrixDSym cov;
+  TMatrixDSym cov(6);
   transformPM6(state, *((M6x6*) cov.GetMatrixArray()));
 
   return cov;
