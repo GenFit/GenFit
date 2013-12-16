@@ -42,11 +42,11 @@ WirePointMeasurement::WirePointMeasurement(const TVectorD& rawHitCoords, const T
 }
 
 
-std::vector<MeasurementOnPlane*> WirePointMeasurement::constructMeasurementsOnPlane(const AbsTrackRep* rep, const SharedPlanePtr& plane) const
+std::vector<MeasurementOnPlane*> WirePointMeasurement::constructMeasurementsOnPlane(const StateOnPlane& state) const
 {
   MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(2),
        TMatrixDSym(2),
-       plane, rep, constructHMatrix(rep));
+       state.getPlane(), state.getRep(), constructHMatrix(state.getRep()));
 
   mopR->getState()(0) = rawHitCoords_(6);
   mopR->getState()(1) = rawHitCoords_(7);
