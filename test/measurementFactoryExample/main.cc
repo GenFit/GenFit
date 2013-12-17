@@ -140,7 +140,8 @@ int main() {
 
 
     // set start values and pdg to cand
-    myCand.setPosMomSeedAndPdgCode(posM, momM, pdg, covSeed);
+    myCand.setPosMomSeedAndPdgCode(posM, momM, pdg);
+    myCand.setCovSeed(covSeed);
 
 
     // create track

@@ -124,6 +124,9 @@ class TrackCand : public TObject {
   /** @brief get the seed value for track: mom. Identical to the last 3 components of getStateSeed*/
   TVector3 getMomSeed() const {return TVector3(state6D_(3), state6D_(4), state6D_(5));}
 
+  /** @brief set the covariance matrix seed (6D).  */
+  void setCovSeed(const TMatrixDSym& cov6D) {cov6D_ = cov6D; /* always 6D, no need to resize */}
+
   /** @brief get the covariance matrix seed (6D).  */
   const TMatrixDSym& getCovSeed() const {return cov6D_;}
 
@@ -168,20 +171,20 @@ class TrackCand : public TObject {
   /** @brief sets the state to seed the track fitting. State has to be a TVectorD(6). First 3 elements are the staring postion second 3 elements the starting momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
    */
-  void set6DSeed(const TVectorD& state6D, const double charge, const TMatrixDSym& cov6D);
+  void set6DSeed(const TVectorD& state6D, const double charge);
 
   /** @brief This function works the same as set6DSeed but instead of a charge hypothesis you can set a pdg code which will set the charge automatically
    */
-  void set6DSeedAndPdgCode(const TVectorD& state6D, const int pdgCode, const TMatrixDSym& cov6D);
+  void set6DSeedAndPdgCode(const TVectorD& state6D, const int pdgCode);
 
   /** @brief sets the state to seed the track fitting. State has to be a TVector3 for position and a TVector3 for momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
    */
-  void setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge, const TMatrixDSym& cov6D);
+  void setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge);
 
   /** @brief This function works the same as setPosMomSeed but instead of a charge hypothesis you can set a pdg code which will set the charge automatically
    */
-  void setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode, const TMatrixDSym& cov6D);
+  void setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode);
 
 
  private:

@@ -235,30 +235,26 @@ void TrackCand::sortHits(const std::vector<unsigned int>& indices){
 }
 
 
-void TrackCand::set6DSeed(const TVectorD& state6D, const double charge, const TMatrixDSym& cov6D) {
+void TrackCand::set6DSeed(const TVectorD& state6D, const double charge) {
   q_ = charge;
   state6D_ = state6D;
-  cov6D_ = cov6D;
 }
 
-  void TrackCand::set6DSeedAndPdgCode(const TVectorD& state6D, const int pdgCode, const TMatrixDSym& cov6D) {
+void TrackCand::set6DSeedAndPdgCode(const TVectorD& state6D, const int pdgCode) {
   setPdgCode(pdgCode);
   state6D_ = state6D;
-  cov6D_ = cov6D;
 }
 
-void TrackCand::setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge, const TMatrixDSym& cov6D) {
+void TrackCand::setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge) {
   q_ = charge;
   state6D_[0] = pos[0];  state6D_[1] = pos[1];  state6D_[2] = pos[2];
   state6D_[3] = mom[0];  state6D_[4] = mom[1];  state6D_[5] = mom[2];
-  cov6D_ = cov6D;
 }
 
-void TrackCand::setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode, const TMatrixDSym& cov6D) {
+void TrackCand::setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode) {
   setPdgCode(pdgCode);
   state6D_[0] = pos[0];  state6D_[1] = pos[1];  state6D_[2] = pos[2];
   state6D_[3] = mom[0];  state6D_[4] = mom[1];  state6D_[5] = mom[2];
-  cov6D_ = cov6D;
 }
 
 

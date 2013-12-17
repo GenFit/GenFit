@@ -1143,6 +1143,11 @@ bool Track::checkConsistency() const {
     retVal = false;
   }
 
+  if (covSeed_.Max() == 0.) {
+    std::cerr << "Track::checkConsistency(): covSeed_ zero" << std::endl;
+    retVal = false;
+  }
+
   // check if cardinalRep_ is in range of trackReps_
   if (trackReps_.size() && cardinalRep_ >= trackReps_.size()) {
     std::cerr << "Track::checkConsistency(): cardinalRep id " << cardinalRep_ << " out of bounds" << std::endl;
