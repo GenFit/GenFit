@@ -176,7 +176,6 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool r
 		  << " new chi2s: " << chi2BW << ", " << chi2FW
 		  << " oldPvals " << oldPvalFW << ", " << oldPvalBW << std::endl;
       }
-
       ++nIt;
 
       double PvalBW = ROOT::Math::chisquared_cdf_c(chi2BW, ndfBW);
@@ -451,8 +450,12 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
       {
         // Square Root formalism, Anderson & Moore, 6.5.12 gives the
         // formalism for combined update and prediction in that
-        // sequence.  We need the opposite sequence.  Therefore, this is
-        // my own invention.
+        // sequence.  We need the opposite sequence.  Therefore, this
+        // is my own invention.  This is not optimized for speed
+        // outside the QR decomposition code (which would be faster if
+        // it were to work on the transposed matrix).  First step
+        // would be replacing the use of TMatrixDSymEigen with an LDLt
+        // transformation.
         TMatrixD F;
         TMatrixDSym noise;
         TVectorD deltaState;
@@ -469,10 +472,6 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
         // applied element-wise and negative eigenvalues are forced to
         // zero.  We then reduce the matrix such that the zero
         // eigenvalues don't appear in the remainder of the calculation.
-        //
-        // FIXME
-        // Careful, this is not tested with actual noise.  Do I need the
-        // transpose???
         TMatrixDSymEigen eig(noise);
         TMatrixD Q(eig.GetEigenVectors());
         const TVectorD& evs(eig.GetEigenValues());
@@ -481,7 +480,6 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
         int iCol = 0;
         for (; iCol < Q.GetNcols(); ++iCol) {
           double ev = evs(iCol) > 0 ? sqrt(evs(iCol)) : 0;
-          //FIXME, see below we do no resizing as of now
           if (ev == 0)
             break;
           for (int j = 0; j < Q.GetNrows(); ++j)
@@ -495,7 +493,6 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
         // TMatrixDSym(TMatrixDSym::kAtA,TMatrixD(TMatrixD::kTransposed,Q)).Print();
         // i.e., we now have the transposed we need.
 
-        //std::cout << "cov root" << std::endl;
         TDecompChol oldCovDecomp(oldCov);
         oldCovDecomp.Decompose();
         const TMatrixD& S(oldCovDecomp.GetU()); // this actually the transposed we want.
@@ -504,14 +501,13 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
         decompR.Decompose();
 
         TMatrixD pre(S.GetNrows() + Q.GetNrows() + V.GetNrows(),
-         S.GetNcols() + V.GetNcols());
+		     S.GetNcols() + V.GetNcols());
         TMatrixD SFt(S, TMatrixD::kMultTranspose, F);
-        pre.SetSub(                        0,0,decompR.GetU()); /* upper right block is zero */
-        pre.SetSub(             V.GetNrows(),0,H->MHt(SFt)); pre.SetSub(V.GetNrows(),             V.GetNcols(),SFt);
+        pre.SetSub(                        0,  0,decompR.GetU());/*           upper right block is zero               */
+        pre.SetSub(             V.GetNrows(),  0,H->MHt(SFt));   pre.SetSub(V.GetNrows(),             V.GetNcols(),SFt);
         if (Q.GetNrows() > 0) { // needed to suppress warnings when inserting an empty Q
-          pre.SetSub(S.GetNrows()+V.GetNrows(),0,H->MHt(Q));   pre.SetSub(S.GetNrows()+V.GetNrows(),V.GetNcols(),Q);
+          pre.SetSub(S.GetNrows()+V.GetNrows(),0,H->MHt(Q));     pre.SetSub(S.GetNrows()+V.GetNrows(),V.GetNcols(),  Q);
         }
-
 
         tools::QR(pre);
         const TMatrixD& r = pre;
@@ -522,7 +518,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
         //K.Print();
         //(K*R).Print();
         TMatrixD Snew(r.GetSub(V.GetNrows(), V.GetNrows() + S.GetNrows() - 1,
-             V.GetNcols(), pre.GetNcols()-1));
+			       V.GetNcols(), pre.GetNcols()-1));
         //Snew.Print();
         // No need for matrix inversion.
         TVectorD update(res);
