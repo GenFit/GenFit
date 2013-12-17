@@ -168,6 +168,13 @@ class Track : public TObject {
    */
   void insertPoint(TrackPoint* point, int id = -1);
 
+  /**
+   * @brief Insert TrackPoints BEFORE TrackPoint with position id, if id >= 0.
+   *
+   * Id -1 means after last TrackPoint. Id -2 means before last TrackPoint. ...
+   * Also deletes backwardInfos before and for new points and forwardInfos after and for new points.
+   * Also sets Track backpointers of points accordingly.
+   */
   void insertPoints(std::vector<genfit::TrackPoint*> points, int id = -1);
 
   void deletePoint(int id);
@@ -200,6 +207,9 @@ class Track : public TObject {
    * Returns if the order of the TrackPoint has actually changed.
    */
   bool sort();
+
+  //! Flip the ordering of the TrackPoints
+  void reverseTrackPoints();
 
   void deleteForwardInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
   void deleteBackwardInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
