@@ -615,6 +615,18 @@ bool Track::sort() {
 }
 
 
+void Track::reverseTrackPoints() {
+
+  std::reverse(trackPoints_.begin(),trackPoints_.end());
+
+  deleteForwardInfo(0, -1);
+  deleteBackwardInfo(0, -1);
+  deleteReferenceInfo(0, -1);
+
+  fillPointsWithMeasurement();
+}
+
+
 void Track::deleteForwardInfo(int startId, int endId, const AbsTrackRep* rep) {
   #ifdef DEBUG
   std::cout << "Track::deleteForwardInfo from position " << startId  << " to " << endId << "\n";
