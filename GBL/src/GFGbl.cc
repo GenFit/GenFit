@@ -48,9 +48,7 @@
 #include "KalmanFitStatus.h"
 #include "KalmanFittedStateOnPlane.h"
 
-#include "MyDebugTools.h"
 #include "Track.h"
-#include <TFile.h>
 #include <TTree.h>
 #include <string>
 #include <list>
@@ -61,7 +59,6 @@
 #include <TMatrixD.h>
 #include <TVectorDfwd.h>
 #include <TMatrixT.h>
-#include <CLHEP/Vector/Sqr.h>
 
 
 #define DEBUG
@@ -130,7 +127,8 @@ void getScattererFromMatList(double& length, double& theta, double& s, double& d
   double xmin = 0.;
   double xmax = 0.;
 
-  for (MatStep step : steps) {
+  for (unsigned int i = 0; i < steps.size(); i++) {
+    const MatStep step = steps.at(i);
     // inverse of material radiation length ... (in 1/cm) ... "density of scattering"
     double rho = 1. / step.materialProperties_.getRadLen();
     len += fabs(step.stepSize_);
@@ -346,8 +344,8 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
         && trk->getPointWithMeasurement(ipoint_meas)->getNumRawMeasurements() == 2
         && point_meas->getRawMeasurement(0)->getDim() == 1
         && point_meas->getRawMeasurement(1)->getDim() == 1) {
-      AbsMeasurement* raw_measU;
-      AbsMeasurement* raw_measV;
+      AbsMeasurement* raw_measU = 0;
+      AbsMeasurement* raw_measV = 0;
 
       // cout << " Two 1D Measurements encountered. " << endl;
 
