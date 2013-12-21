@@ -64,6 +64,13 @@ class GFGbl : public AbsFitter {
   virtual ~GFGbl() {;}
 
   /**
+   * Required to write and close ROOT file
+   * with debug output. Destructor cannot be used.
+   * To be called from endRun function of a module
+   */
+  void endRun();  
+  
+  /**
    * Performs fit on a Track.
    * Hit resorting currently NOT supported.
    */
@@ -80,3 +87,4 @@ class GFGbl : public AbsFitter {
 /** @} */
 
 #endif // GFGBL_H
+
