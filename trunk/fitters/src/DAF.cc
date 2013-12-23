@@ -39,7 +39,7 @@
 namespace genfit {
 
 DAF::DAF(bool useRefKalman)
-  : AbsKalmanFitter(10), deltaWeight_(0.001)
+  : AbsKalmanFitter(10), deltaWeight_(0.1)
 {
   if (useRefKalman) {
     kalman_.reset(new KalmanFitterRefTrack());
@@ -56,7 +56,7 @@ DAF::DAF(bool useRefKalman)
 }
 
 DAF::DAF(AbsKalmanFitter* kalman)
-  : AbsKalmanFitter(10), deltaWeight_(0.001)
+  : AbsKalmanFitter(10), deltaWeight_(0.1)
 {
   kalman_.reset(kalman);
   kalman_->setMultipleMeasurementHandling(weightedAverage); // DAF makes no sense otherwise
