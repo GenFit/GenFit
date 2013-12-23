@@ -211,6 +211,8 @@ void DAF::setBetas(double b1,double b2,double b3,double b4,double b5,double b6,d
 
 
 void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) {
+  // The betas are calculated as a geometric series that takes nSteps
+  // steps to go from bStart to bFinal.
   assert(bStart > bFinal);
   assert(bFinal > 1.E-10);
   assert(nSteps > 1);
@@ -219,11 +221,8 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
 
   betas_.clear();
 
-  const double x = log(bStart/bFinal)/log(2)/(nSteps-1);
-
   for (unsigned int i=0; i<nSteps; ++i) {
-    double exp = double(nSteps-i-1)*x;
-    betas_.push_back(bFinal * pow(2., exp));
+    betas_.push_back(bStart * pow(bFinal / bStart, i / (nSteps - 1.)));
   }
 
   betas_.resize(maxIterations_,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
@@ -286,7 +285,7 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
           twoPiN = pow(twoPiN, hitDim);
 
         double chi2 = Vinv.Similarity(resid);
-        if (debugLvl_ > 0) {
+        if (debugLvl_ > 1) {
           std::cout<<"chi2 = " << chi2 << "\n";
         }
 
@@ -318,18 +317,19 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
       }
 
       if (debugLvl_ > 0) {
-        std::cout<<"\t old weight: " << kfi->getMeasurementOnPlane(j)->getWeight();
-        std::cout<<"\t new weight: " << weight;
+	if (debugLvl_ > 1 || absChange > deltaWeight_) {
+	  std::cout<<"\t old weight: " << kfi->getMeasurementOnPlane(j)->getWeight();
+	  std::cout<<"\t new weight: " << weight;
+	}
       }
 
       kfi->getMeasurementOnPlane(j)->setWeight(weight);
     }
+  }
 
-    if (debugLvl_ > 0) {
-      std::cout << "\t  ";
-      std::cout << "max abs weight change = " << maxAbsChange << "\n";
-    }
-
+  if (debugLvl_ > 0) {
+    std::cout << "\t  ";
+    std::cout << "max abs weight change = " << maxAbsChange << "\n";
   }
 
   return converged;
