@@ -66,6 +66,9 @@
 
 #ifdef DEBUG
 ofstream debug("gbl.debug");
+#endif
+
+#ifdef OUTPUT
 TFile* diag;
 TH1F* resHistosU[6];
 TH1F* resHistosV[6];
@@ -73,13 +76,12 @@ TH1F* mhistosU[6];
 TH1F* mhistosV[6];
 TH1F* ghistosU[6];
 TH1F* ghistosV[6];
+TH1F* downWeightsHistosU[6];
+TH1F* downWeightsHistosV[6];
+TH1I* fitResHisto;
 TH1F* chi2OndfHisto;
 TH1F* pValueHisto;
 
-
-#endif
-
-#ifdef OUTPUT
 void writeHistoDataForLabel(double label, TVectorD res, TVectorD measErr, TVectorD resErr, TVectorD downWeights) {
   if (label > 6) return;
   if (label < 1) return;
@@ -89,7 +91,9 @@ void writeHistoDataForLabel(double label, TVectorD res, TVectorD measErr, TVecto
   mhistosU[i-1]->Fill(res[0]/measErr[0]);
   mhistosV[i-1]->Fill(res[1]/measErr[1]);
   ghistosU[i-1]->Fill(res[0]/resErr[0]);
-  ghistosV[i-1]->Fill(res[1]/resErr[1]);        
+  ghistosV[i-1]->Fill(res[1]/resErr[1]); 
+  downWeightsHistosU[i-1]->Fill(downWeights[0]);
+  downWeightsHistosV[i-1]->Fill(downWeights[1]);
 }
 #endif
 
@@ -97,6 +101,9 @@ void writeHistoDataForLabel(double label, TVectorD res, TVectorD measErr, TVecto
 gbl::MilleBinary* milleFile;
 // Minimum scattering sigma (will be inverted...)
 const double scatEpsilon = 1.e-8;
+std::string rootFileName = "gbl.root";
+std::string milleFileName = "millefile.dat";
+std::string gblInternalIterations = "THC";
 
 
 using namespace gbl;
@@ -106,10 +113,10 @@ using namespace genfit;
 GFGbl::GFGbl() :
 AbsFitter()
 {
-  milleFile = new MilleBinary("millefile.dat");
+  milleFile = new MilleBinary(milleFileName);
   
-#ifdef OUTPUT
-  diag = new TFile("gbl.root","RECREATE"); 
+  #ifdef OUTPUT
+  diag = new TFile(rootFileName.c_str(), "RECREATE"); 
   char name[20];
   
   for (int i = 0; i < 6; i++){
@@ -125,19 +132,24 @@ AbsFitter()
     ghistosU[i] = new TH1F(name, "Res/Res.Err. (U)", 1000, -10., 10.);
     sprintf(name, "pull_v_%i", i+1);
     ghistosV[i] = new TH1F(name, "Res/Res.Err. (V)", 1000, -10., 10.);
+    sprintf(name, "downWeights_u_%i", i+1);
+    downWeightsHistosU[i] = new TH1F(name, "Down-weights (U)", 1000, 0., 1.);
+    sprintf(name, "downWeights_v_%i", i+1);
+    downWeightsHistosV[i] = new TH1F(name, "Down-weights (V)", 1000, 0., 1.);
   }
+  fitResHisto = new TH1I("fit_result", "GBL Fit Result", 20, 0, 20);
   chi2OndfHisto = new TH1F("chi2_ndf", "Track Chi2/NDF", 100, 0., 10.);
   pValueHisto = new TH1F("p_value", "Track P-value", 100, 0., 1.);
-#endif  
+  #endif  
 }
 
 void GFGbl::endRun()
 {
-#ifdef OUTPUT
+  #ifdef OUTPUT
   diag->cd();
   diag->Write();
   diag->Close();
-#endif
+  #endif
   // This is needed to close the file before alignment starts
   delete milleFile;
 }
@@ -344,66 +356,66 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
     
     //cout << " Starting extrapolation..." << endl;
     try {
-
-    // Extrapolate to next measurement to get material distribution
-    if (ipoint_meas < npoints_meas - 1) {
-      // Check if fitter info is in place
-      if (!trk->getPoint(ipoint_meas + 1)->hasFitterInfo(rep)) {
-        cout << " ERROR: Measurement point does not have a fitter info. Track will be skipped." << endl;
-        return;
-      }
-      // Fitter of next point info which is only used now to get the plane
-      KalmanFitterInfo* fi_i_plus_1 = dynamic_cast<KalmanFitterInfo*>(trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep));
-      if (!fi_i_plus_1) {
-        cout << " ERROR: KalmanFitterInfo (with reference state) for measurement does not exist. Track will be skipped." << endl;
-        return;
-      }
       
-      // Extrap to point + 1, do NOT stop at boundary
-      rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, false);
-      getScattererFromMatList(trackLen,
-                              scatTheta,
-                              scatSMean,
-                              scatDeltaS,
-                              trackMomMag,
-                              particleMass,
-                              particleCharge,
-                              rep->getSteps());
-      // Now calculate positions and scattering variance for equivalent scatterers
-      // (Solution from Claus Kleinwort (DESY))
-      s1 = 0.;
-      s2 = scatSMean + scatDeltaS * scatDeltaS / (scatSMean - s1);
-      theta1 = sqrt(scatTheta * scatTheta * scatDeltaS * scatDeltaS / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
-      theta2 = sqrt(scatTheta * scatTheta * (scatSMean - s1) * (scatSMean - s1) / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
-      
-      if (s2 >= trackLen - 1.e-16 || s2 <= 1.e-16) {
-        cout << " ERROR: Failed GBL point position calculation. Points too close. GBLTrajectory construction might fail. Let's try it..." << endl;
-      }
-      
-    }
-    // Return back to state on current plane
-    delete reference;
-    reference = new ReferenceStateOnPlane(*fi->getReferenceState());
-    
-    // If not last measurement, extrapolate and get jacobians for scattering points between this and next measurement
-    if (ipoint_meas < npoints_meas - 1) {
-      if (theta2 > scatEpsilon) {
-        // First scatterer will be placed at current measurement point (see bellow)
+      // Extrapolate to next measurement to get material distribution
+      if (ipoint_meas < npoints_meas - 1) {
+        // Check if fitter info is in place
+        if (!trk->getPoint(ipoint_meas + 1)->hasFitterInfo(rep)) {
+          cout << " ERROR: Measurement point does not have a fitter info. Track will be skipped." << endl;
+          return;
+        }
+        // Fitter of next point info which is only used now to get the plane
+        KalmanFitterInfo* fi_i_plus_1 = dynamic_cast<KalmanFitterInfo*>(trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep));
+        if (!fi_i_plus_1) {
+          cout << " ERROR: KalmanFitterInfo (with reference state) for measurement does not exist. Track will be skipped." << endl;
+          return;
+        }
         
-        // theta2 > 0 ... we want second scatterer:
-        // Extrapolate to s2 (remember s1 = 0)
-        rep->extrapolateBy(*reference, s2, false);
-        rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
-        // Finish extrapolation to next measurement
-        //TODO: check if fitter info at next point exists...
-        rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, true);
-        rep->getForwardJacobianAndNoise(jacScat2ToMeas, noise, deltaState);
-      } else {
-        // No scattering: extrapolate whole distance between measurements
-        rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, true);
-        rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
+        // Extrap to point + 1, do NOT stop at boundary
+        rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, false);
+        getScattererFromMatList(trackLen,
+                                scatTheta,
+                                scatSMean,
+                                scatDeltaS,
+                                trackMomMag,
+                                particleMass,
+                                particleCharge,
+                                rep->getSteps());
+        // Now calculate positions and scattering variance for equivalent scatterers
+        // (Solution from Claus Kleinwort (DESY))
+        s1 = 0.;
+        s2 = scatSMean + scatDeltaS * scatDeltaS / (scatSMean - s1);
+        theta1 = sqrt(scatTheta * scatTheta * scatDeltaS * scatDeltaS / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
+        theta2 = sqrt(scatTheta * scatTheta * (scatSMean - s1) * (scatSMean - s1) / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
+        
+        if (s2 >= trackLen - 1.e-4 || s2 <= 1.e-4) {
+          cout << " WARNING: GBL points will be too close. GBLTrajectory construction might fail. Let's try it..." << endl;
+        }
+        
       }
-    }
+      // Return back to state on current plane
+      delete reference;
+      reference = new ReferenceStateOnPlane(*fi->getReferenceState());
+      
+      // If not last measurement, extrapolate and get jacobians for scattering points between this and next measurement
+      if (ipoint_meas < npoints_meas - 1) {
+        if (theta2 > scatEpsilon) {
+          // First scatterer will be placed at current measurement point (see bellow)
+          
+          // theta2 > 0 ... we want second scatterer:
+          // Extrapolate to s2 (remember s1 = 0)
+          rep->extrapolateBy(*reference, s2, false);
+          rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
+          // Finish extrapolation to next measurement
+          //TODO: check if fitter info at next point exists...
+          rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, true);
+          rep->getForwardJacobianAndNoise(jacScat2ToMeas, noise, deltaState);
+        } else {
+          // No scattering: extrapolate whole distance between measurements
+          rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, true);
+          rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
+        }
+      }
     } catch(...) {
       cout << " ERROR: Extrapolation failed. Track will be skipped." << endl;
       return;
@@ -456,10 +468,9 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
         raw_measU = raw_meas2;
       raw_measV = raw_meas1;
         } else {
-          // Incompatible measurements ... skip this point
-          skipMeasurement = true;
-          cout << " ERROR: Incompatible 1D measurements at meas. point " << ipoint_meas << ". Measurement will be skipped." << endl;
-          
+          // Incompatible measurements ... skip track ... I saw this once and just before a segfault ...
+          cout << " ERROR: Incompatible 1D measurements at meas. point " << ipoint_meas << ". Track will be skipped." << endl;
+          return;
         }
         // Combine raw measurements
         TVectorD _raw_coor(2);
@@ -480,7 +491,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
       if (raw_meas->getRawHitCoords().GetNoElements() != 2) {
         skipMeasurement = true;
         #ifdef DEBUG
-        cout << " WARNING: Measurement " << (ipoint_meas + 1) << " is not 2D. Will be skipped. " << endl;
+        cout << " WARNING: Measurement " << (ipoint_meas + 1) << " is not 2D. Measurement Will be skipped. " << endl;
         #endif
       }
       
@@ -502,7 +513,13 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
         GblPoint measPoint(jacPointToPoint);
         // Projection from local (state) coordinates to measurement coordinates (inverted)
         // 2x2 matrix ... last block of H matrix (2 rows x 5 columns)
-        TMatrixD proL2m = HitHMatrix->getMatrix().GetSub(0, 1, 3, 4);
+        //TMatrixD proL2m = HitHMatrix->getMatrix().GetSub(0, 1, 3, 4);
+        TMatrixD proL2m(2, 2);
+        proL2m.Zero();
+        proL2m(0,0) = HitHMatrix->getMatrix()(0,3);
+        proL2m(0,1) = HitHMatrix->getMatrix()(0,4);
+        proL2m(1,1) = HitHMatrix->getMatrix()(1,4);
+        proL2m(1,0) = HitHMatrix->getMatrix()(1,3);
         proL2m.Invert();
         measPoint.addMeasurement(proL2m, residual, raw_cov.Invert());
         
@@ -626,20 +643,34 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
   if (n_gbl_meas_points > 1) {
     bool writeOut = true;
     int fitRes = 0;
+    double pvalue = 0.;
+    const double pvalueCut = 0.0;
     GblTrajectory* traj = 0;
     try {
       // Construct the GBL trajectory, seed not used
       traj = new GblTrajectory(listOfPoints, seedLabel, clSeed, fitQoverP);
       // Fit the trajectory
-      fitRes = traj->fit(Chi2, Ndf, lostWeight);
-      if (fitRes != 0)
+      fitRes = traj->fit(Chi2, Ndf, lostWeight, gblInternalIterations);
+      if (fitRes != 0) {
         writeOut = false;
+        #ifdef DEBUG
+        traj->printTrajectory(100);
+        traj->printData();
+        traj->printPoints(100); 
+        #endif
+      }
     } catch (...) {
       // Gbl failed critically (usually GblPoint::getDerivatives ... singular matrix inversion)
       writeOut = false;
     }
     
-#ifdef DEBUG
+    pvalue = TMath::Prob(Chi2, Ndf);
+    #ifdef OUTPUT
+    // Fill histogram with fit result
+    fitResHisto->Fill(fitRes);
+    #endif
+    
+    #ifdef DEBUG
     cout << " Ref. Track Chi2      :  " << trkChi2 << endl;
     cout << " Ref. end momentum    :  " << trackMomMag << " GeV/c ";
     if (abs(trk->getCardinalRep()->getPDG()) == 11) {
@@ -648,8 +679,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
       else
         cout << "(positron)";
     }
-    cout << endl;
-    
+    cout << endl;    
     cout << "------------------ GBL Fit Results --------------------" << endl;
     cout << " Fit q/p parameter    :  " << ((fitQoverP) ? ("True") : ("False")) << endl;
     cout << " Valid trajectory     :  " << ((traj->isValid()) ? ("True") : ("False")) << endl;
@@ -658,25 +688,28 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
     cout << " # GBL all points     :  " << n_gbl_points << endl;
     cout << " GBL track NDF        :  " << Ndf << "    (-1 for failure)" << endl;
     cout << " GBL track Chi2       :  " << Chi2 << endl;
-    cout << " GBL track P-value    :  " << TMath::Prob(Chi2, Ndf) << endl;
+    cout << " GBL track P-value    :  " << pvalue;
+    if (pvalue < pvalueCut)
+      cout << " < p-value cut " << pvalueCut;
+    cout << endl;
     cout << "-------------------------------------------------------" << endl;
     //traj->printTrajectory(100);
     //traj->printData();
     //traj->printPoints(100);      
-#endif
+    #endif
     
     // GBL fit succeded if Ndf > 0
     //TODO: Here hould be some track quality check
-    if (Ndf > 1 && traj->isValid() && writeOut) {
+    if (Ndf > 1 && traj->isValid() && writeOut && milleFile) {
       // Write trajectory data to Millepede II binary file
-      traj->milleOut(*milleFile);
-      
-#ifdef DEBUG
-      cout << " GBL Track written to Millepede II binary file." << endl;
-      cout << "-------------------------------------------------------" << endl;      
-#endif
-      
-#ifdef OUTPUT
+      if (pvalue > pvalueCut) {
+        traj->milleOut(*milleFile);      
+        #ifdef DEBUG
+        cout << " GBL Track written to Millepede II binary file." << endl;
+        cout << "-------------------------------------------------------" << endl;      
+        #endif
+      }
+      #ifdef OUTPUT
       // Fill histograms
       chi2OndfHisto->Fill(Chi2/Ndf);
       pValueHisto->Fill(TMath::Prob(Chi2, Ndf));
@@ -698,12 +731,13 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
         writeHistoDataForLabel(listOfLayers.at(p), residuals, measErrors, resErrors, downWeights);        
       } // end for points
       
-#endif
+      #endif
     } // end if "all succeded"
     
     // Free memory
     delete traj;    
   }
 }
+
 
 
