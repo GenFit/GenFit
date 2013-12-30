@@ -118,7 +118,7 @@ public:
     *  Therefore it is not a const function!
     *
   */
-  double energyLossBetheBloch(const double& mom);
+  double energyLossBetheBloch();
 
   //! calculation of energy loss straggeling
   /**  For the energy loss straggeling, different formulas are used for different regions:
@@ -129,8 +129,7 @@ public:
     *
     *  Needs dEdx_, which is calculated in energyLossBetheBloch, so it has to be called afterwards!
     */
-  void noiseBetheBloch(const double& mom,
-                       M7x7& noise) const;
+  void noiseBetheBloch(M7x7& noise) const;
 
   //! calculation of multiple scattering
   /**  This function first calcuates a MSC variance based on the current material and step length
@@ -140,8 +139,7 @@ public:
    * taking even the (co)variances of the position coordinates into account.
    * 
     */
-  void noiseCoulomb(const double& mom,
-                    M7x7& noise,
+  void noiseCoulomb(M7x7& noise,
                     const M1x3& direction) const;
 
   //! Returns energy loss
@@ -149,14 +147,13 @@ public:
     * Uses a gaussian approximation (Bethe-Heitler formula with Migdal corrections).
     * For positrons the energy loss is weighed with a correction factor.
   */
-  double energyLossBrems(const double& mom) const;
+  double energyLossBrems() const;
 
   //! calculation of energy loss straggeling
   /** Can be called with any pdg, but only calculates straggeling for electrons and positrons.
    *
    */
-  void noiseBrems(const double& mom,
-                  M7x7& noise) const;
+  void noiseBrems(M7x7& noise) const;
 
 
   bool noEffects_;
@@ -174,6 +171,7 @@ public:
   double stepSize_; // stepsize
 
   // cached values for energy loss and noise calculations
+  double mom_;
   double beta_;
   double dEdx_;
   double gamma_;
@@ -186,7 +184,7 @@ public:
   double mEE_; // mean excitation energy
 
   int pdg_;
-  double charge_;
+  int charge_;
   double mass_;
 
   int mscModelCode_; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
