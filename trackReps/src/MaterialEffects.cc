@@ -46,6 +46,7 @@ MaterialEffects::MaterialEffects():
   ignoreBoundariesBetweenEqualMaterials_(true),
   me_(0.510998910E-3),
   stepSize_(0),
+  mom_(0),
   beta_(0),
   dEdx_(0),
   gamma_(0),
@@ -172,17 +173,17 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
     if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
 
       if (energyLossBetheBloch_)
-        momLoss += stepSign * this->energyLossBetheBloch(mom);
+        momLoss += stepSign * this->energyLossBetheBloch();
       if (doNoise && energyLossBetheBloch_ && noiseBetheBloch_)
-        this->noiseBetheBloch(mom, *noise);
+        this->noiseBetheBloch(*noise);
 
       if (doNoise && noiseCoulomb_)
-        this->noiseCoulomb(mom, *noise, *((M1x3*) &it->state7_[3]) );
+        this->noiseCoulomb(*noise, *((M1x3*) &it->state7_[3]) );
 
       if (energyLossBrems_)
-        momLoss += stepSign * this->energyLossBrems(mom);
+        momLoss += stepSign * this->energyLossBrems();
       if (doNoise && energyLossBrems_ && noiseBrems_)
-        this->noiseBrems(mom, *noise);
+        this->noiseBrems(*noise);
 
     }
 
@@ -254,8 +255,8 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   stepSize_ = 1; // set stepsize for momLoss calculation
 
   if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
-    if (energyLossBetheBloch_) relMomLossPer_cm += this->energyLossBetheBloch(mom) / mom;
-    if (energyLossBrems_)      relMomLossPer_cm += this->energyLossBrems(mom) / mom;
+    if (energyLossBetheBloch_) relMomLossPer_cm += this->energyLossBetheBloch() / mom;
+    if (energyLossBrems_)      relMomLossPer_cm += this->energyLossBrems() / mom;
   }
 
   double maxStepMomLoss = (maxRelMomLoss - relMomLoss) / relMomLossPer_cm;
@@ -323,39 +324,32 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 void MaterialEffects::getParticleParameters(double mom)
 {
   TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg_);
-  charge_ = part->Charge() / (3.);
+  mom_ = mom;
+  charge_ = int(part->Charge() / 3.);  // We only ever use the square
   mass_ = part->Mass(); // GeV
 
-  beta_ = mom / sqrt(mass_ * mass_ + mom * mom);
-
-  //for numerical stability
-  gammaSquare_ = 1. - beta_ * beta_;
-  if (gammaSquare_ > 1.E-10) gammaSquare_ = 1. / gammaSquare_;
-  else gammaSquare_ = 1.E10;
-  gamma_ = sqrt(gammaSquare_);
+  beta_ = 1 / hypot(mass_ / mom, 1);
+  gammaSquare_ = 1 + mom*mom / mass_ / mass_;
+  gamma_ = hypot(mom / mass_, 1);
 }
 
 
 
 //---- Energy-loss and Noise calculations -----------------------------------------
 
-double MaterialEffects::energyLossBetheBloch(const double& mom)
+double MaterialEffects::energyLossBetheBloch()
 {
 
   // calc dEdx_, also needed in noiseBetheBloch!
   dEdx_ = 0.307075 * matZ_ / matA_ * matDensity_ / (beta_ * beta_) * charge_ * charge_;
   double massRatio = me_ / mass_;
-  double argument = gammaSquare_ * beta_ * beta_ * me_ * 1.E3 * 2. / ((1.E-6 * mEE_) * sqrt(1 + 2 * sqrt(gammaSquare_) * massRatio + massRatio * massRatio));
-  if (argument <= exp(beta_ * beta_))
-    dEdx_ = 0.;
-  else {
-    dEdx_ *= (log(argument) - beta_ * beta_); // Bethe-Bloch [MeV/cm]
-    dEdx_ *= 1.E-3;  // in GeV/cm, hence 1.e-3
-    if (dEdx_ < 0.) dEdx_ = 0;
-  }
+  double argument = gammaSquare_ * beta_ * beta_ * me_ * 1.E3 * 2. / ((1.E-6 * mEE_) * sqrt(1 + 2 * gamma_ * massRatio + massRatio * massRatio));
+  dEdx_ *= log(argument) - beta_ * beta_; // Bethe-Bloch [MeV/cm]
+  dEdx_ *= 1.E-3;  // in GeV/cm, hence 1.e-3
+  if (dEdx_ < 0.) dEdx_ = 0;
 
   double dE = fabs(stepSize_) * dEdx_; //always positive
-  double momLoss = sqrt(mom * mom + 2.*sqrt(mom * mom + mass_ * mass_) * dE + dE * dE) - mom; //always positive
+  double momLoss = sqrt(mom_ * mom_ + 2.*sqrt(mom_ * mom_ + mass_ * mass_) * dE + dE * dE) - mom_; //always positive
 
   //in vacuum it can numerically happen that momLoss becomes a small negative number.
   if (momLoss < 0.) return 0.;
@@ -363,8 +357,7 @@ double MaterialEffects::energyLossBetheBloch(const double& mom)
 }
 
 
-void MaterialEffects::noiseBetheBloch(const double& mom,
-                                      M7x7& noise) const
+void MaterialEffects::noiseBetheBloch(M7x7& noise) const
 {
 
   // Code ported from GEANT 3
@@ -420,13 +413,12 @@ void MaterialEffects::noiseBetheBloch(const double& mom,
 
   sigma2E *= 1.E-18; // eV -> GeV
 
-  // update noise matrix
-  noise[6 * 7 + 6] += (mom * mom + mass_ * mass_) / pow(mom, 6.) * sigma2E;
+  // update noise matrix, using linear error propagation from E to q/p
+  noise[6 * 7 + 6] += charge_*charge_/beta_/beta_ / pow(mom_, 4) * sigma2E;
 }
 
 
-void MaterialEffects::noiseCoulomb(const double& mom,
-                                   M7x7& noise,
+void MaterialEffects::noiseCoulomb(M7x7& noise,
                                    const M1x3& direction) const
 {
 
@@ -435,12 +427,12 @@ void MaterialEffects::noiseCoulomb(const double& mom,
   assert(mscModelCode_ == 0 || mscModelCode_ == 1);
   const double step2 = stepSize_ * stepSize_;
   if (mscModelCode_ == 0) {// PANDA report PV/01-07 eq(43); linear in step length
-    sigma2 = 225.E-6 * charge_ * charge_ / (beta_ * beta_ * mom * mom) * fabs(stepSize_) / radiationLength_ * matZ_ / (matZ_ + 1) * log(159.*pow(matZ_, -1. / 3.)) / log(287.*pow(matZ_, -0.5)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/beta_^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
+    sigma2 = 225.E-6 * charge_ * charge_ / (beta_ * beta_ * mom_ * mom_) * fabs(stepSize_) / radiationLength_ * matZ_ / (matZ_ + 1) * log(159.*pow(matZ_, -1. / 3.)) / log(287.*pow(matZ_, -0.5)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/beta_^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
 
   } else if (mscModelCode_ == 1) { //Highland not linear in step length formula taken from PDG book 2011 edition
     double stepOverRadLength = fabs(stepSize_) / radiationLength_;
     double logCor = (1 + 0.038 * log(stepOverRadLength));
-    sigma2 = 0.0136 * 0.0136 * charge_ * charge_ / (beta_ * beta_ * mom * mom) * stepOverRadLength * logCor * logCor;
+    sigma2 = 0.0136 * 0.0136 * charge_ * charge_ / (beta_ * beta_ * mom_ * mom_) * stepOverRadLength * logCor * logCor;
   }
   assert(sigma2 >= 0.0);
   //XXX std::cout << "MaterialEffects::noiseCoulomb the MSC variance is " << sigma2 << std::endl;
@@ -454,10 +446,10 @@ void MaterialEffects::noiseCoulomb(const double& mom,
   double cosTheta = direction[2];
   double sinPhi = sin(phi);
   double cosPhi = cos(phi);
-  const double sinTheta2 = sinTheta * sinTheta;
   const double cosTheta2 = cosTheta * cosTheta;
+  const double sinTheta2 = 1 - cosTheta2;
   const double sinPhi2 = sinPhi * sinPhi;
-  const double cosPhi2 = cosPhi * cosPhi;
+  const double cosPhi2 = 1 - sinPhi2;
   //this calculates the full projection of the MSC noise variance onto the 7D global coordinate system. Even taking into account the (co)variances of the position coordinates
   noiseAfter[0 * 7 + 0] =  sigma2 * step2 / 3.0 * (cosTheta2 + sinPhi2 * sinTheta2);
   noiseAfter[1 * 7 + 0] = -sigma2 * step2 / 3.0 * sinPhi * cosPhi * sinTheta2;
@@ -503,7 +495,7 @@ void MaterialEffects::noiseCoulomb(const double& mom,
 }
 
 
-double MaterialEffects::energyLossBrems(const double& mom) const
+double MaterialEffects::energyLossBrems() const
 {
 
   // Code ported from GEANT 3
@@ -527,16 +519,16 @@ double MaterialEffects::energyLossBrems(const double& mom) const
   if (BCUT > 0.) {
     double T, kc;
 
-    if (BCUT >= mom) BCUT = mom; // confine BCUT to mom
+    if (BCUT >= mom_) BCUT = mom_; // confine BCUT to mom_
 
-    // T=mom,  confined to THIGH
+    // T=mom_,  confined to THIGH
     // kc=BCUT, confined to CHIGH ??
-    if (mom >= THIGH) {
+    if (mom_ >= THIGH) {
       T = THIGH;
       if (BCUT >= THIGH) kc = CHIGH;
       else kc = BCUT;
     } else {
-      T = mom;
+      T = mom_;
       kc = BCUT;
     }
 
@@ -608,15 +600,15 @@ double MaterialEffects::energyLossBrems(const double& mom) const
       dedxBrems = FAC * S;
 
 
-      if (mom > THIGH) {
+      if (mom_ > THIGH) {
         double RAT;
         if (BCUT < THIGH) {
-          RAT = BCUT / mom;
+          RAT = BCUT / mom_;
           S = (1. - 0.5 * RAT + 2.*RAT * RAT / 9.);
           RAT = BCUT / T;
           S = S / (1. - 0.5 * RAT + 2.*RAT * RAT / 9.);
         } else {
-          RAT = BCUT / mom;
+          RAT = BCUT / mom_;
           S = BCUT * (1. - 0.5 * RAT + 2.*RAT * RAT / 9.);
           RAT = kc / T;
           S = S / (kc * (1. - 0.5 * RAT + 2.*RAT * RAT / 9.));
@@ -637,7 +629,7 @@ double MaterialEffects::energyLossBrems(const double& mom) const
 
     double ETA = 0.;
     if (matZ_ > 0.) {
-      double X = log(AA * mom / (matZ_ * matZ_));
+      double X = log(AA * mom_ / (matZ_ * matZ_));
       if (X > -8.) {
         if (X >= +9.) ETA = 1.;
         else {
@@ -650,7 +642,7 @@ double MaterialEffects::energyLossBrems(const double& mom) const
     if (ETA < 0.0001) factor = 1.E-10;
     else if (ETA > 0.9999) factor = 1.;
     else {
-      double E0 = BCUT / mom;
+      double E0 = BCUT / mom_;
       if (E0 > 1.) E0 = 1.;
       if (E0 < 1.E-8) factor = 1.;
       else factor = ETA * (1. - pow(1. - E0, 1. / ETA)) / E0;
@@ -658,14 +650,13 @@ double MaterialEffects::energyLossBrems(const double& mom) const
   }
 
   double dE = fabs(stepSize_) * factor * dedxBrems; //always positive
-  double momLoss = sqrt(mom * mom + 2.*sqrt(mom * mom + mass_ * mass_) * dE + dE * dE) - mom; //always positive
+  double momLoss = sqrt(mom_ * mom_ + 2.*sqrt(mom_ * mom_ + mass_ * mass_) * dE + dE * dE) - mom_; //always positive
 
   return momLoss;
 }
 
 
-void MaterialEffects::noiseBrems(const double& mom,
-                                 M7x7& noise) const
+void MaterialEffects::noiseBrems(M7x7& noise) const
 {
 
   // Code ported from GEANT 3 and simplified
@@ -675,7 +666,7 @@ void MaterialEffects::noiseBrems(const double& mom,
   if (abs(pdg_) != 11) return; // only for electrons and positrons
 
   double minusXOverLn2  = -1.442695 * fabs(stepSize_) / radiationLength_;
-  double sigma2 = 1.44*(pow(3., minusXOverLn2) - pow(4., minusXOverLn2)) / (mom*mom);
+  double sigma2 = 1.44*(pow(3., minusXOverLn2) - pow(4., minusXOverLn2)) / (mom_*mom_);
   //XXX std::cout << "breams sigma: " << sigma2E << std::endl;
   assert(sigma2 >= 0.0);
   noise[6 * 7 + 6] +=  sigma2;
