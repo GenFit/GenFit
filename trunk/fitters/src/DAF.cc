@@ -38,8 +38,8 @@
 
 namespace genfit {
 
-DAF::DAF(bool useRefKalman)
-  : AbsKalmanFitter(10), deltaWeight_(0.1)
+DAF::DAF(bool useRefKalman, double deltaPval, double deltaWeight)
+  : AbsKalmanFitter(10, deltaPval), deltaWeight_(deltaWeight)
 {
   if (useRefKalman) {
     kalman_.reset(new KalmanFitterRefTrack());
@@ -55,8 +55,8 @@ DAF::DAF(bool useRefKalman)
   setProbCut(0.01);
 }
 
-DAF::DAF(AbsKalmanFitter* kalman)
-  : AbsKalmanFitter(10), deltaWeight_(0.1)
+DAF::DAF(AbsKalmanFitter* kalman, double deltaPval, double deltaWeight)
+  : AbsKalmanFitter(10, deltaPval), deltaWeight_(deltaWeight)
 {
   kalman_.reset(kalman);
   kalman_->setMultipleMeasurementHandling(weightedAverage); // DAF makes no sense otherwise
@@ -79,6 +79,8 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
 
   KalmanFitStatus* status = 0;
   bool oneLastIter = false;
+
+  double lastPval = -1;
 
   for(unsigned int iBeta = 0;; ++iBeta) {
 
@@ -114,7 +116,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
     if(iBeta >= maxIterations_-1){
       status->setIsFitConverged(false);
       if (debugLvl_ > 0) {
-      std::cout << "DAF::number of max iterations reached!\n";
+	std::cout << "DAF::number of max iterations reached!\n";
       }
       break;
     }
@@ -124,6 +126,12 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
     bool converged(false);
     try{
       converged = calcWeights(tr, rep, betas_.at(iBeta));
+      if (!converged && iBeta >= minIterations_-1 && abs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
+	if (debugLvl_ > 0)
+	  std::cout << "converged by Pval = " << lastPval << " even though weights changed at iBeta = " << iBeta << std::endl;
+	converged = true;
+      }
+      lastPval = status->getBackwardPVal();
     } catch(Exception& e) {
       std::cerr<<e.what();
       e.info();
