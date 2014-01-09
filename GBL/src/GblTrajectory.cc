@@ -5,9 +5,9 @@
  *      Author: kleinwrt
  */
 
-/** \mainpage General information
+/** General information
  *
- *  \section intro_sec Introduction
+ *  Introduction
  *
  *  For a track with an initial trajectory from a prefit of the
  *  measurements (internal seed) or an external prediction
@@ -49,7 +49,7 @@
  *  matrices of track parameters in homogeneous magnetic fields
  *  A. Strandlie, W. Wittek, NIM A, 566 (2006) 687-698.
  *
- *  \section call_sec Calling sequence
+ *  Calling sequence
  *
  *    -# Create list of points on initial trajectory:\n
  *            <tt>std::vector<GblPoint> list</tt>
@@ -78,20 +78,20 @@
  *    -# Optionally write trajectory to MP binary file:\n
  *            <tt>traj.milleOut(..)</tt>
  *
- *  \section loc_sec Local system and local parameters
+ *  Local system and local parameters
  *  At each point on the trajectory a local coordinate system with local track
  *  parameters has to be defined. The first of the five parameters describes
  *  the bending, the next two the direction and the last two the position (offsets).
  *  The curvilinear system (T,U,V) with parameters (q/p, lambda, phi, x_t, y_t)
  *  is well suited.
  *
- *  \section impl_sec Implementation
+ *  Implementation
  *
  *  Matrices are implemented with ROOT (root.cern.ch). User input or output is in the
  *  form of TMatrices. Internally SMatrices are used for fixes sized and simple matrices
  *  based on std::vector<> for variable sized matrices.
  *
- *  \section ref_sec References
+ *  References
  *    - V. Blobel, C. Kleinwort, F. Meier,
  *      Fast alignment of a complex tracking detector using advanced track models,
  *      Computer Phys. Communications (2011), doi:10.1016/j.cpc.2011.03.017
