@@ -434,7 +434,8 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
     double logCor = (1 + 0.038 * log(stepOverRadLength));
     sigma2 = 0.0136 * 0.0136 * charge_ * charge_ / (beta_ * beta_ * mom_ * mom_) * stepOverRadLength * logCor * logCor;
   }
-  assert(sigma2 >= 0.0);
+  //assert(sigma2 >= 0.0);
+  sigma2 = (sigma2 > 0.0 ? sigma2 : 0.0);
   //XXX std::cout << "MaterialEffects::noiseCoulomb the MSC variance is " << sigma2 << std::endl;
 
   double noiseAfter[7 * 7]; // will hold the new MSC noise to cause by the current stepSize_ length
@@ -668,8 +669,9 @@ void MaterialEffects::noiseBrems(M7x7& noise) const
   double minusXOverLn2  = -1.442695 * fabs(stepSize_) / radiationLength_;
   double sigma2 = 1.44*(pow(3., minusXOverLn2) - pow(4., minusXOverLn2)) / (mom_*mom_);
   //XXX std::cout << "breams sigma: " << sigma2E << std::endl;
-  assert(sigma2 >= 0.0);
-  noise[6 * 7 + 6] +=  sigma2;
+  //assert(sigma2 >= 0.0);
+  sigma2 = (sigma2 > 0.0 ? sigma2 : 0.0);
+  noise[6 * 7 + 6] +=  charge_*charge_/beta_/beta_ / pow(mom_, 4) * sigma2;
 
 }
 
