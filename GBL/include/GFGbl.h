@@ -50,6 +50,12 @@ class GFGbl : public AbsFitter {
  private:
   GFGbl(const GFGbl&);
   GFGbl& operator=(GFGbl const&);
+  
+  std::string m_milleFileName;
+  std::string m_gblInternalIterations;
+  double m_pValueCut;
+  int m_minNdf;
+  
 
  public:
 
@@ -64,11 +70,23 @@ class GFGbl : public AbsFitter {
   virtual ~GFGbl() {;}
 
   /**
+   * Creates the mille binary file for output of
+   * data for Millepede II alignment, can be set by setMP2Options
+   */
+  void beginRun(); 
+  
+  /**
    * Required to write and close ROOT file
    * with debug output. Destructor cannot be used.
    * To be called from endRun function of a module
    */
-  void endRun();  
+  void endRun();
+
+  void setGBLOptions(std::string internalIterations = "THC", unsigned int externalIterations = 1);
+
+
+  void setMP2Options(double pValueCut = 0., unsigned int minNdf = 1, std::string mille_file_name = "millefile.dat");
+
   
   /**
    * Performs fit on a Track.
