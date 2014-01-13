@@ -169,8 +169,8 @@ std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos() const {
 AbsFitterInfo* TrackPoint::getFitterInfo(const AbsTrackRep* rep) const {
   if (!rep)
     rep = track_->getCardinalRep();
-  std::map<const AbsTrackRep*, AbsFitterInfo*>::iterator it = fitterInfos_.find(rep);
-  if (it == fitterInfos_.end)
+  std::map<const AbsTrackRep*, AbsFitterInfo*>::const_iterator it = fitterInfos_.find(rep);
+  if (it == fitterInfos_.end())
     return NULL;
   return fitterInfos_.at(rep);
 }
