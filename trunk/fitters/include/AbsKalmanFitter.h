@@ -98,7 +98,7 @@ class AbsKalmanFitter : public AbsFitter {
   //! How should multiple measurements be handled?
   void setMultipleMeasurementHandling(eMultipleMeasurementHandling mmh) {multipleMeasurementHandling_ = mmh;}
 
-  void setMaxFailedHits_(int val) {maxFailedHits_ = val;}
+  virtual void setMaxFailedHits(int val) {maxFailedHits_ = val;}
 
   bool isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const;
   bool isTrackFitted(const Track* tr, const AbsTrackRep* rep) const;
