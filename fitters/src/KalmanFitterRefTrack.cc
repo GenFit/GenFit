@@ -327,11 +327,16 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
   unsigned int i=0;
+  int nFailedHits = 0;
 
-  try {
 
-    // loop over TrackPoints
-    for (; i<nPoints; ++i) {
+  // loop over TrackPoints
+  for (; i<nPoints; ++i) {
+
+    try {
+
+      if (debugLvl_ > 0)
+        std::cout << "Prepare TrackPoint " << i << "\n";
 
       TrackPoint* trackPoint = tr->getPoint(i);
 
@@ -369,6 +374,10 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       // get smoothedState if available
       if (fitterInfo->hasPredictionsAndUpdates()) {
         smoothedState = &(fitterInfo->getFittedState(true));
+        if (debugLvl_ > 0) {
+          std::cout << "got smoothed state \n";
+          //smoothedState->Print();
+        }
       }
       else {
         smoothedState = NULL;
@@ -378,13 +387,15 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       if (fitterInfo->hasReferenceState()) {
 
         referenceState = fitterInfo->getReferenceState();
+
+        // set since we continue in this block in any case
         prevFitterInfo = fitterInfo;
         prevSmoothedState = smoothedState;
+        prevReferenceState = referenceState;
 
         if (!newRefState) {
           if (debugLvl_ > 0)
             std::cout << "TrackPoint already has referenceState and previous referenceState has not been altered -> continue \n";
-          prevReferenceState = referenceState;
           trackLen += referenceState->getForwardSegmentLength();
           if (setSortingParams)
             trackPoint->setSortingParameter(trackLen);
@@ -431,8 +442,6 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         if (setSortingParams)
           trackPoint->setSortingParameter(trackLen);
 
-
-        prevReferenceState = referenceState;
         newRefState = false;
 
         continue;
@@ -449,8 +458,10 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         plane = trackPoint->getRawMeasurement(0)->constructPlane(*smoothedState);
       }
       else if (prevSmoothedState != NULL) {
-        if (debugLvl_ > 0)
+        if (debugLvl_ > 0) {
           std::cout << "construct plane with prevSmoothedState \n";
+          //prevSmoothedState->Print();
+        }
         plane = trackPoint->getRawMeasurement(0)->constructPlane(*prevSmoothedState);
       }
       else if (prevReferenceState != NULL) {
@@ -621,38 +632,45 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       prevFitterInfo = fitterInfo;
       prevSmoothedState = smoothedState;
 
-    } // end loop over TrackPoints
+    }
+    catch (Exception& e) {
 
-  }
-  catch (Exception& e) {
+      if (debugLvl_ > 0) {
+        std::cout << "exception at hit " << i << "\n";
+        std::cerr << e.what();
+      }
 
-    if (debugLvl_ > 0) {
-      std::cout << "exception at hit " << i << "\n";
-      std::cerr << e.what();
+
+      ++nFailedHits;
+      if (maxFailedHits_<0 || nFailedHits <= maxFailedHits_) {
+        referenceState = NULL;
+        smoothedState = NULL;
+        tr->getPoint(i)->deleteFitterInfo(rep);
+
+        if (debugLvl_ > 0)
+          std::cout << "There was an exception, try to continue with next TrackPoint " << i+1 << " \n";
+
+        continue;
+      }
+
+
+      // clean up
+      removeForwardBackwardInfo(tr, rep, notChangedUntil, notChangedFrom);
+
+      // set sorting parameters of rest of TrackPoints and remove FitterInfos
+      for (; i<nPoints; ++i) {
+        TrackPoint* trackPoint = tr->getPoint(i);
+
+        if (setSortingParams)
+          trackPoint->setSortingParameter(trackLen);
+
+        trackPoint->deleteFitterInfo(rep);
+      }
+      return true;
+
     }
 
-    // clean up
-    removeForwardBackwardInfo(tr, rep, notChangedUntil, notChangedFrom);
-
-    // set sorting parameters of TrackPoints where no reference state could be calculated
-    for (; i<nPoints; ++i) {
-      TrackPoint* trackPoint = tr->getPoint(i);
-
-      if (setSortingParams)
-        trackPoint->setSortingParameter(trackLen);
-
-      trackPoint->deleteFitterInfo(rep);
-    }
-
-    //prevReferenceState->resetForward();
-    //referenceState->resetBackward();
-
-    //Exception exc("KalmanFitterRefTrack::prepareTrack: got an exception.",__LINE__,__FILE__);
-    //exc.setFatal();
-    //throw exc;
-
-    return true;
-  }
+  } // end loop over TrackPoints
 
 
 
