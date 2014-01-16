@@ -130,8 +130,9 @@ bool AbsKalmanFitter::isTrackPrepared(const Track* tr, const AbsTrackRep* rep) c
 
   for (std::vector<TrackPoint*>::const_iterator pIt = points.begin(), pEnd = points.end(); pIt != pEnd; ++pIt) {
     KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>((*pIt)->getFitterInfo(rep));
+
     if (!fi)
-      return false;
+      continue;
 
     if (!(fi->checkConsistency()))
       return false;

@@ -252,6 +252,7 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(unsigned int iMeasurement, bool
 
   const AbsHMatrix* H = measurement->getHMatrix();
 
+  //TODO: shouldn't the definition be (smoothed - measured) ?
   // res = -(H*smoothedState - measuredState)
   TVectorD res(H->Hv(smoothedState.getState()));
   res -= measurement->getState();

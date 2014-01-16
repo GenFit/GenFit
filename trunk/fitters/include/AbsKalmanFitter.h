@@ -54,7 +54,8 @@ class AbsKalmanFitter : public AbsFitter {
 
   AbsKalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
     : AbsFitter(), minIterations_(2), maxIterations_(maxIterations), deltaPval_(deltaPval), relChi2Change_(0.2),
-      blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPredictionWire) {
+      blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPredictionWire),
+      maxFailedHits_(-1) {
     if (minIterations_ > maxIterations_)
       minIterations_ = maxIterations_;
   }
@@ -97,6 +98,8 @@ class AbsKalmanFitter : public AbsFitter {
   //! How should multiple measurements be handled?
   void setMultipleMeasurementHandling(eMultipleMeasurementHandling mmh) {multipleMeasurementHandling_ = mmh;}
 
+  void setMaxFailedHits_(int val) {maxFailedHits_ = val;}
+
   bool isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const;
   bool isTrackFitted(const Track* tr, const AbsTrackRep* rep) const;
 
@@ -135,6 +138,10 @@ class AbsKalmanFitter : public AbsFitter {
 
   //! How to handle if there are multiple MeasurementsOnPlane
   eMultipleMeasurementHandling multipleMeasurementHandling_;
+
+  //! after how many failed hits (exception during construction of plane, extrapolation etc.) should the fit be cancelled.
+  //! -1 means don't cancel
+  int maxFailedHits_;
 
  public:
 
