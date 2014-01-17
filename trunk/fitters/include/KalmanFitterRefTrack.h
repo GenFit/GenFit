@@ -56,7 +56,7 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
    * of the TrackPoints.
    * Returns if the track has been changed.
    */
-  bool prepareTrack(Track* tr, const AbsTrackRep* rep, bool setSortingParams = false);
+  bool prepareTrack(Track* tr, const AbsTrackRep* rep, bool setSortingParams, int& nFailedHits);
 
   //! If true always refit all points, otherwise fit points only if reference states have changed
   void setRefitAll(bool refit = true) {refitAll_ = refit;}

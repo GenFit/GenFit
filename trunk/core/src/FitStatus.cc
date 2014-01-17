@@ -29,10 +29,13 @@ void FitStatus::Print(const Option_t*) const
   std::cout << "fitStatus \n";
   if (isFitted_) {
     std::cout << " track has been fitted,";
-    if (isFitConverged_)
-      std::cout << " fit has converged,";
+    if (isFitConvergedFully_)
+      std::cout << " fit has converged fully,";
+    else if (isFitConvergedPartially_)
+      std::cout << " fit has converged partially,";
     else
       std::cout << " fit has NOT converged,";
+    std::cout << " " << nFailedPoints_ << " TrackPoints could not be processed,";
     if (trackHasChanged_) std::cout << " track has changed since the fit,";
     if (trackIsPruned_) std::cout << " track is pruned,";
     std::cout << " fitted charge = " << charge_ << " \n";
