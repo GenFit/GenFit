@@ -647,6 +647,9 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         smoothedState = NULL;
         tr->getPoint(i)->deleteFitterInfo(rep);
 
+        if (setSortingParams)
+          tr->getPoint(i)->setSortingParameter(trackLen);
+
         if (debugLvl_ > 0)
           std::cout << "There was an exception, try to continue with next TrackPoint " << i+1 << " \n";
 
