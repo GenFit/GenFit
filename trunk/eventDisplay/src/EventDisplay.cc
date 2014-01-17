@@ -242,7 +242,7 @@ void EventDisplay::gotoEvent(unsigned int id) {
 
 void EventDisplay::open() {
 
-  std::cout << "EventDisplay::open(); " << events_.size() << " events loaded" << std::endl;
+  std::cout << "EventDisplay::open(); " << getNEvents() << " events loaded" << std::endl;
 
   if(getNEvents() > 0) {
     double old_error_scale = errorScale_;
@@ -338,6 +338,8 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       refittedTrack.reset(new Track(*track));
       refittedTrack->deleteFitterInfo();
 
+      refittedTrack->Print("C");
+
       try{
         fitter->processTrack(refittedTrack.get(), resort_);
       }
@@ -375,8 +377,13 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
     track->getFitStatus(rep)->Print();
 
     if (track->getFitStatus(rep)->isFitted()) {
-      std::cout << "fitted state: \n";
-      track->getFittedState().Print();
+      try {
+        std::cout << "fitted state: \n";
+        track->getFittedState().Print();
+      }
+      catch (Exception& e) {
+        std::cerr << e.what();
+      }
     }
 
 
