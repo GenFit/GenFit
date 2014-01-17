@@ -263,9 +263,13 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
 
 
   TrackPoint* tp = tr->getPointWithMeasurementAndFitterInfo(0, rep);
-  if (tp != NULL &&
-      static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep))->hasBackwardUpdate())
-    status->setCharge(rep->getCharge(*static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
+
+  double charge(0);
+  if (tp != NULL) {
+    if (static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep))->hasBackwardUpdate())
+      charge = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep))->getBackwardUpdate()->getCharge();
+  }
+  status->setCharge(charge);
 
   if (tp != NULL) {
     status->setIsFitted();
@@ -391,7 +395,6 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         // set since we continue in this block in any case
         prevFitterInfo = fitterInfo;
         prevSmoothedState = smoothedState;
-        prevReferenceState = referenceState;
 
         if (!newRefState) {
           if (debugLvl_ > 0)
@@ -399,6 +402,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           trackLen += referenceState->getForwardSegmentLength();
           if (setSortingParams)
             trackPoint->setSortingParameter(trackLen);
+
+          prevReferenceState = referenceState;
           continue;
         }
 
@@ -443,6 +448,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           trackPoint->setSortingParameter(trackLen);
 
         newRefState = false;
+
+        prevReferenceState = referenceState;
 
         continue;
       }
@@ -681,8 +688,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
   removeForwardBackwardInfo(tr, rep, notChangedUntil, notChangedFrom);
 
   if (firstBackwardUpdate) {
-    KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep));
-    if (! fi->hasForwardPrediction()) {
+    KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurementAndFitterInfo(0, rep)->getFitterInfo(rep));
+    if (fi && ! fi->hasForwardPrediction()) {
       if (debugLvl_ > 0)
         std::cout << "set backwards update of first point as forward prediction (with blown up cov) \n";
       if (fi->getPlane() != firstBackwardUpdate->getPlane()) {
