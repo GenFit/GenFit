@@ -38,7 +38,8 @@ class FitStatus {
  public:
 
   FitStatus() :
-    isFitted_(false), isFitConverged_(false), trackHasChanged_(false), trackIsPruned_(false), charge_(0), chi2_(-1e99), ndf_(-1e99)
+    isFitted_(false), isFitConvergedFully_(false), isFitConvergedPartially_(false), nFailedPoints_(0),
+    trackHasChanged_(false), trackIsPruned_(false), charge_(0), chi2_(-1e99), ndf_(-1e99)
   {;}
 
   virtual ~FitStatus() {};
@@ -47,8 +48,22 @@ class FitStatus {
 
   //! Has the track been fitted?
   bool isFitted() const {return isFitted_;}
-  //! Did the fit converge?
-  bool isFitConverged() const {return isFitConverged_;}
+  //! Did the fit converge (in all Points or only partially)?
+  /**
+   * Per default, this function will only be true, if all TrackPoints
+   * (with measurements) have been used in the fit, and the fit has converged.
+   *
+   * If one or more TrackPoints have been skipped
+   * (e.g. plane could not be constructed or extrapolation to plane failed),
+   * but the fit otherwise met the convergence criteria, isFitConverged(false)
+   * will return true.
+   */
+  bool isFitConverged(bool inAllPoints = true) const {
+    if (inAllPoints) return isFitConvergedFully_; return isFitConvergedPartially_;
+  }
+  bool isFitConvergedFully() const {return isFitConvergedFully_;}
+  bool isFitConvergedPartially() const {return isFitConvergedPartially_;}
+  int getNFailedPoints() const {return nFailedPoints_;}
   //! Has anything in the Track been changed since the fit?
   bool hasTrackChanged() const {return trackHasChanged_;}
   //! Has the track been pruned after the fit?
@@ -67,7 +82,9 @@ class FitStatus {
   virtual double getPVal() const {return ROOT::Math::chisquared_cdf_c(chi2_, ndf_);}
 
   void setIsFitted(bool fitted = true) {isFitted_ = fitted;}
-  void setIsFitConverged(bool fitConverged = true) {isFitConverged_ = fitConverged;}
+  void setIsFitConvergedFully(bool fitConverged = true) {isFitConvergedFully_ = fitConverged;}
+  void setIsFitConvergedPartially(bool fitConverged = true) {isFitConvergedPartially_ = fitConverged;}
+  void setNFailedPoints(int nFailedPoints) {nFailedPoints_ = nFailedPoints;}
   void setHasTrackChanged(bool trackChanged = true) {trackHasChanged_ = trackChanged;}
   void setIsTrackPruned(bool pruned = true) {trackIsPruned_ = pruned;}
   void setCharge(double charge) {charge_ = charge;}
@@ -81,8 +98,12 @@ class FitStatus {
 
   //! has the track been fitted?
   bool isFitted_;
-  //! did the fit converge?
-  bool isFitConverged_;
+  //! did the fit converge with all TrackPoints?
+  bool isFitConvergedFully_;
+  //! did the fit converge with a subset of all TrackPoints?
+  bool isFitConvergedPartially_;
+  //! Number of failed TrackPoints
+  int nFailedPoints_;
   //! has anything in the Track been changed since the fit? -> fit isn't valid anymore
   bool trackHasChanged_;
   //! Information has been stripped off, no refitting possible!

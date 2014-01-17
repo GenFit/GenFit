@@ -109,14 +109,16 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
       if (debugLvl_ > 0) {
       std::cout << "DAF::break after one last iteration\n";
       }
-      status->setIsFitConverged();
+      status->setIsFitConvergedFully(status->getNFailedPoints() == 0);
+      status->setIsFitConvergedPartially();
       break;
     }
 
     if(iBeta >= maxIterations_-1){
-      status->setIsFitConverged(false);
+      status->setIsFitConvergedFully(false);
+      status->setIsFitConvergedPartially(false);
       if (debugLvl_ > 0) {
-	std::cout << "DAF::number of max iterations reached!\n";
+        std::cout << "DAF::number of max iterations reached!\n";
       }
       break;
     }
@@ -138,7 +140,8 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
       //std::cerr << "calc weights failed" << std::endl;
       //mini_trk->getTrackRep(0)->setStatusFlag(1);
       status->setIsFitted(false);
-      status->setIsFitConverged(false);
+      status->setIsFitConvergedFully(false);
+      status->setIsFitConvergedPartially(false);
       break;
     }
 
@@ -148,7 +151,8 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
       std::cout << "DAF::convergence reached in iteration " << iBeta+1 << " -> Do one last iteration with updated weights.\n";
       }
       oneLastIter = true;
-      status->setIsFitConverged();
+      status->setIsFitConvergedFully(status->getNFailedPoints() == 0);
+      status->setIsFitConvergedPartially();
     }
 
   } // end loop over betas
@@ -156,7 +160,8 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
 
   if (status->getForwardPVal() == 0. &&
       status->getBackwardPVal() == 0.) {
-    status->setIsFitConverged(false);
+    status->setIsFitConvergedFully(false);
+    status->setIsFitConvergedPartially(false);
   }
 
 }

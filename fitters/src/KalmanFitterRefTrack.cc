@@ -113,6 +113,7 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
   double oldPvalBW = 0.;
   double chi2FW(0), ndfFW(0);
   double chi2BW(0), ndfBW(0);
+  int nFailedHits(0);
 
   KalmanFitStatus* status = new KalmanFitStatus();
   tr->setFitStatus(status, rep);
@@ -128,11 +129,20 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
         << " (id == " << tr->getIdForRep(rep) << ")"<< ", iteration nr. " << nIt << "\n";
 
       // prepare
-      if (!prepareTrack(tr, rep, resortHits) && !refitAll_) {
+      if (!prepareTrack(tr, rep, resortHits, nFailedHits) && !refitAll_) {
         if (debugLvl_ > 0)
           std::cout << "KalmanFitterRefTrack::processTrack. Track preparation did not change anything!\n";
+
         status->setIsFitted();
-        status->setIsFitConverged();
+
+        status->setIsFitConvergedPartially();
+        if (nFailedHits == 0)
+          status->setIsFitConvergedFully();
+        else
+          status->setIsFitConvergedFully(false);
+
+        status->setNFailedPoints(nFailedHits);
+
         status->setHasTrackChanged(false);
         status->setCharge(rep->getCharge(*static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
         status->setNumIterations(nIt);
@@ -158,7 +168,8 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
             std::cout << "KalmanFitterRefTrack::processTrack. Resorted Track:";
             tr->Print("C");
           }
-          prepareTrack(tr, rep, resortHits);// re-prepare if order of hits has changed!
+          prepareTrack(tr, rep, resortHits, nFailedHits);// re-prepare if order of hits has changed!
+          status->setNFailedPoints(nFailedHits);
           if (debugLvl_ > 0) {
             std::cout << "KalmanFitterRefTrack::processTrack. Prepared resorted Track:";
             tr->Print("C");
@@ -232,7 +243,15 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
             std::cout << "Fit is converged! ";
           std::cout << "\n";
         }
-        status->setIsFitConverged(converged);
+
+        if (nFailedHits == 0)
+          status->setIsFitConvergedFully(converged);
+        else
+          status->setIsFitConvergedFully(false);
+
+        status->setIsFitConvergedPartially(converged);
+        status->setNFailedPoints(nFailedHits);
+
         break;
       }
       else {
@@ -253,7 +272,9 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
     catch(Exception& e) {
       std::cerr << e.what();
       status->setIsFitted(false);
-      status->setIsFitConverged(false);
+      status->setIsFitConvergedFully(false);
+      status->setIsFitConvergedPartially(false);
+      status->setNFailedPoints(nFailedHits);
       if (debugLvl_ > 0)
         status->Print();
       return;
@@ -276,7 +297,9 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
   }
   else { // none of the trackPoints has a fitterInfo
     status->setIsFitted(false);
-    status->setIsFitConverged(false);
+    status->setIsFitConvergedFully(false);
+    status->setIsFitConvergedPartially(false);
+    status->setNFailedPoints(nFailedHits);
   }
 
   status->setHasTrackChanged(false);
@@ -291,7 +314,7 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
 }
 
 
-bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool setSortingParams) {
+bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool setSortingParams, int& nFailedHits) {
 
   if (debugLvl_ > 0)
     std::cout << "KalmanFitterRefTrack::prepareTrack \n";
@@ -331,7 +354,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
   unsigned int i=0;
-  int nFailedHits = 0;
+  nFailedHits = 0;
 
 
   // loop over TrackPoints
