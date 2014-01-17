@@ -351,6 +351,9 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         continue;
       }
 
+      bool newRefStateTemp = newRefState;
+      newRefState = false; // is set here already because exceptions may be raised
+
 
       // get fitterInfo
       KalmanFitterInfo* fitterInfo(NULL);
@@ -396,7 +399,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         prevFitterInfo = fitterInfo;
         prevSmoothedState = smoothedState;
 
-        if (!newRefState) {
+        if (!newRefStateTemp) {
           if (debugLvl_ > 0)
             std::cout << "TrackPoint already has referenceState and previous referenceState has not been altered -> continue \n";
           trackLen += referenceState->getForwardSegmentLength();
@@ -447,14 +450,10 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         if (setSortingParams)
           trackPoint->setSortingParameter(trackLen);
 
-        newRefState = false;
-
         prevReferenceState = referenceState;
 
         continue;
       }
-
-      newRefState = false;
 
 
       // Construct plane
@@ -604,7 +603,6 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
       // create new reference state
-      newRefState = true;
       referenceState = new ReferenceStateOnPlane(stateToExtrapolate->getState(),
              stateToExtrapolate->getPlane(),
              stateToExtrapolate->getRep(),
@@ -634,6 +632,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       }
 
       changedSmthg = true;
+      newRefState = true;
 
       prevReferenceState = referenceState;
       prevFitterInfo = fitterInfo;
