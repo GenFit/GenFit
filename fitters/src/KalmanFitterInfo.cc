@@ -179,15 +179,25 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
     if (fittedStateBiased_.get() != NULL)
       return *fittedStateBiased_;
 
-    if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(-1) == this->getTrackPoint()) {// last measurement
-      assert(forwardUpdate_.get() != NULL);
+    if (this->getTrackPoint()->getTrack()->getPointWithMeasurementAndFitterInfo(-1, this->getRep())
+         == this->getTrackPoint()) {// last measurement
+      if(forwardUpdate_.get() == NULL) {
+        Exception e("KalmanFitterInfo::getFittedState: Needed updates/redictions not available in this FitterInfo.", __LINE__,__FILE__);
+        e.setFatal();
+        throw e;
+      }
       #ifdef DEBUG
       std::cout << "KalmanFitterInfo::getFittedState - biased at last measurement = forwardUpdate_ \n";
       #endif
       return *forwardUpdate_;
     }
-    else if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(0) == this->getTrackPoint()) { // first measurement
-      assert(backwardUpdate_.get() != NULL);
+    else if (this->getTrackPoint()->getTrack()->getPointWithMeasurementAndFitterInfo(0, this->getRep())
+        == this->getTrackPoint()) { // first measurement
+      if(backwardUpdate_.get() == NULL) {
+        Exception e("KalmanFitterInfo::getFittedState: Needed updates/redictions not available in this FitterInfo.", __LINE__,__FILE__);
+        e.setFatal();
+        throw e;
+      }
       #ifdef DEBUG
       std::cout << "KalmanFitterInfo::getFittedState - biased at first measurement = backwardUpdate_ \n";
       backwardUpdate_->Print();
@@ -195,8 +205,11 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
       return *backwardUpdate_;
     }
 
-    assert(forwardUpdate_.get() != NULL);
-    assert(backwardPrediction_.get() != NULL);
+    if(forwardUpdate_.get() == NULL || backwardPrediction_.get() == NULL) {
+      Exception e("KalmanFitterInfo::getFittedState: Needed updates/redictions not available in this FitterInfo.", __LINE__,__FILE__);
+      e.setFatal();
+      throw e;
+    }
     #ifdef DEBUG
     std::cout << "KalmanFitterInfo::getFittedState - biased = mean(forwardUpdate_, backwardPrediction_) \n";
     #endif
@@ -207,23 +220,36 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
     if (fittedStateUnbiased_.get() != NULL)
       return *fittedStateUnbiased_;
 
-    if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(-1) == this->getTrackPoint()) { // last measurement
-      assert(forwardPrediction_.get() != NULL);
+    if (this->getTrackPoint()->getTrack()->getPointWithMeasurementAndFitterInfo(-1, this->getRep())
+        == this->getTrackPoint()) { // last measurement
+      if(forwardPrediction_.get() == NULL) {
+        Exception e("KalmanFitterInfo::getFittedState: Needed updates/redictions not available in this FitterInfo.", __LINE__,__FILE__);
+        e.setFatal();
+        throw e;
+      }
       #ifdef DEBUG
       std::cout << "KalmanFitterInfo::getFittedState - unbiased at last measurement = forwardPrediction_ \n";
       #endif
       return *forwardPrediction_;
     }
-    else if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(0) == this->getTrackPoint()) { // first measurement
-      assert(backwardPrediction_.get() != NULL);
+    else if (this->getTrackPoint()->getTrack()->getPointWithMeasurementAndFitterInfo(0, this->getRep())
+        == this->getTrackPoint()) { // first measurement
+      if(backwardPrediction_.get() == NULL) {
+        Exception e("KalmanFitterInfo::getFittedState: Needed updates/redictions not available in this FitterInfo.", __LINE__,__FILE__);
+        e.setFatal();
+        throw e;
+      }
       #ifdef DEBUG
       std::cout << "KalmanFitterInfo::getFittedState - unbiased at first measurement = backwardPrediction_ \n";
       #endif
       return *backwardPrediction_;
     }
 
-    assert(forwardPrediction_.get() != NULL);
-    assert(backwardPrediction_.get() != NULL);
+    if(forwardPrediction_.get() == NULL || backwardPrediction_.get() == NULL) {
+      Exception e("KalmanFitterInfo::getFittedState: Needed updates/redictions not available in this FitterInfo.", __LINE__,__FILE__);
+      e.setFatal();
+      throw e;
+    }
     #ifdef DEBUG
     std::cout << "KalmanFitterInfo::getFittedState - unbiased = mean(forwardPrediction_, backwardPrediction_) \n";
     #endif
