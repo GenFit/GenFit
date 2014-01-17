@@ -160,9 +160,11 @@ void Track::swap(Track& other) {
   std::swap(this->trackReps_, other.trackReps_);
   std::swap(this->cardinalRep_, other.cardinalRep_);
   std::swap(this->trackPoints_, other.trackPoints_);
+  std::swap(this->trackPointsWithMeasurement_, other.trackPointsWithMeasurement_);
   std::swap(this->fitStatuses_, other.fitStatuses_);
   std::swap(this->stateSeed_, other.stateSeed_);
   std::swap(this->covSeed_, other.covSeed_);
+
 }
 
 Track::~Track() {
@@ -175,13 +177,19 @@ void Track::Clear(Option_t*)
   // FIXME: smarter containers or pointers needed ...
   for (size_t i = 0; i < trackPoints_.size(); ++i)
     delete trackPoints_[i];
-  // ?trackPoints_.clear();
+
+  trackPoints_.clear();
+  trackPointsWithMeasurement_.clear();
 
   for (std::map< const AbsTrackRep*, FitStatus* >::iterator it = fitStatuses_.begin(); it!= fitStatuses_.end(); ++it)
     delete it->second;
+  fitStatuses_.clear();
 
   for (size_t i = 0; i < trackReps_.size(); ++i)
     delete trackReps_[i];
+  trackReps_.clear();
+
+  cardinalRep_ = 0;
 
   stateSeed_ *= 0;
   covSeed_ *= 0;
@@ -436,6 +444,8 @@ void Track::deletePoint(int id) {
 
   delete trackPoints_[id];
   trackPoints_.erase(trackPoints_.begin()+id);
+
+  fillPointsWithMeasurement();
 
 }
 
