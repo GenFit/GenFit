@@ -99,7 +99,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
 
     if (! status->isFitted()){
       if (debugLvl_ > 0) {
-      std::cout << "DAF::Kalman could not fit!\n";
+        std::cout << "DAF::Kalman could not fit!\n";
       }
       status->setIsFitted(false);
       break;
@@ -107,7 +107,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
 
     if( oneLastIter == true){
       if (debugLvl_ > 0) {
-      std::cout << "DAF::break after one last iteration\n";
+        std::cout << "DAF::break after one last iteration\n";
       }
       status->setIsFitConvergedFully(status->getNFailedPoints() == 0);
       status->setIsFitConvergedPartially();
@@ -129,9 +129,10 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
     try{
       converged = calcWeights(tr, rep, betas_.at(iBeta));
       if (!converged && iBeta >= minIterations_-1 && abs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
-	if (debugLvl_ > 0)
-	  std::cout << "converged by Pval = " << lastPval << " even though weights changed at iBeta = " << iBeta << std::endl;
-	converged = true;
+        if (debugLvl_ > 0) {
+          std::cout << "converged by Pval = " << lastPval << " even though weights changed at iBeta = " << iBeta << std::endl;
+        }
+        converged = true;
       }
       lastPval = status->getBackwardPVal();
     } catch(Exception& e) {
@@ -148,7 +149,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
     // check if converged
     if (iBeta >= minIterations_-1 && converged) {
       if (debugLvl_ > 0) {
-      std::cout << "DAF::convergence reached in iteration " << iBeta+1 << " -> Do one last iteration with updated weights.\n";
+        std::cout << "DAF::convergence reached in iteration " << iBeta+1 << " -> Do one last iteration with updated weights.\n";
       }
       oneLastIter = true;
       status->setIsFitConvergedFully(status->getNFailedPoints() == 0);
@@ -330,10 +331,10 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
       }
 
       if (debugLvl_ > 0) {
-	if (debugLvl_ > 1 || absChange > deltaWeight_) {
-	  std::cout<<"\t old weight: " << kfi->getMeasurementOnPlane(j)->getWeight();
-	  std::cout<<"\t new weight: " << weight;
-	}
+        if (debugLvl_ > 1 || absChange > deltaWeight_) {
+          std::cout<<"\t old weight: " << kfi->getMeasurementOnPlane(j)->getWeight();
+          std::cout<<"\t new weight: " << weight;
+        }
       }
 
       kfi->getMeasurementOnPlane(j)->setWeight(weight);
