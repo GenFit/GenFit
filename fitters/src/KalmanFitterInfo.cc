@@ -296,6 +296,30 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(unsigned int iMeasurement, bool
 }
 
 
+void KalmanFitterInfo::setReferenceState(ReferenceStateOnPlane* referenceState) {
+  referenceState_.reset(referenceState);
+  if (referenceState_)
+    setPlane(referenceState_->getPlane());
+
+  // if plane has changed, delete outdated info
+  /*if (forwardPrediction_ && forwardPrediction_->getPlane() != getPlane())
+    setForwardPrediction(0);
+
+  if (forwardUpdate_ && forwardUpdate_->getPlane() != getPlane())
+    setForwardUpdate(0);
+
+  if (backwardPrediction_ && backwardPrediction_->getPlane() != getPlane())
+    setBackwardPrediction(0);
+
+  if (backwardUpdate_ && backwardUpdate_->getPlane() != getPlane())
+    setBackwardUpdate(0);
+
+  if (measurementsOnPlane_.size() > 0 && measurementsOnPlane_[0]->getPlane() != getPlane())
+    deleteMeasurementInfo();
+  */
+}
+
+
 void KalmanFitterInfo::setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {
   forwardPrediction_.reset(forwardPrediction);
   fittedStateUnbiased_.reset();

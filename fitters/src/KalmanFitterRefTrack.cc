@@ -375,7 +375,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         continue;
       }
 
-      newRefState = false; // is set here already because exceptions may be raised
+      newRefState = false;
 
 
       // get fitterInfo
@@ -418,9 +418,6 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
         referenceState = fitterInfo->getReferenceState();
 
-        // set since we continue in this block in any case
-        prevFitterInfo = fitterInfo;
-        prevSmoothedState = smoothedState;
 
         if (!prevNewRefState) {
           if (debugLvl_ > 0)
@@ -429,7 +426,29 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           if (setSortingParams)
             trackPoint->setSortingParameter(trackLen);
 
+          prevNewRefState = newRefState;
           prevReferenceState = referenceState;
+          prevFitterInfo = fitterInfo;
+          prevSmoothedState = smoothedState;
+
+          continue;
+        }
+
+
+        if (prevReferenceState == NULL) {
+          if (debugLvl_ > 0)
+            std::cout << "TrackPoint already has referenceState but previous referenceState is NULL -> reset backwar info of current reference state and continue \n";
+
+          referenceState->resetBackward();
+
+          if (setSortingParams)
+            trackPoint->setSortingParameter(trackLen);
+
+          prevNewRefState = newRefState;
+          prevReferenceState = referenceState;
+          prevFitterInfo = fitterInfo;
+          prevSmoothedState = smoothedState;
+
           continue;
         }
 
@@ -470,10 +489,15 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         referenceState->setForwardNoiseMatrix(FNoiseMatrix_);
         referenceState->setForwardDeltaState(forwardDeltaState_);
 
+        newRefState = true;
+
         if (setSortingParams)
           trackPoint->setSortingParameter(trackLen);
 
+        prevNewRefState = newRefState;
         prevReferenceState = referenceState;
+        prevFitterInfo = fitterInfo;
+        prevSmoothedState = smoothedState;
 
         continue;
       }
@@ -520,7 +544,11 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         plane = trackPoint->getRawMeasurement(0)->constructPlane(seedFromTrack);
       }
 
-      assert (plane.get() != NULL);
+      if (plane.get() == NULL) {
+        Exception exc("KalmanFitterRefTrack::prepareTrack ==> construced plane is NULL!",__LINE__,__FILE__);
+        exc.setFatal();
+        throw exc;
+      }
 
 
 
@@ -674,6 +702,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
       ++nFailedHits;
       if (maxFailedHits_<0 || nFailedHits <= maxFailedHits_) {
+        prevNewRefState = true;
         referenceState = NULL;
         smoothedState = NULL;
         tr->getPoint(i)->deleteFitterInfo(rep);
@@ -711,7 +740,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
   removeForwardBackwardInfo(tr, rep, notChangedUntil, notChangedFrom);
 
-  if (firstBackwardUpdate) {
+  if (firstBackwardUpdate && tr->getPointWithMeasurementAndFitterInfo(0, rep)) {
     KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurementAndFitterInfo(0, rep)->getFitterInfo(rep));
     if (fi && ! fi->hasForwardPrediction()) {
       if (debugLvl_ > 0)
