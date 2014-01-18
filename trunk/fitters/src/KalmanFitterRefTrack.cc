@@ -348,7 +348,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
   double trackLen(0);
 
-  bool newRefState(false);
+  bool newRefState(false); // has the current Point a new reference state?
+  bool prevNewRefState(false); // has the last successfull point a new reference state?
 
   unsigned int nPoints = tr->getNumPoints();
 
@@ -374,7 +375,6 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         continue;
       }
 
-      bool newRefStateTemp = newRefState;
       newRefState = false; // is set here already because exceptions may be raised
 
 
@@ -387,9 +387,9 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       if (fitterInfo == NULL) {
         if (debugLvl_ > 0)
           std::cout << "create new KalmanFitterInfo \n";
+        changedSmthg = true;
         fitterInfo = new KalmanFitterInfo(trackPoint, rep);
         trackPoint->setFitterInfo(fitterInfo);
-        changedSmthg = true;
       }
       else {
         if (debugLvl_ > 0)
@@ -422,7 +422,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         prevFitterInfo = fitterInfo;
         prevSmoothedState = smoothedState;
 
-        if (!newRefStateTemp) {
+        if (!prevNewRefState) {
           if (debugLvl_ > 0)
             std::cout << "TrackPoint already has referenceState and previous referenceState has not been altered -> continue \n";
           trackLen += referenceState->getForwardSegmentLength();
@@ -626,6 +626,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
       // create new reference state
+      newRefState = true;
+      changedSmthg = true;
       referenceState = new ReferenceStateOnPlane(stateToExtrapolate->getState(),
              stateToExtrapolate->getPlane(),
              stateToExtrapolate->getRep(),
@@ -654,9 +656,9 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         fitterInfo->fixWeights(oldWeightsFixed);
       }
 
-      changedSmthg = true;
-      newRefState = true;
 
+      // if we made it here, no Exceptions were thrown and the TrackPoint could successfully be processed
+      prevNewRefState = newRefState;
       prevReferenceState = referenceState;
       prevFitterInfo = fitterInfo;
       prevSmoothedState = smoothedState;
