@@ -731,7 +731,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
           scatCov *= theta1 * theta1 / (1. - c1 * c1 - c2 * c2) / (1. - c1 * c1 - c2 * c2) ;
           
           // last point is the just inserted measurement (or dummy point)
-          GblPoint& lastPoint = listOfPoints.at(ipoint_meas);
+          GblPoint& lastPoint = listOfPoints.at(n_gbl_points - 1);
           lastPoint.addScatterer(scatResidual, scatCov.Invert());
           
         }
