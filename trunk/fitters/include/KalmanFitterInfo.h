@@ -86,7 +86,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   bool hasUpdate(int direction) const {if (direction < 0) return hasBackwardUpdate(); return hasForwardUpdate();}
   bool hasPredictionsAndUpdates() const {return (hasForwardPrediction() && hasBackwardPrediction() && hasForwardUpdate() && hasBackwardUpdate());}
 
-  void setReferenceState(ReferenceStateOnPlane* referenceState) {referenceState_.reset(referenceState);}
+  void setReferenceState(ReferenceStateOnPlane* referenceState);
   void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction);
   void setBackwardPrediction(MeasuredStateOnPlane* backwardPrediction);
   void setPrediction(MeasuredStateOnPlane* prediction, int direction)  {if (direction >=0) setForwardPrediction(prediction); else setBackwardPrediction(prediction);}
