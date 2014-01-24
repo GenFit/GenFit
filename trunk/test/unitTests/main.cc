@@ -864,6 +864,8 @@ bool checkExtrapolateBy() {
   genfit::StateOnPlane state(rep);
   rep->setPosMom(state, pos, mom);
 
+  TVector3 posOrig(state.getPos());
+
   genfit::SharedPlanePtr origPlane = state.getPlane();
   genfit::StateOnPlane origState(state);
 
@@ -878,15 +880,22 @@ bool checkExtrapolateBy() {
     return false;
   }
 
+  TVector3 posExt(state.getPos());
+
+
 
 
   // compare
-  if (fabs(extrapolatedLen-step) > epsilonLen) {
+  if (fabs(extrapolatedLen-step) > epsilonLen ||
+      (posOrig - posExt).Mag() > fabs(step)) {
 
       origState.Print();
       state.Print();
 
       std::cout << "extrapolatedLen-step = " << extrapolatedLen-step << "\n";
+      std::cout << "started extrapolation from: "; posOrig.Print();
+      std::cout << "extrapolated to "; posExt.Print();
+      std::cout << "difference = " << (posOrig - posExt).Mag() << "; step = " << step << "\n";
 
       delete rep;
       return false;
