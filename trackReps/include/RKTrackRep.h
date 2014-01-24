@@ -82,31 +82,36 @@ class RKTrackRep : public AbsTrackRep {
   virtual double extrapolateToPlane(StateOnPlane& state,
       const SharedPlanePtr& plane,
       bool stopAtBoundary = false,
-      bool calcJacobianNoise = false) const;
+      bool calcJacobianNoise = true) const;
 
   virtual double extrapolateToLine(StateOnPlane& state,
       const TVector3& linePoint,
       const TVector3& lineDirection,
-      bool stopAtBoundary = false) const;
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const;
 
   virtual double extrapolateToPoint(StateOnPlane& state,
       const TVector3& point,
-      bool stopAtBoundary = false) const;
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const;
 
   virtual double extrapolateToCylinder(StateOnPlane& state,
       double radius,
       const TVector3& linePoint = TVector3(0.,0.,0.),
       const TVector3& lineDirection = TVector3(0.,0.,1.),
-      bool stopAtBoundary = false) const;
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const;
 
   virtual double extrapolateToSphere(StateOnPlane& state,
       double radius,
       const TVector3& point = TVector3(0.,0.,0.),
-      bool stopAtBoundary = false) const;
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const;
 
   virtual double extrapolateBy(StateOnPlane& state,
       double step,
-      bool stopAtBoundary = false) const;
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const;
 
 
   unsigned int getDim() const {return 5;}

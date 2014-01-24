@@ -79,26 +79,25 @@ class AbsTrackRep : public TObject {
    *        and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
-   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
+   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToPlane(StateOnPlane& state,
       const SharedPlanePtr& plane,
       bool stopAtBoundary = false,
-      bool calcJacobianNoise = false) const = 0;
+      bool calcJacobianNoise = true) const = 0;
 
   /**
    * @brief Extrapolates the state to the POCA to a line, and returns the extrapolation length
    *        and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
-   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
+   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToLine(StateOnPlane& state,
       const TVector3& linePoint,
       const TVector3& lineDirection,
-      bool stopAtBoundary = false) const = 0;
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const = 0;
 
   /**
    * @brief Resembles the interface of GFAbsTrackRep in old versions of genfit
@@ -106,6 +105,8 @@ class AbsTrackRep : public TObject {
    * This interface to extrapolateToLine is intended to resemble the
    * interface of GFAbsTrackRep in old versions of genfit and is
    * implemented by default via the preceding function.
+   *
+   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToLine(StateOnPlane& state,
       const TVector3& point1,
@@ -113,7 +114,8 @@ class AbsTrackRep : public TObject {
       TVector3& poca,
       TVector3& dirInPoca,
       TVector3& poca_onwire,
-      bool stopAtBoundary = false) const {
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const {
     TVector3 wireDir(point2 - point1);
     wireDir.Unit();
     double retval = this->extrapolateToLine(state, point1, wireDir, stopAtBoundary);
@@ -131,51 +133,51 @@ class AbsTrackRep : public TObject {
    *        and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
-   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
+   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToPoint(StateOnPlane& state,
       const TVector3& point,
-      bool stopAtBoundary = false) const = 0;
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const = 0;
 
   /**
    * @brief Extrapolates the state to the cylinder surface, and returns the extrapolation length
    *       and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
-   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
+   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToCylinder(StateOnPlane& state,
       double radius,
       const TVector3& linePoint = TVector3(0.,0.,0.),
       const TVector3& lineDirection = TVector3(0.,0.,1.),
-      bool stopAtBoundary = false) const = 0;
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const = 0;
 
   /**
    * @brief Extrapolates the state to the sphere surface, and returns the extrapolation length
    *       and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
-   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
+   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToSphere(StateOnPlane& state,
       double radius,
       const TVector3& point = TVector3(0.,0.,0.),
-      bool stopAtBoundary = false) const = 0;
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const = 0;
 
   /**
    * @brief Extrapolates the state by step (cm) and returns the extrapolation length
    *       and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
-   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
+   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateBy(StateOnPlane& state,
       double step,
-      bool stopAtBoundary = false) const = 0;
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const = 0;
 
   //! Get the dimension of the state vector used by the track representation.
   virtual unsigned int getDim() const = 0;

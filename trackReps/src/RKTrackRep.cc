@@ -102,19 +102,15 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane& state,
   // to 7D
   M1x7 state7;
   getState7(state, state7);
-  bool fillExtrapSteps(false);
-  TMatrixDSym* covPtr(NULL);
 
+  TMatrixDSym* covPtr(NULL);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     covPtr = &(static_cast<MeasuredStateOnPlane*>(&state)->getCov());
-    fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   // actual extrapolation
   bool isAtBoundary(false);
-  double coveredDistance = Extrap(*(state.getPlane()), *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, covPtr, false, stopAtBoundary);
+  double coveredDistance = Extrap(*(state.getPlane()), *plane, getCharge(state), isAtBoundary, state7, calcJacobianNoise, covPtr, false, stopAtBoundary);
 
   if (stopAtBoundary && isAtBoundary) {
     state.setPlane(SharedPlanePtr(new DetPlane(TVector3(state7[0], state7[1], state7[2]),
@@ -136,7 +132,8 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane& state,
 double RKTrackRep::extrapolateToLine(StateOnPlane& state,
     const TVector3& linePoint,
     const TVector3& lineDirection,
-    bool stopAtBoundary) const {
+    bool stopAtBoundary,
+    bool calcJacobianNoise) const {
 
   if (debugLvl_ > 0) {
     std::cout << "RKTrackRep::extrapolateToLine()\n";
@@ -171,7 +168,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, charge, isAtBoundary, state7, false, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, charge, isAtBoundary, state7, calcJacobianNoise, NULL, true, stopAtBoundary, maxStep);
     tracklength += step;
 
     dir.SetXYZ(state7[3], state7[4], state7[5]);
@@ -204,7 +201,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
     lastEndState_.setPlane(plane);
     getState5(lastEndState_, state7);
 
-    tracklength = extrapolateToPlane(state, plane);
+    tracklength = extrapolateToPlane(state, plane, false, calcJacobianNoise);
   }
   else {
     state.setPlane(plane);
@@ -223,7 +220,8 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
 
 double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
     const TVector3& point,
-    bool stopAtBoundary) const {
+    bool stopAtBoundary,
+    bool calcJacobianNoise) const {
 
   if (debugLvl_ > 0) {
     std::cout << "RKTrackRep::extrapolateToPoint()\n";
@@ -258,7 +256,7 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, calcJacobianNoise, NULL, true, stopAtBoundary, maxStep);
     tracklength += step;
 
     dir.SetXYZ(state7[3], state7[4], state7[5]);
@@ -290,7 +288,7 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
     lastEndState_.setPlane(plane);
     getState5(lastEndState_, state7);
 
-    tracklength = extrapolateToPlane(state, plane);
+    tracklength = extrapolateToPlane(state, plane, false, calcJacobianNoise);
   }
   else {
     state.setPlane(plane);
@@ -312,7 +310,8 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     double radius,
     const TVector3& linePoint,
     const TVector3& lineDirection,
-    bool stopAtBoundary) const {
+    bool stopAtBoundary,
+    bool calcJacobianNoise) const {
 
   if (debugLvl_ > 0) {
     std::cout << "RKTrackRep::extrapolateToCylinder()\n";
@@ -385,7 +384,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     plane->setO(dest);
     plane->setUV((dest-linePoint).Cross(lineDirection), lineDirection);
 
-    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, calcJacobianNoise, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -407,7 +406,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     lastEndState_.setPlane(plane);
     getState5(lastEndState_, state7);
 
-    tracklength = extrapolateToPlane(state, plane);
+    tracklength = extrapolateToPlane(state, plane, false, calcJacobianNoise);
   }
   else {
     state.setPlane(plane);
@@ -423,7 +422,8 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
 double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
     double radius,
     const TVector3& point, // center
-    bool stopAtBoundary) const {
+    bool stopAtBoundary,
+    bool calcJacobianNoise) const {
 
   if (debugLvl_ > 0) {
     std::cout << "RKTrackRep::extrapolateToSphere()\n";
@@ -484,7 +484,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
 
     plane->setON(dest, dest-point);
 
-    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, calcJacobianNoise, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -505,7 +505,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
     lastEndState_.setPlane(plane);
     getState5(lastEndState_, state7);
 
-    tracklength = extrapolateToPlane(state, plane);
+    tracklength = extrapolateToPlane(state, plane, false, calcJacobianNoise);
   }
   else {
     state.setPlane(plane);
@@ -520,7 +520,8 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
 
 double RKTrackRep::extrapolateBy(StateOnPlane& state,
     double step,
-    bool stopAtBoundary) const {
+    bool stopAtBoundary,
+    bool calcJacobianNoise) const {
 
   if (debugLvl_ > 0) {
     std::cout << "RKTrackRep::extrapolateBy()\n";
@@ -558,7 +559,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
 
     plane->setON(dest, dir);
 
-    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, true, stopAtBoundary, (step-tracklength));
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, calcJacobianNoise, NULL, true, stopAtBoundary, (step-tracklength));
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -583,7 +584,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
   }
 
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
-    tracklength = extrapolateToPlane(state, plane);
+    tracklength = extrapolateToPlane(state, plane, false, calcJacobianNoise);
   }
   else {
     state.setPlane(plane);
