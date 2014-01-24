@@ -572,6 +572,9 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
       if (debugLvl_ > 0) {
         std::cout << "RKTrackRep::extrapolateBy(): reached after " << iterations << " iterations. \n";
       }
+      pos.SetXYZ(state7[0], state7[1], state7[2]);
+      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      plane->setON(pos, dir);
       break;
     }
 
