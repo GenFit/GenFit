@@ -1309,6 +1309,10 @@ void RKTrackRep::initArrays() const {
   memset(J_Mp_7x5_,   0x00, 7*5*sizeof(double));
   memset(J_Mp_6x5_,   0x00, 6*5*sizeof(double));
 
+  fJacobian_.UnitMatrix();
+  fNoise_.Zero();
+  limits_.reset();
+
   RKSteps_.reserve(100);
   ExtrapSteps_.reserve(100);
 
