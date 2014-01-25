@@ -11,7 +11,7 @@
 #include <TMath.h>
 #include <TVector3.h>
 
-
+/*
 using namespace std;
 
 ofstream file("debug.txt");
@@ -63,5 +63,5 @@ void outputVector(TVector3 vector, std::string caption)
 	}
 	file << endl;
 }
-
+*/
 #endif

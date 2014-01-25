@@ -563,7 +563,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
         TVector3 vDir = plane->getV();
         // sensor normal direction in global coords
         TVector3 nDir = plane->getNormal();
-        file << sensorId << endl;
+        //file << sensorId << endl;
         //outputVector(uDir, "U");
         //outputVector(vDir, "V");
         //outputVector(nDir, "Normal");
