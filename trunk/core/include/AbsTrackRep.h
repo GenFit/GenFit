@@ -118,7 +118,7 @@ class AbsTrackRep : public TObject {
       bool calcJacobianNoise = false) const {
     TVector3 wireDir(point2 - point1);
     wireDir.Unit();
-    double retval = this->extrapolateToLine(state, point1, wireDir, stopAtBoundary);
+    double retval = this->extrapolateToLine(state, point1, wireDir, stopAtBoundary, calcJacobianNoise);
     poca = this->getPos(state);
     dirInPoca = this->getMom(state);
     dirInPoca.Unit();
