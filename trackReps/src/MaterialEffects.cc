@@ -596,7 +596,15 @@ double MaterialEffects::energyLossBrems() const
       CORR = 1. / (1. + 0.805485E-10 * matDensity_ * matZ_ * E * E / (matA_ * kc * kc)); // MIGDAL correction factor
 #endif
 
-      double FAC = matZ_ * (matZ_ + xi) * E * E * pow((kc * CORR / T), beta) / (E + me_);
+      // We use exp(beta * log(...) here because pow(..., beta) is
+      // REALLY slow and we don't need ultimate numerical precision
+      // for this approximation.
+      double FAC = matZ_ * (matZ_ + xi) * E * E / (E + me_);
+      if (beta == 1.) {  // That is the #ifdef BETHE case
+	FAC *= kc * CORR / T;
+      } else {
+	FAC *= exp(beta * log(kc * CORR / T));
+      }
       if (FAC <= 0.) return 0.;
       dedxBrems = FAC * S;
 
