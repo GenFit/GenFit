@@ -42,6 +42,45 @@ WirePointMeasurement::WirePointMeasurement(const TVectorD& rawHitCoords, const T
 }
 
 
+SharedPlanePtr WirePointMeasurement::constructPlane(const StateOnPlane& state) const {
+
+  // copy state. Neglect covariance.
+  StateOnPlane st(state);
+
+  TVector3 wire1(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
+  TVector3 wire2(rawHitCoords_(3), rawHitCoords_(4), rawHitCoords_(5));
+
+  //std::cout << " wire1(" << rawHitCoords_(0) << ", " << rawHitCoords_(1) << ", " << rawHitCoords_(2) << ")" << std::endl;
+  //std::cout << " wire2(" << rawHitCoords_(3) << ", " << rawHitCoords_(4) << ", " << rawHitCoords_(5) << ")" << std::endl;
+
+  // unit vector along the wire (V)
+  TVector3 wireDirection = wire2 - wire1;
+  wireDirection.SetMag(1.);
+
+  //std::cout << " wireDirection(" << wireDirection.X() << ", " << wireDirection.Y() << ", " << wireDirection.Z() << ")" << std::endl;
+
+  // point of closest approach
+  const AbsTrackRep* rep = state.getRep();
+  rep->extrapolateToLine(st, wire1, wireDirection);
+  //const TVector3& poca = rep->getPos(st);
+  TVector3 dirInPoca = rep->getMom(st);
+  dirInPoca.SetMag(1.);
+  //const TVector3& pocaOnWire = wire1 + wireDirection.Dot(poca - wire1)*wireDirection;
+
+  // check if direction is parallel to wire
+  if (fabs(wireDirection.Angle(dirInPoca)) < 0.01){
+    Exception exc("WireMeasurement::detPlane(): Cannot construct detector plane, direction is parallel to wire", __LINE__,__FILE__);
+    throw exc;
+  }
+
+  // construct orthogonal vector
+  TVector3 U = dirInPoca.Cross(wireDirection);
+  // U.SetMag(1.); automatically assured
+
+  return SharedPlanePtr(new DetPlane(wire1, U, wireDirection));
+}
+
+
 std::vector<MeasurementOnPlane*> WirePointMeasurement::constructMeasurementsOnPlane(const StateOnPlane& state) const
 {
   MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(2),
