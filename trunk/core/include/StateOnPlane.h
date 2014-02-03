@@ -72,21 +72,26 @@ class StateOnPlane : public TObject {
   // Shortcuts to TrackRep functions
   double extrapolateToPlane(const SharedPlanePtr& plane,
         bool stopAtBoundary = false,
-        bool calcJacobianNoise = false) {return rep_->extrapolateToPlane(*this, plane, stopAtBoundary, calcJacobianNoise);}
+        bool calcJacobianNoise = true) {return rep_->extrapolateToPlane(*this, plane, stopAtBoundary, calcJacobianNoise);}
   double extrapolateToLine(const TVector3& linePoint,
         const TVector3& lineDirection,
-        bool stopAtBoundary = false) {return rep_->extrapolateToLine(*this, linePoint, lineDirection, stopAtBoundary);}
+        bool stopAtBoundary = false,
+        bool calcJacobianNoise = false) {return rep_->extrapolateToLine(*this, linePoint, lineDirection, stopAtBoundary, calcJacobianNoise);}
   double extrapolateToPoint(const TVector3& point,
-        bool stopAtBoundary = false) {return rep_->extrapolateToPoint(*this, point, stopAtBoundary);}
+        bool stopAtBoundary = false,
+        bool calcJacobianNoise = false) {return rep_->extrapolateToPoint(*this, point, stopAtBoundary, calcJacobianNoise);}
   double extrapolateToCylinder(double radius,
         const TVector3& linePoint = TVector3(0.,0.,0.),
         const TVector3& lineDirection = TVector3(0.,0.,1.),
-        bool stopAtBoundary = false) {return rep_->extrapolateToCylinder(*this, radius, linePoint, lineDirection, stopAtBoundary);}
+        bool stopAtBoundary = false,
+        bool calcJacobianNoise = false) {return rep_->extrapolateToCylinder(*this, radius, linePoint, lineDirection, stopAtBoundary, calcJacobianNoise);}
   double extrapolateToSphere(double radius,
         const TVector3& point = TVector3(0.,0.,0.),
-        bool stopAtBoundary = false) {return rep_->extrapolateToSphere(*this, radius, point, stopAtBoundary);}
+        bool stopAtBoundary = false,
+        bool calcJacobianNoise = false) {return rep_->extrapolateToSphere(*this, radius, point, stopAtBoundary, calcJacobianNoise);}
   double extrapolateBy(double step,
-        bool stopAtBoundary = false) {return rep_->extrapolateBy(*this, step, stopAtBoundary);}
+        bool stopAtBoundary = false,
+        bool calcJacobianNoise = false) {return rep_->extrapolateBy(*this, step, stopAtBoundary, calcJacobianNoise);}
 
   TVector3 getPos() const {return rep_->getPos(*this);}
   TVector3 getMom() const {return rep_->getMom(*this);}
