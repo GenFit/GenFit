@@ -79,19 +79,23 @@ class AbsTrackRep : public TObject {
    *        and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
+   *
+   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
+   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToPlane(StateOnPlane& state,
       const SharedPlanePtr& plane,
       bool stopAtBoundary = false,
-      bool calcJacobianNoise = true) const = 0;
+      bool calcJacobianNoise = false) const = 0;
 
   /**
    * @brief Extrapolates the state to the POCA to a line, and returns the extrapolation length
    *        and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
+   *
+   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
+   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToLine(StateOnPlane& state,
       const TVector3& linePoint,
@@ -106,7 +110,10 @@ class AbsTrackRep : public TObject {
    * interface of GFAbsTrackRep in old versions of genfit and is
    * implemented by default via the preceding function.
    *
-   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
+   * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
+   *
+   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
+   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToLine(StateOnPlane& state,
       const TVector3& point1,
@@ -133,7 +140,9 @@ class AbsTrackRep : public TObject {
    *        and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
+   *
+   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
+   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToPoint(StateOnPlane& state,
       const TVector3& point,
@@ -145,7 +154,9 @@ class AbsTrackRep : public TObject {
    *       and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
+   *
+   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
+   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToCylinder(StateOnPlane& state,
       double radius,
@@ -159,7 +170,9 @@ class AbsTrackRep : public TObject {
    *       and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
+   *
+   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
+   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToSphere(StateOnPlane& state,
       double radius,
@@ -172,7 +185,9 @@ class AbsTrackRep : public TObject {
    *       and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * Jacobian and noise will only be calculated if calcJacobianNoise == true.
+   *
+   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
+   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateBy(StateOnPlane& state,
       double step,
