@@ -72,7 +72,7 @@ class StateOnPlane : public TObject {
   // Shortcuts to TrackRep functions
   double extrapolateToPlane(const SharedPlanePtr& plane,
         bool stopAtBoundary = false,
-        bool calcJacobianNoise = true) {return rep_->extrapolateToPlane(*this, plane, stopAtBoundary, calcJacobianNoise);}
+        bool calcJacobianNoise = false) {return rep_->extrapolateToPlane(*this, plane, stopAtBoundary, calcJacobianNoise);}
   double extrapolateToLine(const TVector3& linePoint,
         const TVector3& lineDirection,
         bool stopAtBoundary = false,

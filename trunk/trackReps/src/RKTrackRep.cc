@@ -104,13 +104,17 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane& state,
   getState7(state, state7);
 
   TMatrixDSym* covPtr(NULL);
+  bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     covPtr = &(static_cast<MeasuredStateOnPlane*>(&state)->getCov());
+    fillExtrapSteps = true;
   }
+  else if (calcJacobianNoise)
+    fillExtrapSteps = true;
 
   // actual extrapolation
   bool isAtBoundary(false);
-  double coveredDistance = Extrap(*(state.getPlane()), *plane, getCharge(state), isAtBoundary, state7, calcJacobianNoise, covPtr, false, stopAtBoundary);
+  double coveredDistance = Extrap(*(state.getPlane()), *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, covPtr, false, stopAtBoundary);
 
   if (stopAtBoundary && isAtBoundary) {
     state.setPlane(SharedPlanePtr(new DetPlane(TVector3(state7[0], state7[1], state7[2]),
@@ -147,6 +151,13 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
   M1x7 state7;
   getState7(state, state7);
 
+  bool fillExtrapSteps(false);
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+    fillExtrapSteps = true;
+  }
+  else if (calcJacobianNoise)
+    fillExtrapSteps = true;
+
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   double charge = getCharge(state);
   TVector3 dir(state7[3], state7[4], state7[5]);
@@ -168,7 +179,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, charge, isAtBoundary, state7, calcJacobianNoise, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, charge, isAtBoundary, state7, fillExtrapSteps, NULL, true, stopAtBoundary, maxStep);
     tracklength += step;
 
     dir.SetXYZ(state7[3], state7[4], state7[5]);
@@ -235,6 +246,13 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
   M1x7 state7;
   getState7(state, state7);
 
+  bool fillExtrapSteps(false);
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+    fillExtrapSteps = true;
+  }
+  else if (calcJacobianNoise)
+    fillExtrapSteps = true;
+
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   TVector3 dir(state7[3], state7[4], state7[5]);
   TVector3 lastDir(0,0,0);
@@ -256,7 +274,7 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, calcJacobianNoise, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, NULL, true, stopAtBoundary, maxStep);
     tracklength += step;
 
     dir.SetXYZ(state7[3], state7[4], state7[5]);
@@ -325,6 +343,13 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
   M1x7 state7;
   getState7(state, state7);
 
+  bool fillExtrapSteps(false);
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+    fillExtrapSteps = true;
+  }
+  else if (calcJacobianNoise)
+    fillExtrapSteps = true;
+
   double tracklength(0.), maxStep(1.E99);
 
   TVector3 dest, pos, dir;
@@ -384,7 +409,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     plane->setO(dest);
     plane->setUV((dest-linePoint).Cross(lineDirection), lineDirection);
 
-    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, calcJacobianNoise, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -437,6 +462,13 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
   M1x7 state7;
   getState7(state, state7);
 
+  bool fillExtrapSteps(false);
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+    fillExtrapSteps = true;
+  }
+  else if (calcJacobianNoise)
+    fillExtrapSteps = true;
+
   double tracklength(0.), maxStep(1.E99);
 
   TVector3 dest, pos, dir;
@@ -484,7 +516,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
 
     plane->setON(dest, dest-point);
 
-    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, calcJacobianNoise, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -535,6 +567,13 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
   M1x7 state7;
   getState7(state, state7);
 
+  bool fillExtrapSteps(false);
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+    fillExtrapSteps = true;
+  }
+  else if (calcJacobianNoise)
+    fillExtrapSteps = true;
+
   double tracklength(0.);
 
   TVector3 dest, pos, dir;
@@ -559,7 +598,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
 
     plane->setON(dest, dir);
 
-    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, calcJacobianNoise, NULL, true, stopAtBoundary, (step-tracklength));
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, NULL, true, stopAtBoundary, (step-tracklength));
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {

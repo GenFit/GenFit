@@ -82,7 +82,7 @@ class RKTrackRep : public AbsTrackRep {
   virtual double extrapolateToPlane(StateOnPlane& state,
       const SharedPlanePtr& plane,
       bool stopAtBoundary = false,
-      bool calcJacobianNoise = true) const;
+      bool calcJacobianNoise = false) const;
 
   virtual double extrapolateToLine(StateOnPlane& state,
       const TVector3& linePoint,
