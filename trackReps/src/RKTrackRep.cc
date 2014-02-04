@@ -179,7 +179,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, charge, isAtBoundary, state7, fillExtrapSteps, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, charge, isAtBoundary, state7, false, NULL, true, stopAtBoundary, maxStep);
     tracklength += step;
 
     dir.SetXYZ(state7[3], state7[4], state7[5]);
@@ -207,12 +207,12 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
     plane->setU(dir.Cross(lineDirection));
   }
 
-  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
+  if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
     lastEndState_.setPlane(plane);
     getState5(lastEndState_, state7);
 
-    tracklength = extrapolateToPlane(state, plane, false, calcJacobianNoise);
+    tracklength = extrapolateToPlane(state, plane, false, true);
   }
   else {
     state.setPlane(plane);
@@ -274,7 +274,7 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, true, stopAtBoundary, maxStep);
     tracklength += step;
 
     dir.SetXYZ(state7[3], state7[4], state7[5]);
@@ -301,12 +301,12 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
     plane->setNormal(dir);
   }
 
-  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
+  if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
     lastEndState_.setPlane(plane);
     getState5(lastEndState_, state7);
 
-    tracklength = extrapolateToPlane(state, plane, false, calcJacobianNoise);
+    tracklength = extrapolateToPlane(state, plane, false, true);
   }
   else {
     state.setPlane(plane);
@@ -409,7 +409,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     plane->setO(dest);
     plane->setUV((dest-linePoint).Cross(lineDirection), lineDirection);
 
-    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -426,12 +426,12 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
 
   }
 
-  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
+  if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
     lastEndState_.setPlane(plane);
     getState5(lastEndState_, state7);
 
-    tracklength = extrapolateToPlane(state, plane, false, calcJacobianNoise);
+    tracklength = extrapolateToPlane(state, plane, false, true);
   }
   else {
     state.setPlane(plane);
@@ -516,7 +516,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
 
     plane->setON(dest, dest-point);
 
-    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -532,12 +532,12 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
 
   }
 
-  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
+  if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
     lastEndState_.setPlane(plane);
     getState5(lastEndState_, state7);
 
-    tracklength = extrapolateToPlane(state, plane, false, calcJacobianNoise);
+    tracklength = extrapolateToPlane(state, plane, false, true);
   }
   else {
     state.setPlane(plane);
@@ -598,7 +598,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
 
     plane->setON(dest, dir);
 
-    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, NULL, true, stopAtBoundary, (step-tracklength));
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, true, stopAtBoundary, (step-tracklength));
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -622,8 +622,12 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
 
   }
 
-  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
-    tracklength = extrapolateToPlane(state, plane, false, calcJacobianNoise);
+  if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
+    // make use of the cache
+    lastEndState_.setPlane(plane);
+    getState5(lastEndState_, state7);
+
+    tracklength = extrapolateToPlane(state, plane, false, true);
   }
   else {
     state.setPlane(plane);
