@@ -219,8 +219,9 @@ void DAF::setBetas(double b1,double b2,double b3,double b4,double b5,double b6,d
       }
     }
   }
+  minIterations_ = betas_.size();
   maxIterations_ = betas_.size() + 4;
-  betas_.resize(maxIterations_,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
+  betas_.resize(maxIterations_,betas_.back()); //make sure main loop has a maximum of maxIterations_ and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
 }
 
 
@@ -231,6 +232,7 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
   assert(bFinal > 1.E-10);
   assert(nSteps > 1);
 
+  minIterations_ = nSteps;
   maxIterations_ = nSteps + 4;
 
   betas_.clear();
