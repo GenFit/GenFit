@@ -84,14 +84,14 @@ class DAF : public AbsKalmanFitter {
    *
    * In the current implementation you need to provide at least one temperature
    * and not more then ten temperatures.
-   * Also sets #maxIterations_.
+   * Also sets #minIterations_ and #maxIterations_.
    */
   void setBetas(double b1,double b2=-1, double b3=-1., double b4=-1., double b5=-1., double b6=-1., double b7=-1., double b8=-1., double b9=-1., double b10=-1.);
 
   /** @brief Configure the annealing scheme.
    *
    * Set a start and end temperature and the number of steps. A logarithmic sequence of temperatures will be calculated.
-   * Also sets #maxIterations_.
+   * Also sets #minIterations_ and #maxIterations_.
    */
   void setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps);
 
