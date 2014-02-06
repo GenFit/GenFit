@@ -36,7 +36,7 @@ TrackCandHit::TrackCandHit(int detId,
 }
 
 
-void TrackCandHit::Print(Option_t* option) const {
+void TrackCandHit::Print(Option_t*) const {
   std::cout << "  TrackCandHit. DetId = " << detId_
             << " \t HitId = " << hitId_
             << " \t PlaneId = " << planeId_

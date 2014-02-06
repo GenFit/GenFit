@@ -20,11 +20,11 @@
 
 namespace genfit {
 
-TVector3 ConstField::get(const TVector3& pos) const {
+TVector3 ConstField::get(const TVector3&) const {
   return field_;
 }
 
-void ConstField::get(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz) const {
+void ConstField::get(const double&, const double&, const double&, double& Bx, double& By, double& Bz) const {
   Bx = field_.X();
   By = field_.Y();
   Bz = field_.Z();

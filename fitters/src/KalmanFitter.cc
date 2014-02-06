@@ -78,7 +78,7 @@ bool KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
     }
 
     try {
-      processTrackPoint(tr, tp, rep, chi2, ndf, direction);
+      processTrackPoint(tp, rep, chi2, ndf, direction);
     }
     catch (Exception& e) {
       std::cerr << e.what();
@@ -107,7 +107,7 @@ bool KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
 }
 
 
-void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits)
+void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
 {
 
   if (tr->getFitStatus(rep) != NULL && tr->getFitStatus(rep)->isTrackPruned()) {
@@ -372,7 +372,7 @@ KalmanFitter::processTrackPartially(Track* tr, const AbsTrackRep* rep, int start
 
 
 void
-KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
+KalmanFitter::processTrackPoint(TrackPoint* tp,
     const AbsTrackRep* rep, double& chi2, double& ndf, int direction)
 {
   assert(direction == -1 || direction == +1);

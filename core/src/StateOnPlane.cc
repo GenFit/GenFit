@@ -26,7 +26,7 @@
 namespace genfit {
 
 
-void StateOnPlane::Print(Option_t* option) const {
+void StateOnPlane::Print(Option_t*) const {
   std::cout << "genfit::StateOnPlane ";
   std::cout << " state vector: "; state_.Print();
   if (sharedPlane_ != NULL) {
