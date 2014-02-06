@@ -42,7 +42,7 @@ FullMeasurement::FullMeasurement(const MeasuredStateOnPlane& state, int detId, i
 }
 
 
-SharedPlanePtr FullMeasurement::constructPlane(const StateOnPlane& state) const {
+SharedPlanePtr FullMeasurement::constructPlane(const StateOnPlane&) const {
   if (!plane_) {
     Exception exc("FullMeasurement::constructPlane(): No plane has been set!", __LINE__,__FILE__);
     throw exc;

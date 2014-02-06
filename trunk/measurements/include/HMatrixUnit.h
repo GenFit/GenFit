@@ -50,7 +50,7 @@ class HMatrixUnit : public AbsHMatrix {
   TMatrixD MHt(const TMatrixDSym& M) const {return TMatrixD(M);}
   TMatrixD MHt(const TMatrixD& M) const {return M;}
 
-  void HMHt(TMatrixDSym& M) const {return;}
+  void HMHt(TMatrixDSym&) const {return;}
 
   virtual AbsHMatrix* clone() const {return new HMatrixUnit(*this);}
 

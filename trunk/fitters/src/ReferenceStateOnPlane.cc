@@ -127,7 +127,7 @@ void ReferenceStateOnPlane::resetBackward() {
 }
 
 
-void ReferenceStateOnPlane::Print(Option_t* option) const {
+void ReferenceStateOnPlane::Print(Option_t*) const {
   StateOnPlane::Print();
 
   std::cout << " forwardSegmentLength: " << forwardSegmentLength_ << "\n";

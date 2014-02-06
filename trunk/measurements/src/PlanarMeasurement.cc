@@ -43,7 +43,7 @@ PlanarMeasurement::PlanarMeasurement(const TVectorD& rawHitCoords, const TMatrix
 }
 
 
-SharedPlanePtr PlanarMeasurement::constructPlane(const StateOnPlane& state) const {
+SharedPlanePtr PlanarMeasurement::constructPlane(const StateOnPlane&) const {
   if (!physicalPlane_) {
     Exception exc("PlanarMeasurement::constructPlane(): No plane has been set!", __LINE__,__FILE__);
     throw exc;

@@ -35,7 +35,7 @@ WireTrackCandHit::WireTrackCandHit(int detId,
 }
 
 
-void WireTrackCandHit::Print(Option_t* option) const {
+void WireTrackCandHit::Print(Option_t*) const {
   std::cout << "  WireTrackCandHit. DetId = " << detId_
             << " \t HitId = " << hitId_
             << " \t PlaneId = " << planeId_

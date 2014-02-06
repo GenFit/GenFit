@@ -44,7 +44,7 @@ void MeasurementOnPlane::swap(MeasurementOnPlane& other) {
 }
 
 
-void MeasurementOnPlane::Print(Option_t* option) const
+void MeasurementOnPlane::Print(Option_t*) const
 {
   std::cout << "genfit::MeasurementOnPlane, weight = " << weight_ << "\n";
   std::cout << " state vector: "; state_.Print();
