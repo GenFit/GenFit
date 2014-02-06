@@ -61,6 +61,8 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
   const AbsHMatrix* getHMatrix() const {return hMatrix_.get();}
   double getWeight() const {return weight_;}
 
+  TMatrixDSym getWeightedCov() {return weight_*cov_;}
+
   void setHMatrix(const AbsHMatrix* hMatrix) {hMatrix_.reset(hMatrix);}
   void setWeight(double weight) {weight_ = fmax(weight, 1.E-10);}
 
