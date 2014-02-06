@@ -1939,13 +1939,17 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       }
 
       if (!calcOnlyLastRowOfJ) {
-        for (int iRow = 0; iRow < 6; ++iRow) {
+        for (int iRow = 0; iRow < 3; ++iRow) {
           for (int iCol = 0; iCol < 3; ++iCol) {
             double val = (iRow == iCol);
-            if (iRow < 3)
-              val -= An * SU[iCol] * A[iRow];
-            else
-              val -= An * SU[iCol] * SA[iRow-3];
+            val -= An * SU[iCol] * A[iRow];
+            noiseProjection[iRow*7 + iCol] = val;
+          }
+        }
+        for (int iRow = 3; iRow < 6; ++iRow) {
+          for (int iCol = 0; iCol < 3; ++iCol) {
+            double val = (iRow == iCol);
+            val -= An * SU[iCol] * SA[iRow-3];
             noiseProjection[iRow*7 + iCol] = val;
           }
         }
