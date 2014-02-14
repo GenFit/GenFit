@@ -218,7 +218,7 @@ int EventDisplay::getNEvents() { return events_.size(); }
 void EventDisplay::gotoEvent(unsigned int id) {
 
   if (events_.size() == 0)
-    id = 0;
+    return;
   else if(id >= events_.size())
     id = events_.size() - 1;
 
