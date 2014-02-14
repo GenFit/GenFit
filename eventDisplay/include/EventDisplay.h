@@ -234,6 +234,8 @@ class EventDisplay : public TNamed {
     unsigned int nMinIter_;
     TGNumberEntry* guiNMaxIter_;
     unsigned int nMaxIter_;
+    TGNumberEntry* guiNMaxFailed_;
+    int nMaxFailed_;
     TGCheckButton* guiResort_;
     bool resort_;
 
