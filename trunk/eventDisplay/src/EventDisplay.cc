@@ -92,6 +92,7 @@ EventDisplay::EventDisplay() :
   dRelChi2_(0.2),
   nMinIter_(2),
   nMaxIter_(4),
+  nMaxFailed_(-1),
   resort_(false)
 {
 
@@ -334,6 +335,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       fitter->setMinIterations(nMinIter_);
       fitter->setMaxIterations(nMaxIter_);
       fitter->setRelChi2Change(dRelChi2_);
+      fitter->setMaxFailedHits(nMaxFailed_);
 
 
       refittedTrack.reset(new Track(*track));
@@ -1454,6 +1456,18 @@ void EventDisplay::makeGui() {
   }
   frmMain2->AddFrame(hf);
 
+  hf = new TGHorizontalFrame(frmMain2); {
+    guiNMaxFailed_ = new TGNumberEntry(hf, nMaxFailed_, 6,999, TGNumberFormat::kNESInteger,
+                          TGNumberFormat::kNEAAnyNumber,
+                          TGNumberFormat::kNELLimitMinMax,
+                          -1, 1000);
+    hf->AddFrame(guiNMaxFailed_);
+    guiNMaxFailed_->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+    lbl = new TGLabel(hf, "Maximum nr of failed hits");
+    hf->AddFrame(lbl);
+  }
+  frmMain2->AddFrame(hf);
+
 
   hf = new TGHorizontalFrame(frmMain2); {
     guiResort_ =  new TGCheckButton(hf, "Resort track");
@@ -1522,6 +1536,7 @@ void EventDisplay::guiSetDrawParams(){
   dRelChi2_ = guiRelChi2_->GetNumberEntry()->GetNumber();
   nMinIter_ = guiNMinIter_->GetNumberEntry()->GetNumber();
   nMaxIter_ = guiNMaxIter_->GetNumberEntry()->GetNumber();
+  nMaxFailed_ = guiNMaxFailed_->GetNumberEntry()->GetNumber();
   resort_ = guiResort_->IsOn();
 
   gotoEvent(eventId_);
