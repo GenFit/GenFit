@@ -217,7 +217,10 @@ int EventDisplay::getNEvents() { return events_.size(); }
 
 void EventDisplay::gotoEvent(unsigned int id) {
 
-  if(id >= events_.size()) id = events_.size() - 1;
+  if (events_.size() == 0)
+    id = 0;
+  else if(id >= events_.size())
+    id = events_.size() - 1;
 
   bool resetCam = true;
 
