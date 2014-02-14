@@ -6,6 +6,7 @@
 #include <cmath>
 #include <exception>
 #include <iostream>
+#include <sys/time.h>
 
 #include "AbsMeasurement.h"
 #include "FullMeasurement.h"
@@ -329,7 +330,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
           break;
 
       }
-      fitter->setDebugLvl(debugLvl_);
+      fitter->setDebugLvl(std::max(0, (int)debugLvl_-1));
       fitter->setMinIterations(nMinIter_);
       fitter->setMaxIterations(nMaxIter_);
       fitter->setRelChi2Change(dRelChi2_);
@@ -338,16 +339,24 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       refittedTrack.reset(new Track(*track));
       refittedTrack->deleteFitterInfo();
 
-      refittedTrack->Print("C");
+      if (debugLvl_>0)
+        refittedTrack->Print("C");
+
+      timeval startcputime, endcputime;
 
       try{
+        gettimeofday(&startcputime, NULL);
         fitter->processTrack(refittedTrack.get(), resort_);
+        gettimeofday(&endcputime, NULL);
       }
       catch(genfit::Exception& e){
         std::cerr << e.what();
         std::cerr << "Exception, could not refit track" << std::endl;
         continue;
       }
+
+      int microseconds = 1000000*(endcputime.tv_sec - startcputime.tv_sec) + (endcputime.tv_usec - startcputime.tv_usec);
+      std::cout << "it took " << double(microseconds) /  1000 << " ms of CPU to fit the track\n";
 
       if (! refittedTrack->checkConsistency()){
         std::cerr<<"refittedTrack is not consistent"<<std::endl;
@@ -356,6 +365,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
       track = refittedTrack.get();
     }
+
 
 
 
@@ -372,19 +382,22 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
        std::cout << "Draw rep" << repId_ << std::endl;
     }
 
-    //track->Print();
-    track->Print("C");
-    track->getFitStatus(rep)->Print();
+    if (debugLvl_>0) {
+      //track->Print();
+      track->Print("C");
+      track->getFitStatus(rep)->Print();
 
-    if (track->getFitStatus(rep)->isFitted()) {
-      try {
-        std::cout << "fitted state: \n";
-        track->getFittedState().Print();
-      }
-      catch (Exception& e) {
-        std::cerr << e.what();
+      if (track->getFitStatus(rep)->isFitted()) {
+        try {
+          std::cout << "fitted state: \n";
+          track->getFittedState().Print();
+        }
+        catch (Exception& e) {
+          std::cerr << e.what();
+        }
       }
     }
+
 
 
     rep->setPropDir(0);
