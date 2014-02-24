@@ -31,9 +31,6 @@
 
 #include <map>
 
-#include <boost/shared_ptr.hpp>
-
-
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
 //#define DEBUG
 
@@ -166,7 +163,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
   bool isAtBoundary(false);
 
   DetPlane startPlane(*(state.getPlane()));
-  boost::shared_ptr<genfit::DetPlane> plane(new DetPlane(linePoint, dir.Cross(lineDirection), lineDirection));
+  SharedPlanePtr plane(new DetPlane(linePoint, dir.Cross(lineDirection), lineDirection));
   unsigned int iterations(0);
 
   while(true){
@@ -261,7 +258,7 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
   bool isAtBoundary(false);
 
   DetPlane startPlane(*(state.getPlane()));
-  boost::shared_ptr<genfit::DetPlane> plane(new DetPlane(point, dir));
+  SharedPlanePtr plane(new DetPlane(point, dir));
   unsigned int iterations(0);
 
   while(true){
@@ -357,7 +354,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
   bool isAtBoundary(false);
 
   DetPlane startPlane(*(state.getPlane()));
-  boost::shared_ptr<genfit::DetPlane> plane(new DetPlane());
+  SharedPlanePtr plane(new DetPlane());
   unsigned int iterations(0);
 
   while(true){
@@ -476,7 +473,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
   bool isAtBoundary(false);
 
   DetPlane startPlane(*(state.getPlane()));
-  boost::shared_ptr<genfit::DetPlane> plane(new DetPlane());
+  SharedPlanePtr plane(new DetPlane());
   unsigned int iterations(0);
 
   while(true){
@@ -581,7 +578,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
   bool isAtBoundary(false);
 
   DetPlane startPlane(*(state.getPlane()));
-  boost::shared_ptr<genfit::DetPlane> plane(new DetPlane());
+  SharedPlanePtr plane(new DetPlane());
   unsigned int iterations(0);
 
   while(true){
