@@ -8,22 +8,19 @@
 #ifndef GBLDATA_H_
 #define GBLDATA_H_
 
+#include<iostream>
+#include<vector>
+#include<math.h>
 #include "VMatrix.h"
+#include "TVectorD.h"
+#include "TMatrixD.h"
+#include "TMatrixDSym.h"
 
-#include <iostream>
-#include <vector>
-#include <math.h>
-#include <TVectorD.h>
-#include <TMatrixD.h>
-#include <TMatrixDSym.h>
-
-#include <Math/SMatrix.h>
-#include <Math/SVector.h>
-
+#include "Math/SMatrix.h"
+#include "Math/SVector.h"
 typedef ROOT::Math::SMatrix<double, 2, 5> SMatrix25;
 typedef ROOT::Math::SMatrix<double, 2, 7> SMatrix27;
 typedef ROOT::Math::SMatrix<double, 5, 5> SMatrix55;
-
 
 //! Namespace for the general broken lines package
 namespace gbl {
@@ -55,7 +52,7 @@ public:
 	void getLocalData(double &aValue, double &aWeight,
 			std::vector<unsigned int>* &indLocal,
 			std::vector<double>* &derLocal);
-	void getAllData(float &fValue, float &fErr,
+	void getAllData(double &aValue, double &aErr,
 			std::vector<unsigned int>* &indLocal,
 			std::vector<double>* &derLocal, std::vector<int>* &labGlobal,
 			std::vector<double>* &derGlobal);
