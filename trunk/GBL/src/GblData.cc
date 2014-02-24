@@ -210,18 +210,18 @@ void GblData::getLocalData(double &aValue, double &aWeight,
 
 /// Get all Data for MP-II binary record.
 /**
- * \param [out] fValue Value
- * \param [out] fErr Error
+ * \param [out] aValue Value
+ * \param [out] aErr Error
  * \param [out] indLocal List of labels of local parameters
  * \param [out] derLocal List of derivatives for local parameters
  * \param [out] labGlobal List of labels of global parameters
  * \param [out] derGlobal List of derivatives for global parameters
  */
-void GblData::getAllData(float &fValue, float &fErr,
+void GblData::getAllData(double &aValue, double &aErr,
 		std::vector<unsigned int>* &indLocal, std::vector<double>* &derLocal,
 		std::vector<int>* &labGlobal, std::vector<double>* &derGlobal) {
-	fValue = theValue;
-	fErr = 1.0 / sqrt(thePrecision);
+	aValue = theValue;
+	aErr = 1.0 / sqrt(thePrecision);
 	indLocal = &theParameters;
 	derLocal = &theDerivatives;
 	labGlobal = &globalLabels;

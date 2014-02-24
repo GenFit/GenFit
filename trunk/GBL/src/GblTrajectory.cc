@@ -75,7 +75,7 @@
  *    -# For any point on initial trajectory:
  *        - Get corrections and covariance matrix for track parameters:\n
  *            <tt>[..] = traj.getResults(label)</tt>
- *    -# Optionally write trajectory to MP binary file:\n
+ *    -# Optionally write trajectory to MP binary file (doesn't needs to be fitted):\n
  *            <tt>traj.milleOut(..)</tt>
  *
  *  Local system and local parameters
@@ -234,9 +234,14 @@ void GblTrajectory::construct() {
 	constructOK = false;
 	fitOK = false;
 	unsigned int aLabel = 0;
+	if (numAllPoints < 2) {
+		std::cout << " GblTrajectory construction failed: too few GblPoints "
+				<< std::endl;
+		return;
+	}
 	// loop over trajectories
 	numTrajectories = thePoints.size();
-	//std::cout << " numTrajectories: " << numTrajectories << ", "<< innerTransformations.size()  << std::endl;
+	//std::cout << " numTrajectories: " << numTrajectories << ", " << innerTransformations.size() << std::endl;
 	for (unsigned int iTraj = 0; iTraj < numTrajectories; ++iTraj) {
 		std::vector<GblPoint>::iterator itPoint;
 		for (itPoint = thePoints[iTraj].begin();
@@ -878,7 +883,7 @@ void GblTrajectory::prepare() {
 		std::pair<std::vector<unsigned int>, TMatrixD> indexAndJacobian =
 				getJacobian(externalPoint);
 		externalIndex = indexAndJacobian.first;
-		std::vector<double> vExternalDerivatives(externalIndex.size());
+		std::vector<double> externalDerivatives(externalIndex.size());
 		const TMatrixDSymEigen externalEigen(externalSeed);
 		const TVectorD valEigen = externalEigen.GetEigenValues();
 		TMatrixD vecEigen = externalEigen.GetEigenVectors();
@@ -886,10 +891,10 @@ void GblTrajectory::prepare() {
 		for (int i = 0; i < externalSeed.GetNrows(); ++i) {
 			if (valEigen(i) > 0.) {
 				for (int j = 0; j < externalSeed.GetNcols(); ++j) {
-					vExternalDerivatives[j] = vecEigen(i, j);
+					externalDerivatives[j] = vecEigen(i, j);
 				}
 				GblData aData(externalPoint, 0., valEigen(i));
-				aData.addDerivatives(externalIndex, vExternalDerivatives);
+				aData.addDerivatives(externalIndex, externalDerivatives);
 				theData.push_back(aData);
 				nData++;
 			}
@@ -994,10 +999,10 @@ unsigned int GblTrajectory::fit(double &Chi2, int &Ndf, double &lostWeight,
 	return ierr;
 }
 
-/// Write trajectory to Millepede-II binary file.
+/// Write valid trajectory to Millepede-II binary file.
 void GblTrajectory::milleOut(MilleBinary &aMille) {
-	float fValue;
-	float fErr;
+	double aValue;
+	double aErr;
 	std::vector<unsigned int>* indLocal;
 	std::vector<double>* derLocal;
 	std::vector<int>* labGlobal;
@@ -1009,9 +1014,9 @@ void GblTrajectory::milleOut(MilleBinary &aMille) {
 //   data: measurements, kinks and external seed
 	std::vector<GblData>::iterator itData;
 	for (itData = theData.begin(); itData != theData.end(); ++itData) {
-		itData->getAllData(fValue, fErr, indLocal, derLocal, labGlobal,
+		itData->getAllData(aValue, aErr, indLocal, derLocal, labGlobal,
 				derGlobal);
-		aMille.addData(fValue, fErr, *indLocal, *derLocal, *labGlobal,
+		aMille.addData(aValue, aErr, *indLocal, *derLocal, *labGlobal,
 				*derGlobal);
 	}
 	aMille.writeRecord();
