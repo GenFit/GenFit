@@ -80,7 +80,7 @@ void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane& state, TVectorD& sta
 }
 
 
-double AbsTrackRep::getMass(const StateOnPlane& state) const {
+double AbsTrackRep::getMass(const StateOnPlane& /*state*/) const {
   return TDatabasePDG::Instance()->GetParticle(pdgCode_)->Mass();
 }
 
