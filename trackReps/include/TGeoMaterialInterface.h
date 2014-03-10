@@ -36,7 +36,7 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
 
  public:
 
-  TGeoMaterialInterface();
+  TGeoMaterialInterface() {};
   ~TGeoMaterialInterface(){;};
 
   /** @brief Initialize the navigator at given position and with given direction
@@ -70,9 +70,6 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
   // ClassDef(TGeoMaterialInterface, 1);
 
  private:
-
-  int whichNavig_;
-
 };
 
 } /* End of namespace genfit */
