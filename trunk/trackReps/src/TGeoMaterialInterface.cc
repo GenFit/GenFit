@@ -89,16 +89,16 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
                                           double sMax, // signed
                                           bool varField){
 
-  const double delta(1.E-2); // cm
-  double s(0), safety(0), slDist(0);
+  const double delta(1.E-2); // cm, limit beneath which straight-line steps are taken.
+  double s(0);
   M1x3 SA;
   M1x7 state7;
   memcpy(state7, stateOrig, sizeof(stateOrig));
 
-  int stepSign(1);
-  if (sMax < 0) stepSign = -1;
+  int stepSign(sMax < 0 ? -1 : 1);
 
-  unsigned int maxIt(300), it(0);
+  const unsigned maxIt(300);
+  unsigned it(0);
 
 
   while (true) {
@@ -110,15 +110,15 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
     }
 
     gGeoManager->FindNextBoundary(fabs(sMax) - fabs(s));
-    safety = gGeoManager->GetSafeDistance(); // unsigned; distance to closest boundary
-    slDist = gGeoManager->GetStep(); // unsigned; straight line distance to next boundary along step direction
+    double safety = gGeoManager->GetSafeDistance(); // unsigned; distance to closest boundary
+    double slDist = gGeoManager->GetStep(); // unsigned; straight line distance to next boundary along step direction
 
 #ifdef DEBUG
     std::cout << "   TGeoMaterialInterface::findNextBoundary: Iteration " << it << ". Safety = " << safety << ". slDist = " << slDist << ". Step so far = " << s << "\n";
     std::cout << "   Material before step: " << gGeoManager->GetCurrentVolume()->GetMedium()->GetName() << "\n";
 #endif
 
-    if (fabs(s + stepSign*safety) > fabs(sMax)) { // next boundary is further away than sMax
+    if (fabs(s) + safety > fabs(sMax)) { // next boundary is further away than sMax
 #ifdef DEBUG
       std::cout << "   next boundary is further away than sMax \n";
 #endif
@@ -136,32 +136,22 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
     std::cout << "   make RKutta step \n";
 #endif
     // check if we would cross a boundary when making slDist step
-    double tryStep = 0.9 * stepSign*slDist;
+    memcpy(state7, stateOrig, sizeof(state7)); // propagate complete way from original start
 
-    bool safe = fabs(tryStep) < safety;
+    double tryStep = 0.9 * slDist;
+    bool safe = tryStep < safety;
     if (!safe) {
-      memcpy(state7, stateOrig, sizeof(state7)); // propagate complete way from original start
-      rep->RKPropagate(state7, NULL, SA, s+tryStep, varField);
-    }
-    // check: gGeoManager->GetStep() gives us the max sl step size from stateOrig to state7
-    if (!safe && gGeoManager->GetStep() > fabs(tryStep)) {
-      s += tryStep;
-      // init for next iteration
-      initTrack(state7[0], state7[1], state7[2],  stepSign*state7[3], stepSign*state7[4], stepSign*state7[5]);
-#ifdef DEBUG
-      std::cout << "   tried and its safe to make a step of  " << stepSign*tryStep << "\n";
-#endif
-    }
-    else { // step along safety
+      // FIXME: this is fairly bizarre but that's what the code did
+      // before I simplified it to make this explicit.  My current
+      // guess is that this works because it guarantees that the
+      // boundary is actually crossed, to be verified.
+      s += stepSign*tryStep;
+    } else {
       s += stepSign*safety;
-      memcpy(state7, stateOrig, sizeof(state7)); // propagate complete way from original start
-      rep->RKPropagate(state7, NULL, SA, s, varField);
-      // init for next iteration
-      initTrack(state7[0], state7[1], state7[2],  stepSign*state7[3], stepSign*state7[4], stepSign*state7[5]);
-#ifdef DEBUG
-      std::cout << "   step along safety  " << stepSign*safety << "\n";
-#endif
-    }
+    }      
+    rep->RKPropagate(state7, NULL, SA, s, varField);
+    // init for next iteration
+    initTrack(state7[0], state7[1], state7[2],  stepSign*state7[3], stepSign*state7[4], stepSign*state7[5]);
 
 #ifdef DEBUG
     std::cout << "   Material after step: " << gGeoManager->GetCurrentVolume()->GetMedium()->GetName() << "\n";
