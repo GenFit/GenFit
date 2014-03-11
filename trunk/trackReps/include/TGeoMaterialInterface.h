@@ -1,4 +1,4 @@
-/* Copyright 2008-2009, Technische Universitaet Muenchen,
+/* Copyright 2008-2014, Technische Universitaet Muenchen,
    Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
 
    This file is part of GENFIT.
@@ -39,9 +39,10 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
   TGeoMaterialInterface() {};
   ~TGeoMaterialInterface(){;};
 
-  /** @brief Initialize the navigator at given position and with given direction
+  /** @brief Initialize the navigator at given position and with given
+      direction.  Returns true if the volume changed.
    */
-  void initTrack(double posX, double posY, double posZ,
+  bool initTrack(double posX, double posY, double posZ,
                  double dirX, double dirY, double dirZ);
 
   /** @brief Get material parameters in current material
@@ -54,10 +55,11 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
 
   void getMaterialParameters(MaterialProperties& parameters);
 
-  /** @brief Make a step (following the curvature) until maxStep or the next boundary is reached.
-   * After making a step to a boundary, the position has to be beyond the boundary,
-   * i.e. in the current material has to be that beyond the boundary.
-   * The actual step made is returned.
+  /** @brief Make a step (following the curvature) until step length
+   * sMax or the next boundary is reached.  After making a step to a
+   * boundary, the position has to be beyond the boundary, i.e. the
+   * current material has to be that beyond the boundary.  The actual
+   * step made is returned.
    */
   double findNextBoundary(const RKTrackRep* rep,
                           const M1x7& state7,

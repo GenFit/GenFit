@@ -43,9 +43,9 @@ class AbsMaterialInterface : public TObject {
   AbsMaterialInterface(){;};
   virtual ~AbsMaterialInterface(){;};
 
-  /** @brief Initialize the navigator at given position and with given direction
+  /** @brief Initialize the navigator at given position and with given direction.  Return true if volume changed.
    */
-  virtual void initTrack(double posX, double posY, double posZ,
+  virtual bool initTrack(double posX, double posY, double posZ,
                          double dirX, double dirY, double dirZ) = 0;
 
   /** @brief Get material parameters in current material
