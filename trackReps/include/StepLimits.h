@@ -1,4 +1,4 @@
-/* Copyright 2008-2010, Technische Universitaet Muenchen,
+/* Copyright 2008-2014, Technische Universitaet Muenchen,
    Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
 
    This file is part of GENFIT.
@@ -99,7 +99,7 @@ class StepLimits {
 
  private:
   std::vector<double> limits_; // limits are unsigned (i.e. non-negative)
-  char stepSign_;
+  signed char stepSign_;
   static const double maxLimit_;
 
 };
