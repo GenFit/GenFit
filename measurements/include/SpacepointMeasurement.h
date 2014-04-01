@@ -47,19 +47,36 @@ class SpacepointMeasurement : public AbsMeasurement {
 
  public:
   SpacepointMeasurement(int nDim = 3);
-  SpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
+  SpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint, bool weightedPlaneContruction = false);
 
   virtual ~SpacepointMeasurement() {;}
 
   virtual AbsMeasurement* clone() const {return new SpacepointMeasurement(*this);}
 
+  /**
+   * @brief Contruct the virtual detector plane
+   *
+   * Per default, the plane will be constructed such that it contains the measurement and POCA to the measurement in cartesian space.
+   * The plane is perpendicular to the track (at the POCA).
+   *
+   *  If weightedPlaneContruction_ is set, the POCA will be calculated in a space weighted with the inverse of the 3D covariance.
+   *  E.g. if the covariance is very oblate, the plane will be almost defined by the covariance shape.
+   *  If the covariance is very prolate, the behaviour will be very similar to the ProlateSpacepointHit.
+   */
   virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
 
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const;
 
   virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
 
-  ClassDef(SpacepointMeasurement,1)
+ private:
+
+  void initG();
+
+  bool weightedPlaneContruction_;
+  TMatrixDSym G_; //! inverse of 3x3 cov
+
+  ClassDef(SpacepointMeasurement,2)
 };
 
 } /* End of namespace genfit */

@@ -150,6 +150,21 @@ class AbsTrackRep : public TObject {
       bool calcJacobianNoise = false) const = 0;
 
   /**
+   * @brief Extrapolates the state to the POCA to a point in the metric of G, and returns the extrapolation length
+   *        and, via reference, the extrapolated state.
+   *
+   * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
+   *
+   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
+   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
+   */
+  virtual double extrapolateToPoint(StateOnPlane& state,
+      const TVector3& point,
+      const TMatrixDSym& G, // weight matrix (metric)
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const = 0;
+
+  /**
    * @brief Extrapolates the state to the cylinder surface, and returns the extrapolation length
    *       and, via reference, the extrapolated state.
    *
