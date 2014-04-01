@@ -30,9 +30,11 @@
 #include <stdexcept>
 #include <string>
 
+#define CACHE
 
 namespace genfit {
 
+#ifdef CACHE
 /**
  * @brief Cache B field at a position. Used by FieldManager.
  */
@@ -40,6 +42,7 @@ struct fieldCache {
   double posX; double posY; double posZ;
   double Bx; double By; double Bz;
 };
+#endif
 
 
 /** @brief Singleton which provides access to magnetic field maps.
@@ -62,7 +65,14 @@ class FieldManager {
     return field_->get(position);
   }
 
+#ifdef CACHE
   void getFieldVal(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz);
+#else
+  inline void getFieldVal(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz) {
+    checkInitialized();
+    return field_->get(posX, posY, posZ, Bx, By, Bz);
+  }
+#endif
 
   //! set the magnetic field here. Magnetic field classes must be derived from AbsBField.
   void init(AbsBField* b) {
@@ -89,8 +99,14 @@ class FieldManager {
     }
   }
 
+#ifdef CACHE
   //! Cache last lookup positions, and use stored field values if a lookup at (almost) the same position is done.
   void useCache(bool opt = true, unsigned int nBuckets = 8);
+#else
+  void useCache(bool opt = true, unsigned int nBuckets = 8) {
+    std::cerr << "genfit::FieldManager::useCache() - FieldManager is compiled w/o CACHE, no caching will be done!" << std::endl;
+  }
+#endif
 
   //! Get singleton instance.
   static FieldManager* getInstance(){
@@ -104,13 +120,19 @@ class FieldManager {
  private:
 
   FieldManager() {}
+#ifdef CACHE
   ~FieldManager() { delete cache_; }
+#else
+  ~FieldManager() { }
+#endif
   static FieldManager* instance_;
   static AbsBField* field_;
 
+#ifdef CACHE
   static bool useCache_;
   static unsigned int n_buckets_;
   static fieldCache* cache_;
+#endif
 
 };
 

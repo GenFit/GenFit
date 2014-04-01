@@ -25,12 +25,16 @@ namespace genfit {
 
 FieldManager* FieldManager::instance_ = NULL;
 AbsBField* FieldManager::field_ = NULL;
+
+#ifdef CACHE
 bool FieldManager::useCache_ = false;
 unsigned int FieldManager::n_buckets_ = 8;
 fieldCache* FieldManager::cache_ = NULL;
+#endif
 
 //#define DEBUG
 
+#ifdef CACHE
 void FieldManager::getFieldVal(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz){
   checkInitialized();
 
@@ -50,16 +54,16 @@ void FieldManager::getFieldVal(const double& posX, const double& posY, const dou
 
     do {
       if (fabs(cache_[i].posX - posX) < epsilon &&
-	  fabs(cache_[i].posY - posY) < epsilon &&
-	  fabs(cache_[i].posZ - posZ) < epsilon) {
-	Bx = cache_[i].Bx;
-	By = cache_[i].By;
-	Bz = cache_[i].Bz;
+          fabs(cache_[i].posY - posY) < epsilon &&
+          fabs(cache_[i].posZ - posZ) < epsilon) {
+        Bx = cache_[i].Bx;
+        By = cache_[i].By;
+        Bz = cache_[i].Bz;
         #ifdef DEBUG
-	++used;
-	std::cout<<"used the cache! " << double(used)/(used + notUsed) << "\n";
+        ++used;
+        std::cout<<"used the cache! " << double(used)/(used + notUsed) << "\n";
         #endif
-	return;
+        return;
       }
       i = (i + 1) % n_buckets_;
     } while (i != last_read_i);
@@ -101,6 +105,6 @@ void FieldManager::useCache(bool opt, unsigned int nBuckets) {
     }      
   }
 }
-
+#endif
 
 } /* End of namespace genfit */
