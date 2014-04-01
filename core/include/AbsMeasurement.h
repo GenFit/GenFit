@@ -96,7 +96,7 @@ class AbsMeasurement : public TObject {
 
  private:
   //! protect from calling assignment operator from outside the class. Use #clone() if you want a copy!
-  virtual AbsMeasurement& operator=(const AbsMeasurement&); // default cannot work because TVector and TMatrix = operators don't do resizing
+  AbsMeasurement& operator=(const AbsMeasurement&); // default cannot work because TVector and TMatrix = operators don't do resizing
 
  protected:
   //! protect from calling copy c'tor from outside the class. Use #clone() if you want a copy!

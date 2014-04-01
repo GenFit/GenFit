@@ -84,6 +84,8 @@ class RKTrackRep : public AbsTrackRep {
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const;
 
+  using AbsTrackRep::extrapolateToLine;
+
   virtual double extrapolateToLine(StateOnPlane& state,
       const TVector3& linePoint,
       const TVector3& lineDirection,
