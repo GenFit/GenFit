@@ -93,7 +93,17 @@ class RKTrackRep : public AbsTrackRep {
   virtual double extrapolateToPoint(StateOnPlane& state,
       const TVector3& point,
       bool stopAtBoundary = false,
-      bool calcJacobianNoise = false) const;
+      bool calcJacobianNoise = false) const {
+    return extrapToPoint(state, point, NULL, stopAtBoundary, calcJacobianNoise);
+  }
+
+  virtual double extrapolateToPoint(StateOnPlane& state,
+      const TVector3& point,
+      const TMatrixDSym& G, // weight matrix (metric)
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const {
+    return extrapToPoint(state, point, &G, stopAtBoundary, calcJacobianNoise);
+  }
 
   virtual double extrapolateToCylinder(StateOnPlane& state,
       double radius,
@@ -173,6 +183,12 @@ class RKTrackRep : public AbsTrackRep {
  private:
 
   void initArrays() const;
+
+  virtual double extrapToPoint(StateOnPlane& state,
+      const TVector3& point,
+      const TMatrixDSym* G = NULL, // weight matrix (metric)
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const;
 
   void getState7(const StateOnPlane& state, M1x7& state7) const;
   void getState5(StateOnPlane& state, const M1x7& state7) const; // state7 must already lie on plane of state!

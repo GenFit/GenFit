@@ -80,6 +80,10 @@ class StateOnPlane : public TObject {
   double extrapolateToPoint(const TVector3& point,
         bool stopAtBoundary = false,
         bool calcJacobianNoise = false) {return rep_->extrapolateToPoint(*this, point, stopAtBoundary, calcJacobianNoise);}
+  double extrapolateToPoint(const TVector3& point,
+        const TMatrixDSym& G, // weight matrix (metric)
+        bool stopAtBoundary = false,
+        bool calcJacobianNoise = false) {return rep_->extrapolateToPoint(*this, point, G, stopAtBoundary, calcJacobianNoise);}
   double extrapolateToCylinder(double radius,
         const TVector3& linePoint = TVector3(0.,0.,0.),
         const TVector3& lineDirection = TVector3(0.,0.,1.),

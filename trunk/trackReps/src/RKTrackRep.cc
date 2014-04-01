@@ -226,8 +226,9 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
 }
 
 
-double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
+double RKTrackRep::extrapToPoint(StateOnPlane& state,
     const TVector3& point,
+    const TMatrixDSym* G,
     bool stopAtBoundary,
     bool calcJacobianNoise) const {
 
@@ -252,6 +253,14 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
 
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   TVector3 dir(state7[3], state7[4], state7[5]);
+  if (G != NULL) {
+    if(G->GetNrows() != 3) {
+      Exception exc("RKTrackRep::extrapolateToLine ==> G is not 3x3",__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    }
+    dir = TMatrix(*G) * dir;
+  }
   TVector3 lastDir(0,0,0);
 
   TVector3 poca;
@@ -263,7 +272,7 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
 
   while(true){
     if(++iterations == maxIt) {
-      Exception exc("RKTrackRep::extrapolateToLine ==> extrapolation to line failed, maximum number of iterations reached",__LINE__,__FILE__);
+      Exception exc("RKTrackRep::extrapolateToPoint ==> extrapolation to point failed, maximum number of iterations reached",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
     }
@@ -275,6 +284,9 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
     tracklength += step;
 
     dir.SetXYZ(state7[3], state7[4], state7[5]);
+    if (G != NULL) {
+      dir = TMatrix(*G) * dir;
+    }
     poca.SetXYZ(state7[0], state7[1], state7[2]);
 
     // check break conditions
