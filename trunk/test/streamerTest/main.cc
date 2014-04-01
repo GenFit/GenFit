@@ -58,7 +58,7 @@ bool emptyTrackTest()
 
 int main() {
   if (!emptyTrackTest()) {
-    std::cout << "enptyTrackTest failed." << std::endl;
+    std::cout << "emptyTrackTest failed." << std::endl;
     return 1;
   }
 
