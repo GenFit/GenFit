@@ -117,7 +117,7 @@ GblTrajectory::GblTrajectory(const std::vector<GblPoint> &aPointList,
 		bool flagCurv, bool flagU1dir, bool flagU2dir) :
 		numAllPoints(aPointList.size()), numPoints(), numOffsets(0), numInnerTrans(
 				0), numCurvature(flagCurv ? 1 : 0), numParameters(0), numLocals(
-				0), numMeasurements(0), externalPoint(0), theDimension(0), thePoints(), theData(), measDataIndex(), scatDataIndex(), externalIndex(), externalSeed(), innerTransformations(), externalDerivatives(), externalMeasurements(), externalPrecisions() {
+				0), numMeasurements(0), externalPoint(0), theDimension(0), thePoints(), theData(), measDataIndex(), scatDataIndex(), externalSeed(), innerTransformations(), externalDerivatives(), externalMeasurements(), externalPrecisions() {
 
 	if (flagU1dir)
 		theDimension.push_back(0);
@@ -146,7 +146,7 @@ GblTrajectory::GblTrajectory(const std::vector<GblPoint> &aPointList,
 		bool flagU1dir, bool flagU2dir) :
 		numAllPoints(aPointList.size()), numPoints(), numOffsets(0), numInnerTrans(
 				0), numCurvature(flagCurv ? 1 : 0), numParameters(0), numLocals(
-				0), numMeasurements(0), externalPoint(aLabel), theDimension(0), thePoints(), theData(), measDataIndex(), scatDataIndex(), externalIndex(), externalSeed(
+				0), numMeasurements(0), externalPoint(aLabel), theDimension(0), thePoints(), theData(), measDataIndex(), scatDataIndex(), externalSeed(
 				aSeed), innerTransformations(), externalDerivatives(), externalMeasurements(), externalPrecisions() {
 
 	if (flagU1dir)
@@ -168,7 +168,7 @@ GblTrajectory::GblTrajectory(
 		const std::vector<std::pair<std::vector<GblPoint>, TMatrixD> > &aPointsAndTransList) :
 		numAllPoints(), numPoints(), numOffsets(0), numInnerTrans(
 				aPointsAndTransList.size()), numParameters(0), numLocals(0), numMeasurements(
-				0), externalPoint(0), theDimension(0), thePoints(), theData(), measDataIndex(), scatDataIndex(), externalIndex(), externalSeed(), innerTransformations(), externalDerivatives(), externalMeasurements(), externalPrecisions() {
+				0), externalPoint(0), theDimension(0), thePoints(), theData(), measDataIndex(), scatDataIndex(), externalSeed(), innerTransformations(), externalDerivatives(), externalMeasurements(), externalPrecisions() {
 
 	for (unsigned int iTraj = 0; iTraj < aPointsAndTransList.size(); ++iTraj) {
 		thePoints.push_back(aPointsAndTransList[iTraj].first);
@@ -196,7 +196,7 @@ GblTrajectory::GblTrajectory(
 		const TVectorD &extPrecisions) :
 		numAllPoints(), numPoints(), numOffsets(0), numInnerTrans(
 				aPointsAndTransList.size()), numParameters(0), numLocals(0), numMeasurements(
-				0), externalPoint(0), theDimension(0), thePoints(), theData(), measDataIndex(), scatDataIndex(), externalIndex(), externalSeed(), innerTransformations(), externalDerivatives(
+				0), externalPoint(0), theDimension(0), thePoints(), theData(), measDataIndex(), scatDataIndex(), externalSeed(), innerTransformations(), externalDerivatives(
 				extDerivatives), externalMeasurements(extMeasurements), externalPrecisions(
 				extPrecisions) {
 
@@ -882,19 +882,19 @@ void GblTrajectory::prepare() {
 	if (externalPoint > 0) {
 		std::pair<std::vector<unsigned int>, TMatrixD> indexAndJacobian =
 				getJacobian(externalPoint);
-		externalIndex = indexAndJacobian.first;
-		std::vector<double> externalDerivatives(externalIndex.size());
-		const TMatrixDSymEigen externalEigen(externalSeed);
-		const TVectorD valEigen = externalEigen.GetEigenValues();
-		TMatrixD vecEigen = externalEigen.GetEigenVectors();
+		std::vector<unsigned int> externalSeedIndex = indexAndJacobian.first;
+		std::vector<double> externalSeedDerivatives(externalSeedIndex.size());
+		const TMatrixDSymEigen externalSeedEigen(externalSeed);
+		const TVectorD valEigen = externalSeedEigen.GetEigenValues();
+		TMatrixD vecEigen = externalSeedEigen.GetEigenVectors();
 		vecEigen = vecEigen.T() * indexAndJacobian.second;
 		for (int i = 0; i < externalSeed.GetNrows(); ++i) {
 			if (valEigen(i) > 0.) {
 				for (int j = 0; j < externalSeed.GetNcols(); ++j) {
-					externalDerivatives[j] = vecEigen(i, j);
+					externalSeedDerivatives[j] = vecEigen(i, j);
 				}
 				GblData aData(externalPoint, 0., valEigen(i));
-				aData.addDerivatives(externalIndex, externalDerivatives);
+				aData.addDerivatives(externalSeedIndex, externalSeedDerivatives);
 				theData.push_back(aData);
 				nData++;
 			}
