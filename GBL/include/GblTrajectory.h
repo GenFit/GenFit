@@ -13,9 +13,7 @@
 #include "GblPoint.h"
 #include "BorderedBandMatrix.h"
 #include "MilleBinary.h"
-
-#include <TMatrixDSymEigen.h>
-
+#include "TMatrixDSymEigen.h"
 
 //! Namespace for the general broken lines package
 namespace gbl {
@@ -76,7 +74,6 @@ private:
 	std::vector<GblData> theData; ///< List of data blocks
 	std::vector<unsigned int> measDataIndex; ///< mapping points to data blocks from measurements
 	std::vector<unsigned int> scatDataIndex; ///< mapping points to data blocks from scatterers
-	std::vector<unsigned int> externalIndex; ///< List of fit parameters used by external seed
 	TMatrixDSym externalSeed; ///< Precision (inverse covariance matrix) of external seed
 	std::vector<TMatrixD> innerTransformations; ///< Transformations at innermost points of
 	// composed trajectory (from common external parameters)
