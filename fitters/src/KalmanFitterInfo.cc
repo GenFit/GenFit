@@ -708,11 +708,13 @@ void KalmanFitterInfo::Streamer(TBuffer &R__b)
      //This works around a msvc bug and should be harmless on other platforms
      typedef genfit::AbsFitterInfo baseClass0;
      baseClass0::Streamer(R__b);
+     // "!!" forces the value to 1 or 0 (pointer != 0 or pointer == 0),
+     // this value is then written as a bitfield.
      int flag = (!!referenceState_
-       | (!!forwardPrediction_ << 1)
-       | (!!forwardUpdate_ << 2)
-       | (!!backwardPrediction_ << 3)
-       | (!!backwardUpdate_ << 4));
+		 | (!!forwardPrediction_ << 1)
+		 | (!!forwardUpdate_ << 2)
+		 | (!!backwardPrediction_ << 3)
+		 | (!!backwardUpdate_ << 4));
      R__b << flag;
      if (flag & 1)
        referenceState_->Streamer(R__b);

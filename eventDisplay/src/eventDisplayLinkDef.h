@@ -5,6 +5,6 @@
 #pragma link off all functions;
 
 // These need no special treatment.
-#pragma link C++ class genfit::EventDisplay;
+#pragma link C++ class genfit::EventDisplay+;
 
 #endif

@@ -115,6 +115,8 @@ class FitStatus {
   //! For the Kalman-derived fitters in particular, this corresponds to the backwards fit.
   double chi2_;
   double ndf_;
+
+  ClassDef(FitStatus, 1);
 };
 
 } /* End of namespace genfit */

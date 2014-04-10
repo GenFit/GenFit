@@ -190,7 +190,7 @@ class DetPlane : public TObject {
 #ifndef __CINT__
   boost::scoped_ptr<AbsFinitePlane> finitePlane_; // Ownership
 #else
-  class AbsFinitePlane* finitePlane_;
+  class AbsFinitePlane* finitePlane_; //! Shut ROOT up, this class has a custom streamer.
 #endif
 
 

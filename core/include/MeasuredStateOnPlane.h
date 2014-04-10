@@ -40,8 +40,8 @@ class MeasuredStateOnPlane : public StateOnPlane {
  public:
 
   MeasuredStateOnPlane(const AbsTrackRep* rep = NULL);
-  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep);
-  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
+  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const genfit::SharedPlanePtr& plane, const AbsTrackRep* rep);
+  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const genfit::SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
   MeasuredStateOnPlane(const MeasuredStateOnPlane& o);
   MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov);
 

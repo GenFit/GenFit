@@ -18,6 +18,7 @@
 */
 
 #include <iostream>
+#include <TClass.h>
 
 #include "MeasurementOnPlane.h"
 
@@ -68,12 +69,11 @@ void MeasurementOnPlane::Streamer(TBuffer &R__b)
      MeasuredStateOnPlane::Streamer(R__b);
      hMatrix_.reset();
      char flag;
-     R__b >> flag;
+     R__b.ReadChar(flag);
      if (flag) {
        AbsHMatrix *h = 0;
        R__b >> h;
-       hMatrix_.reset(h->clone());
-       //delete h; // segfaults!
+       hMatrix_.reset(h);
      }
      R__b >> weight_;
      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
@@ -81,12 +81,10 @@ void MeasurementOnPlane::Streamer(TBuffer &R__b)
      R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
      MeasuredStateOnPlane::Streamer(R__b);
      if (hMatrix_) {
-       R__b << (char)1;
-       AbsHMatrix *h = hMatrix_->clone();
-       R__b << h;
-       delete h;
+       R__b.WriteChar(1);
+       R__b << hMatrix_.get();
      } else {
-       R__b << (char)0;
+       R__b.WriteChar(0);
      }
      R__b << weight_;
      R__b.SetByteCount(R__c, kTRUE);

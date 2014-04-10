@@ -73,7 +73,7 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
 #ifndef __CINT__
   boost::scoped_ptr<const AbsHMatrix> hMatrix_; // Ownership
 #else
-  const AbsHMatrix* hMatrix_; // Ownership. Projection matrix
+  const AbsHMatrix* hMatrix_; //! Ownership. Projection matrix
 #endif
   double weight_;
 
