@@ -42,8 +42,7 @@ RectangularFinitePlane::~RectangularFinitePlane(){
 }
 
 bool RectangularFinitePlane::isInActive(double u, double v) const{
-  if(u>=uMin_ && u<=uMax_ && v>=vMin_ && v<=vMax_) return true;
-  return false;
+  return (u>=uMin_ && u<=uMax_ && v>=vMin_ && v<=vMax_);
 }
 
 void RectangularFinitePlane::Print(const Option_t*) const{
