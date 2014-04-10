@@ -83,8 +83,9 @@ class AbsTrackRep : public TObject {
    * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
-  virtual double extrapolateToPlane(StateOnPlane& state,
-      const SharedPlanePtr& plane,
+  virtual double extrapolateToPlane(
+      StateOnPlane& state,
+      const genfit::SharedPlanePtr& plane,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const = 0;
 
@@ -281,7 +282,7 @@ class AbsTrackRep : public TObject {
    */
   void calcJacobianNumerically(const genfit::StateOnPlane& origState,
                                    const genfit::SharedPlanePtr destPlane,
-                                   TMatrixD& jacobian);
+                                   TMatrixD& jacobian) const;
 
   //! Set position and momentum of state.
   virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const = 0;
