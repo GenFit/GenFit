@@ -121,7 +121,7 @@ class StateOnPlane : public TObject {
 
   TVectorD state_; // state vector
   TVectorD auxInfo_; // auxiliary information (e.g. charge, flight direction etc.)
-  SharedPlanePtr sharedPlane_; // Shared ownership.
+  SharedPlanePtr sharedPlane_; //! Shared ownership.  '!' in order to silence ROOT, custom streamer writes and reads this.
 
  private:
 

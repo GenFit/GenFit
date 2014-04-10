@@ -13,12 +13,12 @@
 #pragma link C++ class genfit::TrackCand+;
 #pragma link C++ class genfit::TrackCandHit+;
 
-// These inherit from classes with custom streamers, or reference share_ptrs in their interfaces.
-#pragma link C++ class genfit::AbsTrackRep;
-#pragma link C++ class genfit::MeasuredStateOnPlane;
+// These inherit from classes with custom streamers, or reference shared_ptrs in their interfaces.
+#pragma link C++ class genfit::AbsTrackRep+;
+#pragma link C++ class genfit::MeasuredStateOnPlane+;
 
 // These need their owners fixed up after reading.
-#pragma link C++ class genfit::AbsMeasurement; // trackPoint_
+#pragma link C++ class genfit::AbsMeasurement+; // trackPoint_
 
 // These cannot be dealt with by default streamers because of
 // shared_ptrs<> or scoped_ptrs<>.  Additionally, they may need their
