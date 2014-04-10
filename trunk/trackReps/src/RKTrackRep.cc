@@ -226,7 +226,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
 }
 
 
-double RKTrackRep::extrapToPoint(StateOnPlane& state,
+double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
     const TVector3& point,
     const TMatrixDSym* G,
     bool stopAtBoundary,
