@@ -87,7 +87,7 @@ double AbsTrackRep::getMass(const StateOnPlane& /*state*/) const {
 
 void AbsTrackRep::calcJacobianNumerically(const genfit::StateOnPlane& origState,
                                                const genfit::SharedPlanePtr destPlane,
-                                               TMatrixD& jacobian) {
+                                               TMatrixD& jacobian) const {
 
   // Find the transport matrix for track propagation from origState to destPlane
   // I.e. this finds
