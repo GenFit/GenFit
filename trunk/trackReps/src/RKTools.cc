@@ -27,6 +27,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static const int flagSlowMatrix = 1 << 10; // Replace custom matrix multiplications with general equivalents
+static const int debugFlags = 0; // | flagSlowMatrix;
+
 namespace genfit {
 
 
@@ -56,8 +59,8 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7){
   // [3*7+1]
   // [3*7+2]
 
-  // [4*7+2]
-  // [4*7+2]
+  // [4*7+0]
+  // [4*7+1]
   // [4*7+2]
 
   double JTC0  = J_pM[21] * cov5[18] + J_pM[28] * cov5[23];
@@ -190,7 +193,16 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x6& J_pM, const M5x5& cov5, M6x6& out6){
 }
 
 
-void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5){
+void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5)
+{
+  if (debugFlags & flagSlowMatrix) {
+    TMatrixD JMp(7, 5, (const double*)&J_Mp);
+    TMatrixD J7(7, 7, (const double*)&cov7);
+    TMatrixD result(JMp, TMatrixD::kTransposeMult,
+                    TMatrixD(J7, TMatrixD::kMult, JMp));
+    memcpy(out5, result.GetMatrixArray(), 5*5*sizeof(double));
+    return;
+  }
 
   // 7D -> 5D
 
@@ -262,7 +274,16 @@ void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5){
 }
 
 
-void RKTools::J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5){
+void RKTools::J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5)
+{
+  if (debugFlags & flagSlowMatrix) {
+    TMatrixD JMp(6, 5, (const double*)&J_Mp);
+    TMatrixD J7(6, 6, (const double*)&cov6);
+    TMatrixD result(JMp, TMatrixD::kTransposeMult,
+                    TMatrixD(J7, TMatrixD::kMult, JMp));
+    memcpy(out5, result.GetMatrixArray(), 5*5*sizeof(double));
+    return;
+  }
 
   // 6D -> 5D
 
@@ -484,13 +505,24 @@ void RKTools::J_MMxJ_MM(M7x7& J_MM, const M7x7& J_MM_old){
 }
 
 
-void RKTools::J_pMTTxJ_MMTTxJ_MpTT(const M7x5& J_pMT, const M7x7& J_MMT, const M5x7& J_MpT, M5x5& J_pp) {
-    //const M5x7& J_pM, const M7x7& J_MMT, const M7x5& J_Mp, M5x5& J_pp, bool MMproj) {
+void RKTools::J_pMTTxJ_MMTTxJ_MpTT(const M7x5& J_pMT, const M7x7& J_MMT, const M5x7& J_MpT, M5x5& J_pp)
+{
+    // calculates  J_pp = J_pM * J_MM * J_Mp
+    // input J_MMT is transposed version of actual jacobian J_MM
+    // input J_pMT is transposed version of actual jacobian J_pM (Master to plane)
+    // input J_MpT is transposed version of actual jacobian J_Mp (plane to Master)
 
-  // calculates  J_pp = J_pM * J_MM * J_Mp
-  // input J_MMT is transposed version of actual jacobian J_MM
-  // input J_pMT is transposed version of actual jacobian J_pM (Master to plane)
-  // input J_MpT is transposed version of actual jacobian J_Mp (plane to Master)
+  if (debugFlags & flagSlowMatrix) {
+    TMatrixD JpMT(7, 5, (const double*)&J_pMT);
+    TMatrixD J7(7, 7, (const double*)&J_MMT);
+    TMatrixD JMpT(5, 7, (const double*)&J_MpT);
+    TMatrixD result(TMatrixD::kTransposed,
+                    TMatrixD(JMpT, TMatrixD::kMult,
+                             TMatrixD(J7, TMatrixD::kMult, JpMT)));
+
+    memcpy(J_pp, result.GetMatrixArray(), 5*5*sizeof(double));
+    return;
+  }
 
 
   // J_pMT
@@ -524,27 +556,62 @@ void RKTools::J_pMTTxJ_MMTTxJ_MpTT(const M7x5& J_pMT, const M7x7& J_MMT, const M
   J_pp[0*5+2] = 0;
   J_pp[0*5+3] = 0;
   J_pp[0*5+4] = 0;
-  J_pp[1*5+0] =  J_pMT[3*5+1] * J_MMT[6*7+3] + J_pMT[4*5+1] * J_MMT[6*7+4] + J_pMT[5*5+1] * J_MMT[6*7+5];
-  J_pp[1*5+1] = (J_pMT[3*5+1] * J_MMT[3*7+3] + J_pMT[4*5+1] * J_MMT[3*7+4] + J_pMT[5*5+1] * J_MMT[3*7+5]) * J_MpT[1*7+3] + (J_pMT[3*5+1] * J_MMT[4*7+3] + J_pMT[4*5+1] * J_MMT[4*7+4] + J_pMT[5*5+1] * J_MMT[4*7+5]) * J_MpT[1*7+4] + (J_pMT[3*5+1] * J_MMT[5*7+3] + J_pMT[4*5+1] * J_MMT[5*7+4] + J_pMT[5*5+1] * J_MMT[5*7+5]) * J_MpT[1*7+5];
-  J_pp[1*5+2] = (J_pMT[3*5+1] * J_MMT[3*7+3] + J_pMT[4*5+1] * J_MMT[3*7+4] + J_pMT[5*5+1] * J_MMT[3*7+5]) * J_MpT[2*7+3] + (J_pMT[3*5+1] * J_MMT[4*7+3] + J_pMT[4*5+1] * J_MMT[4*7+4] + J_pMT[5*5+1] * J_MMT[4*7+5]) * J_MpT[2*7+4] + (J_pMT[3*5+1] * J_MMT[5*7+3] + J_pMT[4*5+1] * J_MMT[5*7+4] + J_pMT[5*5+1] * J_MMT[5*7+5]) * J_MpT[2*7+5];
-  J_pp[1*5+3] = (J_pMT[3*5+1] * J_MMT[0*7+3] + J_pMT[4*5+1] * J_MMT[0*7+4] + J_pMT[5*5+1] * J_MMT[0*7+5]) * J_MpT[3*7+0] + (J_pMT[3*5+1] * J_MMT[1*7+3] + J_pMT[4*5+1] * J_MMT[1*7+4] + J_pMT[5*5+1] * J_MMT[1*7+5]) * J_MpT[3*7+1] + (J_pMT[3*5+1] * J_MMT[2*7+3] + J_pMT[4*5+1] * J_MMT[2*7+4] + J_pMT[5*5+1] * J_MMT[2*7+5]) * J_MpT[3*7+2];
-  J_pp[1*5+4] = (J_pMT[3*5+1] * J_MMT[0*7+3] + J_pMT[4*5+1] * J_MMT[0*7+4] + J_pMT[5*5+1] * J_MMT[0*7+5]) * J_MpT[4*7+0] + (J_pMT[3*5+1] * J_MMT[1*7+3] + J_pMT[4*5+1] * J_MMT[1*7+4] + J_pMT[5*5+1] * J_MMT[1*7+5]) * J_MpT[4*7+1] + (J_pMT[3*5+1] * J_MMT[2*7+3] + J_pMT[4*5+1] * J_MMT[2*7+4] + J_pMT[5*5+1] * J_MMT[2*7+5]) * J_MpT[4*7+2];
-  J_pp[2*5+0] =  J_pMT[3*5+2] * J_MMT[6*7+3] + J_pMT[4*5+2] * J_MMT[6*7+4] + J_pMT[5*5+2] * J_MMT[6*7+5];
-  J_pp[2*5+1] = (J_pMT[3*5+2] * J_MMT[3*7+3] + J_pMT[4*5+2] * J_MMT[3*7+4] + J_pMT[5*5+2] * J_MMT[3*7+5]) * J_MpT[1*7+3] + (J_pMT[3*5+2] * J_MMT[4*7+3] + J_pMT[4*5+2] * J_MMT[4*7+4] + J_pMT[5*5+2] * J_MMT[4*7+5]) * J_MpT[1*7+4] + (J_pMT[3*5+2] * J_MMT[5*7+3] + J_pMT[4*5+2] * J_MMT[5*7+4] + J_pMT[5*5+2] * J_MMT[5*7+5]) * J_MpT[1*7+5];
-  J_pp[2*5+2] = (J_pMT[3*5+2] * J_MMT[3*7+3] + J_pMT[4*5+2] * J_MMT[3*7+4] + J_pMT[5*5+2] * J_MMT[3*7+5]) * J_MpT[2*7+3] + (J_pMT[3*5+2] * J_MMT[4*7+3] + J_pMT[4*5+2] * J_MMT[4*7+4] + J_pMT[5*5+2] * J_MMT[4*7+5]) * J_MpT[2*7+4] + (J_pMT[3*5+2] * J_MMT[5*7+3] + J_pMT[4*5+2] * J_MMT[5*7+4] + J_pMT[5*5+2] * J_MMT[5*7+5]) * J_MpT[2*7+5];
-  J_pp[2*5+3] = (J_pMT[3*5+2] * J_MMT[0*7+3] + J_pMT[4*5+2] * J_MMT[0*7+4] + J_pMT[5*5+2] * J_MMT[0*7+5]) * J_MpT[3*7+0] + (J_pMT[3*5+2] * J_MMT[1*7+3] + J_pMT[4*5+2] * J_MMT[1*7+4] + J_pMT[5*5+2] * J_MMT[1*7+5]) * J_MpT[3*7+1] + (J_pMT[3*5+2] * J_MMT[2*7+3] + J_pMT[4*5+2] * J_MMT[2*7+4] + J_pMT[5*5+2] * J_MMT[2*7+5]) * J_MpT[3*7+2];
-  J_pp[2*5+4] = (J_pMT[3*5+2] * J_MMT[0*7+3] + J_pMT[4*5+2] * J_MMT[0*7+4] + J_pMT[5*5+2] * J_MMT[0*7+5]) * J_MpT[4*7+0] + (J_pMT[3*5+2] * J_MMT[1*7+3] + J_pMT[4*5+2] * J_MMT[1*7+4] + J_pMT[5*5+2] * J_MMT[1*7+5]) * J_MpT[4*7+1] + (J_pMT[3*5+2] * J_MMT[2*7+3] + J_pMT[4*5+2] * J_MMT[2*7+4] + J_pMT[5*5+2] * J_MMT[2*7+5]) * J_MpT[4*7+2];
-  J_pp[3*5+0] =  J_pMT[0*5+3] * J_MMT[6*7+0] + J_pMT[1*5+3] * J_MMT[6*7+1] + J_pMT[2*5+3] * J_MMT[6*7+2];
-  J_pp[3*5+1] = (J_pMT[0*5+3] * J_MMT[3*7+0] + J_pMT[1*5+3] * J_MMT[3*7+1] + J_pMT[2*5+3] * J_MMT[3*7+2]) * J_MpT[1*7+3] + (J_pMT[0*5+3] * J_MMT[4*7+0] + J_pMT[1*5+3] * J_MMT[4*7+1] + J_pMT[2*5+3] * J_MMT[4*7+2]) * J_MpT[1*7+4] + (J_pMT[0*5+3] * J_MMT[5*7+0] + J_pMT[1*5+3] * J_MMT[5*7+1] + J_pMT[2*5+3] * J_MMT[5*7+2]) * J_MpT[1*7+5];
-  J_pp[3*5+2] = (J_pMT[0*5+3] * J_MMT[3*7+0] + J_pMT[1*5+3] * J_MMT[3*7+1] + J_pMT[2*5+3] * J_MMT[3*7+2]) * J_MpT[2*7+3] + (J_pMT[0*5+3] * J_MMT[4*7+0] + J_pMT[1*5+3] * J_MMT[4*7+1] + J_pMT[2*5+3] * J_MMT[4*7+2]) * J_MpT[2*7+4] + (J_pMT[0*5+3] * J_MMT[5*7+0] + J_pMT[1*5+3] * J_MMT[5*7+1] + J_pMT[2*5+3] * J_MMT[5*7+2]) * J_MpT[2*7+5];
-  J_pp[3*5+3] = (J_pMT[0*5+3] * J_MMT[0*7+0] + J_pMT[1*5+3] * J_MMT[0*7+1] + J_pMT[2*5+3] * J_MMT[0*7+2]) * J_MpT[3*7+0] + (J_pMT[0*5+3] * J_MMT[1*7+0] + J_pMT[1*5+3] * J_MMT[1*7+1] + J_pMT[2*5+3] * J_MMT[1*7+2]) * J_MpT[3*7+1] + (J_pMT[0*5+3] * J_MMT[2*7+0] + J_pMT[1*5+3] * J_MMT[2*7+1] + J_pMT[2*5+3] * J_MMT[2*7+2]) * J_MpT[3*7+2];
-  J_pp[3*5+4] = (J_pMT[0*5+3] * J_MMT[0*7+0] + J_pMT[1*5+3] * J_MMT[0*7+1] + J_pMT[2*5+3] * J_MMT[0*7+2]) * J_MpT[4*7+0] + (J_pMT[0*5+3] * J_MMT[1*7+0] + J_pMT[1*5+3] * J_MMT[1*7+1] + J_pMT[2*5+3] * J_MMT[1*7+2]) * J_MpT[4*7+1] + (J_pMT[0*5+3] * J_MMT[2*7+0] + J_pMT[1*5+3] * J_MMT[2*7+1] + J_pMT[2*5+3] * J_MMT[2*7+2]) * J_MpT[4*7+2];
-  J_pp[4*5+0] =  J_pMT[0*5+4] * J_MMT[6*7+0] + J_pMT[1*5+4] * J_MMT[6*7+1] + J_pMT[2*5+4] * J_MMT[6*7+2];
-  J_pp[4*5+1] = (J_pMT[0*5+4] * J_MMT[3*7+0] + J_pMT[1*5+4] * J_MMT[3*7+1] + J_pMT[2*5+4] * J_MMT[3*7+2]) * J_MpT[1*7+3] + (J_pMT[0*5+4] * J_MMT[4*7+0] + J_pMT[1*5+4] * J_MMT[4*7+1] + J_pMT[2*5+4] * J_MMT[4*7+2]) * J_MpT[1*7+4] + (J_pMT[0*5+4] * J_MMT[5*7+0] + J_pMT[1*5+4] * J_MMT[5*7+1] + J_pMT[2*5+4] * J_MMT[5*7+2]) * J_MpT[1*7+5];
-  J_pp[4*5+2] = (J_pMT[0*5+4] * J_MMT[3*7+0] + J_pMT[1*5+4] * J_MMT[3*7+1] + J_pMT[2*5+4] * J_MMT[3*7+2]) * J_MpT[2*7+3] + (J_pMT[0*5+4] * J_MMT[4*7+0] + J_pMT[1*5+4] * J_MMT[4*7+1] + J_pMT[2*5+4] * J_MMT[4*7+2]) * J_MpT[2*7+4] + (J_pMT[0*5+4] * J_MMT[5*7+0] + J_pMT[1*5+4] * J_MMT[5*7+1] + J_pMT[2*5+4] * J_MMT[5*7+2]) * J_MpT[2*7+5];
-  J_pp[4*5+3] = (J_pMT[0*5+4] * J_MMT[0*7+0] + J_pMT[1*5+4] * J_MMT[0*7+1] + J_pMT[2*5+4] * J_MMT[0*7+2]) * J_MpT[3*7+0] + (J_pMT[0*5+4] * J_MMT[1*7+0] + J_pMT[1*5+4] * J_MMT[1*7+1] + J_pMT[2*5+4] * J_MMT[1*7+2]) * J_MpT[3*7+1] + (J_pMT[0*5+4] * J_MMT[2*7+0] + J_pMT[1*5+4] * J_MMT[2*7+1] + J_pMT[2*5+4] * J_MMT[2*7+2]) * J_MpT[3*7+2];
-  J_pp[4*5+4] = (J_pMT[0*5+4] * J_MMT[0*7+0] + J_pMT[1*5+4] * J_MMT[0*7+1] + J_pMT[2*5+4] * J_MMT[0*7+2]) * J_MpT[4*7+0] + (J_pMT[0*5+4] * J_MMT[1*7+0] + J_pMT[1*5+4] * J_MMT[1*7+1] + J_pMT[2*5+4] * J_MMT[1*7+2]) * J_MpT[4*7+1] + (J_pMT[0*5+4] * J_MMT[2*7+0] + J_pMT[1*5+4] * J_MMT[2*7+1] + J_pMT[2*5+4] * J_MMT[2*7+2]) * J_MpT[4*7+2];
 
+  J_pp[1*5+0] = J_pMT[3*5+1] * J_MMT[6*7+3] + J_pMT[4*5+1] * J_MMT[6*7+4] + J_pMT[5*5+1] * J_MMT[6*7+5];
+  J_pp[1*5+1] = (  (J_pMT[3*5+1] * J_MMT[3*7+3] + J_pMT[4*5+1] * J_MMT[3*7+4] + J_pMT[5*5+1] * J_MMT[3*7+5]) * J_MpT[1*7+3] 
+                 + (J_pMT[3*5+1] * J_MMT[4*7+3] + J_pMT[4*5+1] * J_MMT[4*7+4] + J_pMT[5*5+1] * J_MMT[4*7+5]) * J_MpT[1*7+4]
+                 + (J_pMT[3*5+1] * J_MMT[5*7+3] + J_pMT[4*5+1] * J_MMT[5*7+4] + J_pMT[5*5+1] * J_MMT[5*7+5]) * J_MpT[1*7+5]);
+  J_pp[1*5+2] = (  (J_pMT[3*5+1] * J_MMT[3*7+3] + J_pMT[4*5+1] * J_MMT[3*7+4] + J_pMT[5*5+1] * J_MMT[3*7+5]) * J_MpT[2*7+3]
+                 + (J_pMT[3*5+1] * J_MMT[4*7+3] + J_pMT[4*5+1] * J_MMT[4*7+4] + J_pMT[5*5+1] * J_MMT[4*7+5]) * J_MpT[2*7+4]
+                 + (J_pMT[3*5+1] * J_MMT[5*7+3] + J_pMT[4*5+1] * J_MMT[5*7+4] + J_pMT[5*5+1] * J_MMT[5*7+5]) * J_MpT[2*7+5]);
+  J_pp[1*5+3] = (  (J_pMT[3*5+1] * J_MMT[0*7+3] + J_pMT[4*5+1] * J_MMT[0*7+4] + J_pMT[5*5+1] * J_MMT[0*7+5]) * J_MpT[3*7+0]
+                 + (J_pMT[3*5+1] * J_MMT[1*7+3] + J_pMT[4*5+1] * J_MMT[1*7+4] + J_pMT[5*5+1] * J_MMT[1*7+5]) * J_MpT[3*7+1]
+                 + (J_pMT[3*5+1] * J_MMT[2*7+3] + J_pMT[4*5+1] * J_MMT[2*7+4] + J_pMT[5*5+1] * J_MMT[2*7+5]) * J_MpT[3*7+2]);
+  J_pp[1*5+4] = (  (J_pMT[3*5+1] * J_MMT[0*7+3] + J_pMT[4*5+1] * J_MMT[0*7+4] + J_pMT[5*5+1] * J_MMT[0*7+5]) * J_MpT[4*7+0]
+                 + (J_pMT[3*5+1] * J_MMT[1*7+3] + J_pMT[4*5+1] * J_MMT[1*7+4] + J_pMT[5*5+1] * J_MMT[1*7+5]) * J_MpT[4*7+1]
+                 + (J_pMT[3*5+1] * J_MMT[2*7+3] + J_pMT[4*5+1] * J_MMT[2*7+4] + J_pMT[5*5+1] * J_MMT[2*7+5]) * J_MpT[4*7+2]);
+
+  J_pp[2*5+0] =  J_pMT[3*5+2] * J_MMT[6*7+3] + J_pMT[4*5+2] * J_MMT[6*7+4] + J_pMT[5*5+2] * J_MMT[6*7+5];
+  J_pp[2*5+1] = (  (J_pMT[3*5+2] * J_MMT[3*7+3] + J_pMT[4*5+2] * J_MMT[3*7+4] + J_pMT[5*5+2] * J_MMT[3*7+5]) * J_MpT[1*7+3]
+                 + (J_pMT[3*5+2] * J_MMT[4*7+3] + J_pMT[4*5+2] * J_MMT[4*7+4] + J_pMT[5*5+2] * J_MMT[4*7+5]) * J_MpT[1*7+4]
+                 + (J_pMT[3*5+2] * J_MMT[5*7+3] + J_pMT[4*5+2] * J_MMT[5*7+4] + J_pMT[5*5+2] * J_MMT[5*7+5]) * J_MpT[1*7+5]);
+  J_pp[2*5+2] = (  (J_pMT[3*5+2] * J_MMT[3*7+3] + J_pMT[4*5+2] * J_MMT[3*7+4] + J_pMT[5*5+2] * J_MMT[3*7+5]) * J_MpT[2*7+3]
+                 + (J_pMT[3*5+2] * J_MMT[4*7+3] + J_pMT[4*5+2] * J_MMT[4*7+4] + J_pMT[5*5+2] * J_MMT[4*7+5]) * J_MpT[2*7+4]
+                 + (J_pMT[3*5+2] * J_MMT[5*7+3] + J_pMT[4*5+2] * J_MMT[5*7+4] + J_pMT[5*5+2] * J_MMT[5*7+5]) * J_MpT[2*7+5]);
+  J_pp[2*5+3] = (  (J_pMT[3*5+2] * J_MMT[0*7+3] + J_pMT[4*5+2] * J_MMT[0*7+4] + J_pMT[5*5+2] * J_MMT[0*7+5]) * J_MpT[3*7+0]
+                 + (J_pMT[3*5+2] * J_MMT[1*7+3] + J_pMT[4*5+2] * J_MMT[1*7+4] + J_pMT[5*5+2] * J_MMT[1*7+5]) * J_MpT[3*7+1]
+                 + (J_pMT[3*5+2] * J_MMT[2*7+3] + J_pMT[4*5+2] * J_MMT[2*7+4] + J_pMT[5*5+2] * J_MMT[2*7+5]) * J_MpT[3*7+2]);
+  J_pp[2*5+4] = (  (J_pMT[3*5+2] * J_MMT[0*7+3] + J_pMT[4*5+2] * J_MMT[0*7+4] + J_pMT[5*5+2] * J_MMT[0*7+5]) * J_MpT[4*7+0]
+                 + (J_pMT[3*5+2] * J_MMT[1*7+3] + J_pMT[4*5+2] * J_MMT[1*7+4] + J_pMT[5*5+2] * J_MMT[1*7+5]) * J_MpT[4*7+1]
+                 + (J_pMT[3*5+2] * J_MMT[2*7+3] + J_pMT[4*5+2] * J_MMT[2*7+4] + J_pMT[5*5+2] * J_MMT[2*7+5]) * J_MpT[4*7+2]);
+
+  J_pp[3*5+0] =  J_pMT[0*5+3] * J_MMT[6*7+0] + J_pMT[1*5+3] * J_MMT[6*7+1] + J_pMT[2*5+3] * J_MMT[6*7+2];
+  J_pp[3*5+1] = (  (J_pMT[0*5+3] * J_MMT[3*7+0] + J_pMT[1*5+3] * J_MMT[3*7+1] + J_pMT[2*5+3] * J_MMT[3*7+2]) * J_MpT[1*7+3]
+                 + (J_pMT[0*5+3] * J_MMT[4*7+0] + J_pMT[1*5+3] * J_MMT[4*7+1] + J_pMT[2*5+3] * J_MMT[4*7+2]) * J_MpT[1*7+4]
+                 + (J_pMT[0*5+3] * J_MMT[5*7+0] + J_pMT[1*5+3] * J_MMT[5*7+1] + J_pMT[2*5+3] * J_MMT[5*7+2]) * J_MpT[1*7+5]);
+  J_pp[3*5+2] = (  (J_pMT[0*5+3] * J_MMT[3*7+0] + J_pMT[1*5+3] * J_MMT[3*7+1] + J_pMT[2*5+3] * J_MMT[3*7+2]) * J_MpT[2*7+3]
+                 + (J_pMT[0*5+3] * J_MMT[4*7+0] + J_pMT[1*5+3] * J_MMT[4*7+1] + J_pMT[2*5+3] * J_MMT[4*7+2]) * J_MpT[2*7+4]
+                 + (J_pMT[0*5+3] * J_MMT[5*7+0] + J_pMT[1*5+3] * J_MMT[5*7+1] + J_pMT[2*5+3] * J_MMT[5*7+2]) * J_MpT[2*7+5]);
+  J_pp[3*5+3] = (  (J_pMT[0*5+3] * J_MMT[0*7+0] + J_pMT[1*5+3] * J_MMT[0*7+1] + J_pMT[2*5+3] * J_MMT[0*7+2]) * J_MpT[3*7+0]
+                 + (J_pMT[0*5+3] * J_MMT[1*7+0] + J_pMT[1*5+3] * J_MMT[1*7+1] + J_pMT[2*5+3] * J_MMT[1*7+2]) * J_MpT[3*7+1]
+                 + (J_pMT[0*5+3] * J_MMT[2*7+0] + J_pMT[1*5+3] * J_MMT[2*7+1] + J_pMT[2*5+3] * J_MMT[2*7+2]) * J_MpT[3*7+2]);
+  J_pp[3*5+4] = (  (J_pMT[0*5+3] * J_MMT[0*7+0] + J_pMT[1*5+3] * J_MMT[0*7+1] + J_pMT[2*5+3] * J_MMT[0*7+2]) * J_MpT[4*7+0]
+                 + (J_pMT[0*5+3] * J_MMT[1*7+0] + J_pMT[1*5+3] * J_MMT[1*7+1] + J_pMT[2*5+3] * J_MMT[1*7+2]) * J_MpT[4*7+1]
+                 + (J_pMT[0*5+3] * J_MMT[2*7+0] + J_pMT[1*5+3] * J_MMT[2*7+1] + J_pMT[2*5+3] * J_MMT[2*7+2]) * J_MpT[4*7+2]);
+
+  J_pp[4*5+0] =  J_pMT[0*5+4] * J_MMT[6*7+0] + J_pMT[1*5+4] * J_MMT[6*7+1] + J_pMT[2*5+4] * J_MMT[6*7+2];
+  J_pp[4*5+1] = (  (J_pMT[0*5+4] * J_MMT[3*7+0] + J_pMT[1*5+4] * J_MMT[3*7+1] + J_pMT[2*5+4] * J_MMT[3*7+2]) * J_MpT[1*7+3]
+                 + (J_pMT[0*5+4] * J_MMT[4*7+0] + J_pMT[1*5+4] * J_MMT[4*7+1] + J_pMT[2*5+4] * J_MMT[4*7+2]) * J_MpT[1*7+4]
+                 + (J_pMT[0*5+4] * J_MMT[5*7+0] + J_pMT[1*5+4] * J_MMT[5*7+1] + J_pMT[2*5+4] * J_MMT[5*7+2]) * J_MpT[1*7+5]);
+  J_pp[4*5+2] = (  (J_pMT[0*5+4] * J_MMT[3*7+0] + J_pMT[1*5+4] * J_MMT[3*7+1] + J_pMT[2*5+4] * J_MMT[3*7+2]) * J_MpT[2*7+3]
+                 + (J_pMT[0*5+4] * J_MMT[4*7+0] + J_pMT[1*5+4] * J_MMT[4*7+1] + J_pMT[2*5+4] * J_MMT[4*7+2]) * J_MpT[2*7+4]
+                 + (J_pMT[0*5+4] * J_MMT[5*7+0] + J_pMT[1*5+4] * J_MMT[5*7+1] + J_pMT[2*5+4] * J_MMT[5*7+2]) * J_MpT[2*7+5]);
+  J_pp[4*5+3] = (  (J_pMT[0*5+4] * J_MMT[0*7+0] + J_pMT[1*5+4] * J_MMT[0*7+1] + J_pMT[2*5+4] * J_MMT[0*7+2]) * J_MpT[3*7+0]
+                 + (J_pMT[0*5+4] * J_MMT[1*7+0] + J_pMT[1*5+4] * J_MMT[1*7+1] + J_pMT[2*5+4] * J_MMT[1*7+2]) * J_MpT[3*7+1]
+                 + (J_pMT[0*5+4] * J_MMT[2*7+0] + J_pMT[1*5+4] * J_MMT[2*7+1] + J_pMT[2*5+4] * J_MMT[2*7+2]) * J_MpT[3*7+2]);
+  J_pp[4*5+4] = (  (J_pMT[0*5+4] * J_MMT[0*7+0] + J_pMT[1*5+4] * J_MMT[0*7+1] + J_pMT[2*5+4] * J_MMT[0*7+2]) * J_MpT[4*7+0]
+                 + (J_pMT[0*5+4] * J_MMT[1*7+0] + J_pMT[1*5+4] * J_MMT[1*7+1] + J_pMT[2*5+4] * J_MMT[1*7+2]) * J_MpT[4*7+1]
+                 + (J_pMT[0*5+4] * J_MMT[2*7+0] + J_pMT[1*5+4] * J_MMT[2*7+1] + J_pMT[2*5+4] * J_MMT[2*7+2]) * J_MpT[4*7+2]);
 }
 
 
@@ -564,6 +631,13 @@ void RKTools::Np_N_NpT(const M7x7& Np, M7x7& N) {
   // calculate:
   // Np * N * Np^T
 
+  if (debugFlags & flagSlowMatrix) {
+    TMatrixDSym n(7,N);
+    TMatrixD np(7,7,Np);
+    n.Similarity(np);
+    memcpy(N, np.GetMatrixArray(), sizeof(M7x7));
+    return;
+  }
 
   double N00(N[0*7+0]), N11(N[1*7+1]), N22(N[2*7+2]), N33(N[3*7+3]), N44(N[4*7+4]), N55(N[5*7+5]);
 
@@ -611,7 +685,6 @@ void RKTools::Np_N_NpT(const M7x7& Np, M7x7& N) {
   N[2*7+3] = N[3*7+2];  N[2*7+4] = N[4*7+2];  N[2*7+5] = N[5*7+2];  N[2*7+6] = N[6*7+2];
   N[1*7+2] = N[2*7+1];  N[1*7+3] = N[3*7+1];  N[1*7+4] = N[4*7+1];  N[1*7+5] = N[5*7+1];  N[1*7+6] = N[6*7+1];
   N[0*7+1] = N[1*7+0];  N[0*7+2] = N[2*7+0];  N[0*7+3] = N[3*7+0];  N[0*7+4] = N[4*7+0];  N[0*7+5] = N[5*7+0];  N[0*7+6] = N[6*7+0];
-
 }
 
 
