@@ -425,12 +425,13 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
   // MULTIPLE SCATTERING; calculate sigma^2
   double sigma2 = 0;
   assert(mscModelCode_ == 0 || mscModelCode_ == 1);
-  const double step2 = stepSize_ * stepSize_;
+  const double step = fabs(stepSize_);
+  const double step2 = step * step;
   if (mscModelCode_ == 0) {// PANDA report PV/01-07 eq(43); linear in step length
-    sigma2 = 225.E-6 * charge_ * charge_ / (beta_ * beta_ * mom_ * mom_) * fabs(stepSize_) / radiationLength_ * matZ_ / (matZ_ + 1) * log(159.*pow(matZ_, -1. / 3.)) / log(287.*pow(matZ_, -0.5)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/beta_^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
+    sigma2 = 225.E-6 * charge_ * charge_ / (beta_ * beta_ * mom_ * mom_) * step / radiationLength_ * matZ_ / (matZ_ + 1) * log(159.*pow(matZ_, -1. / 3.)) / log(287.*pow(matZ_, -0.5)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/beta_^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
 
   } else if (mscModelCode_ == 1) { //Highland not linear in step length formula taken from PDG book 2011 edition
-    double stepOverRadLength = fabs(stepSize_) / radiationLength_;
+    double stepOverRadLength = step / radiationLength_;
     double logCor = (1 + 0.038 * log(stepOverRadLength));
     sigma2 = 0.0136 * 0.0136 * charge_ * charge_ / (beta_ * beta_ * mom_ * mom_) * stepOverRadLength * logCor * logCor;
   }
@@ -441,53 +442,45 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
   double noiseAfter[7 * 7]; // will hold the new MSC noise to cause by the current stepSize_ length
   memset(noiseAfter, 0x00, 7 * 7 * sizeof(double));
 
-  double phi = atan2(direction[1], direction[0]);
-  // cache sin and cos
-  double sinTheta = sqrt(1 - direction[2] * direction[2]); // theta = arccos(direction[2])
-  double cosTheta = direction[2];
-  double sinPhi = sin(phi);
-  double cosPhi = cos(phi);
-  const double cosTheta2 = cosTheta * cosTheta;
-  const double sinTheta2 = 1 - cosTheta2;
-  const double sinPhi2 = sinPhi * sinPhi;
-  const double cosPhi2 = 1 - sinPhi2;
-  //this calculates the full projection of the MSC noise variance onto the 7D global coordinate system. Even taking into account the (co)variances of the position coordinates
-  noiseAfter[0 * 7 + 0] =  sigma2 * step2 / 3.0 * (cosTheta2 + sinPhi2 * sinTheta2);
-  noiseAfter[1 * 7 + 0] = -sigma2 * step2 / 3.0 * sinPhi * cosPhi * sinTheta2;
-  noiseAfter[2 * 7 + 0] = -sigma2 * step2 / 3.0 * cosPhi * cosTheta * sinTheta;
-  noiseAfter[3 * 7 + 0] =  sigma2 * fabs(stepSize_) * 0.5 * (cosTheta2 + sinPhi2 * sinTheta2);
-  noiseAfter[4 * 7 + 0] = -sigma2 * fabs(stepSize_) * 0.5 * sinPhi * cosPhi * sinTheta2;
-  noiseAfter[5 * 7 + 0] = -sigma2 * fabs(stepSize_) * 0.5 * cosPhi * cosTheta * sinTheta;
+  const double *a = direction;
+  // This calculates the MSC angular spread in the 7D global
+  // coordinate system.
+  noiseAfter[0 * 7 + 0] =  sigma2 * step2 / 3.0 * (1 - a[0]*a[0]);
+  noiseAfter[1 * 7 + 0] = -sigma2 * step2 / 3.0 * a[0]*a[1];
+  noiseAfter[2 * 7 + 0] = -sigma2 * step2 / 3.0 * a[0]*a[2];
+  noiseAfter[3 * 7 + 0] =  sigma2 * step * 0.5 * (1 - a[0]*a[0]);
+  noiseAfter[4 * 7 + 0] = -sigma2 * step * 0.5 * a[0]*a[1];
+  noiseAfter[5 * 7 + 0] = -sigma2 * step * 0.5 * a[0]*a[1];
   noiseAfter[0 * 7 + 1] = noiseAfter[1 * 7 + 0];
-  noiseAfter[1 * 7 + 1] = -sigma2 * step2 / 3.0 * (sinPhi2 * sinTheta2 - 1.0);
-  noiseAfter[2 * 7 + 1] = -sigma2 * step2 / 3.0 * cosTheta * sinPhi * sinTheta;
+  noiseAfter[1 * 7 + 1] =  sigma2 * step2 / 3.0 * (1 - a[1]*a[1]);
+  noiseAfter[2 * 7 + 1] = -sigma2 * step2 / 3.0 * a[1]*a[2];
   noiseAfter[3 * 7 + 1] = noiseAfter[4 * 7 + 0]; // Cov(x,a_y) = Cov(y,a_x)
-  noiseAfter[4 * 7 + 1] = -sigma2 * fabs(stepSize_) * 0.5 * (sinPhi2 * sinTheta2 - 1.0);
-  noiseAfter[5 * 7 + 1] = -sigma2 * fabs(stepSize_) * 0.5 * cosTheta * sinPhi * sinTheta;
+  noiseAfter[4 * 7 + 1] =  sigma2 * step * 0.5 * (1 - a[1] * a[1]);
+  noiseAfter[5 * 7 + 1] = -sigma2 * step * 0.5 * a[1]*a[2];
   noiseAfter[0 * 7 + 2] = noiseAfter[2 * 7 + 0];
   noiseAfter[1 * 7 + 2] = noiseAfter[2 * 7 + 1];
-  noiseAfter[2 * 7 + 2] =  sigma2 * step2 / 3.0 * sinTheta2;
+  noiseAfter[2 * 7 + 2] =  sigma2 * step2 / 3.0 * (1 - a[2]*a[2]);
   noiseAfter[3 * 7 + 2] = noiseAfter[5 * 7 + 0]; // Cov(z,a_x) = Cov(x,a_z)
   noiseAfter[4 * 7 + 2] = noiseAfter[5 * 7 + 1]; // Cov(y,a_z) = Cov(z,a_y)
-  noiseAfter[5 * 7 + 2] =  sigma2 * fabs(stepSize_) * 0.5 * sinTheta2;
+  noiseAfter[5 * 7 + 2] =  sigma2 * step * 0.5 * (1 - a[2]*a[2]);
   noiseAfter[0 * 7 + 3] = noiseAfter[3 * 7 + 0];
   noiseAfter[1 * 7 + 3] = noiseAfter[3 * 7 + 1];
   noiseAfter[2 * 7 + 3] = noiseAfter[3 * 7 + 2];
-  noiseAfter[3 * 7 + 3] =  sigma2 * (1.0 - sinTheta2 * cosPhi2);
-  noiseAfter[4 * 7 + 3] = -sigma2 * sinTheta2 * cosPhi * sinPhi;
-  noiseAfter[5 * 7 + 3] = -sigma2 * cosTheta * sinTheta * cosPhi;
+  noiseAfter[3 * 7 + 3] =  sigma2 * (1 - a[0]*a[0]);
+  noiseAfter[4 * 7 + 3] = -sigma2 * a[0]*a[1];
+  noiseAfter[5 * 7 + 3] = -sigma2 * a[0]*a[2];
   noiseAfter[0 * 7 + 4] = noiseAfter[4 * 7 + 0];
   noiseAfter[1 * 7 + 4] = noiseAfter[4 * 7 + 1];
   noiseAfter[2 * 7 + 4] = noiseAfter[4 * 7 + 2];
   noiseAfter[3 * 7 + 4] = noiseAfter[4 * 7 + 3];
-  noiseAfter[4 * 7 + 4] =  sigma2 * (1.0 - sinTheta2 * sinPhi2);
-  noiseAfter[5 * 7 + 4] = -sigma2 * cosTheta * sinTheta * sinPhi;
+  noiseAfter[4 * 7 + 4] =  sigma2 * (1 - a[1]*a[1]);
+  noiseAfter[5 * 7 + 4] = -sigma2 * a[1]*a[2];
   noiseAfter[0 * 7 + 5] = noiseAfter[5 * 7 + 0];
   noiseAfter[1 * 7 + 5] = noiseAfter[5 * 7 + 1];
   noiseAfter[2 * 7 + 5] = noiseAfter[5 * 7 + 2];
   noiseAfter[3 * 7 + 5] = noiseAfter[5 * 7 + 3];
   noiseAfter[4 * 7 + 5] = noiseAfter[5 * 7 + 4];
-  noiseAfter[5 * 7 + 5] = sigma2 * sinTheta2;
+  noiseAfter[5 * 7 + 5] = sigma2 * (1 - a[2]*a[2]);
 //    std::cout << "new noise\n";
 //    RKTools::printDim(noiseAfter, 7,7);
   for (unsigned int i = 0; i < 7 * 7; ++i) {
