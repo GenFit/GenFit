@@ -1409,7 +1409,7 @@ void RKTrackRep::getState7(const StateOnPlane& state, M1x7& state7) const {
 
 void RKTrackRep::getState5(StateOnPlane& state, const M1x7& state7) const {
 
-  // state5: (q/p, u', v'. u. v)
+  // state5: (q/p, u', v'. u, v)
 
   double spu(1.);
 
@@ -1432,8 +1432,8 @@ void RKTrackRep::getState5(StateOnPlane& state, const M1x7& state7) const {
   TVectorD& state5 = state.getState();
 
   state5(0) = state7[6]; // q/p
-  state5(1) = (state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z()) / AtW; // u' = (dir * U) / (A * W)
-  state5(2) = (state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z()) / AtW; // v' = (dir * V) / (A * W)
+  state5(1) = (state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z()) / AtW; // u' = (A * U) / (A * W)
+  state5(2) = (state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z()) / AtW; // v' = (A * V) / (A * W)
   state5(3) = ((state7[0]-O.X())*U.X() +
                (state7[1]-O.Y())*U.Y() +
                (state7[2]-O.Z())*U.Z()); // u = (pos - O) * U
@@ -1514,6 +1514,40 @@ void RKTrackRep::calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& 
   /*if (debugLvl_ > 1) {
     std::cout << "  J_pM_5x7_ = "; RKTools::printDim(J_pM_5x7_, 5,7);
   }*/
+}
+
+
+void RKTrackRep::calcJ_pM_5x7_orth(const TVector3& U, const TVector3& V) const {
+  if (debugLvl_ > 1) {
+    std::cout << "RKTrackRep::calcJ_pM_5x7_orth \n";
+    std::cout << "  U = "; U.Print();
+    std::cout << "  V = "; V.Print();
+  }
+
+  //J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)   (out is 7x7)
+
+   // d(x,y,z)/d(u)
+  J_pM_5x7_[21] = U.X(); // [3][0]
+  J_pM_5x7_[22] = U.Y(); // [3][1]
+  J_pM_5x7_[23] = U.Z(); // [3][2]
+  // d(x,y,z)/d(v)
+  J_pM_5x7_[28] = V.X(); // [4][0]
+  J_pM_5x7_[29] = V.Y(); // [4][1]
+  J_pM_5x7_[30] = V.Z(); // [4][2]
+  // d(q/p)/d(q/p)
+  J_pM_5x7_[6] = 1.; // not needed for array matrix multiplication
+  // d(ax,ay,az)/d(u')
+  J_pM_5x7_[10] = U.X(); // [1][3]
+  J_pM_5x7_[11] = U.Y(); // [1][4]
+  J_pM_5x7_[12] = U.Z(); // [1][5]
+  // d(ax,ay,az)/d(v')
+  J_pM_5x7_[17] = V.X(); // [2][3]
+  J_pM_5x7_[18] = V.Y(); // [2][4]
+  J_pM_5x7_[19] = V.Z(); // [2][5]
+
+  if (debugLvl_ > 1) {
+    std::cout << "  J_pM_5x7_orth_ = "; RKTools::printDim(J_pM_5x7_, 5,7);
+  }
 }
 
 
@@ -1638,6 +1672,44 @@ void RKTrackRep::calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVecto
     std::cout << "  J_Mp_7x5_ = "; RKTools::printDim(J_Mp_7x5_, 7,5);
   }*/
 
+}
+
+
+void RKTrackRep::calcJ_Mp_7x5_orth(const TVector3& U, const TVector3& V) const
+{
+  // Same as before, but now the plane is orthogonal to the track.
+  if (debugLvl_ > 1) {
+    std::cout << "RKTrackRep::calcJ_Mp_7x5_orth \n";
+    std::cout << "  U = "; U.Print();
+    std::cout << "  V = "; V.Print();
+  }
+
+  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)   (in is 7x7)
+
+  // d(u')/d(ax,ay,az)
+  J_Mp_7x5_[3*5+1] = U.X();
+  J_Mp_7x5_[4*5+1] = U.Y();
+  J_Mp_7x5_[5*5+1] = U.Z();
+
+  // d(v')/d(ax,ay,az)
+  J_Mp_7x5_[3*5+2] = V.X();
+  J_Mp_7x5_[4*5+2] = V.Y();
+  J_Mp_7x5_[5*5+2] = V.Z();
+
+  // d(q/p)/d(q/p)
+  J_Mp_7x5_[6*5+0] = 1.; // not needed for array matrix multiplication
+  //d(u)/d(x,y,z)
+  J_Mp_7x5_[0*5+3] = U.X();
+  J_Mp_7x5_[1*5+3] = U.Y();
+  J_Mp_7x5_[2*5+3] = U.Z();
+  //d(v)/d(x,y,z)
+  J_Mp_7x5_[0*5+4] = V.X();
+  J_Mp_7x5_[1*5+4] = V.Y();
+  J_Mp_7x5_[2*5+4] = V.Z();
+
+  if (debugLvl_ > 1) {
+    std::cout << "  J_Mp_7x5_orth = "; RKTools::printDim(J_Mp_7x5_, 7,5);
+  }
 }
 
 
@@ -1927,7 +1999,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
         std::cout << "  Project Jacobian of extrapolation onto destination plane\n";
       }
       An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
-      fabs(An) > 1.E-7 ? An=1./An : An = 0; // 1/A_normal
+      An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
       double norm;
       int i=0;
       if (calcOnlyLastRowOfJ)
@@ -1950,16 +2022,9 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       if (!calcOnlyLastRowOfJ) {
         for (int iRow = 0; iRow < 3; ++iRow) {
           for (int iCol = 0; iCol < 3; ++iCol) {
-            double val = (iRow == iCol);
-            val -= An * SU[iCol] * A[iRow];
-            noiseProjection[iRow*7 + iCol] = val;
-          }
-        }
-        for (int iRow = 3; iRow < 6; ++iRow) {
-          for (int iCol = 0; iCol < 3; ++iCol) {
-            double val = (iRow == iCol);
-            val -= An * SU[iCol] * SA[iRow-3];
-            noiseProjection[iRow*7 + iCol] = val;
+	    noiseProjection[iRow*7 + iCol]       = (iRow == iCol) - An * SU[iCol] * A[iRow];
+	    noiseProjection[(iRow + 3)*7 + iCol] =                - An * SU[iCol] * SA[iRow];
+
           }
         }
 
@@ -2271,27 +2336,9 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     M7x7* noise = NULL;
     isAtBoundary = false;
 
-
-    if(fillExtrapSteps){
-      // calc J_Mp for later calculation of 5D Jacobian
-      if (numIt == 1) { // first iteration
-        M1x3 pTilde = {state7[3], state7[4], state7[5]};
-        const TVector3& normal = startPlane.getNormal();
-        double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
-        double spu = 1;
-        if (pTildeW < 0) {
-          spu = -1;
-          pTildeW *= -1.;
-        }
-
-        for (unsigned int i=0; i<3; ++i) {
-          pTilde[i] *= 1./pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
-        }
-
-        calcJ_pM_5x7(startPlane.getU(), startPlane.getV(), pTilde, spu);      }
-      else {
-        calcJ_pM_5x7(intermediatePlane.getU(), intermediatePlane.getV(), *((M1x3*) &state7[3]), 1.);      }
-    }
+    // Remember previous state
+    M1x7 oldState7;
+    memcpy(oldState7, state7, sizeof(M1x7));
 
     // propagation
     bool checkJacProj = false;
@@ -2371,6 +2418,22 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       ExtrapSteps_.push_back(defaultExtrapStep);
       std::vector<ExtrapStep>::iterator lastStep = ExtrapSteps_.end() - 1;
 
+      // calc J_Mp for later calculation of 5D Jacobian
+      if (numIt == 1) { // first iteration
+        M1x3 pTilde = {oldState7[3], oldState7[4], oldState7[5]};
+        const TVector3& normal = startPlane.getNormal();
+        double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
+        double spu = pTildeW > 0 ? 1 : -1;
+        for (unsigned int i=0; i<3; ++i) {
+	  pTilde[i] *= spu/pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
+	}
+        calcJ_pM_5x7(startPlane.getU(), startPlane.getV(), pTilde, spu);
+      } else {
+	// the intermediate plane (from the previous iteration) is
+	// orthogonal to the track before the extrapolation.
+        calcJ_pM_5x7_orth(intermediatePlane.getU(), intermediatePlane.getV());
+      }
+
       // calc J_pM
       if (atPlane) {
         if (!checkJacProj) {
@@ -2382,7 +2445,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       }
       else {
         intermediatePlane.setON(TVector3(state7[0], state7[1], state7[2]), TVector3(state7[3], state7[4], state7[5]));
-        calcJ_Mp_7x5(intermediatePlane.getU(), intermediatePlane.getV(), intermediatePlane.getNormal(), *((M1x3*) &state7[3]));
+        calcJ_Mp_7x5_orth(intermediatePlane.getU(), intermediatePlane.getV());
       }
 
       // Project covariance down to 5D
