@@ -199,6 +199,7 @@ class RKTrackRep : public AbsTrackRep {
                     M7x7& out7x7) const;
 
   void calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
+  void calcJ_pM_5x7_orth(const TVector3& U, const TVector3& V) const;
 
   void transformPM6(const MeasuredStateOnPlane& state,
                     M6x6& out6x6) const;
@@ -208,6 +209,7 @@ class RKTrackRep : public AbsTrackRep {
                     MeasuredStateOnPlane& state) const; // plane must already be set!
 
   void calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const;
+  void calcJ_Mp_7x5_orth(const TVector3& U, const TVector3& V) const;
 
   void calcForwardJacobianAndNoise() const;
 
