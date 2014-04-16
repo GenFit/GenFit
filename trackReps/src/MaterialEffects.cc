@@ -444,7 +444,7 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
 
   const double *a = direction;
   // This calculates the MSC angular spread in the 7D global
-  // coordinate system.
+  // coordinate system.  See PDG 2010, Sec. 27.3 for formulae.
   noiseAfter[0 * 7 + 0] =  sigma2 * step2 / 3.0 * (1 - a[0]*a[0]);
   noiseAfter[1 * 7 + 0] = -sigma2 * step2 / 3.0 * a[0]*a[1];
   noiseAfter[2 * 7 + 0] = -sigma2 * step2 / 3.0 * a[0]*a[2];
