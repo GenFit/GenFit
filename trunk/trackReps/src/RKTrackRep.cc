@@ -756,7 +756,8 @@ double RKTrackRep::getSpu(const StateOnPlane& state) const {
 }
 
 
-void RKTrackRep::calcForwardJacobianAndNoise() const {
+void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
+					     const M1x7& destState7, const DetPlane& destPlane) const {
 
   if (debugLvl_ > 0) {
     std::cout << "RKTrackRep::calcForwardJacobianAndNoise " << std::endl;
@@ -767,23 +768,31 @@ void RKTrackRep::calcForwardJacobianAndNoise() const {
     throw exc;
   }
 
-  fJacobian_.SetMatrixArray(ExtrapSteps_.back().jac_);
-  fNoise_.SetMatrixArray(ExtrapSteps_.back().noise_);
-
-  if (debugLvl_ > 2) {
-    std::cout << "jacobian " << ExtrapSteps_.size()-1 << " "; fJacobian_.Print();
-    std::cout << "noise " << ExtrapSteps_.size()-1 << " "; fNoise_.Print();
+  // The Jacobians returned from RKutta are transposed.
+  TMatrixD jac(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_.back().jac7_));
+  TMatrixDSym noise(7, ExtrapSteps_.back().noise7_);
+  for (int i = ExtrapSteps_.size() - 2; i >= 0; --i) {
+    noise += TMatrixDSym(7, ExtrapSteps_[i].noise7_).Similarity(jac);
+    jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_[i].jac7_));
   }
 
-  for (unsigned int i=ExtrapSteps_.size()-2; i!=std::numeric_limits<unsigned int>::max(); --i) {
-    fNoise_ += TMatrixDSym(5, ExtrapSteps_[i].noise_).Similarity(fJacobian_);
-    fJacobian_ *= TMatrixD(5,5, ExtrapSteps_[i].jac_);
-
-    if (debugLvl_ > 2) {
-      std::cout << "jacobian " << i << " "; TMatrixD(5,5, ExtrapSteps_[i].jac_).Print();
-      std::cout << "noise " << i << " "; TMatrixDSym(5, ExtrapSteps_[i].noise_).Print();
-    }
+  // Project into 5x5 space.
+  M1x3 pTilde = {startState7[3], startState7[4], startState7[5]};
+  const TVector3& normal = startPlane.getNormal();
+  double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
+  double spu = pTildeW > 0 ? 1 : -1;
+  for (unsigned int i=0; i<3; ++i) {
+    pTilde[i] *= spu/pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
   }
+  M5x7 J_pM;
+  calcJ_pM_5x7(J_pM, startPlane.getU(), startPlane.getV(), pTilde, spu);
+  M7x5 J_Mp;
+  calcJ_Mp_7x5(J_Mp, destPlane.getU(), destPlane.getV(), destPlane.getNormal(), *((M1x3*) &destState7[3]));
+  jac.Transpose(jac); // Because the helper function wants transposed input.
+  RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, *(M7x7 *)jac.GetMatrixArray(),
+				J_pM, *(M5x5 *)fJacobian_.GetMatrixArray());
+  RKTools::J_MpTxcov7xJ_Mp(J_Mp, *(M7x7 *)noise.GetMatrixArray(),
+			   *(M5x5 *)fNoise_.GetMatrixArray());
 
   if (debugLvl_ > 0) {
     std::cout << "total jacobian : "; fJacobian_.Print();
@@ -829,7 +838,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
   }
 
   jacobian.ResizeTo(5,5);
-  jacobian.SetMatrixArray(ExtrapSteps_.front().jac_);
+  jacobian = fJacobian_;
   if (!useInvertFast) {
     TDecompLU invertAlgo(jacobian);
     bool status = invertAlgo.Invert(jacobian);
@@ -849,57 +858,12 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
   }
 
   noise.ResizeTo(5,5);
-  noise.SetMatrixArray(ExtrapSteps_.front().noise_);
+  noise = fNoise_;
   noise.Similarity(jacobian);
-
-  if (debugLvl_ > 2) {
-    std::cout << "inverted jacobian 0 "; jacobian.Print();
-    std::cout << "inverted noise 0 "; noise.Print();
-  }
-  for (unsigned int i=1; i!=ExtrapSteps_.size(); ++i) {
-    TMatrixD nextJac(5,5, ExtrapSteps_[i].jac_);
-    if (!useInvertFast) {
-      TDecompLU invertAlgo2(nextJac);
-      bool status = invertAlgo2.Invert(nextJac);
-      if(status == 0){
-        Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
-	e.setFatal();
-	throw e;
-      }
-    } else {
-      double det;
-      nextJac.InvertFast(&det);
-      if(det < 1e-80){
-        Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
-        e.setFatal();
-	throw e;
-      }
-    }
-
-    if (debugLvl_ > 2) {
-      std::cout << "inverted jacobian " << i << " "; nextJac.Print();
-    }
-
-    jacobian *= nextJac;
-    noise += (TMatrixDSym(5, ExtrapSteps_[i].noise_)).Similarity(jacobian);
-
-    if (debugLvl_ > 2) {
-      std::cout << "inverted noise " << i << " "; ((TMatrixDSym(5, ExtrapSteps_[i].noise_)).Similarity(jacobian)).Print();
-    }
-  }
-
-  if (debugLvl_ > 0) {
-    std::cout << "total jacobian : "; jacobian.Print();
-    std::cout << "total noise : "; noise.Print();
-  }
 
   // lastStartState_ = jacobian * lastEndState_  + deltaState
   deltaState.ResizeTo(5);
   deltaState = lastStartState_.getState() - jacobian * lastEndState_.getState();
-
-  if (debugLvl_ > 0) {
-    std::cout << "delta state : "; deltaState.Print();
-  }
 }
 
 
@@ -1356,10 +1320,6 @@ void RKTrackRep::initArrays() const {
   for (unsigned int i=0; i<7; ++i) // initialize as diagonal matrix
     noiseProjection_[i*8] = 1;
   memset(J_MMT_,      0x00, 7*7*sizeof(double));
-  memset(J_pM_5x7_,   0x00, 5*7*sizeof(double));
-  memset(J_pM_5x6_,   0x00, 5*6*sizeof(double));
-  memset(J_Mp_7x5_,   0x00, 7*5*sizeof(double));
-  memset(J_Mp_6x5_,   0x00, 6*5*sizeof(double));
 
   fJacobian_.UnitMatrix();
   fNoise_.Zero();
@@ -1463,18 +1423,18 @@ void RKTrackRep::transformPM7(const MeasuredStateOnPlane& state,
   pTilde[1] = spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
   pTilde[2] = spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
 
-  calcJ_pM_5x7(U, V, pTilde, spu);
+  M5x7 J_pM;
+  calcJ_pM_5x7(J_pM, U, V, pTilde, spu);
 
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
   // the multiplication can be done much faster directly on array level
   // out = J_pM^T * in5x5 * J_pM
   const M5x5& in5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
-  RKTools::J_pMTxcov5xJ_pM(J_pM_5x7_, in5x5_, out7x7);
-
+  RKTools::J_pMTxcov5xJ_pM(J_pM, in5x5_, out7x7);
 }
 
 
-void RKTrackRep::calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const {
+void RKTrackRep::calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const {
   /*if (debugLvl_ > 1) {
     std::cout << "RKTrackRep::calcJ_pM_5x7 \n";
     std::cout << "  U = "; U.Print();
@@ -1482,6 +1442,8 @@ void RKTrackRep::calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& 
     std::cout << "  pTilde = "; RKTools::printDim(pTilde, 3,1);
     std::cout << "  spu = " << spu << "\n";
   }*/
+
+  memset(J_pM, 0, sizeof(M5x7));
 
   const double pTildeMag = sqrt(pTilde[0]*pTilde[0] + pTilde[1]*pTilde[1] + pTilde[2]*pTilde[2]);
   const double pTildeMag2 = pTildeMag*pTildeMag;
@@ -1492,62 +1454,28 @@ void RKTrackRep::calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& 
   //J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)   (out is 7x7)
 
    // d(x,y,z)/d(u)
-  J_pM_5x7_[21] = U.X(); // [3][0]
-  J_pM_5x7_[22] = U.Y(); // [3][1]
-  J_pM_5x7_[23] = U.Z(); // [3][2]
+  J_pM[21] = U.X(); // [3][0]
+  J_pM[22] = U.Y(); // [3][1]
+  J_pM[23] = U.Z(); // [3][2]
   // d(x,y,z)/d(v)
-  J_pM_5x7_[28] = V.X(); // [4][0]
-  J_pM_5x7_[29] = V.Y(); // [4][1]
-  J_pM_5x7_[30] = V.Z(); // [4][2]
+  J_pM[28] = V.X(); // [4][0]
+  J_pM[29] = V.Y(); // [4][1]
+  J_pM[30] = V.Z(); // [4][2]
   // d(q/p)/d(q/p)
-  J_pM_5x7_[6] = 1.; // not needed for array matrix multiplication
+  J_pM[6] = 1.; // not needed for array matrix multiplication
   // d(ax,ay,az)/d(u')
   double fact = spu / pTildeMag;
-  J_pM_5x7_[10] = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 ); // [1][3]
-  J_pM_5x7_[11] = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 ); // [1][4]
-  J_pM_5x7_[12] = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 ); // [1][5]
+  J_pM[10] = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 ); // [1][3]
+  J_pM[11] = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 ); // [1][4]
+  J_pM[12] = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 ); // [1][5]
   // d(ax,ay,az)/d(v')
-  J_pM_5x7_[17] = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
-  J_pM_5x7_[18] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
-  J_pM_5x7_[19] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
+  J_pM[17] = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
+  J_pM[18] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
+  J_pM[19] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
 
   /*if (debugLvl_ > 1) {
     std::cout << "  J_pM_5x7_ = "; RKTools::printDim(J_pM_5x7_, 5,7);
   }*/
-}
-
-
-void RKTrackRep::calcJ_pM_5x7_orth(const TVector3& U, const TVector3& V) const {
-  if (debugLvl_ > 1) {
-    std::cout << "RKTrackRep::calcJ_pM_5x7_orth \n";
-    std::cout << "  U = "; U.Print();
-    std::cout << "  V = "; V.Print();
-  }
-
-  //J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)   (out is 7x7)
-
-   // d(x,y,z)/d(u)
-  J_pM_5x7_[21] = U.X(); // [3][0]
-  J_pM_5x7_[22] = U.Y(); // [3][1]
-  J_pM_5x7_[23] = U.Z(); // [3][2]
-  // d(x,y,z)/d(v)
-  J_pM_5x7_[28] = V.X(); // [4][0]
-  J_pM_5x7_[29] = V.Y(); // [4][1]
-  J_pM_5x7_[30] = V.Z(); // [4][2]
-  // d(q/p)/d(q/p)
-  J_pM_5x7_[6] = 1.; // not needed for array matrix multiplication
-  // d(ax,ay,az)/d(u')
-  J_pM_5x7_[10] = U.X(); // [1][3]
-  J_pM_5x7_[11] = U.Y(); // [1][4]
-  J_pM_5x7_[12] = U.Z(); // [1][5]
-  // d(ax,ay,az)/d(v')
-  J_pM_5x7_[17] = V.X(); // [2][3]
-  J_pM_5x7_[18] = V.Y(); // [2][4]
-  J_pM_5x7_[19] = V.Z(); // [2][5]
-
-  if (debugLvl_ > 1) {
-    std::cout << "  J_pM_5x7_orth_ = "; RKTools::printDim(J_pM_5x7_, 5,7);
-  }
 }
 
 
@@ -1578,34 +1506,37 @@ void RKTrackRep::transformPM6(const MeasuredStateOnPlane& state,
   const double qop = state5(0);
   const double p = getCharge(state)/qop; // momentum
 
+  M5x6 J_pM_5x6;
+  memset(J_pM_5x6, 0, sizeof(M5x6));
+
   // d(px,py,pz)/d(q/p)
   double fact = -1. * p / (pTildeMag * qop);
-  J_pM_5x6_[3] = fact * pTilde[0]; // [0][3]
-  J_pM_5x6_[4] = fact * pTilde[1]; // [0][4]
-  J_pM_5x6_[5] = fact * pTilde[2]; // [0][5]
+  J_pM_5x6[3] = fact * pTilde[0]; // [0][3]
+  J_pM_5x6[4] = fact * pTilde[1]; // [0][4]
+  J_pM_5x6[5] = fact * pTilde[2]; // [0][5]
   // d(px,py,pz)/d(u')
   fact = p * spu / pTildeMag;
-  J_pM_5x6_[9]  = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 ); // [1][3]
-  J_pM_5x6_[10] = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 ); // [1][4]
-  J_pM_5x6_[11] = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 ); // [1][5]
+  J_pM_5x6[9]  = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 ); // [1][3]
+  J_pM_5x6[10] = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 ); // [1][4]
+  J_pM_5x6[11] = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 ); // [1][5]
   // d(px,py,pz)/d(v')
-  J_pM_5x6_[15] = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
-  J_pM_5x6_[16] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
-  J_pM_5x6_[17] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
+  J_pM_5x6[15] = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
+  J_pM_5x6[16] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
+  J_pM_5x6[17] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
   // d(x,y,z)/d(u)
-  J_pM_5x6_[18] = U.X(); // [3][0]
-  J_pM_5x6_[19] = U.Y(); // [3][1]
-  J_pM_5x6_[20] = U.Z(); // [3][2]
+  J_pM_5x6[18] = U.X(); // [3][0]
+  J_pM_5x6[19] = U.Y(); // [3][1]
+  J_pM_5x6[20] = U.Z(); // [3][2]
   // d(x,y,z)/d(v)
-  J_pM_5x6_[24] = V.X(); // [4][0]
-  J_pM_5x6_[25] = V.Y(); // [4][1]
-  J_pM_5x6_[26] = V.Z(); // [4][2]
+  J_pM_5x6[24] = V.X(); // [4][0]
+  J_pM_5x6[25] = V.Y(); // [4][1]
+  J_pM_5x6[26] = V.Z(); // [4][2]
 
 
   // do the transformation
   // out = J_pM^T * in5x5 * J_pM
   const M5x5& in5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
-  RKTools::J_pMTxcov5xJ_pM(J_pM_5x6_, in5x5_, out6x6);
+  RKTools::J_pMTxcov5xJ_pM(J_pM_5x6, in5x5_, out6x6);
 
 }
 
@@ -1621,18 +1552,19 @@ void RKTrackRep::transformM7P(const M7x7& in7x7,
 
   M1x3& A = *((M1x3*) &state7[3]);
 
-  calcJ_Mp_7x5(U, V, W, A);
+  M5x7 J_Mp;
+  calcJ_Mp_7x5(J_Mp, U, V, W, A);
 
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
   // the multiplication can be done much faster directly on array level
   // out5x5 = J_Mp^T * in * J_Mp
   M5x5& out5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
-  RKTools::J_MpTxcov7xJ_Mp(J_Mp_7x5_, in7x7, out5x5_);
+  RKTools::J_MpTxcov7xJ_Mp(J_Mp, in7x7, out5x5_);
 
 }
 
 
-void RKTrackRep::calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const {
+void RKTrackRep::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const {
 
   /*if (debugLvl_ > 1) {
     std::cout << "RKTrackRep::calcJ_Mp_7x5 \n";
@@ -1642,6 +1574,8 @@ void RKTrackRep::calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVecto
     std::cout << "  A = "; RKTools::printDim(A, 3,1);
   }*/
 
+  memset(J_Mp, 0, sizeof(M7x5));
+
   const double AtU = A[0]*U.X() + A[1]*U.Y() + A[2]*U.Z();
   const double AtV = A[0]*V.X() + A[1]*V.Y() + A[2]*V.Z();
   const double AtW = A[0]*W.X() + A[1]*W.Y() + A[2]*W.Z();
@@ -1650,66 +1584,28 @@ void RKTrackRep::calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVecto
 
   // d(u')/d(ax,ay,az)
   double fact = 1./(AtW*AtW);
-  J_Mp_7x5_[16] = fact * (U.X()*AtW - W.X()*AtU); // [3][1]
-  J_Mp_7x5_[21] = fact * (U.Y()*AtW - W.Y()*AtU); // [4][1]
-  J_Mp_7x5_[26] = fact * (U.Z()*AtW - W.Z()*AtU); // [5][1]
+  J_Mp[16] = fact * (U.X()*AtW - W.X()*AtU); // [3][1]
+  J_Mp[21] = fact * (U.Y()*AtW - W.Y()*AtU); // [4][1]
+  J_Mp[26] = fact * (U.Z()*AtW - W.Z()*AtU); // [5][1]
   // d(v')/d(ax,ay,az)
-  J_Mp_7x5_[17] = fact * (V.X()*AtW - W.X()*AtV); // [3][2]
-  J_Mp_7x5_[22] = fact * (V.Y()*AtW - W.Y()*AtV); // [4][2]
-  J_Mp_7x5_[27] = fact * (V.Z()*AtW - W.Z()*AtV); // [5][2]
+  J_Mp[17] = fact * (V.X()*AtW - W.X()*AtV); // [3][2]
+  J_Mp[22] = fact * (V.Y()*AtW - W.Y()*AtV); // [4][2]
+  J_Mp[27] = fact * (V.Z()*AtW - W.Z()*AtV); // [5][2]
   // d(q/p)/d(q/p)
-  J_Mp_7x5_[30] = 1.; // [6][0]  - not needed for array matrix multiplication
+  J_Mp[30] = 1.; // [6][0]  - not needed for array matrix multiplication
   //d(u)/d(x,y,z)
-  J_Mp_7x5_[3]  = U.X(); // [0][3]
-  J_Mp_7x5_[8]  = U.Y(); // [1][3]
-  J_Mp_7x5_[13] = U.Z(); // [2][3]
+  J_Mp[3]  = U.X(); // [0][3]
+  J_Mp[8]  = U.Y(); // [1][3]
+  J_Mp[13] = U.Z(); // [2][3]
   //d(v)/d(x,y,z)
-  J_Mp_7x5_[4]  = V.X(); // [0][4]
-  J_Mp_7x5_[9]  = V.Y(); // [1][4]
-  J_Mp_7x5_[14] = V.Z(); // [2][4]
+  J_Mp[4]  = V.X(); // [0][4]
+  J_Mp[9]  = V.Y(); // [1][4]
+  J_Mp[14] = V.Z(); // [2][4]
 
   /*if (debugLvl_ > 1) {
-    std::cout << "  J_Mp_7x5_ = "; RKTools::printDim(J_Mp_7x5_, 7,5);
+    std::cout << "  J_Mp_7x5_ = "; RKTools::printDim(J_Mp, 7,5);
   }*/
 
-}
-
-
-void RKTrackRep::calcJ_Mp_7x5_orth(const TVector3& U, const TVector3& V) const
-{
-  // Same as before, but now the plane is orthogonal to the track.
-  if (debugLvl_ > 1) {
-    std::cout << "RKTrackRep::calcJ_Mp_7x5_orth \n";
-    std::cout << "  U = "; U.Print();
-    std::cout << "  V = "; V.Print();
-  }
-
-  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)   (in is 7x7)
-
-  // d(u')/d(ax,ay,az)
-  J_Mp_7x5_[3*5+1] = U.X();
-  J_Mp_7x5_[4*5+1] = U.Y();
-  J_Mp_7x5_[5*5+1] = U.Z();
-
-  // d(v')/d(ax,ay,az)
-  J_Mp_7x5_[3*5+2] = V.X();
-  J_Mp_7x5_[4*5+2] = V.Y();
-  J_Mp_7x5_[5*5+2] = V.Z();
-
-  // d(q/p)/d(q/p)
-  J_Mp_7x5_[6*5+0] = 1.; // not needed for array matrix multiplication
-  //d(u)/d(x,y,z)
-  J_Mp_7x5_[0*5+3] = U.X();
-  J_Mp_7x5_[1*5+3] = U.Y();
-  J_Mp_7x5_[2*5+3] = U.Z();
-  //d(v)/d(x,y,z)
-  J_Mp_7x5_[0*5+4] = V.X();
-  J_Mp_7x5_[1*5+4] = V.Y();
-  J_Mp_7x5_[2*5+4] = V.Z();
-
-  if (debugLvl_ > 1) {
-    std::cout << "  J_Mp_7x5_orth = "; RKTools::printDim(J_Mp_7x5_, 7,5);
-  }
 }
 
 
@@ -1731,33 +1627,36 @@ void RKTrackRep::transformM6P(const M6x6& in6x6,
   const double qop = state7[6];
   const double p = getCharge(state)/qop; // momentum
 
+  M6x5 J_Mp_6x5;
+  memset(J_Mp_6x5, 0, sizeof(M6x5));
+
   //d(u)/d(x,y,z)
-  J_Mp_6x5_[3]  = U.X(); // [0][3]
-  J_Mp_6x5_[8]  = U.Y(); // [1][3]
-  J_Mp_6x5_[13] = U.Z(); // [2][3]
+  J_Mp_6x5[3]  = U.X(); // [0][3]
+  J_Mp_6x5[8]  = U.Y(); // [1][3]
+  J_Mp_6x5[13] = U.Z(); // [2][3]
   //d(v)/d(x,y,z)
-  J_Mp_6x5_[4]  = V.X(); // [0][4]
-  J_Mp_6x5_[9]  = V.Y(); // [1][4]
-  J_Mp_6x5_[14] = V.Z(); // [2][4]
+  J_Mp_6x5[4]  = V.X(); // [0][4]
+  J_Mp_6x5[9]  = V.Y(); // [1][4]
+  J_Mp_6x5[14] = V.Z(); // [2][4]
   // d(q/p)/d(px,py,pz)
   double fact = (-1.) * qop / p;
-  J_Mp_6x5_[15] = fact * state7[3]; // [3][0]
-  J_Mp_6x5_[20] = fact * state7[4]; // [4][0]
-  J_Mp_6x5_[25] = fact * state7[5]; // [5][0]
+  J_Mp_6x5[15] = fact * state7[3]; // [3][0]
+  J_Mp_6x5[20] = fact * state7[4]; // [4][0]
+  J_Mp_6x5[25] = fact * state7[5]; // [5][0]
   // d(u')/d(px,py,pz)
   fact = 1./(p*AtW*AtW);
-  J_Mp_6x5_[16] = fact * (U.X()*AtW - W.X()*AtU); // [3][1]
-  J_Mp_6x5_[21] = fact * (U.Y()*AtW - W.Y()*AtU); // [4][1]
-  J_Mp_6x5_[26] = fact * (U.Z()*AtW - W.Z()*AtU); // [5][1]
+  J_Mp_6x5[16] = fact * (U.X()*AtW - W.X()*AtU); // [3][1]
+  J_Mp_6x5[21] = fact * (U.Y()*AtW - W.Y()*AtU); // [4][1]
+  J_Mp_6x5[26] = fact * (U.Z()*AtW - W.Z()*AtU); // [5][1]
   // d(v')/d(px,py,pz)
-  J_Mp_6x5_[17] = fact * (V.X()*AtW - W.X()*AtV); // [3][2]
-  J_Mp_6x5_[22] = fact * (V.Y()*AtW - W.Y()*AtV); // [4][2]
-  J_Mp_6x5_[27] = fact * (V.Z()*AtW - W.Z()*AtV); // [5][2]
+  J_Mp_6x5[17] = fact * (V.X()*AtW - W.X()*AtV); // [3][2]
+  J_Mp_6x5[22] = fact * (V.Y()*AtW - W.Y()*AtV); // [4][2]
+  J_Mp_6x5[27] = fact * (V.Z()*AtW - W.Z()*AtV); // [5][2]
 
   // do the transformation
   // out5x5 = J_Mp^T * in * J_Mp
   M5x5& out5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
-  RKTools::J_MpTxcov6xJ_Mp(J_Mp_6x5_, in6x6, out5x5_);
+  RKTools::J_MpTxcov6xJ_Mp(J_Mp_6x5, in6x6, out5x5_);
 
 }
 
@@ -2312,8 +2211,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
   }
 
 
-  DetPlane intermediatePlane;
-
+  M1x7 startState7;
+  memcpy(startState7, state7, sizeof(M1x7));
 
   while(true){
 
@@ -2418,38 +2317,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       ExtrapSteps_.push_back(defaultExtrapStep);
       std::vector<ExtrapStep>::iterator lastStep = ExtrapSteps_.end() - 1;
 
-      // calc J_Mp for later calculation of 5D Jacobian
-      if (numIt == 1) { // first iteration
-        M1x3 pTilde = {oldState7[3], oldState7[4], oldState7[5]};
-        const TVector3& normal = startPlane.getNormal();
-        double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
-        double spu = pTildeW > 0 ? 1 : -1;
-        for (unsigned int i=0; i<3; ++i) {
-	  pTilde[i] *= spu/pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
-	}
-        calcJ_pM_5x7(startPlane.getU(), startPlane.getV(), pTilde, spu);
-      } else {
-	// the intermediate plane (from the previous iteration) is
-	// orthogonal to the track before the extrapolation.
-        calcJ_pM_5x7_orth(intermediatePlane.getU(), intermediatePlane.getV());
-      }
-
-      // calc J_pM
-      if (atPlane) {
-        if (!checkJacProj) {
-          Exception exc("RKTrackRep::Extrap ==> checkJacProj is false",__LINE__,__FILE__);
-          exc.setFatal();
-          throw exc;
-        }
-        calcJ_Mp_7x5(destPlane.getU(), destPlane.getV(), W, *((M1x3*) &state7[3]));
-      }
-      else {
-        intermediatePlane.setON(TVector3(state7[0], state7[1], state7[2]), TVector3(state7[3], state7[4], state7[5]));
-        calcJ_Mp_7x5_orth(intermediatePlane.getU(), intermediatePlane.getV());
-      }
-
-      // Project covariance down to 5D
-      RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp_7x5_, J_MMT_, J_pM_5x7_, lastStep->jac_);
+      // Store Jacobian of this step for final calculation.
+      memcpy(lastStep->jac7_, J_MMT_, sizeof(M7x7));
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane
@@ -2461,20 +2330,14 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         }
       }
 
-      // Project noise down to 5D
-      RKTools::J_MpTxcov7xJ_Mp(J_Mp_7x5_, noiseArray_, lastStep->noise_);
-
-      if (debugLvl_ > 1) {
-        std::cout << "noise projected to 5D: \n";
-        RKTools::printDim(lastStep->noise_, 5, 5);
-      }
-
+      // Store this step's noise for final calculation.
+      memcpy(lastStep->noise7_, noiseArray_, sizeof(M7x7));
 
       if (debugLvl_ > 2) {
         std::cout<<"ExtrapSteps \n";
         for (std::vector<ExtrapStep>::iterator it = ExtrapSteps_.begin(); it != ExtrapSteps_.end(); ++it){
-          std::cout << "5D Jacobian: "; RKTools::printDim((it->jac_), 5,5);
-          std::cout << "5D noise:    "; RKTools::printDim((it->noise_), 5,5);
+          std::cout << "7D Jacobian: "; RKTools::printDim((it->jac7_), 5,5);
+          std::cout << "7D noise:    "; RKTools::printDim((it->noise7_), 5,5);
         }
         std::cout<<"\n";
       }
@@ -2513,7 +2376,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
   if (fillExtrapSteps) {
     // propagate cov and add noise
-    calcForwardJacobianAndNoise();
+    calcForwardJacobianAndNoise(startState7, startPlane, state7, destPlane);
 
     if (cov != NULL) {
       cov->Similarity(fJacobian_);

@@ -50,12 +50,12 @@ struct RKStep {
  * @brief Helper for RKTrackRep
  */
 struct ExtrapStep {
-  M5x5 jac_; // 5D jacobian of transport
-  M5x5 noise_; // 5D noise matrix
+  M7x7 jac7_; // 5D jacobian of transport
+  M7x7 noise7_; // 5D noise matrix
 
   ExtrapStep() {
-    memset(jac_,   0x00, 5*5*sizeof(double));
-    memset(noise_, 0x00, 5*5*sizeof(double));
+    memset(jac7_,   0, sizeof(M7x7));
+    memset(noise7_, 0, sizeof(M7x7));
   }
 };
 
@@ -198,8 +198,7 @@ class RKTrackRep : public AbsTrackRep {
   void transformPM7(const MeasuredStateOnPlane& state,
                     M7x7& out7x7) const;
 
-  void calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
-  void calcJ_pM_5x7_orth(const TVector3& U, const TVector3& V) const;
+  void calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
 
   void transformPM6(const MeasuredStateOnPlane& state,
                     M6x6& out6x6) const;
@@ -208,10 +207,10 @@ class RKTrackRep : public AbsTrackRep {
                     const M1x7& state7,
                     MeasuredStateOnPlane& state) const; // plane must already be set!
 
-  void calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const;
-  void calcJ_Mp_7x5_orth(const TVector3& U, const TVector3& V) const;
+  void calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const;
 
-  void calcForwardJacobianAndNoise() const;
+  void calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
+				   const M1x7& destState7, const DetPlane& destPlane) const;
 
   void transformM6P(const M6x6& in6x6,
                     const M1x7& state7,
@@ -294,12 +293,6 @@ class RKTrackRep : public AbsTrackRep {
   mutable M7x7 noiseArray_; //! noise matrix of the last extrapolation
   mutable M7x7 noiseProjection_; //!
   mutable M7x7 J_MMT_; //!
-  // needed in transform...
-  mutable M5x7 J_pM_5x7_; //!  // FIXME this is actually (J_Mp)^T
-  mutable M5x6 J_pM_5x6_; //!  // FIXME this is actually (J_Mp)^T
-  mutable M7x5 J_Mp_7x5_; //!  // FIXME this is actually (J_pM)^T
-  mutable M6x5 J_Mp_6x5_; //!  // FIXME this is actually (J_pM)^T
-
 
  public:
 
