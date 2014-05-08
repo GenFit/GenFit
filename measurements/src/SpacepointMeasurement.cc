@@ -30,15 +30,17 @@
 namespace genfit {
 
 SpacepointMeasurement::SpacepointMeasurement(int nDim)
-  : AbsMeasurement(nDim), weightedPlaneContruction_(false)
+  : AbsMeasurement(nDim), weightedPlaneContruction_(true), G_(3), cutCov_(true)
 {
   assert(nDim >= 3);
 
   //this->initG();
 }
 
-SpacepointMeasurement::SpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint, bool weightedPlaneContruction)
-  : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), weightedPlaneContruction_(weightedPlaneContruction)
+SpacepointMeasurement::SpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint,
+    bool weightedPlaneContruction, bool cutCov)
+  : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint),
+    weightedPlaneContruction_(weightedPlaneContruction), cutCov_(cutCov)
 {
   assert(rawHitCoords_.GetNrows() >= 3);
 
@@ -85,11 +87,13 @@ std::vector<MeasurementOnPlane*> SpacepointMeasurement::constructMeasurementsOnP
          (rawHitCoords_(1)-o.Y()) * v.Y() +
          (rawHitCoords_(2)-o.Z()) * v.Z();
 
-
+  //
   // V
-  TMatrixD jac(3,2);
+  //
+  V = rawHitCov_;
 
   // jac = dF_i/dx_j = s_unitvec * t_untivec, with s=u,v and t=x,y,z
+  TMatrixD jac(3,2);
   jac(0,0) = u.X();
   jac(1,0) = u.Y();
   jac(2,0) = u.Z();
@@ -97,8 +101,14 @@ std::vector<MeasurementOnPlane*> SpacepointMeasurement::constructMeasurementsOnP
   jac(1,1) = v.Y();
   jac(2,1) = v.Z();
 
-  V = rawHitCov_;
-  V.SimilarityT(jac);
+  if (cutCov_) { // cut (default)
+    tools::invertMatrix(V);
+    V.SimilarityT(jac);
+    tools::invertMatrix(V);
+  }
+  else { // projection
+    V.SimilarityT(jac);
+  }
 
   std::vector<MeasurementOnPlane*> retVal;
   retVal.push_back(mop);

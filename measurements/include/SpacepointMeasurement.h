@@ -47,7 +47,8 @@ class SpacepointMeasurement : public AbsMeasurement {
 
  public:
   SpacepointMeasurement(int nDim = 3);
-  SpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint, bool weightedPlaneContruction = false);
+  SpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint,
+      bool weightedPlaneContruction = true, bool cutCov = true);
 
   virtual ~SpacepointMeasurement() {;}
 
@@ -73,10 +74,11 @@ class SpacepointMeasurement : public AbsMeasurement {
 
   void initG();
 
-  bool weightedPlaneContruction_;
+  bool weightedPlaneContruction_; // false: use POCA to construct DetPlane. true: Use metric G to construct POCA (default)
   TMatrixDSym G_; //! inverse of 3x3 cov
+  bool cutCov_; // false: project 3D cov onto DetPlane. true: cut 3D cov with DetPlane (default)
 
-  ClassDef(SpacepointMeasurement,2)
+  ClassDef(SpacepointMeasurement,3)
 };
 
 } /* End of namespace genfit */
