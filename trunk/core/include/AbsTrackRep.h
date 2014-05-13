@@ -51,6 +51,7 @@ struct MatStep {
 
 class StateOnPlane;
 class MeasuredStateOnPlane;
+class AbsMeasurement;
 
 /**
  * @brief Abstract base class for a track representation
@@ -209,6 +210,12 @@ class AbsTrackRep : public TObject {
       double step,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const = 0;
+
+  //! extrapolate to an AbsMeasurement
+  double extrapolateToMeasurement(StateOnPlane& state,
+      const AbsMeasurement* measurement,
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const;
 
   //! Get the dimension of the state vector used by the track representation.
   virtual unsigned int getDim() const = 0;
