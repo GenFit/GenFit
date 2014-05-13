@@ -96,6 +96,10 @@ class StateOnPlane : public TObject {
   double extrapolateBy(double step,
         bool stopAtBoundary = false,
         bool calcJacobianNoise = false) {return rep_->extrapolateBy(*this, step, stopAtBoundary, calcJacobianNoise);}
+  double extrapolateToMeasurement(const AbsMeasurement* measurement,
+        bool stopAtBoundary = false,
+        bool calcJacobianNoise = false) {return rep_->extrapolateToMeasurement(*this, measurement, stopAtBoundary, calcJacobianNoise);}
+
 
   TVector3 getPos() const {return rep_->getPos(*this);}
   TVector3 getMom() const {return rep_->getMom(*this);}

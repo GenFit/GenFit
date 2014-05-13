@@ -19,6 +19,7 @@
 
 #include "AbsTrackRep.h"
 #include "StateOnPlane.h"
+#include "AbsMeasurement.h"
 
 #include <TDatabasePDG.h>
 
@@ -43,6 +44,15 @@ AbsTrackRep::AbsTrackRep(const AbsTrackRep& rep) :
   TObject(rep), pdgCode_(rep.pdgCode_), propDir_(rep.propDir_), debugLvl_(rep.debugLvl_)
 {
   ;
+}
+
+
+double AbsTrackRep::extrapolateToMeasurement(StateOnPlane& state,
+    const AbsMeasurement* measurement,
+    bool stopAtBoundary,
+    bool calcJacobianNoise) const {
+
+  return this->extrapolateToPlane(state, measurement->constructPlane(state), stopAtBoundary, calcJacobianNoise);
 }
 
 
