@@ -209,7 +209,8 @@ class Track : public TObject {
   bool sort();
 
   //! Try to set the fitted state as seed. Return if it was successfull.
-  bool udpateSeed(int id = 0, const AbsTrackRep* rep = NULL, bool biased = true);
+  //! Adapt the sign of all TrackReps' pdg to the actual fitted charge.
+  bool udpateSeed(int id = 0, AbsTrackRep* rep = NULL, bool biased = true);
 
   //! Flip the ordering of the TrackPoints
   void reverseTrackPoints();
@@ -219,10 +220,14 @@ class Track : public TObject {
     stateSeed_(3) *= -1; stateSeed_(4) *= -1; stateSeed_(5) *= -1;
   }
 
+  //! Switch the pdg signs of specified rep (of all reps if rep == NULL).
+  void switchPDGSigns(AbsTrackRep* rep = NULL);
+
   //! Make track ready to be fitted in reverse direction
   /**
    * Flip the order of TrackPoints and the momentum direction of the seed state.
    * If possible, take the smoothed state of the last hit as new seed state.
+   * Flip charge of the TrackReps.
    */
   void reverseTrack();
 
