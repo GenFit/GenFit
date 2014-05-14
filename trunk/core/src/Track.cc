@@ -625,11 +625,19 @@ bool Track::sort() {
 }
 
 
-bool Track::udpateSeed(int id, const AbsTrackRep* rep, bool biased) {
+bool Track::udpateSeed(int id, AbsTrackRep* rep, bool biased) {
   try {
     const MeasuredStateOnPlane& fittedState = getFittedState(id, rep, biased);
     setStateSeed(fittedState.get6DState());
     setCovSeed(fittedState.get6DCov());
+
+    double fittedCharge = fittedState.getCharge();
+
+    for (unsigned int i = 0; i<trackReps_.size(); ++i) {
+      if (trackReps_[i]->getPDGCharge() * fittedCharge < 0) {
+        trackReps_[i]->switchPDGSign();
+      }
+    }
   }
   catch (Exception& e) {
     // in this case the original track seed will be used
@@ -651,9 +659,22 @@ void Track::reverseTrackPoints() {
 }
 
 
+void Track::switchPDGSigns(AbsTrackRep* rep) {
+  if (rep != NULL) {
+    rep->switchPDGSign();
+    return;
+  }
+
+  for (unsigned int i = 0; i<trackReps_.size(); ++i) {
+    trackReps_[i]->switchPDGSign();
+  }
+}
+
+
 void Track::reverseTrack() {
   udpateSeed(-1); // set fitted state of last hit as new seed
   reverseMomSeed(); // flip momentum direction
+  switchPDGSigns();
   reverseTrackPoints(); // also deletes all fitterInfos
 }
 
