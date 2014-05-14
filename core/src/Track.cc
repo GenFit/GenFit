@@ -625,6 +625,20 @@ bool Track::sort() {
 }
 
 
+bool Track::udpateSeed(int id, const AbsTrackRep* rep, bool biased) {
+  try {
+    const MeasuredStateOnPlane& fittedState = getFittedState(id, rep, biased);
+    setStateSeed(fittedState.get6DState());
+    setCovSeed(fittedState.get6DCov());
+  }
+  catch (Exception& e) {
+    // in this case the original track seed will be used
+    return false;
+  }
+  return true;
+}
+
+
 void Track::reverseTrackPoints() {
 
   std::reverse(trackPoints_.begin(),trackPoints_.end());
@@ -634,6 +648,13 @@ void Track::reverseTrackPoints() {
   deleteReferenceInfo(0, -1);
 
   fillPointsWithMeasurement();
+}
+
+
+void Track::reverseTrack() {
+  udpateSeed(-1); // set fitted state of last hit as new seed
+  reverseMomSeed(); // flip momentum direction
+  reverseTrackPoints(); // also deletes all fitterInfos
 }
 
 

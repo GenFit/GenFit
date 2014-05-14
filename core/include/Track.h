@@ -208,8 +208,24 @@ class Track : public TObject {
    */
   bool sort();
 
+  //! Try to set the fitted state as seed. Return if it was successfull.
+  bool udpateSeed(int id = 0, const AbsTrackRep* rep = NULL, bool biased = true);
+
   //! Flip the ordering of the TrackPoints
   void reverseTrackPoints();
+
+  //! Flip direction of momentum seed
+  void reverseMomSeed() {
+    stateSeed_(3) *= -1; stateSeed_(4) *= -1; stateSeed_(5) *= -1;
+  }
+
+  //! Make track ready to be fitted in reverse direction
+  /**
+   * Flip the order of TrackPoints and the momentum direction of the seed state.
+   * If possible, take the smoothed state of the last hit as new seed state.
+   */
+  void reverseTrack();
+
 
   void deleteForwardInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
   void deleteBackwardInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
