@@ -255,6 +255,9 @@ class AbsTrackRep : public TObject {
   //! Get the pdg code.
   int getPDG() const {return pdgCode_;}
 
+  //! Get the charge of the particle of the pdg code
+  double getPDGCharge() const;
+
   /**
    * @brief Get the (fitted) charge of a state.
    * This is not always equal the pdg charge (e.g. if the charge sign was flipped during the fit).
@@ -290,6 +293,9 @@ class AbsTrackRep : public TObject {
   void calcJacobianNumerically(const genfit::StateOnPlane& origState,
                                    const genfit::SharedPlanePtr destPlane,
                                    TMatrixD& jacobian) const;
+
+  //! try to multiply pdg code with -1. (Switch from particle to anti-particle and vice versa).
+  bool switchPDGSign();
 
   //! Set position and momentum of state.
   virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const = 0;

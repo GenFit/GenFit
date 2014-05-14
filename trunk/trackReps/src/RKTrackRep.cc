@@ -25,7 +25,6 @@
 #include <MeasuredStateOnPlane.h>
 #include <MeasurementOnPlane.h>
 
-#include <TDatabasePDG.h>
 #include <TDecompLU.h>
 #include <TMath.h>
 
@@ -700,9 +699,7 @@ double RKTrackRep::getCharge(const StateOnPlane& state) const {
     throw exc;
   }
 
-  TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(pdgCode_);
-  assert(particle != NULL);
-  double pdgCharge = particle->Charge()/(3.);
+  double pdgCharge = getPDGCharge();
 
   // return pdgCharge with sign of q/p
   if (state.getState()(0) * pdgCharge < 0)
