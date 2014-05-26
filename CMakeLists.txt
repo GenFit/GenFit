@@ -25,7 +25,7 @@ LIST( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 INCLUDE(settings)
 INCLUDE(macros)
 
-FIND_PACKAGE(ROOT 5.28 REQUIRED COMPONENTS Geom)
+FIND_PACKAGE(ROOT REQUIRED COMPONENTS Geom)
 
 
 # either, the environment variable RAVEPATH has to be specified, and RAVE's pkgConfig will be used to determine everything we need
