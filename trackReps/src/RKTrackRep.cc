@@ -957,6 +957,12 @@ void RKTrackRep::setPosMom(StateOnPlane& state, const TVector3& pos, const TVect
     throw exc;
   }
 
+  if (mom.Mag2() == 0) {
+    Exception exc("RKTrackRep::setPosMom - momentum is 0",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+
   // init auxInfo if that has not yet happened
   TVectorD& auxInfo = state.getAuxInfo();
   if (auxInfo.GetNrows() != 1) {
