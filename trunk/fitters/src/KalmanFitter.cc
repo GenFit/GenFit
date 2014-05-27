@@ -220,7 +220,10 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
       bool finished(false);
       if (nIt >= minIterations_ && fabs(oldPvalBW - PvalBW) < deltaPval_)  {
         // if pVal ~ 0, check if chi2 has changed significantly
-        if (fabs(1 - fabs(oldChi2BW / chi2BW)) > relChi2Change_) {
+        if (chi2BW == 0) {
+          finished = false;
+        }
+        else if (fabs(1 - fabs(oldChi2BW / chi2BW)) > relChi2Change_) {
           finished = false;
         }
         else {
