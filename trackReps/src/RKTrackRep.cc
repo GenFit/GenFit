@@ -1818,7 +1818,10 @@ bool RKTrackRep::RKutta(const M1x4& SU,
     }
 
     // check if total angle is bigger than AngleMax. Can happen if a curler should be fitted and it does not hit the active area of the next plane.
-    deltaAngle += acos(ABefore[0]*A[0] + ABefore[1]*A[1] + ABefore[2]*A[2]);
+    double arg = ABefore[0]*A[0] + ABefore[1]*A[1] + ABefore[2]*A[2];
+    arg = arg > 1 ? 1 : arg;
+    arg = arg < -1 ? -1 : arg;
+    deltaAngle += acos(arg);
     if (fabs(deltaAngle) > AngleMax){
       std::ostringstream sstream;
       sstream << "RKTrackRep::RKutta ==> Do not get to an active plane! Already extrapolated " << deltaAngle * 180 / TMath::Pi() << "°.";
