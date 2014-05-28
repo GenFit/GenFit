@@ -23,6 +23,9 @@
 #include "KalmanFitterInfo.h"
 #include "KalmanFitStatus.h"
 #include "PlanarMeasurement.h"
+#include "WireMeasurement.h"
+
+#include "WireTrackCandHit.h"
 
 #include <algorithm>
 #include <iostream>
@@ -39,14 +42,14 @@
 namespace genfit {
 
 Track::Track() :
-  cardinalRep_(0), fitStatuses_(), stateSeed_(6), covSeed_(6)
+  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), stateSeed_(6), covSeed_(6)
 {
   ;
 }
 
 
 Track::Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMeasurement>& factory, AbsTrackRep* rep) :
-  cardinalRep_(0), fitStatuses_(), stateSeed_(6), covSeed_(6)
+  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), stateSeed_(6), covSeed_(6)
 {
 
   if (rep != NULL)
@@ -79,6 +82,8 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMea
   // initial guess for cov
   covSeed_ = trackCand.getCovSeed();
 
+  mcTrackId_ = trackCand.getMcTrackId();
+
   // fill cache
   fillPointsWithMeasurement();
 
@@ -88,7 +93,7 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMea
 
 
 Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
-  cardinalRep_(0), fitStatuses_(), stateSeed_(stateSeed),
+  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), stateSeed_(stateSeed),
   covSeed_(TMatrixDSym::kUnit, TMatrixDSym(6))
 {
   addTrackRep(trackRep);
@@ -96,7 +101,7 @@ Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
 
 
 Track::Track(AbsTrackRep* trackRep, const TVector3& posSeed, const TVector3& momSeed) :
-  cardinalRep_(0), fitStatuses_(), stateSeed_(6),
+  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), stateSeed_(6),
   covSeed_(TMatrixDSym::kUnit, TMatrixDSym(6))
 {
   addTrackRep(trackRep);
@@ -105,7 +110,7 @@ Track::Track(AbsTrackRep* trackRep, const TVector3& posSeed, const TVector3& mom
 
 
 Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym& covSeed) :
-  cardinalRep_(0), fitStatuses_(), stateSeed_(stateSeed), covSeed_(covSeed)
+  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), stateSeed_(stateSeed), covSeed_(covSeed)
 {
   addTrackRep(trackRep);
 }
@@ -113,7 +118,7 @@ Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym
 
 Track::Track(const Track& rhs) :
   TObject(rhs),
-  cardinalRep_(rhs.cardinalRep_), stateSeed_(rhs.stateSeed_), covSeed_(rhs.covSeed_)
+  cardinalRep_(rhs.cardinalRep_), mcTrackId_(rhs.mcTrackId_), stateSeed_(rhs.stateSeed_), covSeed_(rhs.covSeed_)
 {
   assert(rhs.checkConsistency());
 
@@ -162,6 +167,7 @@ void Track::swap(Track& other) {
   std::swap(this->trackPoints_, other.trackPoints_);
   std::swap(this->trackPointsWithMeasurement_, other.trackPointsWithMeasurement_);
   std::swap(this->fitStatuses_, other.fitStatuses_);
+  std::swap(this->mcTrackId_, other.mcTrackId_);
   std::swap(this->stateSeed_, other.stateSeed_);
   std::swap(this->covSeed_, other.covSeed_);
 
@@ -191,8 +197,10 @@ void Track::Clear(Option_t*)
 
   cardinalRep_ = 0;
 
-  stateSeed_ *= 0;
-  covSeed_ *= 0;
+  mcTrackId_ = -1;
+
+  stateSeed_.Zero();
+  covSeed_.Zero();
 }
 
 
@@ -870,6 +878,42 @@ double Track::getTrackLen(AbsTrackRep* rep, int startId, int endId) const {
     trackLen *= -1.;
 
   return trackLen;
+}
+
+
+TrackCand* Track::constructTrackCand() const {
+  TrackCand* cand = new TrackCand();
+
+  cand->set6DSeedAndPdgCode(stateSeed_, getCardinalRep()->getPDG());
+  cand->setCovSeed(covSeed_);
+  cand->setMcTrackId(mcTrackId_);
+
+  for (unsigned int i = 0; i < trackPointsWithMeasurement_.size(); ++i) {
+    const TrackPoint* tp = trackPointsWithMeasurement_[i];
+    const std::vector< genfit::AbsMeasurement* >& measurements = tp->getRawMeasurements();
+
+    for (unsigned int j = 0; j < measurements.size(); ++j) {
+      const AbsMeasurement* m = measurements[j];
+      TrackCandHit* tch;
+
+      int planeId = -1;
+      if (dynamic_cast<const PlanarMeasurement*>(m)) {
+        planeId = static_cast<const PlanarMeasurement*>(m)->getPlaneId();
+      }
+
+      if (dynamic_cast<const WireMeasurement*>(m)) {
+        tch = new WireTrackCandHit(m->getDetId(), m->getHitId(), planeId,
+            tp->getSortingParameter(), static_cast<const WireMeasurement*>(m)->getLeftRightResolution());
+      }
+      else {
+        tch = new TrackCandHit(m->getDetId(), m->getHitId(), planeId,
+            tp->getSortingParameter());
+      }
+      cand->addHit(tch);
+    }
+  }
+
+  return cand;
 }
 
 

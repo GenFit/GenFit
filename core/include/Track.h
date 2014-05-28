@@ -140,6 +140,9 @@ class Track : public TObject {
   AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_);}
   unsigned int getCardinalRepId() const {return cardinalRep_;}
 
+  //! Get the MCT track id, for MC simulations - default value = -1
+  int getMcTrackId() const {return mcTrackId_;}
+
   //! Check if track has a FitStatus for given AbsTrackRep. Per default, check for cardinal rep.
   bool hasFitStatus(const AbsTrackRep* rep = NULL) const;
   //! Get FitStatus for a AbsTrackRep. Per default, return FitStatus for cardinalRep.
@@ -158,6 +161,9 @@ class Track : public TObject {
 
   const TMatrixDSym& getCovSeed() const {return covSeed_;}
   void setCovSeed(const TMatrixDSym& c) {covSeed_.ResizeTo(c); covSeed_ = c;}
+
+  //! Set the MCT track id, for MC simulations
+  void setMcTrackId(int i) {mcTrackId_ = i;}
 
   /**
    * @brief Insert TrackPoint BEFORE TrackPoint with position id, if id >= 0.
@@ -243,6 +249,15 @@ class Track : public TObject {
   //! get time of flight in ns between to trackPoints (if NULL, for cardinal rep)
   double getTOF(AbsTrackRep* rep = NULL, int startId = 0, int endId = -1) const;
 
+  //! Construct a new TrackCand containing the hit IDs of the measurements
+  /**
+   * The idea is hat you can get a TrackCand for storing the hit IDs after a track has been fitted.
+   * His could have been reordered, added or removed, so that the original TackCand no longer
+   * represents the Track correctly.
+   * You might want to call determineCardinalRep() and/or udpateSeed() before.
+   */
+  TrackCand* constructTrackCand() const;
+
   //! Helper function: For all KalmanFitterInfos belonging to rep (if NULL, for all reps),
   //! call the fixWeights() function, so that e.g. the DAF will not alter weights anymore.
   void fixWeights(AbsTrackRep* rep = NULL, int startId = 0, int endId = -1);
@@ -281,12 +296,13 @@ class Track : public TObject {
 
   std::map< const AbsTrackRep*, FitStatus* > fitStatuses_; // Ownership over FitStatus*
 
+  int mcTrackId_; /**< if MC simulation, store the mc track id here */
   TVectorD stateSeed_; // 6D: position, momentum
   TMatrixDSym covSeed_; // 6D
 
 
  public:
-  ClassDef(Track,1)
+  ClassDef(Track,2)
 
 };
 
