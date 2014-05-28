@@ -721,68 +721,136 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
           // draw spacepoint hits -----------------------------------------------------------
           if(space_hit) {
+            {
+              // get eigenvalues of covariance to know how to draw the ellipsoid ------------
+              TMatrixDEigen eigen_values(m->getRawHitCov());
+              TEveGeoShape* cov_shape = new TEveGeoShape("cov_shape");
+              cov_shape->IncDenyDestroy();
+              cov_shape->SetShape(new TGeoSphere(0.,1.));
+              TMatrixT<double> ev = eigen_values.GetEigenValues();
+              TMatrixT<double> eVec = eigen_values.GetEigenVectors();
+              TVector3 eVec1(eVec(0,0),eVec(1,0),eVec(2,0));
+              TVector3 eVec2(eVec(0,1),eVec(1,1),eVec(2,1));
+              TVector3 eVec3(eVec(0,2),eVec(1,2),eVec(2,2));
+              const TVector3 norm = u.Cross(v);
+              // got everything we need -----------------------------------------------------
 
-            // get eigenvalues of covariance to know how to draw the ellipsoid ------------
-            TMatrixDEigen eigen_values(m->getRawHitCov());
-            TEveGeoShape* cov_shape = new TEveGeoShape("cov_shape");
-            cov_shape->IncDenyDestroy();
-            cov_shape->SetShape(new TGeoSphere(0.,1.));
-            TMatrixT<double> ev = eigen_values.GetEigenValues();
-            TMatrixT<double> eVec = eigen_values.GetEigenVectors();
-            TVector3 eVec1(eVec(0,0),eVec(1,0),eVec(2,0));
-            TVector3 eVec2(eVec(0,1),eVec(1,1),eVec(2,1));
-            TVector3 eVec3(eVec(0,2),eVec(1,2),eVec(2,2));
-            TVector3 norm = u.Cross(v);
-            // got everything we need -----------------------------------------------------
+              static const double radDeg(180./TMath::Pi());
+              TGeoRotation det_rot("det_rot", eVec1.Theta()*radDeg, eVec1.Phi()*radDeg,
+                  eVec2.Theta()*radDeg, eVec2.Phi()*radDeg,
+                  eVec3.Theta()*radDeg, eVec3.Phi()*radDeg);
 
+              if (! det_rot.IsValid()){
+                // hackish fix if eigenvectors are not orthonogonal
+                if (fabs(eVec2*eVec3) > 1.e-10)
+                  eVec3 = eVec1.Cross(eVec2);
 
-            TGeoRotation det_rot("det_rot", (eVec1.Theta()*180)/TMath::Pi(), (eVec1.Phi()*180)/TMath::Pi(),
-                (eVec2.Theta()*180)/TMath::Pi(), (eVec2.Phi()*180)/TMath::Pi(),
-                (eVec3.Theta()*180)/TMath::Pi(), (eVec3.Phi()*180)/TMath::Pi()); // the rotation is already clear
+                det_rot.SetAngles(eVec1.Theta()*radDeg, eVec1.Phi()*radDeg,
+                    eVec2.Theta()*radDeg, eVec2.Phi()*radDeg,
+                    eVec3.Theta()*radDeg, eVec3.Phi()*radDeg);
+              }
 
-            // set the scaled eigenvalues -------------------------------------------------
-            double pseudo_res_0 = errorScale_*std::sqrt(ev(0,0));
-            double pseudo_res_1 = errorScale_*std::sqrt(ev(1,1));
-            double pseudo_res_2 = errorScale_*std::sqrt(ev(2,2));
-            if(drawScaleMan_) { // override again if necessary
-              pseudo_res_0 = errorScale_*0.5;
-              pseudo_res_1 = errorScale_*0.5;
-              pseudo_res_2 = errorScale_*0.5;
-            }
-            // finished scaling -----------------------------------------------------------
+              // set the scaled eigenvalues -------------------------------------------------
+              double pseudo_res_0 = errorScale_*std::sqrt(ev(0,0));
+              double pseudo_res_1 = errorScale_*std::sqrt(ev(1,1));
+              double pseudo_res_2 = errorScale_*std::sqrt(ev(2,2));
+              if(drawScaleMan_) { // override again if necessary
+                pseudo_res_0 = errorScale_*0.5;
+                pseudo_res_1 = errorScale_*0.5;
+                pseudo_res_2 = errorScale_*0.5;
+              }
+              // finished scaling -----------------------------------------------------------
 
-            // autoscale if necessary -----------------------------------------------------
-            if(drawAutoScale_) {
-              double min_cov = std::min(pseudo_res_0,std::min(pseudo_res_1,pseudo_res_2));
-              if(min_cov < 1e-5) {
-                std::cout << "Track " << i << ", Hit " << j << ": Invalid covariance matrix (Eigenvalue < 1e-5), autoscaling not possible!" << std::endl;
-              } else {
-                if(min_cov <= 0.149) {
-                  double cor = 0.15 / min_cov;
-                  std::cout << "Track " << i << ", Hit " << j << ": Space hit covariance too small, rescaling by " << cor;
-                  errorScale_ *= cor;
-                  pseudo_res_0 *= cor;
-                  pseudo_res_1 *= cor;
-                  pseudo_res_2 *= cor;
-                  std::cout << " to " << errorScale_ << std::endl;
+              // autoscale if necessary -----------------------------------------------------
+              if(drawAutoScale_) {
+                double min_cov = std::min(pseudo_res_0,std::min(pseudo_res_1,pseudo_res_2));
+                if(min_cov < 1e-5) {
+                  std::cout << "Track " << i << ", Hit " << j << ": Invalid covariance matrix (Eigenvalue < 1e-5), autoscaling not possible!" << std::endl;
+                } else {
+                  if(min_cov <= 0.149) {
+                    double cor = 0.15 / min_cov;
+                    std::cout << "Track " << i << ", Hit " << j << ": Space hit covariance too small, rescaling by " << cor;
+                    errorScale_ *= cor;
+                    pseudo_res_0 *= cor;
+                    pseudo_res_1 *= cor;
+                    pseudo_res_2 *= cor;
+                    std::cout << " to " << errorScale_ << std::endl;
 
+                  }
                 }
               }
+              // finished autoscaling -------------------------------------------------------
+
+              // rotate and translate -------------------------------------------------------
+              TGeoGenTrans det_trans(o(0),o(1),o(2),
+                                     //std::sqrt(pseudo_res_0/pseudo_res_1/pseudo_res_2), std::sqrt(pseudo_res_1/pseudo_res_0/pseudo_res_2), std::sqrt(pseudo_res_2/pseudo_res_0/pseudo_res_1), // this workaround is necessary due to the "normalization" performed in  TGeoGenTrans::SetScale
+                                     //1/(pseudo_res_0),1/(pseudo_res_1),1/(pseudo_res_2),
+                                     pseudo_res_0, pseudo_res_1, pseudo_res_2,
+                                     &det_rot);
+              cov_shape->SetTransMatrix(det_trans);
+              // finished rotating and translating ------------------------------------------
+
+              cov_shape->SetMainColor(kYellow);
+              cov_shape->SetMainTransparency(10);
+              gEve->AddElement(cov_shape);
             }
-            // finished autoscaling -------------------------------------------------------
 
-            // rotate and translate -------------------------------------------------------
-            TGeoGenTrans det_trans(o(0),o(1),o(2),
-                                   //std::sqrt(pseudo_res_0/pseudo_res_1/pseudo_res_2), std::sqrt(pseudo_res_1/pseudo_res_0/pseudo_res_2), std::sqrt(pseudo_res_2/pseudo_res_0/pseudo_res_1), // this workaround is necessary due to the "normalization" performed in  TGeoGenTrans::SetScale
-                                   //1/(pseudo_res_0),1/(pseudo_res_1),1/(pseudo_res_2),
-                                   pseudo_res_0, pseudo_res_1, pseudo_res_2,
-                                   &det_rot);
-            cov_shape->SetTransMatrix(det_trans);
-            // finished rotating and translating ------------------------------------------
 
-            cov_shape->SetMainColor(kYellow);
-            cov_shape->SetMainTransparency(10);
-            gEve->AddElement(cov_shape);
+            {
+              // calculate eigenvalues to draw error-ellipse ----------------------------
+              TMatrixDEigen eigen_values(hit_cov);
+              TEveGeoShape* cov_shape = new TEveGeoShape("cov_shape");
+              cov_shape->IncDenyDestroy();
+              TMatrixT<double> ev = eigen_values.GetEigenValues();
+              TMatrixT<double> eVec = eigen_values.GetEigenVectors();
+              double pseudo_res_0 = errorScale_*std::sqrt(ev(0,0));
+              double pseudo_res_1 = errorScale_*std::sqrt(ev(1,1));
+              // finished calcluating, got the values -----------------------------------
+
+              // do autoscaling if necessary --------------------------------------------
+              if(drawAutoScale_) {
+                double min_cov = std::min(pseudo_res_0,pseudo_res_1);
+                if(min_cov < 1e-5) {
+                  std::cout << "Track " << i << ", Hit " << j << ": Invalid covariance matrix (Eigenvalue < 1e-5), autoscaling not possible!" << std::endl;
+                } else {
+                  if(min_cov < 0.049) {
+                    double cor = 0.05 / min_cov;
+                    std::cout << "Track " << i << ", Hit " << j << ": Pixel covariance too small, rescaling by " << cor;
+                    errorScale_ *= cor;
+                    pseudo_res_0 *= cor;
+                    pseudo_res_1 *= cor;
+                    std::cout << " to " << errorScale_ << std::endl;
+                  }
+                }
+              }
+              // finished autoscaling ---------------------------------------------------
+
+              // calculate the semiaxis of the error ellipse ----------------------------
+              cov_shape->SetShape(new TGeoEltu(pseudo_res_0, pseudo_res_1, 0.0105));
+              TVector3 pix_pos = o + hit_u*u + hit_v*v;
+              TVector3 u_semiaxis = (pix_pos + eVec(0,0)*u + eVec(1,0)*v)-pix_pos;
+              TVector3 v_semiaxis = (pix_pos + eVec(0,1)*u + eVec(1,1)*v)-pix_pos;
+              TVector3 norm = u.Cross(v);
+              // finished calculating ---------------------------------------------------
+
+              // rotate and translate everything correctly ------------------------------
+              static const double radDeg(180./TMath::Pi());
+              TGeoRotation det_rot("det_rot", u_semiaxis.Theta()*radDeg, u_semiaxis.Phi()*radDeg,
+                  v_semiaxis.Theta()*radDeg, v_semiaxis.Phi()*radDeg,
+                  norm.Theta()*radDeg, norm.Phi()*radDeg);
+              /*if (! det_rot.IsValid()){
+                u_semiaxis.Print();
+                v_semiaxis.Print();
+                norm.Print();
+              }*/
+              TGeoCombiTrans det_trans(pix_pos(0),pix_pos(1),pix_pos(2), &det_rot);
+              cov_shape->SetTransMatrix(det_trans);
+              // finished rotating and translating --------------------------------------
+
+              cov_shape->SetMainColor(kYellow);
+              cov_shape->SetMainTransparency(0);
+              gEve->AddElement(cov_shape);
+            }
           }
           // finished drawing spacepoint hits -----------------------------------------------
 
