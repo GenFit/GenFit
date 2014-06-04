@@ -260,7 +260,9 @@ int Track::getIdForRep(const AbsTrackRep* rep) const
     if (trackReps_[i] == rep)
       return i;
 
-  assert(0 == 1);  // Cannot happen.
+  Exception exc("Track::getIdForRep ==> cannot find TrackRep in Track",__LINE__,__FILE__);
+  exc.setFatal();
+  throw exc;
 }
 
 
