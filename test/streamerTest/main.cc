@@ -73,6 +73,7 @@ int main() {
   TFile* fOut = new TFile(FILENAME, "RECREATE");
   fOut->cd();
   TTree* tResults = new TTree("tResults", "results from track fit");
+  // it is important to set the splitLevel to -1, because some of the genfit classes use custom streamers
   tResults->Branch("gfTrack", "genfit::Track", &fitTrack, 32000, -1);
   tResults->Branch("stateFinal", &stateFinal);
   tResults->Branch("covFinal", &covFinal, 32000, -1);
