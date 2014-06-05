@@ -1464,6 +1464,11 @@ void Track::Streamer(TBuffer &R__b)
       {
         std::map<const AbsTrackRep*,FitStatus*> &R__stl =  fitStatuses_;
         R__stl.clear();
+        TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
+        if (R__tcl1==0) {
+          Error("fitStatuses_ streamer","Missing the TClass object for genfit::AbsTrackRep!");
+          return;
+        }
         TClass *R__tcl2 = TBuffer::GetClass(typeid(genfit::FitStatus));
         if (R__tcl2==0) {
           Error("fitStatuses_ streamer","Missing the TClass object for genfit::FitStatus!");
@@ -1525,6 +1530,11 @@ void Track::Streamer(TBuffer &R__b)
           TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
           if (R__tcl1==0) {
             Error("fitStatuses_ streamer","Missing the TClass object for genfit::AbsTrackRep!");
+            return;
+          }
+          TClass *R__tcl2 = TBuffer::GetClass(typeid(genfit::FitStatus));
+          if (R__tcl2==0) {
+            Error("fitStatuses_ streamer","Missing the TClass object for genfit::FitStatus!");
             return;
           }
           std::map<const AbsTrackRep*,FitStatus*>::iterator R__k;
