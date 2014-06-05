@@ -182,7 +182,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
     if (this->getTrackPoint()->getTrack()->getPointWithMeasurementAndFitterInfo(-1, this->getRep())
          == this->getTrackPoint()) {// last measurement
       if(forwardUpdate_.get() == NULL) {
-        Exception e("KalmanFitterInfo::getFittedState: Needed updates/redictions not available in this FitterInfo.", __LINE__,__FILE__);
+        Exception e("KalmanFitterInfo::getFittedState: Needed updates/predictions not available in this FitterInfo.", __LINE__,__FILE__);
         e.setFatal();
         throw e;
       }
@@ -194,7 +194,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
     else if (this->getTrackPoint()->getTrack()->getPointWithMeasurementAndFitterInfo(0, this->getRep())
         == this->getTrackPoint()) { // first measurement
       if(backwardUpdate_.get() == NULL) {
-        Exception e("KalmanFitterInfo::getFittedState: Needed updates/redictions not available in this FitterInfo.", __LINE__,__FILE__);
+        Exception e("KalmanFitterInfo::getFittedState: Needed updates/predictions not available in this FitterInfo.", __LINE__,__FILE__);
         e.setFatal();
         throw e;
       }
@@ -206,7 +206,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
     }
 
     if(forwardUpdate_.get() == NULL || backwardPrediction_.get() == NULL) {
-      Exception e("KalmanFitterInfo::getFittedState: Needed updates/redictions not available in this FitterInfo.", __LINE__,__FILE__);
+      Exception e("KalmanFitterInfo::getFittedState: Needed updates/predictions not available in this FitterInfo.", __LINE__,__FILE__);
       e.setFatal();
       throw e;
     }
@@ -223,7 +223,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
     if (this->getTrackPoint()->getTrack()->getPointWithMeasurementAndFitterInfo(-1, this->getRep())
         == this->getTrackPoint()) { // last measurement
       if(forwardPrediction_.get() == NULL) {
-        Exception e("KalmanFitterInfo::getFittedState: Needed updates/redictions not available in this FitterInfo.", __LINE__,__FILE__);
+        Exception e("KalmanFitterInfo::getFittedState: Needed updates/predictions not available in this FitterInfo.", __LINE__,__FILE__);
         e.setFatal();
         throw e;
       }
@@ -235,7 +235,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
     else if (this->getTrackPoint()->getTrack()->getPointWithMeasurementAndFitterInfo(0, this->getRep())
         == this->getTrackPoint()) { // first measurement
       if(backwardPrediction_.get() == NULL) {
-        Exception e("KalmanFitterInfo::getFittedState: Needed updates/redictions not available in this FitterInfo.", __LINE__,__FILE__);
+        Exception e("KalmanFitterInfo::getFittedState: Needed updates/predictions not available in this FitterInfo.", __LINE__,__FILE__);
         e.setFatal();
         throw e;
       }
@@ -246,7 +246,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
     }
 
     if(forwardPrediction_.get() == NULL || backwardPrediction_.get() == NULL) {
-      Exception e("KalmanFitterInfo::getFittedState: Needed updates/redictions not available in this FitterInfo.", __LINE__,__FILE__);
+      Exception e("KalmanFitterInfo::getFittedState: Needed updates/predictions not available in this FitterInfo.", __LINE__,__FILE__);
       e.setFatal();
       throw e;
     }
