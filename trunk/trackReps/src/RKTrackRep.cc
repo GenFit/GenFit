@@ -299,8 +299,12 @@ double RKTrackRep::extrapToPoint(StateOnPlane& state,
     if (angle*distToPoca < 0.1*MINSTEP) break;
 
     // if lastStep and step have opposite sign, the real normal vector lies somewhere between the last two normal vectors (i.e. the directions)
-    // -> try mean value of the two (normalization not needed)
+    // -> try mean value of the two
     if (lastStep*step < 0){
+      if (G != NULL) { // after multiplication with G, dir has not length 1 anymore in general
+        dir.SetMag(1.);
+        lastDir.SetMag(1.);
+      }
       dir += lastDir;
       maxStep = 0.5*fabs(lastStep); // make it converge!
     }
