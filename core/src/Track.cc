@@ -58,6 +58,12 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMea
   // create the measurements using the factory.
   std::vector <genfit::AbsMeasurement*> factoryHits = factory.createMany(trackCand);
 
+  if (factoryHits.size() != trackCand.getNHits()) {
+    Exception exc("Track::Track ==> factoryHits.size() != trackCand->getNHits()",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+
   // create TrackPoints
   PlanarMeasurement* lastPlanarMeas(NULL);
   PlanarMeasurement* planarMeas(NULL);
@@ -70,8 +76,11 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMea
         lastPlanarMeas->getPlaneId() == planarMeas->getPlaneId() ) {
       trackPoints_.back()->addRawMeasurement(factoryHits[i]);
     }
-    else
-      insertPoint(new genfit::TrackPoint(factoryHits[i], this));
+    else {
+      TrackPoint* tp = new genfit::TrackPoint(factoryHits[i], this);
+      tp->setSortingParameter(trackCand.getHit(i)->getSortingParameter());
+      insertPoint(tp);
+    }
 
     lastPlanarMeas = dynamic_cast<PlanarMeasurement*>(factoryHits[i]);
   }
