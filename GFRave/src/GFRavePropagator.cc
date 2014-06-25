@@ -88,7 +88,7 @@ GFRavePropagator::closestTo ( const rave::Track & orig,
 
 void
 GFRavePropagator::setIdGFTrackStateMap(std::map < int, genfit::trackAndState > * map){
-  std::cout << "GFRavePropagator::setIdGFMeasuredStateOnPlaneMap() \n";
+  //std::cout << "GFRavePropagator::setIdGFMeasuredStateOnPlaneMap() \n";
 
   IdGFTrackStateMap_ = map;
 
