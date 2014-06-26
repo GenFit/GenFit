@@ -248,6 +248,10 @@ SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cc" "${library_
 
 SET(GBL_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GFGbl.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblFitter.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/ICalibrationParametersDerivatives.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblFitterInfo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblFitStatus.h
 )
 ROOT_GENERATE_DICTIONARY("${GBL_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/GBL/include"

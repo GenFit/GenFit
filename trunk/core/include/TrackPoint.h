@@ -104,8 +104,8 @@ class TrackPoint : public TObject {
     return (fitterInfos_.find(rep) != fitterInfos_.end());
   }
 
-  ThinScatterer* getMaterialInfo() {return thinScatterer_.get();}
-  bool hasThinScatterer() {return thinScatterer_.get() != NULL;}
+  ThinScatterer* getMaterialInfo() const {return thinScatterer_.get();}
+  bool hasThinScatterer() const {return thinScatterer_.get() != NULL;}
 
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
