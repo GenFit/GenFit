@@ -109,7 +109,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   virtual void Print(const Option_t* = "") const;
 
-  virtual bool checkConsistency() const;
+  virtual bool checkConsistency(const genfit::PruneFlags* = NULL) const;
 
  private:
 

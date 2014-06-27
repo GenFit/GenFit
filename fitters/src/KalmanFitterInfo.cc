@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include "Exception.h"
+#include "FitStatus.h"
 #include "Tools.h"
 #include "Track.h"
 #include "TrackPoint.h"
@@ -175,12 +176,47 @@ std::vector<double> KalmanFitterInfo::getWeights() const {
 
 
 const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const {
-  if (biased) {
-    if (fittedStateBiased_.get() != NULL)
-      return *fittedStateBiased_;
 
-    if (this->getTrackPoint()->getTrack()->getPointWithMeasurementAndFitterInfo(-1, this->getRep())
-         == this->getTrackPoint()) {// last measurement
+  // check if we can use cached states
+  if (biased && fittedStateBiased_.get() != NULL)
+    return *fittedStateBiased_;
+  if (!biased && fittedStateUnbiased_.get() != NULL)
+    return *fittedStateUnbiased_;
+
+
+  const TrackPoint* tp = this->getTrackPoint();
+  const Track* tr = tp->getTrack();
+  const AbsTrackRep* rep =  this->getRep();
+
+
+  bool first(false), last(false);
+  PruneFlags& flag = tr->getFitStatus(rep)->getPruneFlags();
+  // if Track is pruned so that only one TrackPoint remains, see if it was the first or last one
+  if (flag.isPruned() && tr->getNumPoints() == 1) {
+    #ifdef DEBUG
+    std::cout << "KalmanFitterInfo::getFittedState - Track is pruned and has " << tr->getNumPoints() << " TrackPoints \n";
+    #endif
+    if (flag.hasFlags("F")) {
+      first = true;
+      #ifdef DEBUG
+      std::cout << "KalmanFitterInfo::getFittedState - has flag F \n";
+      #endif
+    }
+    else if (flag.hasFlags("L")) {
+      last = true;
+      #ifdef DEBUG
+      std::cout << "KalmanFitterInfo::getFittedState - has flag L \n";
+      #endif
+    }
+  }
+  else { // otherwise check against TrackPoint order
+    first = tr->getPointWithFitterInfo(0, rep) == tp;
+    last = tr->getPointWithFitterInfo(-1, rep) == tp;
+  }
+
+
+  if (biased) {
+    if (last) {// last measurement
       if(forwardUpdate_.get() == NULL) {
         Exception e("KalmanFitterInfo::getFittedState: Needed updates/predictions not available in this FitterInfo.", __LINE__,__FILE__);
         e.setFatal();
@@ -191,8 +227,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
       #endif
       return *forwardUpdate_;
     }
-    else if (this->getTrackPoint()->getTrack()->getPointWithMeasurementAndFitterInfo(0, this->getRep())
-        == this->getTrackPoint()) { // first measurement
+    else if (first) { // first measurement
       if(backwardUpdate_.get() == NULL) {
         Exception e("KalmanFitterInfo::getFittedState: Needed updates/predictions not available in this FitterInfo.", __LINE__,__FILE__);
         e.setFatal();
@@ -200,7 +235,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
       }
       #ifdef DEBUG
       std::cout << "KalmanFitterInfo::getFittedState - biased at first measurement = backwardUpdate_ \n";
-      backwardUpdate_->Print();
+      //backwardUpdate_->Print();
       #endif
       return *backwardUpdate_;
     }
@@ -217,11 +252,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
     return *fittedStateBiased_;
   }
   else { // unbiased
-    if (fittedStateUnbiased_.get() != NULL)
-      return *fittedStateUnbiased_;
-
-    if (this->getTrackPoint()->getTrack()->getPointWithMeasurementAndFitterInfo(-1, this->getRep())
-        == this->getTrackPoint()) { // last measurement
+    if (last) { // last measurement
       if(forwardPrediction_.get() == NULL) {
         Exception e("KalmanFitterInfo::getFittedState: Needed updates/predictions not available in this FitterInfo.", __LINE__,__FILE__);
         e.setFatal();
@@ -232,8 +263,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
       #endif
       return *forwardPrediction_;
     }
-    else if (this->getTrackPoint()->getTrack()->getPointWithMeasurementAndFitterInfo(0, this->getRep())
-        == this->getTrackPoint()) { // first measurement
+    else if (first) { // first measurement
       if(backwardPrediction_.get() == NULL) {
         Exception e("KalmanFitterInfo::getFittedState: Needed updates/predictions not available in this FitterInfo.", __LINE__,__FILE__);
         e.setFatal();
@@ -476,7 +506,7 @@ void KalmanFitterInfo::Print(const Option_t*) const {
 }
 
 
-bool KalmanFitterInfo::checkConsistency() const {
+bool KalmanFitterInfo::checkConsistency(const genfit::PruneFlags* flags) const {
 
   bool retVal(true);
 
@@ -609,26 +639,30 @@ bool KalmanFitterInfo::checkConsistency() const {
     }
   }
 
-  // see if there is an update w/o prediction or measurement
-  if (forwardUpdate_ && !forwardPrediction_) {
-    std::cerr << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ w/o forwardPrediction_" << std::endl;
-    retVal = false;
-  }
-
-  if (forwardUpdate_ && measurementsOnPlane_.size() == 0) {
-    std::cerr << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ w/o measurement" << std::endl;
-    retVal = false;
-  }
+  if (flags == NULL or !flags->hasFlags("U")) { // if predictions have not been pruned
+    // see if there is an update w/o prediction or measurement
+    if (forwardUpdate_ && !forwardPrediction_) {
+      std::cerr << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ w/o forwardPrediction_" << std::endl;
+      retVal = false;
+    }
 
 
-  if (backwardUpdate_ && !backwardPrediction_) {
-    std::cerr << "KalmanFitterInfo::checkConsistency(): backwardUpdate_ w/o backwardPrediction_" << std::endl;
-    retVal = false;
-  }
+    if (backwardUpdate_ && !backwardPrediction_) {
+      std::cerr << "KalmanFitterInfo::checkConsistency(): backwardUpdate_ w/o backwardPrediction_" << std::endl;
+      retVal = false;
+    }
 
-  if (backwardUpdate_ && measurementsOnPlane_.size() == 0) {
-    std::cerr << "KalmanFitterInfo::checkConsistency(): backwardUpdate_ w/o measurement" << std::endl;
-    retVal = false;
+    if (flags == NULL or !flags->hasFlags("M")) {
+      if (forwardUpdate_ && measurementsOnPlane_.size() == 0) {
+        std::cerr << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ w/o measurement" << std::endl;
+        retVal = false;
+      }
+
+      if (backwardUpdate_ && measurementsOnPlane_.size() == 0) {
+        std::cerr << "KalmanFitterInfo::checkConsistency(): backwardUpdate_ w/o measurement" << std::endl;
+        retVal = false;
+      }
+    }
   }
 
 
