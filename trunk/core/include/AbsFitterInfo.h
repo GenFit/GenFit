@@ -25,6 +25,7 @@
 #define genfit_AbsFitterInfo_h
 
 #include "MeasurementOnPlane.h"
+#include "FitStatus.h"
 
 #include <TObject.h>
 #include <TVectorD.h>
@@ -78,7 +79,7 @@ class AbsFitterInfo : public TObject {
 
   virtual void Print(const Option_t* = "") const {;}
 
-  virtual bool checkConsistency() const = 0;
+  virtual bool checkConsistency(const PruneFlags* = NULL) const = 0;
 
  protected:
 

@@ -29,6 +29,44 @@
 
 namespace genfit {
 
+
+/**
+ * @brief Info which information has been pruned from the Track.
+ *
+ * Possible options:
+ * C:  prune all reps except cardinalRep
+ * F:  prune all points except first point
+ * L:  prune all points except last point
+ * FL: prune all points except first and last point
+ * W:  prune rawMeasurements from TrackPoints
+ * R:  prune referenceInfo from fitterInfos
+ * M:  prune measurementInfo from fitterInfos
+ * I:  if F, L, or FL is set, prune forward (backward) info of first (last) point
+ * U:  if fitterInfo is a KalmanFitterInfo, prune predictions and keep updates
+ */
+struct PruneFlags {
+  PruneFlags();
+  void reset();
+  //! does not reset! If a flag is already true and is not in opt, it will stay true.
+  void setFlags(Option_t* option);
+  //! check if flags are set
+  bool hasFlags(Option_t* option) const;
+  //! check if any of the flags is set
+  bool isPruned() const;
+
+  void Print(const Option_t* = "") const;
+
+  bool C:1;
+  bool F:1;
+  bool L:1;
+  bool W:1;
+  bool R:1;
+  bool M:1;
+  bool I:1;
+  bool U:1;
+};
+
+
 /** @brief Class where important numbers and properties of a fit can be stored.
  *
  *  @author Johannes Rauch (Technische Universit&auml;t M&uuml;nchen, original author)
@@ -39,7 +77,7 @@ class FitStatus {
 
   FitStatus() :
     isFitted_(false), isFitConvergedFully_(false), isFitConvergedPartially_(false), nFailedPoints_(0),
-    trackHasChanged_(false), trackIsPruned_(false), charge_(0), chi2_(-1e99), ndf_(-1e99)
+    trackHasChanged_(false), pruneFlags_(), charge_(0), chi2_(-1e99), ndf_(-1e99)
   {;}
 
   virtual ~FitStatus() {};
@@ -67,7 +105,7 @@ class FitStatus {
   //! Has anything in the Track been changed since the fit?
   bool hasTrackChanged() const {return trackHasChanged_;}
   //! Has the track been pruned after the fit?
-  bool isTrackPruned() const {return trackIsPruned_;}
+  bool isTrackPruned() const {return pruneFlags_.isPruned();}
   //! Get the fitted charge.
   double getCharge() const {return charge_;}
   //! Get chi^2 of the fit.
@@ -86,8 +124,9 @@ class FitStatus {
   void setIsFitConvergedPartially(bool fitConverged = true) {isFitConvergedPartially_ = fitConverged;}
   void setNFailedPoints(int nFailedPoints) {nFailedPoints_ = nFailedPoints;}
   void setHasTrackChanged(bool trackChanged = true) {trackHasChanged_ = trackChanged;}
-  void setIsTrackPruned(bool pruned = true) {trackIsPruned_ = pruned;}
   void setCharge(double charge) {charge_ = charge;}
+
+  PruneFlags& getPruneFlags() {return pruneFlags_;}
 
   void setChi2(const double& chi2) {chi2_ = chi2;}
   void setNdf(const double& ndf) {ndf_ = ndf;}
@@ -106,8 +145,8 @@ class FitStatus {
   int nFailedPoints_;
   //! has anything in the Track been changed since the fit? -> fit isn't valid anymore
   bool trackHasChanged_;
-  //! Information has been stripped off, no refitting possible!
-  bool trackIsPruned_;
+  //! Prune flags
+  PruneFlags pruneFlags_;
   //! fitted charge
   double charge_;
 
@@ -116,7 +155,7 @@ class FitStatus {
   double chi2_;
   double ndf_;
 
-  ClassDef(FitStatus, 1);
+  ClassDef(FitStatus, 2);
 };
 
 } /* End of namespace genfit */

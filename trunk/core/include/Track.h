@@ -112,14 +112,15 @@ class Track : public TObject {
   unsigned int getNumPointsWithMeasurement() const {return trackPointsWithMeasurement_.size();}
 
   TrackPoint* getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRep* rep) const;
+  TrackPoint* getPointWithFitterInfo(int id, const AbsTrackRep* rep = NULL) const;
 
   /**
    * @brief Shortcut to get FittedStates.
    *
-   * Uses getPointWithMeasurementAndFitterInfo(id, rep).
+   * Uses getPointWithFitterInfo(id, rep).
    * Gets the fitted state at trackpoint id for the track representation rep.
    * Per default, the fitted state of the fitterInfo of the first TrackPoint
-   * with one or more AbsMeasurement and AbsFitterInfo objects
+   * with one or more AbsFitterInfo objects
    * is returned. If no AbsTrackRep is specified, the AbsFitterInfo of the cardinal rep will be used.
    */
   const MeasuredStateOnPlane& getFittedState(int id = 0, const AbsTrackRep* rep = NULL, bool biased = true) const;
@@ -265,7 +266,7 @@ class Track : public TObject {
   /**
    * @brief Delete unneeded information from the Track.
    *
-   * Possible options:
+   * Possible options: (see also PruneFlags defined in FitStatus.h)
    * C:  prune all reps except cardinalRep
    * F:  prune all points except first point
    * L:  prune all points except last point

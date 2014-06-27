@@ -420,7 +420,7 @@ namespace genfit {
     return MeasurementOnPlane(measurement_, measCov_, sharedPlane_, rep_, hasMeasurements() ? trackPoint_->getRawMeasurement(0)->constructHMatrix(rep_) : new HMatrixUV() );
   }
   
-  bool GblFitterInfo::checkConsistency() const {
+  bool GblFitterInfo::checkConsistency(const genfit::PruneFlags*) const {
     //TODO
     return true;      
   }

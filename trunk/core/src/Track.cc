@@ -249,11 +249,34 @@ TrackPoint* Track::getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRe
 }
 
 
+TrackPoint* Track::getPointWithFitterInfo(int id, const AbsTrackRep* rep) const {
+  if (rep == NULL)
+    rep = getCardinalRep();
+
+  int i(0);
+  for (std::vector<TrackPoint*>::const_iterator it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
+    if ((*it)->hasFitterInfo(rep)) {
+      if (id == i)
+        return (*it);
+      ++i;
+    }
+  }
+
+  if (i == 0)
+    return NULL;
+
+  if (id < 0)
+    id += i;
+
+  return getPointWithFitterInfo(id, rep);
+}
+
+
 const MeasuredStateOnPlane& Track::getFittedState(int id, const AbsTrackRep* rep, bool biased) const {
   if (rep == NULL)
     rep = getCardinalRep();
 
-  TrackPoint* point = getPointWithMeasurementAndFitterInfo(id, rep);
+  TrackPoint* point = getPointWithFitterInfo(id, rep);
   if (point == NULL) {
     Exception exc("Track::getFittedState ==> no trackPoint with fitterInfo for rep",__LINE__,__FILE__);
     exc.setFatal();
@@ -1007,22 +1030,22 @@ void Track::fixWeights(AbsTrackRep* rep, int startId, int endId) {
 
 void Track::prune(const Option_t* option) {
 
-  TString opt = option;
-  opt.ToUpper();
+  PruneFlags f;
+  f.setFlags(option);
 
   for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it=fitStatuses_.begin(); it!=fitStatuses_.end(); ++it) {
-    it->second->setIsTrackPruned();
+    it->second->getPruneFlags().setFlags(option);
   }
 
   // prune trackPoints
-  if (opt.Contains("F") || opt.Contains("L")) {
-    TrackPoint* firstPoint = getPointWithMeasurement(0);
-    TrackPoint* lastPoint = getPointWithMeasurement(-1);
+  if (f.hasFlags("F") || f.hasFlags("L")) {
+    TrackPoint* firstPoint = getPointWithFitterInfo(0);
+    TrackPoint* lastPoint = getPointWithFitterInfo(-1);
     for (unsigned int i = 0; i<trackPoints_.size(); ++i) {
-      if (trackPoints_[i] == firstPoint && opt.Contains("F"))
+      if (trackPoints_[i] == firstPoint && f.hasFlags("F"))
         continue;
 
-      if (trackPoints_[i] == lastPoint && opt.Contains("L"))
+      if (trackPoints_[i] == lastPoint && f.hasFlags("L"))
         continue;
 
       delete trackPoints_[i];
@@ -1032,7 +1055,7 @@ void Track::prune(const Option_t* option) {
   }
 
   // prune TrackReps
-  if (opt.Contains("C")) {
+  if (f.hasFlags("C")) {
     for (unsigned int i = 0; i < trackReps_.size(); ++i) {
       if (i != cardinalRep_) {
         deleteTrackRep(i);
@@ -1044,28 +1067,28 @@ void Track::prune(const Option_t* option) {
 
   // from remaining trackPoints: prune measurementsOnPlane, unneeded fitterInfoStuff
   for (unsigned int i = 0; i<trackPoints_.size(); ++i) {
-    if (opt.Contains("W"))
+    if (f.hasFlags("W"))
       trackPoints_[i]->deleteRawMeasurements();
 
     std::vector< genfit::AbsFitterInfo* > fis =  trackPoints_[i]->getFitterInfos();
     for (unsigned int j = 0; j<fis.size(); ++j) {
 
-      if (i == 0 && opt.Contains("I") && opt.Contains("F") && opt.Contains("L"))
+      if (i == 0 && f.hasFlags("FLI"))
         fis[j]->deleteForwardInfo();
-      else if (i == trackPoints_.size()-1 && opt.Contains("I") && opt.Contains("F") && opt.Contains("L"))
+      else if (i == trackPoints_.size()-1 && f.hasFlags("FLI"))
         fis[j]->deleteBackwardInfo();
-      else if (opt.Contains("I") && opt.Contains("F"))
+      else if (f.hasFlags("FI"))
         fis[j]->deleteForwardInfo();
-      else if (opt.Contains("I") && opt.Contains("L"))
+      else if (f.hasFlags("LI"))
         fis[j]->deleteBackwardInfo();
 
-      if (opt.Contains("U") && dynamic_cast<KalmanFitterInfo*>(fis[j]) != NULL) {
+      if (f.hasFlags("U") && dynamic_cast<KalmanFitterInfo*>(fis[j]) != NULL) {
         static_cast<KalmanFitterInfo*>(fis[j])->deletePredictions();
       }
 
-      if (opt.Contains("R"))
+      if (f.hasFlags("R"))
         fis[j]->deleteReferenceInfo();
-      if (opt.Contains("M"))
+      if (f.hasFlags("M"))
         fis[j]->deleteMeasurementInfo();
     }
   }
@@ -1267,6 +1290,12 @@ bool Track::checkConsistency() const {
     //retVal = false;
   }
 
+  // check if correct number of fitStatuses
+  if (fitStatuses_.size() != trackReps_.size()) {
+    std::cerr << "Track::checkConsistency(): Number of fitStatuses is != number of TrackReps " << std::endl;
+    retVal = false;
+  }
+
   // check if cardinalRep_ is in range of trackReps_
   if (trackReps_.size() && cardinalRep_ >= trackReps_.size()) {
     std::cerr << "Track::checkConsistency(): cardinalRep id " << cardinalRep_ << " out of bounds" << std::endl;
@@ -1287,6 +1316,11 @@ bool Track::checkConsistency() const {
       retVal = false;
     }
 
+    // check if corresponding FitStatus is there
+    if (fitStatuses_.find(*rep) == fitStatuses_.end() and fitStatuses_.find(*rep)->second != NULL) {
+      std::cerr << "Track::checkConsistency(): No FitStatus for Rep or FitStatus is NULL" << std::endl;
+      retVal = false;
+    }
   }
 
   // check TrackPoints
@@ -1326,11 +1360,6 @@ bool Track::checkConsistency() const {
         retVal = false;
       }
 
-      if (!( (*fi)->checkConsistency() ) ) {
-        std::cerr << "Track::checkConsistency(): FitterInfo not consistent. TrackPoint: " << *tp << std::endl;
-        retVal = false;
-      }
-
       // check if fitterInfos point to valid TrackReps in trackReps_
       int mycount (0);
       for (std::vector<AbsTrackRep*>::const_iterator rep = trackReps_.begin(); rep != trackReps_.end(); ++rep) {
@@ -1340,6 +1369,11 @@ bool Track::checkConsistency() const {
       }
       if (mycount ==  0) {
         std::cerr << "Track::checkConsistency(): fitterInfo points to TrackRep which is not in Track" << std::endl;
+        retVal = false;
+      }
+
+      if (!( (*fi)->checkConsistency(&(this->getFitStatus((*fi)->getRep())->getPruneFlags())) ) ) {
+        std::cerr << "Track::checkConsistency(): FitterInfo not consistent. TrackPoint: " << *tp << std::endl;
         retVal = false;
       }
 
@@ -1384,8 +1418,8 @@ bool Track::checkConsistency() const {
   for (unsigned int i = 0; i < trackPointsWithMeasurement.size(); ++i) {
     if (trackPointsWithMeasurement[i] != trackPointsWithMeasurement_[i]) {
       std::cerr << "Track::checkConsistency(): trackPointsWithMeasurement_ is not correct" << std::endl;
-      std::cerr << "has         id " << i << ", adress " << trackPointsWithMeasurement_[i] << std::endl;
-      std::cerr << "should have id " << i << ", adress " << trackPointsWithMeasurement[i] << std::endl;
+      std::cerr << "has         id " << i << ", address " << trackPointsWithMeasurement_[i] << std::endl;
+      std::cerr << "should have id " << i << ", address " << trackPointsWithMeasurement[i] << std::endl;
       retVal = false;
     }
   }
