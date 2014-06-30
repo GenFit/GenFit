@@ -55,7 +55,14 @@ namespace tools {
    *  an orthongonal transformation.  I.e., it computes R from a QR
    *  decomposition of A = QR, replacing A.
    */
-void QR(TMatrixD& A);
+  void QR(TMatrixD& A);
+
+  /** @brief Replaces A with an upper right matrix connected to A by
+   *  an orthongonal transformation.  I.e., it computes R from a QR
+   *  decomposition of A = QR, replacing A.  Also replaces b by Q'b
+   *  where Q' is the transposed of Q.
+   */
+  void QR(TMatrixD& A, TVectorD& b);
 
   /** @brief This averages the covariance matrices C1, C2 in a
    *  numerically stable way by using matrix square roots.  This code

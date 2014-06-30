@@ -25,6 +25,8 @@
 #include <cassert>
 #include <iostream>
 
+#include "TDecompChol.h"
+
 namespace genfit {
 
 void MeasuredStateOnPlane::Print(Option_t*) const {
@@ -88,27 +90,118 @@ MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, 
   return retVal;
 #endif
 
-  static TMatrixDSym fCovInv, bCovInv;  // Static to avoid re-constructing for every call
-  tools::invertMatrix(forwardState.getCov(), fCovInv);
-  tools::invertMatrix(backwardState.getCov(), bCovInv);
+  const bool oldWay = true;
+  if (oldWay) {
+    static TMatrixDSym fCovInv, bCovInv;  // Static to avoid re-constructing for every call
+    tools::invertMatrix(forwardState.getCov(), fCovInv);
+    tools::invertMatrix(backwardState.getCov(), bCovInv);
 
-  // Using a StateOnPlane here turned out at least as fast as
-  // constructing a MeasuredStateOnPlane here, and then resetting its
-  // covariance matrix below, even though it means another copy in the
-  // return statement.
-  StateOnPlane sop(forwardState); // copies auxInfo, plane, rep in the process
-                                  // Using 'static' + subsequent assignment is measurably slower.
-                                  // Surprisingly, using only TVectorD
-                                  // sop(forwardState.getState()) with according
-                                  // changes below measured slower.
+    // Using a StateOnPlane here turned out at least as fast as
+    // constructing a MeasuredStateOnPlane here, and then resetting its
+    // covariance matrix below, even though it means another copy in the
+    // return statement.
+    StateOnPlane sop(forwardState); // copies auxInfo, plane, rep in the process
+                                    // Using 'static' + subsequent assignment is measurably slower.
+                                    // Surprisingly, using only TVectorD
+                                    // sop(forwardState.getState()) with according
+                                    // changes below measured slower.
 
-  sop.getState() *= fCovInv;
-  fCovInv += bCovInv;
-  tools::invertMatrix(fCovInv);  // This is now the covariance of the average.
-  sop.getState() += bCovInv*backwardState.getState();  // one temporary TVectorD
-  sop.getState() *= fCovInv;
+    sop.getState() *= fCovInv;
+    fCovInv += bCovInv;
+    tools::invertMatrix(fCovInv);  // This is now the covariance of the average.
+    sop.getState() += bCovInv*backwardState.getState();  // one temporary TVectorD
+    sop.getState() *= fCovInv;
+    
+    return MeasuredStateOnPlane(sop, fCovInv);
+  }
 
-  return MeasuredStateOnPlane(sop, fCovInv);
+  // This is a numerically stable implementation of the averaging
+  // process.  We write S1, S2 for the lower diagonal square roots
+  // (Cholesky deocmpositions) of the covariance matrices, such that
+  // C1 = S1' S1 (transposition indicated by ').
+  //
+  // Then we can write
+  //  (C1^-1 + C2^-1)^-1 = (S1inv' S1inv + S2inv' S2inv)^-1
+  //                     = ( (S1inv', S2inv') . ( S1inv ) )^-1
+  //                       (                    ( S2inv ) )
+  //                     = ( (R', 0) . Q . Q' . ( R ) )^-1
+  //                       (                    ( 0 ) )
+  // where Q is an orthogonal matrix chosen such that R is upper diagonal.
+  // Since Q'.Q = 1, this reduces to
+  //                     = ( R'.R )^-1
+  //                     = R^-1 . (R')^-1.
+  // This gives the covariance matrix of the average and its Cholesky
+  // decomposition.
+  //
+  // In order to get the averaged state (writing x1 and x2 for the
+  // states) we proceed from
+  //  C1^-1.x1 + C2^-1.x2 = (S1inv', S2inv') . ( S1inv.x1 )
+  //                                           ( S2inv.x2 )
+  // which by the above can be written as
+  //                      =  (R', 0) . Q . ( S1inv.x1 )
+  //                                       ( S2inv.x2 )
+  // with the same (R, Q) as above.
+  //
+  // The average is then after obvious simplification
+  //   average = R^-1 . Q . (S1inv.x1)
+  //                        (S2inv.x2)
+  //
+  // This is what's implemented below, where we make use of the
+  // tridiagonal shapes of the various matrices when multiplying or
+  // inverting.
+  //
+  // This turns out not only more numerically stable, but because the
+  // matrix operations are simpler, it is also faster than the simple
+  // implementation.
+  TDecompChol d1(forwardState.getCov());
+  d1.Decompose();
+  TDecompChol d2(backwardState.getCov());
+  d2.Decompose();
+
+  int nRows = d1.GetU().GetNrows();
+  assert(nRows = d2.GetU().GetNrows());
+  TMatrixD S1inv, S2inv;
+  tools::transposedInvert(d1.GetU(), S1inv);
+  tools::transposedInvert(d2.GetU(), S2inv);
+
+  TMatrixD A(2*nRows, nRows);
+  TVectorD b(2 * nRows);
+  double *const bk = b.GetMatrixArray();
+  double *const Ak = A.GetMatrixArray();
+  const double* S1invk = S1inv.GetMatrixArray();
+  const double* S2invk = S2inv.GetMatrixArray();
+  // S1inv and S2inv are lower triangular.
+  for (int i = 0; i < nRows; ++i) {
+    double sum1 = 0;
+    double sum2 = 0;
+    for (int j = 0; j <= i; ++j) {
+      Ak[i*nRows + j] = S1invk[i*nRows + j];
+      Ak[(i + nRows)*nRows + j] = S2invk[i*nRows + j];
+      sum1 += S1invk[i*nRows + j]*forwardState.getState().GetMatrixArray()[j];
+      sum2 += S2invk[i*nRows + j]*backwardState.getState().GetMatrixArray()[j];
+    }
+    bk[i] = sum1;
+    bk[i + nRows] = sum2;
+  }
+
+  tools::QR(A, b);
+  A.ResizeTo(nRows, nRows);
+
+  TMatrixD inv;
+  tools::transposedInvert(A, inv);
+  b.ResizeTo(nRows);
+  for (int i = 0; i < nRows; ++i) {
+    double sum = 0;
+    for (int j = i; j < nRows; ++j) {
+      sum += inv.GetMatrixArray()[j*nRows+i] * b[j];
+    }
+    b.GetMatrixArray()[i] = sum;
+  }
+  return MeasuredStateOnPlane(b,
+			      TMatrixDSym(TMatrixDSym::kAtA, inv),
+			      forwardState.getPlane(),
+			      forwardState.getRep(),
+			      forwardState.getAuxInfo());
 }
 
 
