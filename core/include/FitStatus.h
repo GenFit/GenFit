@@ -146,7 +146,7 @@ class FitStatus {
   //! has anything in the Track been changed since the fit? -> fit isn't valid anymore
   bool trackHasChanged_;
   //! Prune flags
-  PruneFlags pruneFlags_;
+  PruneFlags pruneFlags_;  //! Don't stream until issues fixed.
   //! fitted charge
   double charge_;
 
