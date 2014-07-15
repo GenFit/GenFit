@@ -34,15 +34,15 @@ namespace genfit {
  * @brief Info which information has been pruned from the Track.
  *
  * Possible options:
- * C:  prune all reps except cardinalRep
- * F:  prune all points except first point
- * L:  prune all points except last point
- * FL: prune all points except first and last point
- * W:  prune rawMeasurements from TrackPoints
- * R:  prune referenceInfo from fitterInfos
- * M:  prune measurementInfo from fitterInfos
- * I:  if F, L, or FL is set, prune forward (backward) info of first (last) point
- * U:  if fitterInfo is a KalmanFitterInfo, prune predictions and keep updates
+   * C:  prune all reps except cardinalRep
+   * F:  prune all points except first point (also prune referenceInfo from fitterInfos)
+   * L:  prune all points except last point (also prune referenceInfo from fitterInfos)
+   * FL: prune all points except first and last point (also prune referenceInfo from fitterInfos)
+   * W:  prune rawMeasurements from TrackPoints
+   * R:  prune referenceInfo from fitterInfos
+   * M:  prune measurementInfo from fitterInfos
+   * I:  if F, L, or FL is set, prune forward (backward) info of first (last) point
+   * U:  if fitterInfo is a KalmanFitterInfo, prune predictions and keep updates
  */
 struct PruneFlags {
   PruneFlags();
@@ -146,7 +146,7 @@ class FitStatus {
   //! has anything in the Track been changed since the fit? -> fit isn't valid anymore
   bool trackHasChanged_;
   //! Prune flags
-  PruneFlags pruneFlags_;  //! Don't stream until issues fixed.
+  PruneFlags pruneFlags_;
   //! fitted charge
   double charge_;
 
