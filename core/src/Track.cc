@@ -1086,7 +1086,8 @@ void Track::prune(const Option_t* option) {
         static_cast<KalmanFitterInfo*>(fis[j])->deletePredictions();
       }
 
-      if (f.hasFlags("R"))
+      // also delete reference info if points have been removed since it is invalid then!
+      if (f.hasFlags("R") or f.hasFlags("F") or f.hasFlags("L"))
         fis[j]->deleteReferenceInfo();
       if (f.hasFlags("M"))
         fis[j]->deleteMeasurementInfo();

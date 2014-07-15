@@ -268,9 +268,9 @@ class Track : public TObject {
    *
    * Possible options: (see also PruneFlags defined in FitStatus.h)
    * C:  prune all reps except cardinalRep
-   * F:  prune all points except first point
-   * L:  prune all points except last point
-   * FL: prune all points except first and last point
+   * F:  prune all points except first point (also prune referenceInfo from fitterInfos)
+   * L:  prune all points except last point (also prune referenceInfo from fitterInfos)
+   * FL: prune all points except first and last point (also prune referenceInfo from fitterInfos)
    * W:  prune rawMeasurements from TrackPoints
    * R:  prune referenceInfo from fitterInfos
    * M:  prune measurementInfo from fitterInfos
