@@ -18,6 +18,8 @@
 #   ROOT_${COMPONENT}_FOUND     : set to TRUE or FALSE for each library
 #   ROOT_${COMPONENT}_LIBRARY   : path to individual libraries
 #   ROOT_LIBS                : required ROOT libraries
+#   ROOT_found_version      : contains the version of ROOT in a comparable
+#                             way, i.e. 5.99.00 as 59900
 #
 #   Please note that by convention components should be entered exactly as
 #   the library names, i.e. the component name equivalent to the library
@@ -110,6 +112,21 @@ IF( ROOT_CONFIG_EXECUTABLE )
     ENDIF()
 
 
+    # ==============================================
+    # ===         ROOT_found_version             ===
+    # ==============================================
+
+    EXECUTE_PROCESS( COMMAND ${ROOT_CONFIG_EXECUTABLE} --version
+        OUTPUT_VARIABLE ROOT_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    IF( _exit_code EQUAL 0 )
+        # Make ROOT-version easier to compare in cmake:
+        STRING(REGEX REPLACE "^([0-9]+)\\.[0-9][0-9]+\\/[0-9][0-9]+.*" "\\1" found_root_major_vers "${ROOT_VERSION}")
+        STRING(REGEX REPLACE "^[0-9]+\\.([0-9][0-9])+\\/[0-9][0-9]+.*" "\\1" found_root_minor_vers "${ROOT_VERSION}")
+        STRING(REGEX REPLACE "^[0-9]+\\.[0-9][0-9]+\\/([0-9][0-9]+).*" "\\1" found_root_patch_vers "${ROOT_VERSION}")
+        MATH(EXPR ROOT_found_version "${found_root_major_vers}*10000 + ${found_root_minor_vers}*100 + ${found_root_patch_vers}")
+    ENDIF()
+
 
     # ==============================================
     # ===          ROOT_EXECUTABLE               ===
@@ -135,7 +152,11 @@ IF( ROOT_CONFIG_EXECUTABLE )
     # find rootcint
     SET( ROOT_CINT_EXECUTABLE ROOT_CINT_EXECUTABLE-NOTFOUND )
     MARK_AS_ADVANCED( ROOT_CINT_EXECUTABLE )
-    FIND_PROGRAM( ROOT_CINT_EXECUTABLE NAMES rootcint rootcling PATHS ${ROOT_BIN_DIR} NO_DEFAULT_PATH )
+    IF(ROOT_found_version GREATER 59900)
+      FIND_PROGRAM( ROOT_CINT_EXECUTABLE NAMES rootcling PATHS ${ROOT_BIN_DIR} NO_DEFAULT_PATH )
+    ELSE()
+      FIND_PROGRAM( ROOT_CINT_EXECUTABLE NAMES rootcint PATHS ${ROOT_BIN_DIR} NO_DEFAULT_PATH )
+    ENDIF()
 
     IF( NOT ROOT_FIND_QUIETLY )
         MESSAGE( STATUS "Check for ROOT_CINT_EXECUTABLE: ${ROOT_CINT_EXECUTABLE}" )
@@ -232,7 +253,6 @@ IF( ROOT_CONFIG_EXECUTABLE )
         ENDFOREACH()
 
     ENDIF()
-
 
     # ====== DL LIBRARY ==================================================
     # workaround for cmake bug in 64 bit:
