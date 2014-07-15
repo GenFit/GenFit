@@ -135,15 +135,15 @@ int main() {
   gRandom->SetSeed(14);
 
 
-  const unsigned int nEvents = 100;
-  const unsigned int nMeasurements = 56;
-  const double BField = 15.;       // kGauss
-  const double momentum = 0.4;     // GeV
-  const double theta = 120;         // degree
+  const unsigned int nEvents = 1000;
+  const unsigned int nMeasurements = 10;
+  const double BField = 20.;       // kGauss
+  const double momentum = 0.1;     // GeV
+  const double theta = 90;         // degree
   const double thetaDetPlane = 90;         // degree
   const double phiDetPlane = 0;         // degree
-  const double pointDist = 5;      // cm; approx. distance between measurements
-  const double resolution = 0.02;   // cm; resolution of generated measurements
+  const double pointDist = 3.;      // cm; approx. distance between measurements
+  const double resolution = 0.05;   // cm; resolution of generated measurements
 
   const double resolutionWire = 5*resolution;   // cm; resolution of generated measurements
   const TVector3 wireDir(0,0,1);
@@ -159,11 +159,11 @@ int main() {
 
   const double hitSwitchProb = -0.1; // probability to give hits to fit in wrong order (flip two hits)
 
-  const int splitTrack = -5; // for track merging testing.
+  const int splitTrack = -5; //nMeasurements/2; // for track merging testing.
   const bool fullMeasurement = false; // put fit result of first tracklet as FullMeasurement into second tracklet, don't merge
 
-  const genfit::eFitterType fitterId = genfit::SimpleKalman;
-  //const genfit::eFitterType fitterId = genfit::RefKalman;
+  //const genfit::eFitterType fitterId = genfit::SimpleKalman;
+  const genfit::eFitterType fitterId = genfit::RefKalman;
   //const genfit::eFitterType fitterId = genfit::DafRef;
   //const genfit::eFitterType fitterId = genfit::DafSimple;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
@@ -178,11 +178,13 @@ int main() {
   const int nIter = 20; // max number of iterations
   const double dPVal = 1.E-3; // convergence criterion
 
-  const bool resort = true;
+  const bool resort = false;
   const bool prefit = false; // make a simple Kalman iteration before the actual fit
   const bool refit  = false; // if fit did not converge, try to fit again
 
   const bool twoReps = false; // test if everything works with more than one rep in the tracks
+
+  const bool checkPruning = true; // test pruning
 
   const int pdg = 13;               // particle pdg code
 
@@ -197,18 +199,12 @@ int main() {
   const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
 
   const bool debug = false;
-  const bool onlyDisplayFailed = true; // only load non-converged tracks into the display
+  const bool onlyDisplayFailed = false; // only load non-converged tracks into the display
 
   std::vector<genfit::eMeasurementType> measurementTypes;
-  measurementTypes.push_back(genfit::Pixel);
-  measurementTypes.push_back(genfit::Pixel);
-  measurementTypes.push_back(genfit::StripUV);
-  measurementTypes.push_back(genfit::StripUV);
-  measurementTypes.push_back(genfit::StripUV);
-  measurementTypes.push_back(genfit::StripUV);
-  for (unsigned int i = 0; i<50; ++i)
-    measurementTypes.push_back(genfit::Wire);
-
+  for (unsigned int i = 0; i<nMeasurements; ++i) {
+    measurementTypes.push_back(genfit::eMeasurementType(i%8));
+  }
 
   signal(SIGSEGV, handler);   // install our handler
 
@@ -233,8 +229,8 @@ int main() {
       break;
   }
   fitter->setMaxIterations(nIter);
-  if (debug)
-    fitter->setDebugLvl(10);
+  //if (debug)
+  //  fitter->setDebugLvl(10);
 
   /*if (dynamic_cast<genfit::DAF*>(fitter) != NULL) {
     //static_cast<genfit::DAF*>(fitter)->setBetas(100, 50, 25, 12, 6, 3, 1, 0.5, 0.1);
@@ -285,11 +281,11 @@ int main() {
   gStyle->SetPalette(1);
   gStyle->SetOptFit(1111);
 
-  TH1D *hmomRes = new TH1D("hmomRes","mom res",500,-10*resolution*momentum/nMeasurements,10*resolution*momentum/nMeasurements);
-  TH1D *hupRes = new TH1D("hupRes","u' res",500,-5*resolution/nMeasurements, 5*resolution/nMeasurements);
-  TH1D *hvpRes = new TH1D("hvpRes","v' res",500,-5*resolution/nMeasurements, 5*resolution/nMeasurements);
-  TH1D *huRes = new TH1D("huRes","u res",500,-5*resolution, 5*resolution);
-  TH1D *hvRes = new TH1D("hvRes","v res",500,-5*resolution, 5*resolution);
+  TH1D *hmomRes = new TH1D("hmomRes","mom res",500,-20*resolution*momentum/nMeasurements,20*resolution*momentum/nMeasurements);
+  TH1D *hupRes = new TH1D("hupRes","u' res",500,-15*resolution/nMeasurements, 15*resolution/nMeasurements);
+  TH1D *hvpRes = new TH1D("hvpRes","v' res",500,-15*resolution/nMeasurements, 15*resolution/nMeasurements);
+  TH1D *huRes = new TH1D("huRes","u res",500,-15*resolution, 15*resolution);
+  TH1D *hvRes = new TH1D("hvRes","v res",500,-15*resolution, 15*resolution);
 
   TH1D *hqopPu = new TH1D("hqopPu","q/p pull",200,-6.,6.);
   TH1D *pVal = new TH1D("pVal","p-value",100,0.,1.00000001);
@@ -346,8 +342,8 @@ int main() {
       TVector3 pos(0, 0, 0);
       TVector3 mom(1.,0,0);
       mom.SetPhi(gRandom->Uniform(0.,2*TMath::Pi()));
-      //mom.SetTheta(gRandom->Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
-      mom.SetTheta(theta*TMath::Pi()/180);
+      mom.SetTheta(gRandom->Uniform(0.5*TMath::Pi(),0.9*TMath::Pi()));
+      //mom.SetTheta(theta*TMath::Pi()/180);
       mom.SetMag(momentum);
       TMatrixDSym covM(6);
       for (int i = 0; i < 3; ++i)
@@ -445,7 +441,7 @@ int main() {
         secondTrack->addTrackRep(secondRep->clone());
       }
       else
-	delete secondRep;
+        delete secondRep;
       //if (debug) fitTrack->Print("C");
 
       assert(fitTrack->checkConsistency());
@@ -544,8 +540,13 @@ int main() {
       assert(secondTrack->checkConsistency());
 
 #ifndef VALGRIND
-      if (!onlyDisplayFailed && iEvent < 1000)
-        display->addEvent(fitTrack);
+      if (!onlyDisplayFailed && iEvent < 1000) {
+        std::vector<genfit::Track*> event;
+        event.push_back(fitTrack);
+        if (splitTrack > 0)
+          event.push_back(secondTrack);
+        display->addEvent(event);
+      }
       else if (onlyDisplayFailed &&
                (!fitTrack->getFitStatus(rep)->isFitConverged() ||
                 fitTrack->getFitStatus(rep)->getPVal() < 0.01)) {
@@ -612,7 +613,7 @@ int main() {
       const TMatrixDSym& cov = kfsop.getCov();
 
       double pval = fitter->getPVal(fitTrack, rep);
-      assert( fabs(pval - static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getBackwardPVal()) < 1E-10 );
+      //assert( fabs(pval - static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getBackwardPVal()) < 1E-10 );
 
       hmomRes->Fill( (charge/state[0]-momentum));
       hupRes->Fill(  (state[1]-referenceState[1]));
@@ -640,6 +641,7 @@ int main() {
         std::cerr << e.what();
         std::cout << "could not get TrackLen or TOF! \n";
       }
+
 
 
       // check l/r resolution and outlier rejection
@@ -705,12 +707,75 @@ int main() {
 
       }
 
+      if (checkPruning) { //check pruning
+        //std::cout<<"\n";
+        //std::cout<<"get stFirst ";
+        genfit::MeasuredStateOnPlane stFirst = fitTrack->getFittedState();
+        //std::cout<<"get stLast ";
+        genfit::MeasuredStateOnPlane stLast = fitTrack->getFittedState(-1);
 
-      fitTrack->prune();
-      if (debug) {
-        std::cout<<" pruned track: ";
-        fitTrack->Print();
-      }
+        for (unsigned int i=0; i<1; ++i) {
+          genfit::Track trClone(*fitTrack);
+          assert(trClone.checkConsistency());
+
+          bool first(false), last(false);
+
+          TString opt("");
+          try {
+            if (gRandom->Uniform() < 0.5) trClone.prune("C");
+            if (gRandom->Uniform() < 0.5) {
+              opt.Append("F");
+              first = true;
+            }
+            if (gRandom->Uniform() < 0.5) {
+              opt.Append("L");
+              last = true;
+            }
+            if (gRandom->Uniform() < 0.5) opt.Append("W");
+            if (gRandom->Uniform() < 0.5) opt.Append("R");
+            if (gRandom->Uniform() < 0.5) opt.Append("M");
+            if (gRandom->Uniform() < 0.5) opt.Append("I");
+            if (gRandom->Uniform() < 0.5) opt.Append("U");
+
+            trClone.prune(opt);
+
+            if (!trClone.checkConsistency()) {
+              trClone.getFitStatus()->getPruneFlags().Print();
+            }
+            //trClone.getFitStatus()->getPruneFlags().Print();
+
+            //std::cout<<"get stCloneFirst ";
+            genfit::MeasuredStateOnPlane stCloneFirst = trClone.getFittedState();
+            //std::cout<<"get stCloneLast ";
+            genfit::MeasuredStateOnPlane stCloneLast = trClone.getFittedState(-1);
+
+            if (first and ! (stFirst.getState() == stCloneFirst.getState() and stFirst.getCov() == stCloneFirst.getCov() )) {
+              //std::cout<<" failed first state ";
+              //stFirst.Print();
+              //stCloneFirst.Print();
+
+              trClone.getFitStatus()->getPruneFlags().Print();
+            }
+
+            if (last  and ! (stLast.getState()  == stCloneLast.getState()  and stLast.getCov()  == stCloneLast.getCov() )) {
+              //std::cout<<" failed last state ";
+              //stLast.Print();
+              //stCloneLast.Print();
+
+              trClone.getFitStatus()->getPruneFlags().Print();
+            }
+
+            if (debug) {
+              std::cout<<" pruned track: ";
+              trClone.Print();
+            }
+          }
+          catch (genfit::Exception &e) {
+            std::cerr << e.what();
+          }
+        }
+
+      } // end check pruning
 
 #endif
 
