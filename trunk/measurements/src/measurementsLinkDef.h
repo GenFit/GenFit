@@ -4,6 +4,13 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#ifdef __CLING__
+#pragma link C++ nestedclass;
+#pragma link C++ nestedtypedef;
+
+#pragma link C++ namespace genfit;
+#endif
+
 #pragma link C++ class genfit::HMatrixU+;
 #pragma link C++ class genfit::HMatrixUnit+;
 #pragma link C++ class genfit::HMatrixV+;

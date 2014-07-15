@@ -16,7 +16,7 @@ IF(NOT DEFINED LIBRARY_OUTPUT_DIRECTORY)
 	set( LIBRARY_OUTPUT_DIRECTORY ./lib )
 ENDIF()
 IF(NOT DEFINED INCLUDE_OUTPUT_DIRECTORY)
-	set( INCLUDE_OUTPUT_DIRECTORY ./include/genfit )
+	set( INCLUDE_OUTPUT_DIRECTORY ./include )
 ENDIF()
 
 # define path to macros and settings
@@ -169,28 +169,36 @@ AUX_SOURCE_DIRECTORY( ./utilities/src     library_sources )
 
 
 # Dictionary generation.  For the time being, we list classes one-by-one.
-MACRO (ROOT_GENERATE_DICTIONARY INFILES INCLUDE_DIRS_IN LINKDEF_FILE OUTFILE)
+MACRO (ROOT_GENERATE_DICTIONARY LIBNAME INFILES INCLUDE_DIRS_IN LINKDEF_FILE OUTFILE)
   set (INCLUDE_DIRS)
   foreach (_current_FILE ${INCLUDE_DIRS_IN})
     set(INCLUDE_DIRS ${INCLUDE_DIRS} -I${_current_FILE})   
   endforeach (_current_FILE ${INCLUDE_DIRS_IN})
 
-  if (ROOT_CINT_EXECUTABLE MATCHES ".*rootcint")
+  SET(EXTRA_DICT_ARGS "")
+  IF(ROOT_found_version GREATER 59900)
+    STRING(REGEX REPLACE "^(.*)\\.(.*)$" "\\1_rdict.pcm" OUTFILE_PCM "${OUTFILE}")
+    STRING(REGEX REPLACE "^(.*)Dict\\.(.*)$" "\\1.rootmap" OUTFILE_RMF "${OUTFILE}")
+    SET (OUTFILES ${OUTFILE} ${OUTFILE_PCM} ${OUTFILE_RMF})
+    SET(EXTRA_DICT_ARGS -inlineInputHeader -rmf ${OUTFILE_RMF} -rml ${LIBNAME}${CMAKE_SHARED_LIBRARY_SUFFIX})
+  ELSE()
     STRING(REGEX REPLACE "^(.*)\\.(.*)$" "\\1.h" OUTFILE_H "${OUTFILE}")
     SET (OUTFILES ${OUTFILE} ${OUTFILE_H})
-  elseif (ROOT_CINT_EXECUTABLE MATCHES ".*rootcling")
-    STRING(REGEX REPLACE "^(.*)\\.(.*)$" "\\1_rdict.pcm" OUTFILE_PCM "${OUTFILE}")
-    SET (OUTFILES ${OUTFILE} ${OUTFILE_PCM})
-  else ()
-    MESSAGE(SEND_ERROR "Could not identify ROOT dictionary generation program.")
-  endif ()
-    
+  ENDIF()
+  
   ADD_CUSTOM_COMMAND(OUTPUT ${OUTFILES}
     COMMAND ${ROOT_CINT_EXECUTABLE}
-    ARGS -f ${OUTFILE} -c ${INCLUDE_DIRS} ${INFILES} ${LINKDEF_FILE} DEPENDS ${INFILES} ${LINKDEF_FILE})
+    ARGS -f ${OUTFILE} ${EXTRA_DICT_ARGS} -c ${INCLUDE_DIRS} ${INFILES} ${LINKDEF_FILE}
+    DEPENDS ${INFILES} ${LINKDEF_FILE})
 
   STRING(REGEX REPLACE "/" "" OUTFILE_NO_SLASH "${OUTFILE}")
   ADD_CUSTOM_TARGET(generate_${OUTFILE_NO_SLASH} DEPENDS ${OUTFILE})
+
+  IF(ROOT_found_version GREATER 59900)
+    # PCM files and rootmap-files should be installed
+    INSTALL(FILES ${OUTFILE_RMF} ${OUTFILE_PCM}
+            DESTINATION ${LIBRARY_OUTPUT_DIRECTORY})
+  ENDIF()
 ENDMACRO (ROOT_GENERATE_DICTIONARY)
 
 SET(CORE_DICTIONARY_SOURCES
@@ -214,7 +222,8 @@ SET(CORE_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackPoint.h
   ${CMAKE_CURRENT_SOURCE_DIR}/finitePlanes/include/RectangularFinitePlane.h
 )
-ROOT_GENERATE_DICTIONARY("${CORE_DICTIONARY_SOURCES}"
+ROOT_GENERATE_DICTIONARY("${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}"
+                         "${CORE_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/core/src/coreLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cc")
@@ -223,7 +232,8 @@ SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cc" "${library_sou
 SET(EVENTDISPLAY_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include/EventDisplay.h
 )
-ROOT_GENERATE_DICTIONARY("${EVENTDISPLAY_DICTIONARY_SOURCES}"
+ROOT_GENERATE_DICTIONARY("${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}"
+                         "${EVENTDISPLAY_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/fitters/include;${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/src/eventDisplayLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/eventDisplayRootDict.cc")
@@ -240,7 +250,8 @@ SET(FITTERS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFitterInfo.h
   ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/DAF.h
 )
-ROOT_GENERATE_DICTIONARY("${FITTERS_DICTIONARY_SOURCES}"
+ROOT_GENERATE_DICTIONARY("${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}"
+                         "${FITTERS_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/fitters/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/fitters/src/fittersLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cc")
@@ -253,7 +264,8 @@ SET(GBL_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblFitterInfo.h
   ${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblFitStatus.h
 )
-ROOT_GENERATE_DICTIONARY("${GBL_DICTIONARY_SOURCES}"
+ROOT_GENERATE_DICTIONARY("${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}"
+                         "${GBL_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/GBL/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/GBL/src/GBLLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/GBLRootDict.cc")
@@ -273,7 +285,8 @@ SET(MEASUREMENTS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WirePointMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WireTrackCandHit.h
 )
-ROOT_GENERATE_DICTIONARY("${MEASUREMENTS_DICTIONARY_SOURCES}"
+ROOT_GENERATE_DICTIONARY("${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}"
+                         "${MEASUREMENTS_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/measurements/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/measurements/src/measurementsLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cc")
@@ -282,7 +295,8 @@ SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cc" "${lib
 SET(TRACKREPS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include/RKTrackRep.h
 )
-ROOT_GENERATE_DICTIONARY("${TRACKREPS_DICTIONARY_SOURCES}"
+ROOT_GENERATE_DICTIONARY("${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}"
+                         "${TRACKREPS_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/trackReps/src/trackRepsLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cc")
@@ -294,7 +308,8 @@ SET(UTILITIES_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/mySpacepointDetectorHit.h
   ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/mySpacepointMeasurement.h
 )
-ROOT_GENERATE_DICTIONARY("${UTILITIES_DICTIONARY_SOURCES}"
+ROOT_GENERATE_DICTIONARY("${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}"
+                         "${UTILITIES_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/utilities/include;${CMAKE_CURRENT_SOURCE_DIR}/measurements/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/utilities/src/utilitiesLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cc")
@@ -305,7 +320,8 @@ if(DEFINED RAVE)
 	  ${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include/GFRaveTrackParameters.h
 	  ${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include/GFRaveVertex.h
 	)
-	ROOT_GENERATE_DICTIONARY("${GFRAVE_DICTIONARY_SOURCES}"
+	ROOT_GENERATE_DICTIONARY("${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}"
+	                         "${GFRAVE_DICTIONARY_SOURCES}"
 	                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include"
 				 "${CMAKE_CURRENT_SOURCE_DIR}/GFRave/src/GFRaveLinkDef.h"
 				 "${CMAKE_CURRENT_BINARY_DIR}/GFRaveRootDict.cc")
