@@ -39,6 +39,10 @@
 #pragma link C++ class genfit::Track-;
 #pragma link C++ class genfit::TrackPoint-; // track_, fixup the map
 
+// Schema Evolution rules.  The official documentation appears to be
+// 2010 J. Phys.: Conf. Ser. 219 032004
+// http://iopscience.iop.org/1742-6596/219/3/032004
+//
 // Old versions couldn't actually prune the track, so we ignore the old incarnation
 #pragma read sourceClass="genfit::FitStatus" version="[1]" \
   targetClass="genfit::FitStatus"                          \
