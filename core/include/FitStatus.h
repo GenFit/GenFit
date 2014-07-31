@@ -48,22 +48,28 @@ struct PruneFlags {
   PruneFlags();
   void reset();
   //! does not reset! If a flag is already true and is not in opt, it will stay true.
-  void setFlags(Option_t* option);
-  //! check if flags are set
-  bool hasFlags(Option_t* option) const;
+  void setFlags(Option_t* option = "");
+  //! check if all the given flags are set
+  bool hasFlags(Option_t* option = "CFLWRMIU") const;
   //! check if any of the flags is set
   bool isPruned() const;
 
   void Print(const Option_t* = "") const;
 
-  bool C:1;
-  bool F:1;
-  bool L:1;
-  bool W:1;
-  bool R:1;
-  bool M:1;
-  bool I:1;
-  bool U:1;
+private:
+  enum fields { C = 1 << 0,
+		F = 1 << 1,
+		L = 1 << 2,
+		W = 1 << 3,
+		R = 1 << 4,
+		M = 1 << 5,
+		I = 1 << 6,
+		U = 1 << 7 };
+
+  int value; // bitfield composed from above.  ROOT cannot deal with
+	     // bitfield notation, so this is done manually.
+
+  // No ClassDef here.  Update FitStatus version number when changing this.
 };
 
 
@@ -155,7 +161,7 @@ class FitStatus {
   double chi2_;
   double ndf_;
 
-  ClassDef(FitStatus, 2);
+  ClassDef(FitStatus, 3);
 };
 
 } /* End of namespace genfit */
