@@ -204,6 +204,23 @@ int main() {
     covFinal = fitTrack->getFittedState().getCov();
     planeFinal =  *(fitTrack->getFittedState().getPlane());
 
+    switch (iEvent % 5) {
+    case 0:
+      break;
+    case 1:
+      fitTrack->prune("FL");
+      break;
+    case 2:
+      fitTrack->prune("W");
+      break;
+    case 3:
+      fitTrack->prune("RC");
+      break;
+    case 4:
+      fitTrack->prune("U");
+      break;
+    }
+
     tResults->Fill();
 
     //fitTrack->Print();

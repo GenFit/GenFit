@@ -40,14 +40,14 @@ void PruneFlags::setFlags(Option_t* option) {
   TString opt = option;
   opt.ToUpper();
 
-  C = opt.Contains("C") || C;
-  F = opt.Contains("F") || F;
-  L = opt.Contains("L") || L;
-  W = opt.Contains("W") || W;
-  R = opt.Contains("R") || R;
-  M = opt.Contains("M") || M;
-  I = opt.Contains("I") || I;
-  U = opt.Contains("U") || U;
+  value |= opt.Contains("C") ? C : 0;
+  value |= opt.Contains("F") ? F : 0;
+  value |= opt.Contains("L") ? L : 0;
+  value |= opt.Contains("W") ? W : 0;
+  value |= opt.Contains("R") ? R : 0;
+  value |= opt.Contains("M") ? M : 0;
+  value |= opt.Contains("I") ? I : 0;
+  value |= opt.Contains("U") ? U : 0;
 }
 
 
@@ -55,35 +55,32 @@ bool PruneFlags::hasFlags(Option_t* option) const {
   TString opt = option;
   opt.ToUpper();
 
-  if ((opt.Contains("C") && !C) ||
-      (opt.Contains("F") && !F) ||
-      (opt.Contains("L") && !L) ||
-      (opt.Contains("W") && !W) ||
-      (opt.Contains("R") && !R) ||
-      (opt.Contains("M") && !M) ||
-      (opt.Contains("I") && !I) ||
-      (opt.Contains("U") && !U) )
-    return false;
-
-  return true;
+  return !((!(value & C) && opt.Contains("C"))
+	   || (!(value & F) && opt.Contains("F"))
+	   || (!(value & L) && opt.Contains("L"))
+	   || (!(value & W) && opt.Contains("W"))
+	   || (!(value & R) && opt.Contains("R"))
+	   || (!(value & M) && opt.Contains("M"))
+	   || (!(value & I) && opt.Contains("I"))
+	   || (!(value & U) && opt.Contains("U")));
 }
 
 
 bool PruneFlags::isPruned() const {
-  return (C || F || L || W || R || M || I || U);
+  return !!value;
 }
 
 
 void PruneFlags::Print(const Option_t* option) const {
   std::cout << "PruneFlags: ";
-  if (C) std::cout << "C";
-  if (F) std::cout << "F";
-  if (L) std::cout << "L";
-  if (W) std::cout << "W";
-  if (R) std::cout << "R";
-  if (M) std::cout << "M";
-  if (I) std::cout << "I";
-  if (U) std::cout << "U";
+  if (value & C) std::cout << "C";
+  if (value & F) std::cout << "F";
+  if (value & L) std::cout << "L";
+  if (value & W) std::cout << "W";
+  if (value & R) std::cout << "R";
+  if (value & M) std::cout << "M";
+  if (value & I) std::cout << "I";
+  if (value & U) std::cout << "U";
   std::cout << "\n";
 }
 
