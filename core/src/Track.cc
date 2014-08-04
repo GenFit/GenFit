@@ -253,22 +253,29 @@ TrackPoint* Track::getPointWithFitterInfo(int id, const AbsTrackRep* rep) const 
   if (rep == NULL)
     rep = getCardinalRep();
 
-  int i(0);
-  for (std::vector<TrackPoint*>::const_iterator it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
-    if ((*it)->hasFitterInfo(rep)) {
-      if (id == i)
-        return (*it);
-      ++i;
+  if (id >= 0) {
+    int i = 0;
+    for (std::vector<TrackPoint*>::const_iterator it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
+      if ((*it)->hasFitterInfo(rep)) {
+	if (id == i)
+	  return (*it);
+	++i;
+      }
+    }
+  } else {
+    // Search backwards.
+    int i = -1;
+    for (std::vector<TrackPoint*>::const_reverse_iterator it = trackPoints_.rbegin(); it != trackPoints_.rend(); ++it) {
+      if ((*it)->hasFitterInfo(rep)) {
+	if (id == i)
+	  return (*it);
+	--i;
+      }
     }
   }
 
-  if (i == 0)
-    return NULL;
-
-  if (id < 0)
-    id += i;
-
-  return getPointWithFitterInfo(id, rep);
+  // Not found, i.e. abs(id) > number of fitted TrackPoints
+  return 0;
 }
 
 
