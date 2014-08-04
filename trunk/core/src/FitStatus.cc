@@ -71,7 +71,7 @@ bool PruneFlags::isPruned() const {
 }
 
 
-void PruneFlags::Print(const Option_t* option) const {
+void PruneFlags::Print(const Option_t*) const {
   std::cout << "PruneFlags: ";
   if (value & C) std::cout << "C";
   if (value & F) std::cout << "F";
