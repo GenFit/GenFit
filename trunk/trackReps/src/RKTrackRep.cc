@@ -841,8 +841,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
   jacobian.ResizeTo(5,5);
   jacobian = fJacobian_;
   if (!useInvertFast) {
-    TDecompLU invertAlgo(jacobian);
-    bool status = invertAlgo.Invert(jacobian);
+    bool status = TDecompLU::InvertLU(jacobian, 0.0);
     if(status == 0){
       Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
       e.setFatal();
