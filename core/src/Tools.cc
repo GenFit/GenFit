@@ -215,22 +215,24 @@ bool tools::transposedForwardSubstitution(const TMatrixD& R, TVectorD& b)
 
 
 // Same, but for one column of the matrix b.  Used by transposedInvert below
+// assumes b(i,j) == (i == j)
 bool tools::transposedForwardSubstitution(const TMatrixD& R, TMatrixD& b, int nCol)
 {
   size_t n = R.GetNrows();
-  double *const bk = b.GetMatrixArray();
+  double *const bk = b.GetMatrixArray() + nCol;
   const double *const Rk = R.GetMatrixArray();
-  for (unsigned int i = 0; i < n; ++i) {
-    double sum = bk[i * n + nCol];
+  for (unsigned int i = nCol; i < n; ++i) {
+    double sum = (i == (size_t)nCol);
     for (unsigned int j = 0; j < i; ++j) {
-      sum -= bk[j*n + nCol]*Rk[j*n + i];  // already replaced previous elements in b.
+      sum -= bk[j*n]*Rk[j*n + i];  // already replaced previous elements in b.
     }
     if (Rk[i*n+i] == 0)
       return false;
-    bk[i*n + nCol] = sum / Rk[i*n + i];
+    bk[i*n] = sum / Rk[i*n + i];
   }
   return true;
 }
+
 
 // inv will be the inverse of the transposed of the upper-right matrix R
 bool tools::transposedInvert(const TMatrixD& R, TMatrixD& inv)

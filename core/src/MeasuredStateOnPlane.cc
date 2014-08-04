@@ -75,9 +75,8 @@ MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, 
   // the number of temporary objects being constructed.
 
 #if 0
-  // For ease of understanding, here's a version of the code that is a
-  // few percent slower, depending on the exact use-case, but which
-  // makes the math more explicit:
+  // For ease of understanding, here's a very explicit implementation
+  // that uses the textbook algorithm:
   TMatrixDSym fCovInv, bCovInv, smoothed_cov;
   tools::invertMatrix(forwardState.getCov(), fCovInv);
   tools::invertMatrix(backwardState.getCov(), bCovInv);
@@ -90,34 +89,9 @@ MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, 
   return retVal;
 #endif
 
-  const bool oldWay = true;
-  if (oldWay) {
-    static TMatrixDSym fCovInv, bCovInv;  // Static to avoid re-constructing for every call
-    tools::invertMatrix(forwardState.getCov(), fCovInv);
-    tools::invertMatrix(backwardState.getCov(), bCovInv);
-
-    // Using a StateOnPlane here turned out at least as fast as
-    // constructing a MeasuredStateOnPlane here, and then resetting its
-    // covariance matrix below, even though it means another copy in the
-    // return statement.
-    StateOnPlane sop(forwardState); // copies auxInfo, plane, rep in the process
-                                    // Using 'static' + subsequent assignment is measurably slower.
-                                    // Surprisingly, using only TVectorD
-                                    // sop(forwardState.getState()) with according
-                                    // changes below measured slower.
-
-    sop.getState() *= fCovInv;
-    fCovInv += bCovInv;
-    tools::invertMatrix(fCovInv);  // This is now the covariance of the average.
-    sop.getState() += bCovInv*backwardState.getState();  // one temporary TVectorD
-    sop.getState() *= fCovInv;
-    
-    return MeasuredStateOnPlane(sop, fCovInv);
-  }
-
   // This is a numerically stable implementation of the averaging
-  // process.  We write S1, S2 for the lower diagonal square roots
-  // (Cholesky deocmpositions) of the covariance matrices, such that
+  // process.  We write S1, S2 for the upper diagonal square roots
+  // (Cholesky decompositions) of the covariance matrices, such that
   // C1 = S1' S1 (transposition indicated by ').
   //
   // Then we can write
@@ -151,15 +125,19 @@ MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, 
   // inverting.
   //
   // This turns out not only more numerically stable, but because the
-  // matrix operations are simpler, it is also faster than the simple
-  // implementation.
+  // matrix operations are simpler, it is also faster than the
+  // straightoforward implementation.
+  //
+  // This is an application of the technique of Golub, G.,
+  // Num. Math. 7, 206 (1965) to the least-squares problem underlying
+  // averaging.
   TDecompChol d1(forwardState.getCov());
   d1.Decompose();
   TDecompChol d2(backwardState.getCov());
   d2.Decompose();
 
   int nRows = d1.GetU().GetNrows();
-  assert(nRows = d2.GetU().GetNrows());
+  assert(nRows == d2.GetU().GetNrows());
   TMatrixD S1inv, S2inv;
   tools::transposedInvert(d1.GetU(), S1inv);
   tools::transposedInvert(d2.GetU(), S2inv);
