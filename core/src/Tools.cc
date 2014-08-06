@@ -202,13 +202,13 @@ bool tools::transposedForwardSubstitution(const TMatrixD& R, TVectorD& b)
   double *const bk = b.GetMatrixArray();
   const double *const Rk = R.GetMatrixArray();
   for (unsigned int i = 0; i < n; ++i) {
-    double sum = bk[i * n];
+    double sum = bk[i];
     for (unsigned int j = 0; j < i; ++j) {
-      sum -= bk[j*n]*Rk[j*n + i];  // already replaced previous elements in b.
+      sum -= bk[j]*Rk[j*n + i];  // already replaced previous elements in b.
     }
     if (Rk[i*n+i] == 0)
       return false;
-    bk[i*n] = sum / Rk[i*n + i];
+    bk[i] = sum / Rk[i*n + i];
   }
   return true;
 }
