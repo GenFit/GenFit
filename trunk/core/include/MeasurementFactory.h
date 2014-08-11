@@ -38,11 +38,11 @@ class AbsMeasurement;
 
 /** @brief Factory object to create AbsMeasurement objects from digitized and clustered data
  *
- * The MeasurementFactory is used to automatically fill Track objects with
- * hit data. For each detector type that is used, one AbsMeasurementProducer
- * has to be registered in the factory. The factory can the use the index
- * information from a TrackCand object to load the indexed hits into
- * the Track.
+ * The MeasurementFactory is used to automatically fill Track objects
+ * with hit data. For each detector type used an
+ * AbsMeasurementProducer has to be registered in the factory. The
+ * factory can then use the index information from a TrackCand object
+ * to load the indexed hits into the Track.
  *
  * @sa AbsMeasurementProducer
  * @sa TrackCand
@@ -72,7 +72,7 @@ class MeasurementFactory {
   /** @brief Create a Measurement
    *
    * Measurements have to implement a Constructor which takes the cluster object
-   * from which the Measurement is build as the only parameter.
+   * from which the Measurement is built as the only parameter.
    * @sa AbsMeasurementProducer
    */
   measurement_T* createOne (int detID, int index, const TrackCandHit* hit) const;
@@ -85,7 +85,7 @@ class MeasurementFactory {
    * is already along the Track.
    *
    * Measurements have to implement a constructor which takes the cluster object
-   * from which the Measurement is build as the only parameter.
+   * from which the Measurement is built as the only parameter.
    * @sa AbsMeasurementProducer
    */
   std::vector<measurement_T*> createMany(const TrackCand& cand) const;
