@@ -123,7 +123,7 @@ class FitStatus {
    *
    * Virtual, because the fitter may use a different probability distribution.
    */
-  virtual double getPVal() const {return ROOT::Math::chisquared_cdf_c(chi2_, ndf_);}
+  virtual double getPVal() const {return std::max(0.,ROOT::Math::chisquared_cdf_c(chi2_, ndf_));}
 
   void setIsFitted(bool fitted = true) {isFitted_ = fitted;}
   void setIsFitConvergedFully(bool fitConverged = true) {isFitConvergedFully_ = fitConverged;}
