@@ -212,8 +212,8 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
       ++nIt;
 
 
-      double PvalBW = ROOT::Math::chisquared_cdf_c(chi2BW, ndfBW);
-      double PvalFW = (debugLvl_ > 0) ? ROOT::Math::chisquared_cdf_c(chi2FW, ndfFW) : 0; // Don't calculate if not debugging as this function potentially takes a lot of time.
+      double PvalBW = std::max(0.,ROOT::Math::chisquared_cdf_c(chi2BW, ndfBW));
+      double PvalFW = (debugLvl_ > 0) ? std::max(0.,ROOT::Math::chisquared_cdf_c(chi2FW, ndfFW)) : 0; // Don't calculate if not debugging as this function potentially takes a lot of time.
 
       if (debugLvl_ > 0) {
         std::cout << "KalmanFitterRefTrack::Track after fit:"; tr->Print("C");

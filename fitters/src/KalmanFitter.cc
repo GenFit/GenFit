@@ -209,8 +209,8 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
       }
       ++nIt;
 
-      double PvalBW = ROOT::Math::chisquared_cdf_c(chi2BW, ndfBW);
-      double PvalFW = (debugLvl_ > 0) ? ROOT::Math::chisquared_cdf_c(chi2FW, ndfFW) : 0; // Don't calculate if not debugging as this function potentially takes a lot of time.
+      double PvalBW = std::max(0.,ROOT::Math::chisquared_cdf_c(chi2BW, ndfBW));
+      double PvalFW = (debugLvl_ > 0) ? std::max(0.,ROOT::Math::chisquared_cdf_c(chi2FW, ndfFW)) : 0; // Don't calculate if not debugging as this function potentially takes a lot of time.
       // See if p-value only changed little.  If the initial
       // parameters are very far off, initial chi^2 and the chi^2
       // after the first iteration will be both very close to zero, so

@@ -54,7 +54,7 @@ class KalmanFitStatus : public FitStatus {
   double getForwardNdf() const {return fNdf_;}
   double getBackwardNdf() const {return FitStatus::getNdf();}
   // virtual double getPVal() : not overridden, as it does the right thing.
-  double getForwardPVal() const {return ROOT::Math::chisquared_cdf_c(fChi2_, fNdf_);}
+  double getForwardPVal() const {return std::max(0.,ROOT::Math::chisquared_cdf_c(fChi2_, fNdf_));}
   double getBackwardPVal() const {return FitStatus::getPVal(); }
 
   void setNumIterations(unsigned int numIterations) {numIterations_ = numIterations;}

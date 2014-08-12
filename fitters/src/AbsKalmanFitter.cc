@@ -117,8 +117,8 @@ double AbsKalmanFitter::getPVal(const Track* tr, const AbsTrackRep* rep, int dir
   getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
 
   if (direction < 0)
-    return ROOT::Math::chisquared_cdf_c(bChi2, bNdf);
-  return ROOT::Math::chisquared_cdf_c(fChi2, fNdf);
+    return std::max(0.,ROOT::Math::chisquared_cdf_c(bChi2, bNdf));
+  return std::max(0.,ROOT::Math::chisquared_cdf_c(fChi2, fNdf));
 }
 
 
