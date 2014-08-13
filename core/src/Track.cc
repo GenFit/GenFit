@@ -48,7 +48,7 @@ Track::Track() :
 }
 
 
-Track::Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMeasurement>& factory, AbsTrackRep* rep) :
+Track::Track(const TrackCand& trackCand, const MeasurementFactory<AbsMeasurement>& factory, AbsTrackRep* rep) :
   cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), stateSeed_(6), covSeed_(6)
 {
 
@@ -56,7 +56,7 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMea
     addTrackRep(rep);
 
   // create the measurements using the factory.
-  std::vector <genfit::AbsMeasurement*> factoryHits = factory.createMany(trackCand);
+  std::vector <AbsMeasurement*> factoryHits = factory.createMany(trackCand);
 
   if (factoryHits.size() != trackCand.getNHits()) {
     Exception exc("Track::Track ==> factoryHits.size() != trackCand->getNHits()",__LINE__,__FILE__);
@@ -77,7 +77,7 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMea
       trackPoints_.back()->addRawMeasurement(factoryHits[i]);
     }
     else {
-      TrackPoint* tp = new genfit::TrackPoint(factoryHits[i], this);
+      TrackPoint* tp = new TrackPoint(factoryHits[i], this);
       tp->setSortingParameter(trackCand.getHit(i)->getSortingParameter());
       insertPoint(tp);
     }
@@ -414,7 +414,7 @@ void Track::insertPoint(TrackPoint* point, int id) {
 }
 
 
-void Track::insertPoints(std::vector<genfit::TrackPoint*> points, int id) {
+void Track::insertPoints(std::vector<TrackPoint*> points, int id) {
 
   int nBefore = getNumPoints();
   int n = points.size();
@@ -426,7 +426,7 @@ void Track::insertPoints(std::vector<genfit::TrackPoint*> points, int id) {
     return;
   }
 
-  for (std::vector<genfit::TrackPoint*>::iterator p = points.begin(); p != points.end(); ++p)
+  for (std::vector<TrackPoint*>::iterator p = points.begin(); p != points.end(); ++p)
     (*p)->setTrack(this);
 
   if (id == -1 || id == (int)trackPoints_.size()) {
@@ -931,7 +931,7 @@ TrackCand* Track::constructTrackCand() const {
 
   for (unsigned int i = 0; i < trackPointsWithMeasurement_.size(); ++i) {
     const TrackPoint* tp = trackPointsWithMeasurement_[i];
-    const std::vector< genfit::AbsMeasurement* >& measurements = tp->getRawMeasurements();
+    const std::vector< AbsMeasurement* >& measurements = tp->getRawMeasurements();
 
     for (unsigned int j = 0; j < measurements.size(); ++j) {
       const AbsMeasurement* m = measurements[j];
@@ -1013,7 +1013,7 @@ void Track::fixWeights(AbsTrackRep* rep, int startId, int endId) {
   assert(startId <= endId);
   assert(endId <= (int)trackPoints_.size());
 
-  std::vector< genfit::AbsFitterInfo* > fis;
+  std::vector< AbsFitterInfo* > fis;
 
   for (std::vector<TrackPoint*>::iterator tp = trackPoints_.begin() + startId; tp != trackPoints_.begin() + endId; ++tp) {
     fis.clear();
@@ -1024,7 +1024,7 @@ void Track::fixWeights(AbsTrackRep* rep, int startId, int endId) {
       fis.push_back((*tp)->getFitterInfo(rep));
     }
 
-    for (std::vector< genfit::AbsFitterInfo* >::iterator fi = fis.begin(); fi != fis.end(); ++fi) {
+    for (std::vector< AbsFitterInfo* >::iterator fi = fis.begin(); fi != fis.end(); ++fi) {
       KalmanFitterInfo* kfi = dynamic_cast<KalmanFitterInfo*>(*fi);
       if (kfi == NULL)
         continue;
@@ -1077,7 +1077,7 @@ void Track::prune(const Option_t* option) {
     if (f.hasFlags("W"))
       trackPoints_[i]->deleteRawMeasurements();
 
-    std::vector< genfit::AbsFitterInfo* > fis =  trackPoints_[i]->getFitterInfos();
+    std::vector< AbsFitterInfo* > fis =  trackPoints_[i]->getFitterInfos();
     for (unsigned int j = 0; j<fis.size(); ++j) {
 
       if (i == 0 && f.hasFlags("FLI"))
