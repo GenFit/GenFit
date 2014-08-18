@@ -457,382 +457,381 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
       && point_meas->getRawMeasurement(0)->getDim() == 1
       && point_meas->getRawMeasurement(1)->getDim() == 1) {
       AbsMeasurement* raw_measU = 0;
-    AbsMeasurement* raw_measV = 0;
+      AbsMeasurement* raw_measV = 0;
     
-    // cout << " Two 1D Measurements encountered. " << endl;
+      // cout << " Two 1D Measurements encountered. " << endl;
     
-    int sensorId2 = -1;
-    PlanarMeasurement* measPlanar2 = dynamic_cast<PlanarMeasurement*>(point_meas->getRawMeasurement(0));
-    if (measPlanar2) sensorId2 = measPlanar->getPlaneId();
+      int sensorId2 = -1;
+      PlanarMeasurement* measPlanar2 = dynamic_cast<PlanarMeasurement*>(point_meas->getRawMeasurement(0));
+      if (measPlanar2) sensorId2 = measPlanar->getPlaneId();
     
-    // We only try to combine if at same sensor id (should be always, but who knows)
-    // otherwise ignore this point
-    if (sensorId != sensorId2) {
-      skipMeasurement = true;
-      cout << " ERROR: Incompatible sensorIDs at measurement point " << ipoint_meas << ". Measurement will be skipped." << endl;
-    }
+      // We only try to combine if at same sensor id (should be always, but who knows)
+      // otherwise ignore this point
+      if (sensorId != sensorId2) {
+	skipMeasurement = true;
+	cout << " ERROR: Incompatible sensorIDs at measurement point " << ipoint_meas << ". Measurement will be skipped." << endl;
+      }
     
-    // We have to combine two SVD 1D Clusters at the same plane into one 2D recohit
-    AbsMeasurement* raw_meas1 = point_meas->getRawMeasurement(0);
-    AbsMeasurement* raw_meas2 = point_meas->getRawMeasurement(1);
-    // Decide which cluster is u and which v based on H-matrix
-    if (raw_meas1->constructHMatrix(rep)->isEqual(genfit::HMatrixU())
-      && raw_meas2->constructHMatrix(rep)->isEqual(genfit::HMatrixV())) {
-      // right order U, V
-      raw_measU = raw_meas1;
-    raw_measV = raw_meas2;
+      // We have to combine two SVD 1D Clusters at the same plane into one 2D recohit
+      AbsMeasurement* raw_meas1 = point_meas->getRawMeasurement(0);
+      AbsMeasurement* raw_meas2 = point_meas->getRawMeasurement(1);
+      // Decide which cluster is u and which v based on H-matrix
+      if (raw_meas1->constructHMatrix(rep)->isEqual(genfit::HMatrixU())
+	  && raw_meas2->constructHMatrix(rep)->isEqual(genfit::HMatrixV())) {
+	// right order U, V
+	raw_measU = raw_meas1;
+	raw_measV = raw_meas2;
       } else if (raw_meas2->constructHMatrix(rep)->isEqual(genfit::HMatrixU())
-        && raw_meas1->constructHMatrix(rep)->isEqual(genfit::HMatrixV())) {
+		 && raw_meas1->constructHMatrix(rep)->isEqual(genfit::HMatrixV())) {
         // inversed order V, U
         raw_measU = raw_meas2;
-      raw_measV = raw_meas1;
-        } else {
-          // Incompatible measurements ... skip track ... I saw this once and just before a segfault ...
-          cout << " ERROR: Incompatible 1D measurements at meas. point " << ipoint_meas << ". Track will be skipped." << endl;
-          return;
-        }
-        // Combine raw measurements
-        TVectorD _raw_coor(2);
-        _raw_coor(0) = raw_measU->getRawHitCoords()(0);
-        _raw_coor(1) = raw_measV->getRawHitCoords()(0);
-        // Combine covariance matrix
-        TMatrixDSym _raw_cov(2);
-        _raw_cov.Zero();
-        _raw_cov(0, 0) = raw_measU->getRawHitCov()(0, 0);
-        _raw_cov(1, 1) = raw_measV->getRawHitCov()(0, 0);
-        // Create new combined measurement
-        raw_meas = new PlanarMeasurement(_raw_coor, _raw_cov, raw_measU->getDetId(), raw_measU->getHitId(), point_meas);
+	raw_measV = raw_meas1;
       } else {
-        // Default behavior
-        raw_meas = point_meas->getRawMeasurement(0);
+	// Incompatible measurements ... skip track ... I saw this once and just before a segfault ...
+	cout << " ERROR: Incompatible 1D measurements at meas. point " << ipoint_meas << ". Track will be skipped." << endl;
+	return;
       }
-      //TODO: We only support 2D measurements in GBL (ot two 1D combined above)
-      if (raw_meas->getRawHitCoords().GetNoElements() != 2) {
-        skipMeasurement = true;
-        #ifdef DEBUG
-        cout << " WARNING: Measurement " << (ipoint_meas + 1) << " is not 2D. Measurement Will be skipped. " << endl;
-        #endif
-      }
+      // Combine raw measurements
+      TVectorD _raw_coor(2);
+      _raw_coor(0) = raw_measU->getRawHitCoords()(0);
+      _raw_coor(1) = raw_measV->getRawHitCoords()(0);
+      // Combine covariance matrix
+      TMatrixDSym _raw_cov(2);
+      _raw_cov.Zero();
+      _raw_cov(0, 0) = raw_measU->getRawHitCov()(0, 0);
+      _raw_cov(1, 1) = raw_measV->getRawHitCov()(0, 0);
+      // Create new combined measurement
+      raw_meas = new PlanarMeasurement(_raw_coor, _raw_cov, raw_measU->getDetId(), raw_measU->getHitId(), point_meas);
+    } else {
+      // Default behavior
+      raw_meas = point_meas->getRawMeasurement(0);
+    }
+    //TODO: We only support 2D measurements in GBL (ot two 1D combined above)
+    if (raw_meas->getRawHitCoords().GetNoElements() != 2) {
+      skipMeasurement = true;
+      #ifdef DEBUG
+      cout << " WARNING: Measurement " << (ipoint_meas + 1) << " is not 2D. Measurement Will be skipped. " << endl;
+      #endif
+    }
       
-      // Now we have all necessary information, so lets insert current measurement point
-      // if we don't want to skip it (e.g. ghost SVD hit ... just 1D information)
-      if (!skipMeasurement) {
-        // 2D hit coordinates
-        TVectorD raw_coor = raw_meas->getRawHitCoords();
-        // Covariance matrix of measurement
-        TMatrixDSym raw_cov = raw_meas->getRawHitCov();
-        // Projection matrix from repository state to measurement coords
-        boost::scoped_ptr<const AbsHMatrix> HitHMatrix(raw_meas->constructHMatrix(rep));
-        // Residual between measured position and reference track position
-        TVectorD residual = -1. * (raw_coor - HitHMatrix->Hv(state));
+    // Now we have all necessary information, so lets insert current measurement point
+    // if we don't want to skip it (e.g. ghost SVD hit ... just 1D information)
+    if (!skipMeasurement) {
+      // 2D hit coordinates
+      TVectorD raw_coor = raw_meas->getRawHitCoords();
+      // Covariance matrix of measurement
+      TMatrixDSym raw_cov = raw_meas->getRawHitCov();
+      // Projection matrix from repository state to measurement coords
+      boost::scoped_ptr<const AbsHMatrix> HitHMatrix(raw_meas->constructHMatrix(rep));
+      // Residual between measured position and reference track position
+      TVectorD residual = -1. * (raw_coor - HitHMatrix->Hv(state));
+
+      trkChi2 += residual(0) * residual(0) / raw_cov(0, 0) + residual(1) * residual(1) / raw_cov(1, 1);
         
-        trkChi2 += residual(0) * residual(0) / raw_cov(0, 0) + residual(1) * residual(1) / raw_cov(1, 1);
+      // Measurement point
+      GblPoint measPoint(jacPointToPoint);
+      // Projection from local (state) coordinates to measurement coordinates (inverted)
+      // 2x2 matrix ... last block of H matrix (2 rows x 5 columns)
+      //TMatrixD proL2m = HitHMatrix->getMatrix().GetSub(0, 1, 3, 4);
+      TMatrixD proL2m(2, 2);
+      proL2m.Zero();
+      proL2m(0, 0) = HitHMatrix->getMatrix()(0, 3);
+      proL2m(0, 1) = HitHMatrix->getMatrix()(0, 4);
+      proL2m(1, 1) = HitHMatrix->getMatrix()(1, 4);
+      proL2m(1, 0) = HitHMatrix->getMatrix()(1, 3);
+      proL2m.Invert();
+      //raw_cov *= 100.;
+      //proL2m.Print();
+      measPoint.addMeasurement(proL2m, residual, raw_cov.Invert());
         
-        // Measurement point
-        GblPoint measPoint(jacPointToPoint);
-        // Projection from local (state) coordinates to measurement coordinates (inverted)
-        // 2x2 matrix ... last block of H matrix (2 rows x 5 columns)
-        //TMatrixD proL2m = HitHMatrix->getMatrix().GetSub(0, 1, 3, 4);
-        TMatrixD proL2m(2, 2);
-        proL2m.Zero();
-        proL2m(0, 0) = HitHMatrix->getMatrix()(0, 3);
-        proL2m(0, 1) = HitHMatrix->getMatrix()(0, 4);
-        proL2m(1, 1) = HitHMatrix->getMatrix()(1, 4);
-        proL2m(1, 0) = HitHMatrix->getMatrix()(1, 3);
-        proL2m.Invert();
-        //raw_cov *= 100.;
-        //proL2m.Print();
-        measPoint.addMeasurement(proL2m, residual, raw_cov.Invert());
+      //Add global derivatives to the point
         
-        //Add global derivatives to the point
+      // sensor label = sensorID * 10, then last digit is label for global derivative for the sensor
+      int label = sensorId * 10;
+      // values for global derivatives
+      //TMatrixD derGlobal(2, 6);
+      TMatrixD derGlobal(2, 12);
         
-        // sensor label = sensorID * 10, then last digit is label for global derivative for the sensor
-        int label = sensorId * 10;
-        // values for global derivatives
-        //TMatrixD derGlobal(2, 6);
-        TMatrixD derGlobal(2, 12);
+      // labels for global derivatives
+      std::vector<int> labGlobal;
         
-        // labels for global derivatives
-        std::vector<int> labGlobal;
+      // track direction in global coords
+      TVector3 tDir = trackDir;
+      // sensor u direction in global coords
+      TVector3 uDir = plane->getU();
+      // sensor v direction in global coords
+      TVector3 vDir = plane->getV();
+      // sensor normal direction in global coords
+      TVector3 nDir = plane->getNormal();
+      //file << sensorId << endl;
+      //outputVector(uDir, "U");
+      //outputVector(vDir, "V");
+      //outputVector(nDir, "Normal");
+      // track direction in local sensor system
+      TVector3 tLoc = TVector3(uDir.Dot(tDir), vDir.Dot(tDir), nDir.Dot(tDir));
         
-        // track direction in global coords
-        TVector3 tDir = trackDir;
-        // sensor u direction in global coords
-        TVector3 uDir = plane->getU();
-        // sensor v direction in global coords
-        TVector3 vDir = plane->getV();
-        // sensor normal direction in global coords
-        TVector3 nDir = plane->getNormal();
-        //file << sensorId << endl;
-        //outputVector(uDir, "U");
-        //outputVector(vDir, "V");
-        //outputVector(nDir, "Normal");
-        // track direction in local sensor system
-        TVector3 tLoc = TVector3(uDir.Dot(tDir), vDir.Dot(tDir), nDir.Dot(tDir));
+      // track u-slope in local sensor system
+      double uSlope = tLoc[0] / tLoc[2];
+      // track v-slope in local sensor system
+      double vSlope = tLoc[1] / tLoc[2];
         
-        // track u-slope in local sensor system
-        double uSlope = tLoc[0] / tLoc[2];
-        // track v-slope in local sensor system
-        double vSlope = tLoc[1] / tLoc[2];
+      // Measured track u-position in local sensor system
+      double uPos = raw_coor[0];
+      // Measured track v-position in local sensor system
+      double vPos = raw_coor[1];
         
-        // Measured track u-position in local sensor system
-        double uPos = raw_coor[0];
-        // Measured track v-position in local sensor system
-        double vPos = raw_coor[1];
+      //Global derivatives for alignment in sensor local coordinates
+      derGlobal(0, 0) = 1.0;
+      derGlobal(0, 1) = 0.0;
+      derGlobal(0, 2) = - uSlope;
+      derGlobal(0, 3) = vPos * uSlope;
+      derGlobal(0, 4) = -uPos * uSlope;
+      derGlobal(0, 5) = vPos;
         
-        //Global derivatives for alignment in sensor local coordinates
-        derGlobal(0, 0) = 1.0;
-        derGlobal(0, 1) = 0.0;
-        derGlobal(0, 2) = - uSlope;
-        derGlobal(0, 3) = vPos * uSlope;
-        derGlobal(0, 4) = -uPos * uSlope;
-        derGlobal(0, 5) = vPos;
-        
-        derGlobal(1, 0) = 0.0;
-        derGlobal(1, 1) = 1.0;
-        derGlobal(1, 2) = - vSlope;
-        derGlobal(1, 3) = vPos * vSlope;
-        derGlobal(1, 4) = -uPos * vSlope;
-        derGlobal(1, 5) = -uPos;
-        
-        labGlobal.push_back(label + 1); // u
-        labGlobal.push_back(label + 2); // v
-        labGlobal.push_back(label + 3); // w
-        labGlobal.push_back(label + 4); // alpha
-        labGlobal.push_back(label + 5); // beta
-        labGlobal.push_back(label + 6); // gamma
-        
-        
-        // Global derivatives for movement of whole detector system in global coordinates
-        //TODO: Usage of this requires Hierarchy Constraints to be provided to MP2
-        
-        // sensor centre position in global system
-        TVector3 detPos = plane->getO();
-        //cout << "detPos" << endl;
-        //detPos.Print();
-        
-        // global prediction from raw measurement
-        TVector3 pred = detPos + uPos * uDir + vPos * vDir;
-        //cout << "pred" << endl;
-        //pred.Print();
-        
-        double xPred = pred[0];
-        double yPred = pred[1];
-        double zPred = pred[2];
-        
-        // scalar product of sensor normal and track direction
-        double tn = tDir.Dot(nDir);
-        //cout << "tn" << endl;
-        //cout << tn << endl;
-        
-        // derivatives of local residuals versus measurements
-        TMatrixD drdm(3, 3);
-        drdm.UnitMatrix();
-        for (int row = 0; row < 3; row++)
-          for (int col = 0; col < 3; col++)
-            drdm(row, col) -= tDir[row] * nDir[col] / tn;
-          
-          //cout << "drdm" << endl;
-          //drdm.Print();
-          
-          // derivatives of measurements versus global alignment parameters
-          TMatrixD dmdg(3, 6);
-        dmdg.Zero();
-        dmdg(0, 0) = 1.; dmdg(0, 4) = -zPred; dmdg(0, 5) = yPred;
-        dmdg(1, 1) = 1.; dmdg(1, 3) = zPred;  dmdg(1, 5) = -xPred;
-        dmdg(2, 2) = 1.; dmdg(2, 3) = -yPred; dmdg(2, 4) = xPred;
-        
-        //cout << "dmdg" << endl;
-        //dmdg.Print();
-        
-        // derivatives of local residuals versus global alignment parameters
-        TMatrixD drldrg(3, 3);
-        drldrg.Zero();
-        drldrg(0, 0) = uDir[0]; drldrg(0, 1) = uDir[1]; drldrg(0, 2) = uDir[2];
-        drldrg(1, 0) = vDir[0]; drldrg(1, 1) = vDir[1]; drldrg(1, 2) = vDir[2];
-        
-        //cout << "drldrg" << endl;
-        //drldrg.Print();
-        
-        //cout << "drdm * dmdg" << endl;
-        //(drdm * dmdg).Print();
-        
-        // derivatives of local residuals versus rigid body parameters
-        TMatrixD drldg(3, 6);
-        drldg = drldrg * (drdm * dmdg);
-        
-        //cout << "drldg" << endl;
-        //drldg.Print();
-        
-        // offset to determine labels for sensor sets or individual layers
-        // 0: PXD, TODO 1: SVD, or individual layers
-        // offset 0 is for alignment of whole setup
-        int offset = 0;
-        //if (sensorId > 16704) offset = 20; // svd, but needs to introduce new 6 constraints: sum rot&shifts of pxd&svd = 0
-        
-        derGlobal(0, 6) = drldg(0, 0); labGlobal.push_back(offset + 1);
-        derGlobal(0, 7) = drldg(0, 1); labGlobal.push_back(offset + 2);
-        derGlobal(0, 8) = drldg(0, 2); labGlobal.push_back(offset + 3);
-        derGlobal(0, 9) = drldg(0, 3); labGlobal.push_back(offset + 4);
-        derGlobal(0, 10) = drldg(0, 4); labGlobal.push_back(offset + 5);
-        derGlobal(0, 11) = drldg(0, 5); labGlobal.push_back(offset + 6);
-        
-        derGlobal(1, 6) = drldg(1, 0);
-        derGlobal(1, 7) = drldg(1, 1);
-        derGlobal(1, 8) = drldg(1, 2);
-        derGlobal(1, 9) = drldg(1, 3);
-        derGlobal(1, 10) = drldg(1, 4);
-        derGlobal(1, 11) = drldg(1, 5);
-        
-        
-        
-        measPoint.addGlobals(labGlobal, derGlobal);
-        listOfPoints.push_back(measPoint);
-        listOfLayers.push_back((unsigned int) sensorId);
-        n_gbl_points++;
-        n_gbl_meas_points++;
-      } else {
-        // Incompatible measurement, store point without measurement
-        GblPoint dummyPoint(jacPointToPoint);
-        listOfPoints.push_back(dummyPoint);
-        listOfLayers.push_back((unsigned int) sensorId);
-        n_gbl_points++;
-        skipMeasurement = false;
-        #ifdef DEBUG
-        cout << " Dummy point inserted. " << endl;
-        #endif
-      }
-      
-      
-      //cout << " Starting extrapolation..." << endl;
-      try {
-        
-        // Extrapolate to next measurement to get material distribution
-        if (ipoint_meas < npoints_meas - 1) {
-          // Check if fitter info is in place
-          if (!trk->getPoint(ipoint_meas + 1)->hasFitterInfo(rep)) {
-            cout << " ERROR: Measurement point does not have a fitter info. Track will be skipped." << endl;
-            return;
-          }
-          // Fitter of next point info which is only used now to get the plane
-          KalmanFitterInfo* fi_i_plus_1 = dynamic_cast<KalmanFitterInfo*>(trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep));
-          if (!fi_i_plus_1) {
-            cout << " ERROR: KalmanFitterInfo (with reference state) for measurement does not exist. Track will be skipped." << endl;
-            return;
-          }
-          StateOnPlane refCopy(*reference);
-          // Extrap to point + 1, do NOT stop at boundary
-          rep->extrapolateToPlane(refCopy, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, false);
-          getScattererFromMatList(trackLen,
-                                  scatTheta,
-                                  scatSMean,
-                                  scatDeltaS,
-                                  trackMomMag,
-                                  particleMass,
-                                  particleCharge,
-                                  rep->getSteps());
-          // Now calculate positions and scattering variance for equivalent scatterers
-          // (Solution from Claus Kleinwort (DESY))
-          s1 = 0.;
-          s2 = scatSMean + scatDeltaS * scatDeltaS / (scatSMean - s1);
-          theta1 = sqrt(scatTheta * scatTheta * scatDeltaS * scatDeltaS / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
-          theta2 = sqrt(scatTheta * scatTheta * (scatSMean - s1) * (scatSMean - s1) / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
-          
-          if (m_enableScatterers && !m_enableIntermediateScatterer) {
-            theta1 = scatTheta;
-            theta2 = 0;
-          } else if (!m_enableScatterers) {
-            theta1 = 0.;
-            theta2 = 0.;
-          }
-          
-          if (s2 < 1.e-4 || s2 >= trackLen - 1.e-4 || s2 <= 1.e-4) {
-            cout << " WARNING: GBL points will be too close. GBLTrajectory construction might fail. Let's try it..." << endl;
-          }
-          
-        }
-        // Return back to state on current plane
-        delete reference;
-        reference = new ReferenceStateOnPlane(*fi->getReferenceState());
-        
-        // If not last measurement, extrapolate and get jacobians for scattering points between this and next measurement
-        if (ipoint_meas < npoints_meas - 1) {
-          if (theta2 > scatEpsilon) {
-            // First scatterer will be placed at current measurement point (see bellow)
-            
-            // theta2 > 0 ... we want second scatterer:
-            // Extrapolate to s2 (remember we have s1 = 0)
-            rep->extrapolateBy(*reference, s2, false, true);
-            rep->getForwardJacobianAndNoise(jacMeas2Scat, noise, deltaState);
-            // Finish extrapolation to next measurement
-            double nextStep = rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, true);
-            if (0. > nextStep) {
-              cout << " ERROR: The extrapolation to measurement point " << (ipoint_meas + 2) << " stepped back by " << nextStep << "cm !!! Track will be skipped." << endl;
-              return;
-            }
-            rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
-            
-          } else {
-            // No scattering: extrapolate whole distance between measurements
-            rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, true);
-            //NOTE: we will load the jacobian from this extrapolation in next loop into measurement point
-            //jacPointToPoint.Print();
-            rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
-            //jacPointToPoint.Print();
-          }
-        }
-      } catch (...) {
-        cout << " ERROR: Extrapolation failed. Track will be skipped." << endl;
-        return;
-      }
-      //cout << " Extrapolation finished." << endl;
-      
-      
-      // Now store scatterers if not last measurement and if we decided
-      // there should be scatteres, otherwise the jacobian in measurement
-      // stored above is already correct
+      derGlobal(1, 0) = 0.0;
+      derGlobal(1, 1) = 1.0;
+      derGlobal(1, 2) = - vSlope;
+      derGlobal(1, 3) = vPos * vSlope;
+      derGlobal(1, 4) = -uPos * vSlope;
+      derGlobal(1, 5) = -uPos;
+
+      labGlobal.push_back(label + 1); // u
+      labGlobal.push_back(label + 2); // v
+      labGlobal.push_back(label + 3); // w
+      labGlobal.push_back(label + 4); // alpha
+      labGlobal.push_back(label + 5); // beta
+      labGlobal.push_back(label + 6); // gamma
+
+      // Global derivatives for movement of whole detector system in global coordinates
+      //TODO: Usage of this requires Hierarchy Constraints to be provided to MP2
+  
+      // sensor centre position in global system
+      TVector3 detPos = plane->getO();
+      //cout << "detPos" << endl;
+      //detPos.Print();
+
+      // global prediction from raw measurement
+      TVector3 pred = detPos + uPos * uDir + vPos * vDir;
+      //cout << "pred" << endl;
+      //pred.Print();
+
+      double xPred = pred[0];
+      double yPred = pred[1];
+      double zPred = pred[2];
+
+      // scalar product of sensor normal and track direction
+      double tn = tDir.Dot(nDir);
+      //cout << "tn" << endl;
+      //cout << tn << endl;
+
+      // derivatives of local residuals versus measurements
+      TMatrixD drdm(3, 3);
+      drdm.UnitMatrix();
+      for (int row = 0; row < 3; row++)
+	for (int col = 0; col < 3; col++)
+	  drdm(row, col) -= tDir[row] * nDir[col] / tn;
+
+      //cout << "drdm" << endl;
+      //drdm.Print();
+
+      // derivatives of measurements versus global alignment parameters
+      TMatrixD dmdg(3, 6);
+      dmdg.Zero();
+      dmdg(0, 0) = 1.; dmdg(0, 4) = -zPred; dmdg(0, 5) = yPred;
+      dmdg(1, 1) = 1.; dmdg(1, 3) = zPred;  dmdg(1, 5) = -xPred;
+      dmdg(2, 2) = 1.; dmdg(2, 3) = -yPred; dmdg(2, 4) = xPred;
+
+      //cout << "dmdg" << endl;
+      //dmdg.Print();
+
+      // derivatives of local residuals versus global alignment parameters
+      TMatrixD drldrg(3, 3);
+      drldrg.Zero();
+      drldrg(0, 0) = uDir[0]; drldrg(0, 1) = uDir[1]; drldrg(0, 2) = uDir[2];
+      drldrg(1, 0) = vDir[0]; drldrg(1, 1) = vDir[1]; drldrg(1, 2) = vDir[2];
+
+      //cout << "drldrg" << endl;
+      //drldrg.Print();
+
+      //cout << "drdm * dmdg" << endl;
+      //(drdm * dmdg).Print();
+
+      // derivatives of local residuals versus rigid body parameters
+      TMatrixD drldg(3, 6);
+      drldg = drldrg * (drdm * dmdg);
+
+      //cout << "drldg" << endl;
+      //drldg.Print();
+
+      // offset to determine labels for sensor sets or individual layers
+      // 0: PXD, TODO 1: SVD, or individual layers
+      // offset 0 is for alignment of whole setup
+      int offset = 0;
+      //if (sensorId > 16704) offset = 20; // svd, but needs to introduce new 6 constraints: sum rot&shifts of pxd&svd = 0
+
+      derGlobal(0, 6) = drldg(0, 0); labGlobal.push_back(offset + 1);
+      derGlobal(0, 7) = drldg(0, 1); labGlobal.push_back(offset + 2);
+      derGlobal(0, 8) = drldg(0, 2); labGlobal.push_back(offset + 3);
+      derGlobal(0, 9) = drldg(0, 3); labGlobal.push_back(offset + 4);
+      derGlobal(0, 10) = drldg(0, 4); labGlobal.push_back(offset + 5);
+      derGlobal(0, 11) = drldg(0, 5); labGlobal.push_back(offset + 6);
+
+      derGlobal(1, 6) = drldg(1, 0);
+      derGlobal(1, 7) = drldg(1, 1);
+      derGlobal(1, 8) = drldg(1, 2);
+      derGlobal(1, 9) = drldg(1, 3);
+      derGlobal(1, 10) = drldg(1, 4);
+      derGlobal(1, 11) = drldg(1, 5);
+
+
+
+      measPoint.addGlobals(labGlobal, derGlobal);
+      listOfPoints.push_back(measPoint);
+      listOfLayers.push_back((unsigned int) sensorId);
+      n_gbl_points++;
+      n_gbl_meas_points++;
+    } else {
+      // Incompatible measurement, store point without measurement
+      GblPoint dummyPoint(jacPointToPoint);
+      listOfPoints.push_back(dummyPoint);
+      listOfLayers.push_back((unsigned int) sensorId);
+      n_gbl_points++;
+      skipMeasurement = false;
+      #ifdef DEBUG
+      cout << " Dummy point inserted. " << endl;
+      #endif
+    }
+
+
+    //cout << " Starting extrapolation..." << endl;
+    try {
+
+      // Extrapolate to next measurement to get material distribution
       if (ipoint_meas < npoints_meas - 1) {
-        
-        if (theta1 > scatEpsilon) {
-          // We have to insert first scatterer at measurement point
-          // Therefore (because state is perpendicular to plane, NOT track)
-          // we have non-diaonal matrix of multiple scattering covariance
-          // We have to project scattering into plane coordinates
-          double c1 = trackDir.Dot(plane->getU());
-          double c2 = trackDir.Dot(plane->getV());
-          TMatrixDSym scatCov(2);
-          scatCov(0, 0) = 1. - c2 * c2;
-          scatCov(1, 1) = 1. - c1 * c1;
-          scatCov(0, 1) = c1 * c2;
-          scatCov(1, 0) = c1 * c2;
-          scatCov *= theta1 * theta1 / (1. - c1 * c1 - c2 * c2) / (1. - c1 * c1 - c2 * c2) ;
-          
-          // last point is the just inserted measurement (or dummy point)
-          GblPoint& lastPoint = listOfPoints.at(n_gbl_points - 1);
-          lastPoint.addScatterer(scatResidual, scatCov.Invert());
-          
-        }
-        
-        if (theta2 > scatEpsilon) {
-          // second scatterer is somewhere between measurements
-          // TrackRep state is perpendicular to track direction if using extrapolateBy (I asked Johannes Rauch),
-          // therefore scattering covariance is diagonal (and both elements are equal)
-          TMatrixDSym scatCov(2);
-          scatCov.Zero();
-          scatCov(0, 0) = theta2 * theta2;
-          scatCov(1, 1) = theta2 * theta2;
-          
-          GblPoint scatPoint(jacMeas2Scat);
-          scatPoint.addScatterer(scatResidual, scatCov.Invert());
-          listOfPoints.push_back(scatPoint);
-          listOfLayers.push_back(((unsigned int) sensorId) + 0.5);
-          n_gbl_points++;
-        }
-        
-        
+	// Check if fitter info is in place
+	if (!trk->getPoint(ipoint_meas + 1)->hasFitterInfo(rep)) {
+	  cout << " ERROR: Measurement point does not have a fitter info. Track will be skipped." << endl;
+	  return;
+	}
+	// Fitter of next point info which is only used now to get the plane
+	KalmanFitterInfo* fi_i_plus_1 = dynamic_cast<KalmanFitterInfo*>(trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep));
+	if (!fi_i_plus_1) {
+	  cout << " ERROR: KalmanFitterInfo (with reference state) for measurement does not exist. Track will be skipped." << endl;
+	  return;
+	}
+	StateOnPlane refCopy(*reference);
+	// Extrap to point + 1, do NOT stop at boundary
+	rep->extrapolateToPlane(refCopy, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, false);
+	getScattererFromMatList(trackLen,
+				scatTheta,
+				scatSMean,
+				scatDeltaS,
+				trackMomMag,
+				particleMass,
+				particleCharge,
+				rep->getSteps());
+	// Now calculate positions and scattering variance for equivalent scatterers
+	// (Solution from Claus Kleinwort (DESY))
+	s1 = 0.;
+	s2 = scatSMean + scatDeltaS * scatDeltaS / (scatSMean - s1);
+	theta1 = sqrt(scatTheta * scatTheta * scatDeltaS * scatDeltaS / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
+	theta2 = sqrt(scatTheta * scatTheta * (scatSMean - s1) * (scatSMean - s1) / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
+
+	if (m_enableScatterers && !m_enableIntermediateScatterer) {
+	  theta1 = scatTheta;
+	  theta2 = 0;
+	} else if (!m_enableScatterers) {
+	  theta1 = 0.;
+	  theta2 = 0.;
+	}
+
+	if (s2 < 1.e-4 || s2 >= trackLen - 1.e-4 || s2 <= 1.e-4) {
+	  cout << " WARNING: GBL points will be too close. GBLTrajectory construction might fail. Let's try it..." << endl;
+	}
+
       }
-      // Free memory on the heap
+      // Return back to state on current plane
       delete reference;
+      reference = new ReferenceStateOnPlane(*fi->getReferenceState());
+
+      // If not last measurement, extrapolate and get jacobians for scattering points between this and next measurement
+      if (ipoint_meas < npoints_meas - 1) {
+	if (theta2 > scatEpsilon) {
+	  // First scatterer will be placed at current measurement point (see bellow)
+
+	  // theta2 > 0 ... we want second scatterer:
+	  // Extrapolate to s2 (remember we have s1 = 0)
+	  rep->extrapolateBy(*reference, s2, false, true);
+	  rep->getForwardJacobianAndNoise(jacMeas2Scat, noise, deltaState);
+	  // Finish extrapolation to next measurement
+	  double nextStep = rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, true);
+	  if (0. > nextStep) {
+	    cout << " ERROR: The extrapolation to measurement point " << (ipoint_meas + 2) << " stepped back by " << nextStep << "cm !!! Track will be skipped." << endl;
+	    return;
+	  }
+	  rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
+
+	} else {
+	  // No scattering: extrapolate whole distance between measurements
+	  rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, true);
+	  //NOTE: we will load the jacobian from this extrapolation in next loop into measurement point
+	  //jacPointToPoint.Print();
+	  rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
+	  //jacPointToPoint.Print();
+	}
+      }
+    } catch (...) {
+      cout << " ERROR: Extrapolation failed. Track will be skipped." << endl;
+      return;
+    }
+    //cout << " Extrapolation finished." << endl;
+
+
+    // Now store scatterers if not last measurement and if we decided
+    // there should be scatteres, otherwise the jacobian in measurement
+    // stored above is already correct
+    if (ipoint_meas < npoints_meas - 1) {
+
+      if (theta1 > scatEpsilon) {
+	// We have to insert first scatterer at measurement point
+	// Therefore (because state is perpendicular to plane, NOT track)
+	// we have non-diaonal matrix of multiple scattering covariance
+	// We have to project scattering into plane coordinates
+	double c1 = trackDir.Dot(plane->getU());
+	double c2 = trackDir.Dot(plane->getV());
+	TMatrixDSym scatCov(2);
+	scatCov(0, 0) = 1. - c2 * c2;
+	scatCov(1, 1) = 1. - c1 * c1;
+	scatCov(0, 1) = c1 * c2;
+	scatCov(1, 0) = c1 * c2;
+	scatCov *= theta1 * theta1 / (1. - c1 * c1 - c2 * c2) / (1. - c1 * c1 - c2 * c2) ;
+
+	// last point is the just inserted measurement (or dummy point)
+	GblPoint& lastPoint = listOfPoints.at(n_gbl_points - 1);
+	lastPoint.addScatterer(scatResidual, scatCov.Invert());
+
+      }
+
+      if (theta2 > scatEpsilon) {
+	// second scatterer is somewhere between measurements
+	// TrackRep state is perpendicular to track direction if using extrapolateBy (I asked Johannes Rauch),
+	// therefore scattering covariance is diagonal (and both elements are equal)
+	TMatrixDSym scatCov(2);
+	scatCov.Zero();
+	scatCov(0, 0) = theta2 * theta2;
+	scatCov(1, 1) = theta2 * theta2;
+
+	GblPoint scatPoint(jacMeas2Scat);
+	scatPoint.addScatterer(scatResidual, scatCov.Invert());
+	listOfPoints.push_back(scatPoint);
+	listOfLayers.push_back(((unsigned int) sensorId) + 0.5);
+	n_gbl_points++;
+      }
+
+
+    }
+    // Free memory on the heap
+    delete reference;
   }
   // We should have at least two measurement points to fit anything
   if (n_gbl_meas_points > 1) {
