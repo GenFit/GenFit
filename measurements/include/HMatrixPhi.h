@@ -49,9 +49,11 @@ class HMatrixPhi : public AbsHMatrix {
 
   void HMHt(TMatrixDSym& M) const;
 
-  virtual AbsHMatrix* clone() const {return new HMatrixPhi(*this);}
+  virtual HMatrixPhi* clone() const {return new HMatrixPhi(*this);}
 
   virtual bool isEqual(const AbsHMatrix& other) const;
+
+  virtual void Print(const Option_t* = "") const;
 
   ClassDef(HMatrixPhi,1)
 

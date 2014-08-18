@@ -51,7 +51,7 @@ class ProlateSpacepointMeasurement : public SpacepointMeasurement {
 
   virtual ~ProlateSpacepointMeasurement() {;}
 
-  virtual AbsMeasurement* clone() const {return new ProlateSpacepointMeasurement(*this);}
+  virtual ProlateSpacepointMeasurement* clone() const {return new ProlateSpacepointMeasurement(*this);}
 
   virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
 

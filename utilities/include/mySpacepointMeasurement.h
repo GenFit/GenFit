@@ -52,7 +52,7 @@ class mySpacepointMeasurement : public SpacepointMeasurement {
     hitId_ = hit->getHitId();
   }
 
-  virtual AbsMeasurement* clone() const {return new mySpacepointMeasurement(*this);}
+  virtual mySpacepointMeasurement* clone() const {return new mySpacepointMeasurement(*this);}
 
   ClassDef(mySpacepointMeasurement,1)
 };

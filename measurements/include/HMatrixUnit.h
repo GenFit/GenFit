@@ -52,9 +52,11 @@ class HMatrixUnit : public AbsHMatrix {
 
   void HMHt(TMatrixDSym&) const {return;}
 
-  virtual AbsHMatrix* clone() const {return new HMatrixUnit(*this);}
+  virtual HMatrixUnit* clone() const {return new HMatrixUnit(*this);}
 
   virtual bool isEqual(const AbsHMatrix& other) const {return (dynamic_cast<const HMatrixUnit*>(&other) != NULL);}
+
+  virtual void Print(const Option_t* = "") const;
 
   ClassDef(HMatrixUnit,1)
 
