@@ -21,6 +21,7 @@
 #include <cassert>
 #include <alloca.h>
 #include <math.h>
+#include <iostream>
 
 
 namespace genfit {
@@ -102,6 +103,10 @@ bool HMatrixPhi::isEqual(const AbsHMatrix& other) const {
   return (phi_ == static_cast<const HMatrixPhi*>(&other)->phi_);
 }
 
+void HMatrixPhi::Print(const Option_t*) const
+{
+  std::cout << "phi = " << phi_ << std::endl;
+}
 
 void HMatrixPhi::Streamer(TBuffer &R__b) {
   // Stream an object of class genfit::HMatrixPhi.

@@ -20,6 +20,7 @@
 #include "HMatrixU.h"
 #include <cassert>
 #include <alloca.h>
+#include <iostream>
 
 
 namespace genfit {
@@ -81,6 +82,11 @@ void HMatrixU::HMHt(TMatrixDSym& M) const {
   M(0,0) = M(3,3);
 
   M.ResizeTo(1,1);
+}
+
+
+void HMatrixU::Print(const Option_t*) const {
+  std::cout << "U" << std::endl;
 }
 
 

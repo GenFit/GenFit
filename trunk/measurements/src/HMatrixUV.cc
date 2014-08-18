@@ -20,6 +20,7 @@
 #include "HMatrixUV.h"
 #include <cassert>
 #include <alloca.h>
+#include <iostream>
 
 namespace genfit {
 
@@ -96,6 +97,11 @@ void HMatrixUV::HMHt(TMatrixDSym& M) const {
   MatArray = M.GetMatrixArray();
   MatArray[0] = uu; MatArray[1] = uv;
   MatArray[2] = uv; MatArray[3] = vv;
+}
+
+
+void HMatrixUV::Print(const Option_t*) const {
+  std::cout << "UV" << std::endl;
 }
 
 

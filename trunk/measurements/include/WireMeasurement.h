@@ -57,7 +57,7 @@ class WireMeasurement : public AbsMeasurement {
 
   virtual ~WireMeasurement() {;}
 
-  virtual AbsMeasurement* clone() const {return new WireMeasurement(*this);}
+  virtual WireMeasurement* clone() const {return new WireMeasurement(*this);}
 
   virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
 

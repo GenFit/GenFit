@@ -43,7 +43,7 @@ class WireTrackCandHit : public TrackCandHit {
 
   virtual ~WireTrackCandHit() {;}
 
-  virtual TrackCandHit* clone() const {return new WireTrackCandHit(*this);}
+  virtual WireTrackCandHit* clone() const {return new WireTrackCandHit(*this);}
 
   // Accessors
   double getLeftRightResolution() const {return leftRight_;}
