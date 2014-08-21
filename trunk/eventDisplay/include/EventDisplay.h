@@ -230,6 +230,8 @@ class EventDisplay : public TNamed {
     double dPVal_;
     TGNumberEntry* guiRelChi2_;
     double dRelChi2_;
+    TGNumberEntry* guiDChi2Ref_;
+    double dChi2Ref_;
     TGNumberEntry* guiNMinIter_;
     unsigned int nMinIter_;
     TGNumberEntry* guiNMaxIter_;

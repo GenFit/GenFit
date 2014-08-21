@@ -90,6 +90,7 @@ EventDisplay::EventDisplay() :
   squareRootFormalism_(false),
   dPVal_(1.E-3),
   dRelChi2_(0.2),
+  dChi2Ref_(1.),
   nMinIter_(2),
   nMaxIter_(4),
   nMaxFailed_(-1),
@@ -323,6 +324,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         case RefKalman:
           fitter.reset(new KalmanFitterRefTrack(nMaxIter_, dPVal_));
           fitter->setMultipleMeasurementHandling(mmHandling_);
+          static_cast<KalmanFitterRefTrack*>(fitter.get())->setDeltaChi2Ref(dChi2Ref_);
           break;
 
         case DafSimple:
@@ -331,6 +333,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
           break;
         case DafRef:
           fitter.reset(new DAF());
+          ( static_cast<KalmanFitterRefTrack*>( (static_cast<DAF*>(fitter.get()))->getKalman() ) )->setDeltaChi2Ref(dChi2Ref_);
           break;
 
       }
@@ -530,7 +533,8 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
 
       // loop over MeasurementOnPlanes
-      for (unsigned int iMeas = 0; iMeas < fi->getNumMeasurements(); ++iMeas) {
+      unsigned int nMeas = fi->getNumMeasurements();
+      for (unsigned int iMeas = 0; iMeas < nMeas; ++iMeas) {
 
         if (iMeas > 0 && wire_hit)
           break;
@@ -591,6 +595,13 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         // finished drawing planes ------------------------------------------------------------
 
         // draw track if corresponding option is set ------------------------------------------
+        if (j == 0) {
+          if (drawBackward_) {
+              MeasuredStateOnPlane update ( *fi->getBackwardUpdate() );
+              update.extrapolateBy(-3.);
+              makeLines(&update, fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
+          }
+        }
         if (j > 0 && prevFi != NULL) {
           if(drawTrack_) {
             makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers_, drawErrors_, 3);
@@ -598,10 +609,17 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
               makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, false, drawErrors_, 0, 0);
             }
           }
-          if (drawForward_)
+          if (drawForward_) {
             makeLines(prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
-          if (drawBackward_)
+            if (j == numhits-1) {
+              MeasuredStateOnPlane update ( *fi->getForwardUpdate() );
+              update.extrapolateBy(3.);
+              makeLines(fi->getForwardUpdate(), &update, rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
+            }
+          }
+          if (drawBackward_) {
             makeLines(prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
+          }
           // draw reference track if corresponding option is set ------------------------------------------
           if(drawRefTrack_ && fi->hasReferenceState() && prevFi->hasReferenceState())
             makeLines(prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers_, false, 3);
@@ -1504,6 +1522,18 @@ void EventDisplay::makeGui() {
   frmMain2->AddFrame(hf);
 
   hf = new TGHorizontalFrame(frmMain2); {
+    guiDChi2Ref_ = new TGNumberEntry(hf, dChi2Ref_, 6,9999, TGNumberFormat::kNESReal,
+                          TGNumberFormat::kNEANonNegative,
+                          TGNumberFormat::kNELLimitMinMax,
+                          0, 999);
+    hf->AddFrame(guiDChi2Ref_);
+    guiDChi2Ref_->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+    lbl = new TGLabel(hf, "min chi^2 change for re-calculating reference track (Ref Kalman)");
+    hf->AddFrame(lbl);
+  }
+  frmMain2->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain2); {
     guiNMinIter_ = new TGNumberEntry(hf, nMinIter_, 6,999, TGNumberFormat::kNESInteger,
                           TGNumberFormat::kNEANonNegative,
                           TGNumberFormat::kNELLimitMinMax,
@@ -1605,6 +1635,7 @@ void EventDisplay::guiSetDrawParams(){
   squareRootFormalism_ = guiSquareRootFormalism_->IsOn();
   dPVal_ = guiDPVal_->GetNumberEntry()->GetNumber();
   dRelChi2_ = guiRelChi2_->GetNumberEntry()->GetNumber();
+  dChi2Ref_ = guiDChi2Ref_->GetNumberEntry()->GetNumber();
   nMinIter_ = guiNMinIter_->GetNumberEntry()->GetNumber();
   nMaxIter_ = guiNMaxIter_->GetNumberEntry()->GetNumber();
   nMaxFailed_ = guiNMaxFailed_->GetNumberEntry()->GetNumber();
