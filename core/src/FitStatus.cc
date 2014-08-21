@@ -99,7 +99,7 @@ void FitStatus::Print(const Option_t*) const
       std::cout << " fit has NOT converged,";
     std::cout << " " << nFailedPoints_ << " TrackPoints could not be processed,";
     if (trackHasChanged_) std::cout << " track has changed since the fit,";
-    std::cout << " fitted charge = " << charge_;
+    std::cout << " fitted charge = " << charge_ << ", ";
     pruneFlags_.Print();
   }
   else
