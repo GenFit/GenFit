@@ -27,11 +27,6 @@ INCLUDE(macros)
 
 FIND_PACKAGE(ROOT REQUIRED COMPONENTS Geom)
 
-# ROOT 6 requires C++11 support, enforced via headers
-IF (ROOT_found_version GREATER 59900)
-    ADD_DEFINITIONS(-std=c++11)
-ENDIF()
-
 # either, the environment variable RAVEPATH has to be specified, and RAVE's pkgConfig will be used to determine everything we need
 # or, RAVE_LDFLAGS, RAVE_INCLUDE_DIRS and RAVE_CFLAGS have to be set via the command-line
 
@@ -131,8 +126,7 @@ else()
   message("Neither -std=${CPP_STANDARD} nor --std=${CPP_STANDARD} seem to work.  Moving on.")
 endif()
 
-# require proper c++, standard is C++03, flag reads: c++98
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ansi -pedantic -Wno-long-long -Wshadow -Werror=overloaded-virtual"   )
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wno-long-long -Wshadow -Werror=overloaded-virtual"   )
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g3")
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -O3 -g3")
