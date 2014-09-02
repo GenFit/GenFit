@@ -52,7 +52,7 @@ class SpacepointMeasurement : public AbsMeasurement {
 
   virtual ~SpacepointMeasurement() {;}
 
-  virtual SpacepointMeasurement* clone() const {return new SpacepointMeasurement(*this);}
+  virtual AbsMeasurement* clone() const {return new SpacepointMeasurement(*this);}
 
   /**
    * @brief Contruct the virtual detector plane

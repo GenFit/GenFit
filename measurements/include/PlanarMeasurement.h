@@ -49,7 +49,7 @@ class PlanarMeasurement : public AbsMeasurement {
 
   virtual ~PlanarMeasurement() {;}
 
-  virtual PlanarMeasurement* clone() const {return new PlanarMeasurement(*this);}
+  virtual AbsMeasurement* clone() const {return new PlanarMeasurement(*this);}
 
   int getPlaneId() const {return planeId_;}
 
