@@ -47,7 +47,7 @@ class FullMeasurement : public AbsMeasurement {
 
   virtual ~FullMeasurement() {;}
 
-  virtual FullMeasurement* clone() const {return new FullMeasurement(*this);}
+  virtual AbsMeasurement* clone() const {return new FullMeasurement(*this);}
 
   virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
 
