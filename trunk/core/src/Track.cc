@@ -65,24 +65,10 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<AbsMeasurement
   }
 
   // create TrackPoints
-  PlanarMeasurement* lastPlanarMeas(NULL);
-  PlanarMeasurement* planarMeas(NULL);
   for (unsigned int i=0; i<factoryHits.size(); ++i){
-    planarMeas = dynamic_cast<PlanarMeasurement*>(factoryHits[i]);
-
-    if (lastPlanarMeas != NULL && planarMeas != NULL &&
-        lastPlanarMeas->getDetId() == planarMeas->getDetId() &&
-        planarMeas->getPlaneId() != -1 &&   // -1 is default plane id
-        lastPlanarMeas->getPlaneId() == planarMeas->getPlaneId() ) {
-      trackPoints_.back()->addRawMeasurement(factoryHits[i]);
-    }
-    else {
-      TrackPoint* tp = new TrackPoint(factoryHits[i], this);
-      tp->setSortingParameter(trackCand.getHit(i)->getSortingParameter());
-      insertPoint(tp);
-    }
-
-    lastPlanarMeas = dynamic_cast<PlanarMeasurement*>(factoryHits[i]);
+    TrackPoint* tp = new TrackPoint(factoryHits[i], this);
+    tp->setSortingParameter(trackCand.getHit(i)->getSortingParameter());
+    insertPoint(tp);
   }
 
   // fill seed state
