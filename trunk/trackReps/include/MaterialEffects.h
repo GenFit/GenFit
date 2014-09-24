@@ -106,6 +106,8 @@ public:
                StepLimits& limits,
                bool varField = true);
 
+  void setDebugLvl(unsigned int lvl = 1);
+
 
  private:
 
@@ -156,6 +158,7 @@ public:
   void noiseBrems(M7x7& noise) const;
 
 
+
   bool noEffects_;
 
   bool energyLossBetheBloch_;
@@ -191,6 +194,7 @@ public:
 
   AbsMaterialInterface* materialInterface_;
 
+  unsigned int debugLvl_;
 
   // ClassDef(MaterialEffects, 1);
 

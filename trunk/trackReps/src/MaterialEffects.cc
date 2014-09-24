@@ -31,8 +31,6 @@
 #include <TMath.h>
 
 
-//#define DEBUG
-
 namespace genfit {
 
 MaterialEffects* MaterialEffects::instance_ = nullptr;
@@ -60,7 +58,8 @@ MaterialEffects::MaterialEffects():
   charge_(0),
   mass_(0),
   mscModelCode_(0),
-  materialInterface_(nullptr)
+  materialInterface_(nullptr),
+  debugLvl_(0)
 {
 }
 
@@ -118,9 +117,9 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
                                 M7x7* noise)
 {
 
-#ifdef DEBUG
+  if (debugLvl_ > 0) {
     std::cout << "     MaterialEffects::effects \n";
-#endif
+  }
 
   /*std::cout << "noEffects_ " << noEffects_ << "\n";
   std::cout << "energyLossBetheBloch_ " << energyLossBetheBloch_ << "\n";
@@ -153,14 +152,14 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
       continue;
     }
 
-    #ifdef DEBUG
+    if (debugLvl_ > 0) {
       std::cout << "     calculate matFX ";
       if (doNoise) 
-        std::cout << " and noise";
+        std::cout << "and noise";
       std::cout << " for ";
-      std::cout << "stepSize = " << it->stepSize_ << "\t";
-      it->materialProperties_.Print();
-    #endif
+      std::cout << "stepSize = " << it->matStep_.stepSize_ << "\t";
+      it->matStep_.materialProperties_.Print();
+    }
 
     double stepSign(1.);
     if (realPath < 0)
@@ -246,9 +245,9 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   currentMaterial.setMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
 
 
-  #ifdef DEBUG
+  if (debugLvl_ > 0) {
     std::cout << "     currentMaterial "; currentMaterial.Print();
-  #endif
+  }
 
   // limit due to momloss
   double relMomLossPer_cm(0);
@@ -262,9 +261,9 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   double maxStepMomLoss = (maxRelMomLoss - relMomLoss) / relMomLossPer_cm;
   limits.setLimit(stp_momLoss, maxStepMomLoss);
 
-  #ifdef DEBUG
+  if (debugLvl_ > 0) {
     std::cout << "     momLoss exceeded after a step of " <<  maxStepMomLoss << "\n";
-  #endif
+  }
 
 
   // now look for boundaries
@@ -276,16 +275,23 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   double boundaryStep(sMax);
 
   for (unsigned int i=0; i<100; ++i) {
-    #ifdef DEBUG
+    if (debugLvl_ > 0) {
       std::cout << "     find next boundary\n";
-    #endif
+    }
     double step =  materialInterface_->findNextBoundary(rep, state7, boundaryStep, varField);
+
+    if (debugLvl_ > 0) {
+      if (step == 0) {
+        std::cout << "     materialInterface_ returned a step of 0 \n";
+      }
+    }
+
     stepSize_ += step;
     boundaryStep -= step;
 
-    #ifdef DEBUG
+    if (debugLvl_ > 0) {
       std::cout << "     made a step of " << step << "\n";
-    #endif
+    }
 
     if (! ignoreBoundariesBetweenEqualMaterials_)
       break;
@@ -306,9 +312,9 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
     materialInterface_->getMaterialParameters(materialAfter);
 
-    #ifdef DEBUG
-      std::cout << "     material after step "; materialAfter.Print();
-    #endif
+    if (debugLvl_ > 0) {
+      std::cout << "     material after step: "; materialAfter.Print();
+    }
 
     if (materialAfter != currentMaterial)
       break;
@@ -674,6 +680,13 @@ void MaterialEffects::noiseBrems(M7x7& noise) const
   sigma2 = (sigma2 > 0.0 ? sigma2 : 0.0);
   noise[6 * 7 + 6] +=  charge_*charge_/beta_/beta_ / pow(mom_, 4) * sigma2;
 
+}
+
+
+void MaterialEffects::setDebugLvl(unsigned int lvl) {
+  debugLvl_ = lvl;
+  if (materialInterface_ and debugLvl_ > 1)
+    materialInterface_->setDebugLvl(debugLvl_-1);
 }
 
 } /* End of namespace genfit */
