@@ -116,6 +116,9 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
   double slDist = gGeoManager->GetStep();
   double step = slDist;
 
+  if (debugLvl_ > 0)
+    std::cout << "   safety = " << safety << "; step, slDist = " << step << "\n";
+
   while (1) {
     if (++it > maxIt){
       Exception exc("TGeoMaterialInterface::findNextBoundary ==> maximum number of iterations exceeded",__LINE__,__FILE__);
@@ -173,6 +176,8 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
           stepSign*state7[5]);
 
       if (volChanged) {
+        if (debugLvl_ > 0)
+          std::cout << "   volChanged\n";
         // Move back to start.
         gGeoManager->PopPoint();
 
@@ -180,8 +185,11 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
         // for, so it can happen that a requested step < safety takes
         // us across the boundary.  This is then the best estimate we
         // can get of the distance to the boundary with the stepper.
-        if (step <= safety)
+        if (step <= safety) {
+          if (debugLvl_ > 0)
+            std::cout << "   step <= safety, return stepSign*(s + step) = " << stepSign*(s + step) << "\n";
           return stepSign*(s + step);
+        }
 
         // Volume changed during the extrapolation.  Take a shorter
         // step, but never shorter than safety.
@@ -196,6 +204,8 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
         gGeoManager->FindNextBoundary(fabs(sMax) - s);
         safety = gGeoManager->GetSafeDistance();
         step = slDist = gGeoManager->GetStep();
+        if (debugLvl_ > 0)
+          std::cout << "   safety = " << safety << "; step, slDist = " << step << "\n";
       }
     }
   }
