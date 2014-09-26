@@ -112,8 +112,15 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 
   // Initialize the geometry to the current location (set by caller).
   gGeoManager->FindNextBoundary(fabs(sMax) - s);
-  double safety = gGeoManager->GetSafeDistance();
+  double safety = gGeoManager->GetSafeDistance(); // >= 0
   double slDist = gGeoManager->GetStep();
+
+  // this should not happen, but it happens sometimes.
+  // The reason are probably overlaps in the geometry.
+  // Without this "hack" many small steps with size of minStep will be made,
+  // until eventually the maximum number of iterations are exceeded and the extrapolation fails
+  if (slDist < safety) 
+    slDist = safety;
   double step = slDist;
 
   if (debugLvl_ > 0)
@@ -203,7 +210,15 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 
         gGeoManager->FindNextBoundary(fabs(sMax) - s);
         safety = gGeoManager->GetSafeDistance();
-        step = slDist = gGeoManager->GetStep();
+        slDist = gGeoManager->GetStep();
+
+        // this should not happen, but it happens sometimes.
+        // The reason are probably overlaps in the geometry.
+        // Without this "hack" many small steps with size of minStep will be made,
+        // until eventually the maximum number of iterations are exceeded and the extrapolation fails
+        if (slDist < safety)
+          slDist = safety;
+        step = slDist;
         if (debugLvl_ > 0)
           std::cout << "   safety = " << safety << "; step, slDist = " << step << "\n";
       }
