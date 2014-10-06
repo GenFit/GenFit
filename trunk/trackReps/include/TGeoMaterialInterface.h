@@ -66,9 +66,6 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
                           double sMax,
                           bool varField = true);
 
-  double findNextBoundaryAndStepStraight(double sMax);
-
-
   // ClassDef(TGeoMaterialInterface, 1);
 
  private:

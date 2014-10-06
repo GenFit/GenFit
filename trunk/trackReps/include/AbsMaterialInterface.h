@@ -69,10 +69,7 @@ class AbsMaterialInterface : public TObject {
                                   double sMax,
                                   bool varField = true) = 0;
 
-  virtual double findNextBoundaryAndStepStraight(double sMax) = 0;
-
   virtual void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
-
 
  protected:
   unsigned int debugLvl_;
