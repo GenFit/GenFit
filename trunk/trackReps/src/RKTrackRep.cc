@@ -1384,9 +1384,6 @@ void RKTrackRep::getState5(StateOnPlane& state, const M1x7& state7) const {
   const TVector3& V(state.getPlane()->getV());
   const TVector3& W(state.getPlane()->getNormal());
 
-  TVector3 posShift(state7[0], state7[1], state7[2]);
-  posShift -= state.getPlane()->getO();
-
   // force A to be in normal direction and set spu accordingly
   double AtW = state7[3]*W.X() + state7[4]*W.Y() + state7[5]*W.Z();
   if (AtW < 0) {
@@ -1395,15 +1392,15 @@ void RKTrackRep::getState5(StateOnPlane& state, const M1x7& state7) const {
     spu = -1.;
   }
 
-  TVectorD& state5 = state.getState();
+  double* state5 = state.getState().GetMatrixArray();
 
-  state5(0) = state7[6]; // q/p
-  state5(1) = (state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z()) / AtW; // u' = (A * U) / (A * W)
-  state5(2) = (state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z()) / AtW; // v' = (A * V) / (A * W)
-  state5(3) = ((state7[0]-O.X())*U.X() +
+  state5[0] = state7[6]; // q/p
+  state5[1] = (state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z()) / AtW; // u' = (A * U) / (A * W)
+  state5[2] = (state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z()) / AtW; // v' = (A * V) / (A * W)
+  state5[3] = ((state7[0]-O.X())*U.X() +
                (state7[1]-O.Y())*U.Y() +
                (state7[2]-O.Z())*U.Z()); // u = (pos - O) * U
-  state5(4) = ((state7[0]-O.X())*V.X() +
+  state5[4] = ((state7[0]-O.X())*V.X() +
                (state7[1]-O.Y())*V.Y() +
                (state7[2]-O.Z())*V.Z()); // v = (pos - O) * V
 
