@@ -88,6 +88,8 @@ class DAF : public AbsKalmanFitter {
    */
   void setBetas(double b1,double b2=-1, double b3=-1., double b4=-1., double b5=-1., double b6=-1., double b7=-1., double b8=-1., double b9=-1., double b10=-1.);
 
+  const std::vector<double>& getBetas() {return betas_;}
+
   /** @brief Configure the annealing scheme.
    *
    * Set a start and end temperature and the number of steps. A logarithmic sequence of temperatures will be calculated.

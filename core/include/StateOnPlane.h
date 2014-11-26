@@ -48,6 +48,7 @@ class StateOnPlane : public TObject {
 
 
   StateOnPlane(const AbsTrackRep* rep = NULL);
+  //! state is defined by the TrackReps parameterization
   StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep);
   StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
 

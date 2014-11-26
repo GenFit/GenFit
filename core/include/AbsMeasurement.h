@@ -62,6 +62,7 @@ class AbsMeasurement : public TObject {
 
   unsigned int getDim() const {return rawHitCoords_.GetNrows();}
 
+  void setRawHitCoords(const TVectorD& coords) {rawHitCoords_ = coords;}
   void setDetId(int detId) {detId_ = detId;}
   void setHitId(int hitId) {hitId_ = hitId;}
 
