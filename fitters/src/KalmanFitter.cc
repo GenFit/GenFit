@@ -148,7 +148,7 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
 
   // Only after we have linearly propagated the error into the TrackRep can we
   // blow up the error in good faith.
-  currentState_->blowUpCov(blowUpFactor_);
+  currentState_->blowUpCov(blowUpFactor_, resetOffDiagonals_, blowUpMaxVal_);
 
   double oldChi2FW(1.e6);
   double oldChi2BW(1.e6);
@@ -188,7 +188,7 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
       }
 
       // Backwards iteration:
-      currentState_->blowUpCov(blowUpFactor_);  // blow up cov
+      currentState_->blowUpCov(blowUpFactor_, resetOffDiagonals_, blowUpMaxVal_);  // blow up cov
 
       if (!fitTrack(tr, rep, chi2BW, ndfBW, -1, 0, nFailedHitsBackward)) {
         status->setIsFitted(false);
@@ -261,7 +261,7 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
           oldPvalFW = PvalFW;
           oldChi2FW = chi2FW;
         }
-        currentState_->blowUpCov(blowUpFactor_);  // blow up cov
+        currentState_->blowUpCov(blowUpFactor_, resetOffDiagonals_, blowUpMaxVal_);  // blow up cov
       }
 
       if (nIt >= maxIterations_) {
@@ -356,7 +356,7 @@ KalmanFitter::processTrackPartially(Track* tr, const AbsTrackRep* rep, int start
 
   // if at first or last hit, blow up
   if (startId == 0 || startId == (int)tr->getNumPointsWithMeasurement() - 1) {
-    currentState_->blowUpCov(blowUpFactor_);
+    currentState_->blowUpCov(blowUpFactor_, resetOffDiagonals_, blowUpMaxVal_);
     if (debugLvl_ > 0)
       std::cout << "blow up seed \n";
   }

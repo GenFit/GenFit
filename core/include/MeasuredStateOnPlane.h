@@ -53,7 +53,8 @@ class MeasuredStateOnPlane : public StateOnPlane {
   const TMatrixDSym& getCov() const {return cov_;}
   TMatrixDSym& getCov() {return cov_;}
 
-  void blowUpCov(double blowUpFac, bool resetOffDiagonals = true);
+  //! Blow up covariance matrix with blowUpFac. Per default, off diagonals are reset to 0 and the maximum values are limited to maxVal.
+  void blowUpCov(double blowUpFac, bool resetOffDiagonals = true, double maxVal = -1.);
 
   void setStateCov(const TVectorD& state, const TMatrixDSym& cov) {setState(state); setCov(cov);}
   void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane) {setStatePlane(state, plane); setCov(cov);}

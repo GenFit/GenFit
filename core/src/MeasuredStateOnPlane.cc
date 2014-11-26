@@ -45,10 +45,11 @@ void MeasuredStateOnPlane::Print(Option_t*) const {
   }
 }
 
-void MeasuredStateOnPlane::blowUpCov(double blowUpFac, bool resetOffDiagonals) {
+void MeasuredStateOnPlane::blowUpCov(double blowUpFac, bool resetOffDiagonals, double maxVal) {
+
+  unsigned int dim = cov_.GetNcols();
 
   if (resetOffDiagonals) {
-    unsigned int dim = cov_.GetNcols();
     for (unsigned int i=0; i<dim; ++i) {
       for (unsigned int j=0; j<dim; ++j) {
         if (i != j)
@@ -60,6 +61,14 @@ void MeasuredStateOnPlane::blowUpCov(double blowUpFac, bool resetOffDiagonals) {
   }
   else
     cov_ *= blowUpFac;
+
+  // limit
+  if (maxVal > 0.)
+    for (unsigned int i=0; i<dim; ++i) {
+      for (unsigned int j=0; j<dim; ++j) {
+        cov_(i,j) = std::min(cov_(i,j), maxVal);
+      }
+    }
 
 }
 
