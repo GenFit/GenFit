@@ -200,7 +200,7 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
         KalmanFitterInfo* lastInfo = static_cast<KalmanFitterInfo*>(lastProcessedPoint->getFitterInfo(rep));
         if (! lastInfo->hasBackwardPrediction()) {
           lastInfo->setBackwardPrediction(new MeasuredStateOnPlane(*(lastInfo->getForwardUpdate())));
-          lastInfo->getBackwardPrediction()->blowUpCov(blowUpFactor_);  // blow up cov
+          lastInfo->getBackwardPrediction()->blowUpCov(blowUpFactor_, resetOffDiagonals_, blowUpMaxVal_);  // blow up cov
           if (debugLvl_ > 0) {
             std::cout << "blow up cov for backward fit at TrackPoint " << lastProcessedPoint << "\n";
           }
@@ -782,7 +782,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       if (fi->getPlane() != firstBackwardUpdate->getPlane()) {
         rep->extrapolateToPlane(*firstBackwardUpdate, fi->getPlane());
       }
-      firstBackwardUpdate->blowUpCov(blowUpFactor_);
+      firstBackwardUpdate->blowUpCov(blowUpFactor_, resetOffDiagonals_, blowUpMaxVal_);
       fi->setForwardPrediction(new MeasuredStateOnPlane(*firstBackwardUpdate));
     }
   }
@@ -974,7 +974,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
       rep->getPosMom(mop, pos, mom);
       rep->setPosMomCov(mop, pos, mom, fi->getTrackPoint()->getTrack()->getCovSeed());
       // Blow up, set.
-      mop.blowUpCov(blowUpFactor_);
+      mop.blowUpCov(blowUpFactor_, resetOffDiagonals_, blowUpMaxVal_);
       fi->setPrediction(new MeasuredStateOnPlane(mop), direction);
       C_ = mop.getCov();
     }
