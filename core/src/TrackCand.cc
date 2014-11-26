@@ -199,8 +199,8 @@ void TrackCand::Print(const Option_t* option) const {
   std::cout << "mcTrackId=" << mcTrackId_ << "\n";
   std::cout << "seed values for 6D state: \n";
   state6D_.Print(option);
-  std::cout << "q" << q_ << "\n";
-  std::cout << "PDG code= " << pdg_ << "\n";
+  std::cout << "charge = " << q_ << "\n";
+  std::cout << "PDG code = " << pdg_ << "\n";
   for(unsigned int i=0; i<hits_.size(); ++i){
     hits_[i]->Print();
   }
