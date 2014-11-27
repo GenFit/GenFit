@@ -54,7 +54,7 @@ class AbsKalmanFitter : public AbsFitter {
 
   AbsKalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
     : AbsFitter(), minIterations_(2), maxIterations_(maxIterations), deltaPval_(deltaPval), relChi2Change_(0.2),
-      blowUpFactor_(blowUpFactor), resetOffDiagonals_(true), blowUpMaxVal_(-1.),
+      blowUpFactor_(blowUpFactor), resetOffDiagonals_(true), blowUpMaxVal_(1.E6),
       multipleMeasurementHandling_(unweightedClosestToPredictionWire),
       maxFailedHits_(-1) {
     if (minIterations_ > maxIterations_)
@@ -107,6 +107,15 @@ class AbsKalmanFitter : public AbsFitter {
 
   void setBlowUpFactor(double blowUpFactor) {blowUpFactor_ = blowUpFactor;}
   void setResetOffDiagonals(bool resetOffDiagonals) {resetOffDiagonals_ = resetOffDiagonals;}
+  //! Limit the cov entries to this maximum value when blowing up the cov. Set to negative value to disable. Default is 1.E6.
+  /**
+   * This is especially useful for fits where the measurements do not constrain one direction,
+   * e.g. parallel wire measurements. The fit will not be constrained along the wire direction.
+   * This also means that the covariance along the wire direction will not get smaller during the fit.
+   * However, it will be blown up before the next iteration, leading to an exponential growth of
+   * the covariance element(s) corresponding to the wire direction. This can then lead to numerical problems.
+   * To prevent this, the maximum value of the covariance elements after blowing up can be limited.
+   */
   void setBlowUpMaxVal(double blowUpMaxVal) {blowUpMaxVal_= blowUpMaxVal;}
 
   //! How should multiple measurements be handled?
@@ -152,7 +161,7 @@ class AbsKalmanFitter : public AbsFitter {
   double blowUpFactor_;
   //! Reset the off-diagonals to 0 when blowing up the cov
   bool resetOffDiagonals_;
-  //! Limit the cov antires to this maxuimum value when blowing up the cov
+  //! Limit the cov entries to this maxuimum value when blowing up the cov.
   double blowUpMaxVal_;
 
   //! How to handle if there are multiple MeasurementsOnPlane
