@@ -188,7 +188,9 @@ bool TrackCand::hitInTrack(int detId, int hitId) const
 bool operator== (const TrackCand& lhs, const TrackCand& rhs){
   if(lhs.getNHits() != rhs.getNHits()) return false;
   for (unsigned int i = 0; i < lhs.getNHits(); ++i){
-    if (lhs.getHit(i) != rhs.getHit(i)) return false;
+    // use == operator of the TrackCandHits
+    if (*(lhs.getHit(i)) != *(rhs.getHit(i)))
+      return false;
   }
   return true;
 }
