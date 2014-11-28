@@ -50,6 +50,8 @@ class mySpacepointMeasurement : public SpacepointMeasurement {
     rawHitCov_ = detHit->getCov();
     detId_ = hit->getDetId();
     hitId_ = hit->getHitId();
+
+    this -> initG();
   }
 
   virtual mySpacepointMeasurement* clone() const {return new mySpacepointMeasurement(*this);}
