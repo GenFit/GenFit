@@ -139,7 +139,7 @@ int main() {
   const unsigned int nMeasurements = 10;
   const double BField = 20.;       // kGauss
   const double momentum = 0.1;     // GeV
-  const double theta = 90;         // degree
+  const double theta = 110;         // degree
   const double thetaDetPlane = 90;         // degree
   const double phiDetPlane = 0;         // degree
   const double pointDist = 3.;      // cm; approx. distance between measurements
@@ -342,8 +342,8 @@ int main() {
       TVector3 pos(0, 0, 0);
       TVector3 mom(1.,0,0);
       mom.SetPhi(gRandom->Uniform(0.,2*TMath::Pi()));
-      mom.SetTheta(gRandom->Uniform(0.5*TMath::Pi(),0.9*TMath::Pi()));
-      //mom.SetTheta(theta*TMath::Pi()/180);
+      //mom.SetTheta(gRandom->Uniform(0.5*TMath::Pi(),0.9*TMath::Pi()));
+      mom.SetTheta(theta*TMath::Pi()/180);
       mom.SetMag(momentum);
       TMatrixDSym covM(6);
       for (int i = 0; i < 3; ++i)
@@ -407,7 +407,7 @@ int main() {
       std::vector<int> leftRightTrue;
       int lr;
 
-      double trueLen;
+      double trueLen(-1);
 
       try{
         for (unsigned int i=0; i<measurementTypes.size(); ++i){
@@ -754,7 +754,8 @@ int main() {
               //stFirst.Print();
               //stCloneFirst.Print();
 
-              trClone.getFitStatus()->getPruneFlags().Print();
+              if (debug)
+                trClone.getFitStatus()->getPruneFlags().Print();
             }
 
             if (last  and ! (stLast.getState()  == stCloneLast.getState()  and stLast.getCov()  == stCloneLast.getCov() )) {
@@ -762,7 +763,8 @@ int main() {
               //stLast.Print();
               //stCloneLast.Print();
 
-              trClone.getFitStatus()->getPruneFlags().Print();
+              if (debug)
+                trClone.getFitStatus()->getPruneFlags().Print();
             }
 
             if (debug) {
