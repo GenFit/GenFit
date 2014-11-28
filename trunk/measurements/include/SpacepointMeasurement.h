@@ -70,9 +70,10 @@ class SpacepointMeasurement : public AbsMeasurement {
 
   virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
 
- private:
-
+ protected:
   void initG();
+
+ private:
 
   bool weightedPlaneContruction_; // false: use POCA to construct DetPlane. true: Use metric G to construct POCA (default)
   TMatrixDSym G_; //! inverse of 3x3 cov
