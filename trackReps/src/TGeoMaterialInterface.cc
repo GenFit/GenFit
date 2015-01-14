@@ -268,9 +268,9 @@ double
 MeanExcEnergy_get(int Z, bool logs = false) {
   assert(Z >= 0 && Z < MeanExcEnergy_NELEMENTS);
   if (logs)
-    return MeanExcEnergy_vals[Z];
-  else
     return MeanExcEnergy_logs[Z];
+  else
+    return MeanExcEnergy_vals[Z];
 }
 
 
