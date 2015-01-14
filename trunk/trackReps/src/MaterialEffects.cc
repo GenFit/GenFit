@@ -345,6 +345,11 @@ void MaterialEffects::getParticleParameters(double mom)
 
 double MaterialEffects::energyLossBetheBloch()
 {
+  if (matZ_ < 1e-3) {
+    // In vacuo.
+    dEdx_ = 0;
+    return 0;
+  }
 
   // calc dEdx_, also needed in noiseBetheBloch!
   dEdx_ = 0.307075 * matZ_ / matA_ * matDensity_ / (beta_ * beta_) * charge_ * charge_;
@@ -355,9 +360,13 @@ double MaterialEffects::energyLossBetheBloch()
   if (dEdx_ < 0.) dEdx_ = 0;
 
   double dE = fabs(stepSize_) * dEdx_; //always positive
-  double momLoss = sqrt(mom_ * mom_ + 2.*sqrt(mom_ * mom_ + mass_ * mass_) * dE + dE * dE) - mom_; //always positive
+  if (dE >= hypot(mom_,mass_) - mass_) {
+    // Step would stop particle (E_kin <= 0).
+    return 0.99*mom_;
+  }
 
-  //in vacuum it can numerically happen that momLoss becomes a small negative number.
+  double momLoss = mom_ - sqrt(mom_*mom_ - 2*hypot(mom_, mass_)*dE + dE*dE);
+
   if (momLoss < 0.) return 0.;
   return momLoss;
 }
@@ -365,6 +374,10 @@ double MaterialEffects::energyLossBetheBloch()
 
 void MaterialEffects::noiseBetheBloch(M7x7& noise) const
 {
+  if (matZ_ < 1e-3) {
+    // Nothing to do in vacuo.
+    return;
+  }
 
   // Code ported from GEANT 3
 
