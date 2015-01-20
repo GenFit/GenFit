@@ -45,7 +45,7 @@ class AbsFitter {
   /**
    * Process all reps. Start with the cardinalRep and resort the hits if necessary (and supported by the fitter)
    */
-  void processTrack(Track*, bool resortHits = true);
+  void processTrack(Track*, bool resortHits = false);
 
   virtual void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
 
