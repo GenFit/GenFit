@@ -16,7 +16,7 @@ namespace genfit {
     
     // Retrieve jacobian from rep by default (may not be used ... at 1st point)
     unsigned int dim = rep->getDim();
-    if (!dim == 5)
+    if (dim != 5)
       throw new genfit::Exception("GblFitterInfo: Representation state is not 5D", __LINE__, __FILE__);
     TMatrixDSym noise(dim, dim);
     TVectorD dState(dim);
@@ -29,7 +29,7 @@ namespace genfit {
     
     // Retrieve jacobian from rep by default (may not be used ... at 1st point)
     unsigned int dim = rep->getDim();
-    if (!dim == 5)
+    if (dim != 5)
       throw new genfit::Exception("GblFitterInfo: Representation state is not 5D", __LINE__, __FILE__);
     TMatrixDSym noise(dim, dim);
     TVectorD dState(dim);
