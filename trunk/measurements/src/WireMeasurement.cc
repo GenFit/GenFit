@@ -130,7 +130,7 @@ const AbsHMatrix* WireMeasurement::constructHMatrix(const AbsTrackRep* rep) cons
   return new HMatrixU();
 }
 
-void WireMeasurement::setLeftRightResolution(int lr){
+void WireMeasurement::setLeftRightResolution(int lr) {
   if (lr==0) leftRight_ = 0;
   else if (lr<0) leftRight_ = -1;
   else leftRight_ = 1;

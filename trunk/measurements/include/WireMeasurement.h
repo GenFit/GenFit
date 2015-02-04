@@ -93,11 +93,11 @@ class WireMeasurement : public AbsMeasurement {
  protected:
 
   double maxDistance_;
-  double leftRight_;
+  signed char leftRight_;
 
  public:
 
-  ClassDef(WireMeasurement, 1)
+  ClassDef(WireMeasurement, 2)
 
 };
 
