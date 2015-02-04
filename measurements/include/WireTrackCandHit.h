@@ -46,10 +46,20 @@ class WireTrackCandHit : public TrackCandHit {
   virtual WireTrackCandHit* clone() const {return new WireTrackCandHit(*this);}
 
   // Accessors
-  double getLeftRightResolution() const {return leftRight_;}
+  int getLeftRightResolution() const {return leftRight_;}
 
   // Modifiers
-  void setLeftRightResolution(double leftRight) {leftRight_ = leftRight;}
+  /**
+   * select how to resolve the left/right ambiguity:
+   * -1: negative (left) side on vector (track direction) x (wire direction)
+   * 0: auto select (take side with smallest distance to track)
+   * 1: positive (right) side on vector (track direction) x (wire direction)
+   */
+  void setLeftRightResolution(int leftRight){
+    if (leftRight==0) leftRight_ = 0;
+    else if (leftRight<0) leftRight_ = -1;
+    else leftRight_ = 1;
+  }
 
   virtual void Print(Option_t* option = "") const;
 
@@ -64,12 +74,12 @@ class WireTrackCandHit : public TrackCandHit {
 
 
   // Data Members ------------
-  char leftRight_; // sorting parameter
+  signed char leftRight_; // left/right ambiguity handling
 
 
  public:
 
-  ClassDef(WireTrackCandHit,1)
+  ClassDef(WireTrackCandHit, 2)
 
 };
 
