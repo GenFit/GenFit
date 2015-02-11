@@ -39,7 +39,7 @@ class KalmanFitStatus : public FitStatus {
 
   KalmanFitStatus() :
     FitStatus(), numIterations_(0), fittedWithDaf_(false), fittedWithReferenceTrack_(false),
-    trackLen_(0), fChi2_(-1e99), fNdf_(-1e99) {;}
+    trackLen_(0), fChi2_(-1e99), fNdf_(-1e99), fPval_(-1e99) {;}
 
   virtual ~KalmanFitStatus() {};
 
