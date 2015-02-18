@@ -366,6 +366,12 @@ double MaterialEffects::energyLossBetheBloch()
   }
 
   double momLoss = mom_ - sqrt(mom_*mom_ - 2*hypot(mom_, mass_)*dE + dE*dE);
+  if (0 && stepSize_ < 0) {
+    // FIXME: I lack proof that this really improves anything, even though
+    // it seems correct.  Therefore not enabled.
+    // Going backwards -> gaining energy.
+    momLoss = sqrt(mom_*mom_ + 2*hypot(mom_, mass_)*dE + dE*dE) - mom_;
+  }
 
   if (momLoss < 0.) return 0.;
   return momLoss;
