@@ -28,12 +28,20 @@
 #include <stdlib.h>
 
 static const int flagSlowMatrix = 1 << 10; // Replace custom matrix multiplications with general equivalents
-static const int debugFlags = 0; // | flagSlowMatrix;
+static const int debugFlags = 0;// | flagSlowMatrix;
 
 namespace genfit {
 
 
 void RKTools::J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7){
+  if (debugFlags & flagSlowMatrix) {
+    TMatrixD JpM(5, 7, (const double*)&J_pM);
+    TMatrixDSym J5(5, (const double*)&cov5);
+    J5.SimilarityT(JpM);
+    memcpy(out7, J5.GetMatrixArray(), 7*7*sizeof(double));
+    return;
+  }
+
 
   // 5D -> 7D
 
@@ -116,6 +124,13 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7){
 
 
 void RKTools::J_pMTxcov5xJ_pM(const M5x6& J_pM, const M5x5& cov5, M6x6& out6){
+  if (debugFlags & flagSlowMatrix) {
+    TMatrixD JpM(5, 6, (const double*)&J_pM);
+    TMatrixDSym J5(5, (const double*)&cov5);
+    J5.SimilarityT(JpM);
+    memcpy(out6, J5.GetMatrixArray(), 6*6*sizeof(double));
+    return;
+  }
 
   // 5D -> 6D
 
@@ -278,7 +293,7 @@ void RKTools::J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5)
 {
   if (debugFlags & flagSlowMatrix) {
     TMatrixD JMp(6, 5, (const double*)&J_Mp);
-    TMatrixD J7(6, 6, (const double*)&cov6);
+    TMatrixDSym J7(6, (const double*)&cov6);
     TMatrixD result(JMp, TMatrixD::kTransposeMult,
                     TMatrixD(J7, TMatrixD::kMult, JMp));
     memcpy(out5, result.GetMatrixArray(), 5*5*sizeof(double));
@@ -359,6 +374,13 @@ void RKTools::J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5)
 
 
 void RKTools::J_MMTxcov7xJ_MM(const M7x7& J_MM, M7x7& cov7){
+  if (debugFlags & flagSlowMatrix) {
+    TMatrixD JMM(7, 7, (const double*)&J_MM);
+    TMatrixDSym J7(7, (const double*)&cov7);
+    J7.SimilarityT(JMM);
+    memcpy(cov7, J7.GetMatrixArray(), 7*7*sizeof(double));
+    return;
+  }
 
   // it is assumed that the last column of J_MM is [0,0,0,0,0,0,1]
 
@@ -635,7 +657,7 @@ void RKTools::Np_N_NpT(const M7x7& Np, M7x7& N) {
     TMatrixDSym n(7,N);
     TMatrixD np(7,7,Np);
     n.Similarity(np);
-    memcpy(N, np.GetMatrixArray(), sizeof(M7x7));
+    memcpy(N, n.GetMatrixArray(), sizeof(M7x7));
     return;
   }
 
