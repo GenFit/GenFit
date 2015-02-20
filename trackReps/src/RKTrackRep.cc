@@ -2477,8 +2477,8 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
 
 
 double RKTrackRep::momMag(const M1x7& state7) const {
-  double momMag2 = state7[3]*state7[3] + state7[4]*state7[4] + state7[5]*state7[5];
-  return sqrt(momMag2);
+  // FIXME given this interface this function cannot work for charge =/= +-1
+  return fabs(1/state7[6]);
 }
 
 
