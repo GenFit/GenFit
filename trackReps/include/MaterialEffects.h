@@ -111,16 +111,24 @@ public:
 
  private:
 
-  //! sets charge_, mass_ and calculates beta_, gamma_, fgammasquare;
-  void getParticleParameters(double mom);
+  //! sets charge_, mass_
+  void getParticleParameters();
 
-  //! Returns energy loss
-  /**  Uses Bethe Bloch formula to calculate energy loss.
-    *  Calcuates and sets dEdx_ which needed also for noiseBetheBloch.
-    *  Therefore it is not a const function!
-    *
-  */
-  double energyLossBetheBloch();
+  void getMomGammaBeta(double Energy,
+                       double& mom, double& gammaSquare, double& gamma, double& betaSquare) const;
+
+  //! Returns momentum loss
+  /**
+   * Also sets dEdx_ and E_.
+   */
+  double momentumLoss(double stepSign, double mom, bool linear);
+
+  //! Calculate dEdx for a given energy
+  double dEdx(double Energy) const;
+
+
+  //! Uses Bethe Bloch formula to calculate dEdx.
+  double dEdxBetheBloch(double betaSquare, double gamma, double gammasquare) const;
 
   //! calculation of energy loss straggeling
   /**  For the energy loss straggeling, different formulas are used for different regions:
@@ -129,9 +137,9 @@ public:
     *  - truncated Landau distribution
     *  - Urban model
     *
-    *  Needs dEdx_, which is calculated in energyLossBetheBloch, so it has to be called afterwards!
+    *  Needs dEdx_, which is calculated in momentumLoss, so it has to be called afterwards!
     */
-  void noiseBetheBloch(M7x7& noise) const;
+  void noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare) const;
 
   //! calculation of multiple scattering
   /**  This function first calcuates a MSC variance based on the current material and step length
@@ -142,20 +150,19 @@ public:
    * 
     */
   void noiseCoulomb(M7x7& noise,
-                    const M1x3& direction) const;
+                    const M1x3& direction, double momSquare, double betaSquare) const;
 
-  //! Returns energy loss
-  /** Can be called with any pdg, but only calculates energy loss for electrons and positrons (otherwise returns 0).
+  //! Returns dEdx
+  /** Can be called with any pdg, but only calculates dEdx for electrons and positrons (otherwise returns 0).
     * Uses a gaussian approximation (Bethe-Heitler formula with Migdal corrections).
-    * For positrons the energy loss is weighed with a correction factor.
+    * For positrons, dEdx is weighed with a correction factor.
   */
-  double energyLossBrems() const;
+  double dEdxBrems(double mom) const;
 
   //! calculation of energy loss straggeling
   /** Can be called with any pdg, but only calculates straggeling for electrons and positrons.
-   *
    */
-  void noiseBrems(M7x7& noise) const;
+  void noiseBrems(M7x7& noise, double mom, double betaSquare) const;
 
 
 
@@ -174,12 +181,8 @@ public:
   double stepSize_; // stepsize
 
   // cached values for energy loss and noise calculations
-  double mom_;
-  double beta_;
-  double dEdx_;
-  double gamma_;
-  double gammaSquare_;
-
+  double dEdx_; // Runkge Kutta dEdx
+  double E_; // Runge Kutta Energy
   double matDensity_;
   double matZ_;
   double matA_;
