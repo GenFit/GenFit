@@ -52,7 +52,7 @@ DAF::DAF(bool useRefKalman, double deltaPval, double deltaWeight)
   kalman_->setMaxIterations(1);
 
   setAnnealingScheme(100, 0.1, 5); // also sets maxIterations_
-  setProbCut(0.01);
+  setProbCut(0.001);
 }
 
 DAF::DAF(AbsKalmanFitter* kalman, double deltaPval, double deltaWeight)
@@ -170,7 +170,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
 
 
 void DAF::setProbCut(const double prob_cut){
-  for ( int i = 1; i != 6; ++i){
+  for ( int i = 1; i < 7; ++i){
     addProbCut(prob_cut, i);
   }
 }
@@ -181,8 +181,8 @@ void DAF::addProbCut(const double prob_cut, const int measDim){
     exc.setFatal();
     throw exc;
   }
-  if ( measDim < 1){
-    Exception exc("DAF::addProbCut measDim must be > 0",__LINE__,__FILE__);
+  if ( measDim < 1 || measDim > 6 ){
+    Exception exc("DAF::addProbCut measDim must be in the range [1,6]",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
   }
@@ -306,10 +306,11 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
           std::cout<<"chi2 = " << chi2 << "\n";
         }
 
+	// The common factor beta is eliminated.
         double norm = 1./sqrt(twoPiN * detV);
 
         phi[j] = norm*exp(-0.5*chi2/beta);
-        phi_sum += phi[j];
+	phi_sum += phi[j];
         //std::cerr << "hitDim " << hitDim << " fchi2Cuts[hitDim] " << fchi2Cuts[hitDim] << std::endl;
         double cutVal = chi2Cuts_[hitDim];
         assert(cutVal>1.E-6);
@@ -324,6 +325,7 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
 
     for(unsigned int j=0; j<nMeas; j++) {
       double weight = phi[j]/(phi_sum+phi_cut);
+      //std::cout << phi_sum << " " << phi_cut << " " << weight << std::endl;
 
       // check convergence
       double absChange(fabs(weight - kfi->getMeasurementOnPlane(j)->getWeight()));
@@ -380,20 +382,26 @@ void DAF::Streamer(TBuffer &R__b)
             R__stl.push_back(R__t);
          }
       }
-      {
-         std::map<int,double> &R__stl =  chi2Cuts_;
-         R__stl.clear();
+      if (R__v == 1) {
+ 	 // Old versions kept the chi2Cuts_ in a map.
+         // We ignore non-sensical dimensionalities when reading it again.
          int R__i, R__n;
          R__b >> R__n;
          for (R__i = 0; R__i < R__n; R__i++) {
+	    memset(chi2Cuts_, 0, sizeof(chi2Cuts_));
             int R__t;
             R__b >> R__t;
             double R__t2;
             R__b >> R__t2;
-            typedef int Value_t;
-            std::pair<Value_t const, double > R__t3(R__t,R__t2);
-            R__stl.insert(R__t3);
-         }
+	    if (R__t >= 1 && R__t <= 6)
+	      chi2Cuts_[R__t] = R__t2;
+	 }
+      } else {
+	char n_chi2Cuts;  // should be six
+	R__b >> n_chi2Cuts;
+	assert(n_chi2Cuts == 6);  // Cannot be different as long as sanity prevails.
+	chi2Cuts_[0] = 0; // nonsensical.
+	R__b.ReadFastArray(&chi2Cuts_[1], n_chi2Cuts);
       }
       AbsKalmanFitter *p;
       R__b >> p;
@@ -417,16 +425,8 @@ void DAF::Streamer(TBuffer &R__b)
          }
       }
       {
-         std::map<int,double> &R__stl =  chi2Cuts_;
-         int R__n=(&R__stl) ? int(R__stl.size()) : 0;
-         R__b << R__n;
-         if(R__n) {
-            std::map<int,double>::iterator R__k;
-            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
-            R__b << ((*R__k).first );
-            R__b << ((*R__k).second);
-            }
-         }
+	R__b << (char)6;  // Number of chi2Cuts_
+	R__b.WriteFastArray(&chi2Cuts_[1], 6);
       }
       R__b << kalman_.get();
       R__b.SetByteCount(R__c, kTRUE);
