@@ -118,8 +118,11 @@ class DAF : public AbsKalmanFitter {
 
 
   double deltaWeight_; // convergence criterium
-  std::vector<double> betas_;
-  std::map<int,double>  chi2Cuts_;
+  std::vector<double> betas_;   // Temperatures, NOT inverse temperatures.
+  double chi2Cuts_[7];  // '7' assumes tracks are helices with one
+			// parameter, i.e. we're living in 3D space,
+			// where time may be used in the fit.  Zeroth
+			// entry is not used.
 #ifndef __CINT__
   boost::scoped_ptr<AbsKalmanFitter> kalman_;
 #else
@@ -128,7 +131,7 @@ class DAF : public AbsKalmanFitter {
 
  public:
 
-  ClassDef(DAF,1)
+  ClassDef(DAF,2)
 
 };
 
