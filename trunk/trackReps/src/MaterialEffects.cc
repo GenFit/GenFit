@@ -359,7 +359,7 @@ void MaterialEffects::getMomGammaBeta(double Energy,
     exc.setFatal();
     throw exc;
   }
-  gamma = Energy/mass;
+  gamma = Energy/mass_;
   gammaSquare = gamma*gamma;
   betaSquare = 1.-1./gammaSquare;
 }
@@ -405,8 +405,7 @@ double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear)
 
     dEdx_ = (dEdx1 + 2.*dEdx2 + 2.*dEdx3 + dEdx4)/6.;
 
-    E_ = (E0 + 2.*E1 + 2.*E2 + E3)/6.;
-    //E_ = E0;
+    E_ = E0 - dEdx_*step;
   }
 
 
