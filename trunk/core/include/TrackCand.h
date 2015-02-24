@@ -124,9 +124,6 @@ class TrackCand : public TObject {
   /** @brief get the seed value for track: mom. Identical to the last 3 components of getStateSeed*/
   TVector3 getMomSeed() const {return TVector3(state6D_(3), state6D_(4), state6D_(5));}
 
-  /** @brief set the covariance matrix seed (6D).  */
-  void setCovSeed(const TMatrixDSym& cov6D) {cov6D_ = cov6D; /* always 6D, no need to resize */}
-
   /** @brief get the covariance matrix seed (6D).  */
   const TMatrixDSym& getCovSeed() const {return cov6D_;}
 
@@ -167,6 +164,9 @@ class TrackCand : public TObject {
 
   //! Write the content of all private attributes to the terminal
   void Print(const Option_t* = "") const ;
+
+  /** @brief set the covariance matrix seed (6D).  */
+  void setCovSeed(const TMatrixDSym& cov6D) {cov6D_ = cov6D; /* always 6D, no need to resize */}
 
   /** @brief sets the state to seed the track fitting. State has to be a TVectorD(6). First 3 elements are the staring postion second 3 elements the starting momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
