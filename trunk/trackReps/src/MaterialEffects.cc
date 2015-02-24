@@ -362,6 +362,7 @@ void MaterialEffects::getMomGammaBeta(double Energy,
   gamma = Energy/mass_;
   gammaSquare = gamma*gamma;
   betaSquare = 1.-1./gammaSquare;
+  mom = Energy*sqrt(betaSquare);
 }
 
 
