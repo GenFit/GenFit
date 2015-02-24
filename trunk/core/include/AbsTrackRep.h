@@ -283,8 +283,9 @@ class AbsTrackRep : public TObject {
   //! Get the accumulated X/X0 (path / radiation length) of the material crossed in the last extrapolation.
   virtual double getRadiationLenght() const = 0;
 
-  //! Get the time of flight [ns] of the last extrapolation
-  virtual double getTOF() const = 0;
+  //! Get the time corresponding to the StateOnPlane.  Extrapolation
+  // should keep this up to date with the time of flight.
+  virtual double getTime(const StateOnPlane&) const = 0;
 
   /**
    * @brief Calculate Jacobian of transportation numerically.
@@ -312,6 +313,8 @@ class AbsTrackRep : public TObject {
   virtual void setChargeSign(StateOnPlane& state, double charge) const = 0;
   //! Set charge/momentum.
   virtual void setQop(StateOnPlane& state, double qop) const = 0;
+  //! Set time at which the state was defined
+  virtual void setTime(StateOnPlane& state, double time) const = 0;
 
   //! Set propagation direction. (-1, 0, 1) -> (backward, auto, forward).
   void setPropDir(int dir) {
