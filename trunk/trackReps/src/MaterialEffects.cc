@@ -392,7 +392,6 @@ double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear)
 
   if (linear) {
     dEdx_ = dEdx1;
-    E_ = E0;
   }
   else { // RK4
     double E1 = E0 - dEdx1*step/2.;
@@ -405,10 +404,9 @@ double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear)
     double dEdx4 = dEdx(E3); // dEdx(x0 + h, E0 + h * dEdx3)
 
     dEdx_ = (dEdx1 + 2.*dEdx2 + 2.*dEdx3 + dEdx4)/6.;
-
-    E_ = E0 - dEdx_*step;
   }
 
+  E_ = E0 - dEdx_*step*0.5;
 
   double dE = step*dEdx_; // positive for positive stepSign
 
