@@ -951,12 +951,8 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
   if (endId < 0)
     endId += trackPoints_.size();
 
-  bool backwards(false);
   if (startId > endId) {
-    double temp = startId;
-    startId = endId;
-    endId = temp;
-    backwards = true;
+    std::swap(startId, endId);
   }
 
   endId += 1;
@@ -964,26 +960,19 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
   if (rep == NULL)
     rep = getCardinalRep();
 
-  double tof(0);
   StateOnPlane state;
 
-  for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
-    if (! (*pointIt)->hasFitterInfo(rep)) {
+  const TrackPoint* startPoint(trackPoints_[startId]);
+  const TrackPoint* endPoint(trackPoints_[endId]);
+  
+  if (!startPoint->hasFitterInfo(rep)
+      || !endPoint->hasFitterInfo(rep)) {
       Exception e("Track::getTOF: trackPoint has no fitterInfo", __LINE__,__FILE__);
       throw e;
     }
 
-    if (pointIt != trackPoints_.begin() + startId) {
-      rep->extrapolateToPlane(state, (*pointIt)->getFitterInfo(rep)->getPlane());
-      tof += rep->getTOF();
-    }
-
-    state = (*pointIt)->getFitterInfo(rep)->getFittedState();
-  }
-
-  if (backwards)
-    tof *= -1.;
-
+  double tof = (rep->getTime(endPoint->getFitterInfo(rep)->getFittedState())
+		- rep->getTime(startPoint->getFitterInfo(rep)->getFittedState()));
   return tof;
 }
 

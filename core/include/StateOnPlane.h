@@ -113,11 +113,13 @@ class StateOnPlane : public TObject {
   double getCharge() const {return rep_->getCharge(*this);}
   double getQop() const {return rep_->getQop(*this);}
   double getMass() const {return rep_->getMass(*this);}
+  double getTime() const {return rep_->getTime(*this);}
 
   void setPosMom(const TVector3& pos, const TVector3& mom) {rep_->setPosMom(*this, pos, mom);}
   void setPosMom(const TVectorD& state6) {rep_->setPosMom(*this, state6);}
   void setChargeSign(double charge) {rep_->setChargeSign(*this, charge);}
   void setQop(double qop) {rep_->setQop(*this, qop);}
+  void setTime(double time) {rep_->setTime(*this, time);}
 
 
   virtual void Print(Option_t* option = "") const;

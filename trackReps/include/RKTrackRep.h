@@ -141,6 +141,7 @@ class RKTrackRep : public AbsTrackRep {
   virtual double getCharge(const StateOnPlane& state) const;
   virtual double getQop(const StateOnPlane& state) const {return state.getState()(0);}
   double getSpu(const StateOnPlane& state) const;
+  double getTime(const StateOnPlane& state) const;
 
   virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const;
 
@@ -149,9 +150,6 @@ class RKTrackRep : public AbsTrackRep {
   std::vector<genfit::MatStep> getSteps() const;
 
   virtual double getRadiationLenght() const;
-
-  virtual double getTOF() const;
-
 
   virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const;
   virtual void setPosMom(StateOnPlane& state, const TVectorD& state6) const;
@@ -163,6 +161,7 @@ class RKTrackRep : public AbsTrackRep {
   virtual void setQop(StateOnPlane& state, double qop) const {state.getState()(0) = qop;}
 
   void setSpu(StateOnPlane& state, double spu) const;
+  void setTime(StateOnPlane& state, double time) const;
 
   //! The actual Runge Kutta propagation
   /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).
@@ -229,9 +228,11 @@ class RKTrackRep : public AbsTrackRep {
   bool RKutta(const M1x4& SU,
               const DetPlane& plane,
               double charge,
+	      double mass,
               M1x7& state7,
               M7x7* jacobianT,
               double& coveredDistance, // signed
+	      double& flightTime,
               bool& checkJacProj,
               M7x7& noiseProjection,
               StepLimits& limits,
@@ -261,8 +262,10 @@ class RKTrackRep : public AbsTrackRep {
   double Extrap(const DetPlane& startPlane, // plane where Extrap starts
                 const DetPlane& destPlane, // plane where Extrap has to extrapolate to
                 double charge,
+		double mass,
                 bool& isAtBoundary,
                 M1x7& state7,
+		double& flightTime,
                 bool fillExtrapSteps,
                 TMatrixDSym* cov = nullptr,
                 bool onlyOneStep = false,
