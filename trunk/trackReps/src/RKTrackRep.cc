@@ -31,7 +31,6 @@
 #include <map>
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
-//#define DEBUG
 
 namespace {
   // Use fast inversion instead of LU decomposition?
