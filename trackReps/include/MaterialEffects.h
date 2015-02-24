@@ -162,7 +162,7 @@ public:
   //! calculation of energy loss straggeling
   /** Can be called with any pdg, but only calculates straggeling for electrons and positrons.
    */
-  void noiseBrems(M7x7& noise, double mom, double betaSquare) const;
+  void noiseBrems(M7x7& noise, double momSquare, double betaSquare) const;
 
 
 
