@@ -714,7 +714,7 @@ double MaterialEffects::dEdxBrems(double mom) const
       dedxBrems = FAC * S;
 
 
-      if (mom > THIGH) {
+      if (mom >= THIGH) {
         double RAT;
         if (BCUT < THIGH) {
           RAT = BCUT / mom;
