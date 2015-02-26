@@ -54,5 +54,11 @@
   source="" target="pruneFlags_"                           \
   code="{ pruneFlags_.setFlags(); }"
 
+// Time for the TrackCand was only introduced in version 2.  Default to zero.
+#pragma read sourceClass="genfit::TrackCand" version="[1]" \
+  targetClass="genfit::TrackCand"                          \
+  source="" target="time_"                                 \
+  code="{ time_ = 0; }"
+
 
 #endif

@@ -23,7 +23,7 @@
 #include "KalmanFitterInfo.h"
 #include "KalmanFitStatus.h"
 #include "PlanarMeasurement.h"
-#include "WireMeasurement.h"
+#include "AbsMeasurement.h"
 
 #include "WireTrackCandHit.h"
 
@@ -42,14 +42,14 @@
 namespace genfit {
 
 Track::Track() :
-  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), stateSeed_(6), covSeed_(6)
+  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), timeSeed_(0), stateSeed_(6), covSeed_(6)
 {
   ;
 }
 
 
 Track::Track(const TrackCand& trackCand, const MeasurementFactory<AbsMeasurement>& factory, AbsTrackRep* rep) :
-  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), stateSeed_(6), covSeed_(6)
+  cardinalRep_(0), fitStatuses_(), stateSeed_(6), covSeed_(6)
 {
 
   if (rep != NULL)
@@ -71,10 +71,9 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<AbsMeasurement
     insertPoint(tp);
   }
 
-  // fill seed state
+  // Copy seed information from candidate
+  timeSeed_ = trackCand.getTimeSeed();
   stateSeed_ = trackCand.getStateSeed();
-
-  // initial guess for cov
   covSeed_ = trackCand.getCovSeed();
 
   mcTrackId_ = trackCand.getMcTrackId();
@@ -88,7 +87,7 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<AbsMeasurement
 
 
 Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
-  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), stateSeed_(stateSeed),
+  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), timeSeed_(0), stateSeed_(stateSeed),
   covSeed_(TMatrixDSym::kUnit, TMatrixDSym(6))
 {
   addTrackRep(trackRep);
@@ -96,7 +95,7 @@ Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
 
 
 Track::Track(AbsTrackRep* trackRep, const TVector3& posSeed, const TVector3& momSeed) :
-  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), stateSeed_(6),
+  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), timeSeed_(0), stateSeed_(6),
   covSeed_(TMatrixDSym::kUnit, TMatrixDSym(6))
 {
   addTrackRep(trackRep);
@@ -105,7 +104,8 @@ Track::Track(AbsTrackRep* trackRep, const TVector3& posSeed, const TVector3& mom
 
 
 Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym& covSeed) :
-  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), stateSeed_(stateSeed), covSeed_(covSeed)
+  cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), timeSeed_(0), stateSeed_(stateSeed),
+  covSeed_(covSeed)
 {
   addTrackRep(trackRep);
 }
@@ -113,7 +113,8 @@ Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym
 
 Track::Track(const Track& rhs) :
   TObject(rhs),
-  cardinalRep_(rhs.cardinalRep_), mcTrackId_(rhs.mcTrackId_), stateSeed_(rhs.stateSeed_), covSeed_(rhs.covSeed_)
+  cardinalRep_(rhs.cardinalRep_), mcTrackId_(rhs.mcTrackId_), timeSeed_(rhs.timeSeed_),
+  stateSeed_(rhs.stateSeed_), covSeed_(rhs.covSeed_)
 {
   assert(rhs.checkConsistency());
 
@@ -163,6 +164,7 @@ void Track::swap(Track& other) {
   std::swap(this->trackPointsWithMeasurement_, other.trackPointsWithMeasurement_);
   std::swap(this->fitStatuses_, other.fitStatuses_);
   std::swap(this->mcTrackId_, other.mcTrackId_);
+  std::swap(this->timeSeed_, other.timeSeed_);
   std::swap(this->stateSeed_, other.stateSeed_);
   std::swap(this->covSeed_, other.covSeed_);
 
@@ -194,6 +196,7 @@ void Track::Clear(Option_t*)
 
   mcTrackId_ = -1;
 
+  timeSeed_ = 0;
   stateSeed_.Zero();
   covSeed_.Zero();
 }
@@ -663,6 +666,7 @@ bool Track::sort() {
 bool Track::udpateSeed(int id, AbsTrackRep* rep, bool biased) {
   try {
     const MeasuredStateOnPlane& fittedState = getFittedState(id, rep, biased);
+    setTimeSeed(fittedState.getTime());
     setStateSeed(fittedState.get6DState());
     setCovSeed(fittedState.get6DCov());
 
@@ -911,7 +915,7 @@ double Track::getTrackLen(AbsTrackRep* rep, int startId, int endId) const {
 TrackCand* Track::constructTrackCand() const {
   TrackCand* cand = new TrackCand();
 
-  cand->set6DSeedAndPdgCode(stateSeed_, getCardinalRep()->getPDG());
+  cand->setTime6DSeedAndPdgCode(timeSeed_, stateSeed_, getCardinalRep()->getPDG());
   cand->setCovSeed(covSeed_);
   cand->setMcTrackId(mcTrackId_);
 
@@ -928,9 +932,9 @@ TrackCand* Track::constructTrackCand() const {
         planeId = static_cast<const PlanarMeasurement*>(m)->getPlaneId();
       }
 
-      if (dynamic_cast<const WireMeasurement*>(m)) {
+      if (m->isLeftRightMeasurement()) {
         tch = new WireTrackCandHit(m->getDetId(), m->getHitId(), planeId,
-            tp->getSortingParameter(), static_cast<const WireMeasurement*>(m)->getLeftRightResolution());
+            tp->getSortingParameter(), m->getLeftRightResolution());
       }
       else {
         tch = new TrackCandHit(m->getDetId(), m->getHitId(), planeId,
@@ -1511,6 +1515,13 @@ void Track::Streamer(TBuffer &R__b)
           R__stl[this->getTrackRep(id)] = R__t2;
         }
       }
+      // timeSeed_ was introduced in version 3.  If reading an earlier
+      // version, default to zero.
+      if (R__v >= 3) {
+	R__b >> timeSeed_;
+      } else {
+	timeSeed_ = 0;
+      }
       stateSeed_.Streamer(R__b);
       covSeed_.Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
@@ -1571,6 +1582,7 @@ void Track::Streamer(TBuffer &R__b)
           }
         }
       }
+      R__b << timeSeed_;
       stateSeed_.Streamer(R__b);
       covSeed_.Streamer(R__b);
       R__b.SetByteCount(R__c, kTRUE);
