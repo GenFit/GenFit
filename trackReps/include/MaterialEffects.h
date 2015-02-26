@@ -109,6 +109,8 @@ public:
   void setDebugLvl(unsigned int lvl = 1);
 
 
+  void drawdEdx(int pdg = 11);
+
  private:
 
   //! sets charge_, mass_

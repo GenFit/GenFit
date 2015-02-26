@@ -30,6 +30,9 @@
 #include <TDatabasePDG.h>
 #include <TMath.h>
 
+#include <TH1D.h>
+#include <TFile.h>
+
 
 namespace genfit {
 
@@ -271,14 +274,15 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   stepSize_ = 1.; // set stepsize for momLoss calculation
 
   if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
-    relMomLossPer_cm = this->momentumLoss(limits.getStepSign(), mom, true);
+    relMomLossPer_cm = this->momentumLoss(limits.getStepSign(), mom, true) / mom;
   }
 
-  double maxStepMomLoss = (maxRelMomLoss - relMomLoss) / relMomLossPer_cm; // >= 0
+  double maxStepMomLoss = fabs((maxRelMomLoss - fabs(relMomLoss)) / relMomLossPer_cm); // >= 0
   limits.setLimit(stp_momLoss, maxStepMomLoss);
 
   if (debugLvl_ > 0) {
-    std::cout << "     momLoss exceeded after a step of " <<  maxStepMomLoss << "\n";
+    std::cout << "     momLoss exceeded after a step of " <<  maxStepMomLoss
+        << "; relMomLoss up to now = " << relMomLoss << "\n";
   }
 
 
@@ -383,10 +387,10 @@ double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear)
   //k4 = f(t0 + h,   y0 + h   * k3)
 
   // This means in our case:
-  //dEdx1 = dEdx(x0,p0)
-  //dEdx2 = dEdx(x0 + h/2, E0 + h/2 * dEdx1)
-  //dEdx3 = dEdx(x0 + h/2, E0 + h/2 * dEdx2)
-  //dEdx4 = dEdx(x0 + h, E0 + h * dEdx3)
+  //dEdx1 = dEdx(x0,       E0)
+  //dEdx2 = dEdx(x0 + h/2, E1); E1 = E0 + h/2 * dEdx1
+  //dEdx3 = dEdx(x0 + h/2, E2); E2 = E0 + h/2 * dEdx2
+  //dEdx4 = dEdx(x0 + h,   E3); E3 = E0 + h   * dEdx3
 
   double dEdx1 = dEdx(E0); // dEdx(x0,p0)
 
@@ -420,6 +424,7 @@ double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear)
 
   if (debugLvl_ > 0) {
     std::cout << "      MaterialEffects::momentumLoss: mom = " << mom << "; E0 = " << E0
+        << "; dEdx = " << dEdx_
         << "; dE = " << dE << "; mass = " << mass_ << "\n";
   }
 
@@ -448,9 +453,9 @@ double MaterialEffects::dEdx(double Energy) const {
 
 double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double gammaSquare) const
 {
-  static const double betaGammaMin(0.1);
+  static const double betaGammaMin(0.05);
   if (betaSquare*gammaSquare < betaGammaMin*betaGammaMin) {
-    Exception exc("MaterialEffects::dEdxBetheBloch ==> beta*gamma < 0.1, Bethe-Bloch implementation not valid anymore!",__LINE__,__FILE__);
+    Exception exc("MaterialEffects::dEdxBetheBloch ==> beta*gamma < 0.05, Bethe-Bloch implementation not valid anymore!",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
   }
@@ -791,6 +796,67 @@ void MaterialEffects::setDebugLvl(unsigned int lvl) {
   debugLvl_ = lvl;
   if (materialInterface_ and debugLvl_ > 1)
     materialInterface_->setDebugLvl(debugLvl_-1);
+}
+
+
+void MaterialEffects::drawdEdx(int pdg) {
+  pdg_ = pdg;
+  this->getParticleParameters();
+
+  stepSize_ = 1;
+
+  materialInterface_->initTrack(0, 0, 0, 1, 1, 1);
+  materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+
+
+  double minMom = 0.00001;
+  double maxMom = 10000;
+  int nSteps(10000);
+  double logStepSize = (log10(maxMom) - log10(minMom)) / (nSteps-1);
+
+  TH1D dEdxBethe("dEdxBethe", "dEdxBethe; log10(mom)", nSteps, log10(minMom), log10(maxMom));
+  TH1D dEdxBrems("dEdxBrems", "dEdxBrems; log10(mom)", nSteps, log10(minMom), log10(maxMom));
+
+  for (int i=0; i<nSteps; ++i) {
+    double mom = pow(10., log10(minMom) + i*logStepSize);
+    double E = hypot(mom, mass_);
+
+    energyLossBrems_ = false;
+    energyLossBetheBloch_ = true;
+
+    try {
+      dEdxBethe.Fill(log10(mom), dEdx(E));
+    }
+    catch (...) {
+
+    }
+
+
+    //std::cout<< "E = " << E << "; dEdx = " << dEdx(E) <<"\n";
+
+    energyLossBrems_ = true;
+    energyLossBetheBloch_ = false;
+    try {
+      dEdxBrems.Fill(log10(mom), dEdx(E));
+    }
+    catch (...) {
+
+    }
+  }
+
+  energyLossBrems_ = true;
+  energyLossBetheBloch_ = true;
+
+  std::string Result;//string which will contain the result
+  std::stringstream convert; // stringstream used for the conversion
+  convert << pdg;//add the value of Number to the characters in the stream
+  Result = convert.str();//set Result to the content of the stream
+
+  TFile outfile("dEdx_" + TString(Result) + ".root", "recreate");
+  outfile.cd();
+  dEdxBethe.Write();
+  dEdxBrems.Write();
+  outfile.Close();
 }
 
 } /* End of namespace genfit */
