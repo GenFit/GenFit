@@ -62,6 +62,10 @@ class AbsMeasurement : public TObject {
   int getDetId() const {return detId_;}
   int getHitId() const {return hitId_;}
 
+  //! If the AbsMeasurement is a wire hit, the left/right resolution will be used.
+  virtual bool isLeftRightMeasurement() const {return false;}
+  virtual int getLeftRightResolution() const {return 0;}
+
   unsigned int getDim() const {return rawHitCoords_.GetNrows();}
 
   void setRawHitCoords(const TVectorD& coords) {rawHitCoords_ = coords;}
@@ -116,7 +120,6 @@ class AbsMeasurement : public TObject {
 
  public:
   ClassDef(AbsMeasurement, 3)
-
 };
 
 } /* End of namespace genfit */

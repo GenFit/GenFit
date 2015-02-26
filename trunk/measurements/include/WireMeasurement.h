@@ -87,8 +87,10 @@ class WireMeasurement : public AbsMeasurement {
    */
   void setLeftRightResolution(int lr);
 
+  virtual bool isLeftRightMeasurement() const {return true;}
+  virtual int getLeftRightResolution() const {return leftRight_;}
+
   double getMaxDistance(){return maxDistance_;}
-  int getLeftRightResolution() const {return leftRight_;}
 
  protected:
 
