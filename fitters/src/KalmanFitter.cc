@@ -141,6 +141,7 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
   }
   else {
     currentState_.reset(new MeasuredStateOnPlane(rep));
+    rep->setTime(*currentState_, tr->getTimeSeed());
     rep->setPosMomCov(*currentState_, tr->getStateSeed(), tr->getCovSeed());
     if (debugLvl_ > 0)
       std::cout << "take seed state of track as seed \n";
@@ -349,6 +350,7 @@ KalmanFitter::processTrackPartially(Track* tr, const AbsTrackRep* rep, int start
   }
   else {
     currentState_.reset(new MeasuredStateOnPlane(rep));
+    rep->setTime(*currentState_, tr->getTimeSeed());
     rep->setPosMomCov(*currentState_, tr->getStateSeed(), tr->getCovSeed());
     if (debugLvl_ > 0)
       std::cout << "take seed of track as seed \n";
