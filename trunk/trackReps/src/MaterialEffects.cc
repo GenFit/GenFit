@@ -171,7 +171,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 
     if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
 
-      momLoss += momentumLoss(stepSign, mom, false);
+      momLoss += momentumLoss(stepSign, mom - momLoss, false);
 
       if (doNoise){
         // get values for the "effective" energy of the RK step E_
