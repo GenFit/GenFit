@@ -95,6 +95,7 @@ class WireMeasurementNew : public AbsMeasurement {
    */
   void setLeftRightResolution(int lr);
 
+  virtual bool isLeftRigthMeasurement() const {return true;}
   double getMaxDistance(){return maxDistance_;}
   int getLeftRightResolution() const {return leftRight_;}
 

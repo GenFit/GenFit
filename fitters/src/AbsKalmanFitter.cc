@@ -25,7 +25,7 @@
 #include "TrackPoint.h"
 #include "Exception.h"
 #include "KalmanFitterInfo.h"
-#include "WireMeasurement.h"
+#include "AbsMeasurement.h"
 
 #include "AbsKalmanFitter.h"
 #include <Math/ProbFunc.h>
@@ -211,7 +211,7 @@ const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const K
     case weightedClosestToReferenceWire :
     case unweightedClosestToReferenceWire :
     {
-      if (tp->getNumRawMeasurements() == 1 && dynamic_cast<WireMeasurement*>(tp->getRawMeasurement()) != NULL) {
+      if (tp->getNumRawMeasurements() == 1 && tp->getRawMeasurement()->isLeftRightMeasurement()) {
         if (!fi->hasReferenceState()) {
           Exception e("AbsKalmanFitter::getMeasurement: no ReferenceState.", __LINE__,__FILE__);
           e.setFatal();
@@ -228,7 +228,7 @@ const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const K
     case weightedClosestToPredictionWire :
     case unweightedClosestToPredictionWire :
     {
-      if (tp->getNumRawMeasurements() == 1 && dynamic_cast<WireMeasurement*>(tp->getRawMeasurement()) != NULL) {
+      if (tp->getNumRawMeasurements() == 1 && tp->getRawMeasurement()->isLeftRightMeasurement()) {
         if (!fi->hasPrediction(direction)) {
           Exception e("AbsKalmanFitter::getMeasurement: no prediction.", __LINE__,__FILE__);
           e.setFatal();
