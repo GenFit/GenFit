@@ -42,7 +42,7 @@ namespace genfit {
  * It will provide functionality to extrapolate it and translate the state it into cartesian coordinates.
  * Shortcuts to all functions of the AbsTrackRep which use this StateOnPlane are also provided here.
  */
-class StateOnPlane : public TObject {
+class StateOnPlane {
 
  public:
 
@@ -137,8 +137,10 @@ class StateOnPlane : public TObject {
   const AbsTrackRep* rep_; //! No ownership
 
  public:
-  ClassDef(StateOnPlane,1)
-
+  ClassDef(StateOnPlane,2)
+  // Version history:
+  // ver 2: no longer derives from TObject (the TObject parts were not 
+  //        streamed, so no compatibility issues arise.)
 };
 
 
