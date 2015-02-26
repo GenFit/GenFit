@@ -40,8 +40,7 @@ void StateOnPlane::Print(Option_t*) const {
 
 
 // Modified from auto-generated Streamer to account for sharedPlane_
-// also ignore rep_, this has to be set when loading the object owning
-// this state.
+// Ignores rep_ and sharedPlane_, the owner has to take care of them.
 void StateOnPlane::Streamer(TBuffer &R__b)
 {
    // Stream an object of class genfit::StateOnPlane.
@@ -51,7 +50,6 @@ void StateOnPlane::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
-      //TObject::Streamer(R__b);
       state_.Streamer(R__b);
       auxInfo_.Streamer(R__b);
       sharedPlane_.reset();  // needs to be set by owner;
@@ -59,7 +57,6 @@ void StateOnPlane::Streamer(TBuffer &R__b)
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
-      //TObject::Streamer(R__b);
       state_.Streamer(R__b);
       auxInfo_.Streamer(R__b);
       R__b.SetByteCount(R__c, kTRUE);
