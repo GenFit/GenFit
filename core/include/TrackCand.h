@@ -118,6 +118,9 @@ class TrackCand : public TObject {
   //! Get the MCT track id, for MC simulations - default value = -1
   int getMcTrackId() const {return mcTrackId_;}
 
+  //! Get the time at which the seed state is defined
+  double getTimeSeed() const { return time_; }
+
   /** @brief get the seed value for track: pos. Identical to the first 3 components of getStateSeed*/
   TVector3 getPosSeed() const {return TVector3(state6D_(0), state6D_(1), state6D_(2));}
 
@@ -165,6 +168,9 @@ class TrackCand : public TObject {
   //! Write the content of all private attributes to the terminal
   void Print(const Option_t* = "") const ;
 
+  //! Set the time at which the seed is defined
+  void setTimeSeed(double time) { time_ = time; }
+
   /** @brief set the covariance matrix seed (6D).  */
   void setCovSeed(const TMatrixDSym& cov6D) {cov6D_ = cov6D; /* always 6D, no need to resize */}
 
@@ -186,6 +192,35 @@ class TrackCand : public TObject {
    */
   void setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode);
 
+  /** @brief sets the state to seed the track fitting and its
+     time. State has to be a TVectorD(6). First 3 elements are the
+     staring postion second 3 elements the starting
+     momentum. Everything in global coordinates charge is the charge
+     hypotheses of the particle charge.
+   */
+  void setTime6DSeed(double time, const TVectorD& state6D, const double charge);
+
+  /** @brief This function works the same as set6DSeed but instead of
+      a charge hypothesis you can set a pdg code which will set the
+      charge automatically.
+   */
+  void setTime6DSeedAndPdgCode(double time, const TVectorD& state6D, const int pdgCode);
+
+  /** @brief sets the state to seed the track fitting and its time. State has to be
+     a TVector3 for position and a TVector3 for momentum. Everything
+     in global coordinates charge is the charge hypotheses of the
+     particle charge.
+   */
+  void setTimePosMomSeed(double time, const TVector3& pos, const TVector3& mom,
+			 const double charge);
+
+  /** @brief This function works the same as setPosMomSeed but instead
+      of a charge hypothesis you can set a pdg code which will set the
+      charge automatically.
+   */
+  void setTimePosMomSeedAndPdgCode(double time, const TVector3& pos,
+				   const TVector3& mom, const int pdgCode);
+
 
  private:
 
@@ -195,6 +230,7 @@ class TrackCand : public TObject {
   int mcTrackId_; /**< if MC simulation, store the mc track id here */
   int pdg_; /**< particle data groupe's id for a particle*/
 
+  double time_; /**< Time at which the seed is given */
   TVectorD state6D_; /**< global 6D position plus momentum state */
   TMatrixDSym cov6D_; /**< global 6D position plus momentum state */
   double q_; /**< the charge of the particle in units of elementary charge */
@@ -202,8 +238,9 @@ class TrackCand : public TObject {
 
  public:
 
-  ClassDef(TrackCand,1)
-
+  ClassDef(TrackCand,2)
+  // Version history:
+  // ver 2: keep track of time in state (schema evolution rule added).
 };
 
 } /* End of namespace genfit */

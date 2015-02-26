@@ -31,6 +31,7 @@ namespace genfit {
 TrackCand::TrackCand() :
   mcTrackId_(-1),
   pdg_(0),
+  time_(0),
   state6D_(6),
   cov6D_(6),
   q_(0)
@@ -50,6 +51,7 @@ TrackCand::TrackCand( const TrackCand& other ) :
   TObject(other),
   mcTrackId_(other.mcTrackId_),
   pdg_(0),
+  time_(other.time_),
   state6D_(other.state6D_),
   cov6D_(other.cov6D_),
   q_(other.q_)
@@ -76,6 +78,7 @@ void TrackCand::swap(TrackCand& other) {
   std::swap(this->hits_, other.hits_);
   std::swap(this->mcTrackId_, other.mcTrackId_);
   std::swap(this->pdg_, other.pdg_);
+  std::swap(this->time_, other.time_);
   std::swap(this->state6D_, other.state6D_);
   std::swap(this->cov6D_, other.cov6D_);
   std::swap(this->q_, other.q_);
@@ -264,6 +267,33 @@ void TrackCand::setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom
   setPdgCode(pdgCode);
   state6D_[0] = pos[0];  state6D_[1] = pos[1];  state6D_[2] = pos[2];
   state6D_[3] = mom[0];  state6D_[4] = mom[1];  state6D_[5] = mom[2];
+}
+
+
+void TrackCand::setTime6DSeed(double time, const TVectorD& state6D, const double charge)
+{
+  time_ = time;
+  set6DSeed(state6D, charge);
+}
+
+void TrackCand::setTime6DSeedAndPdgCode(double time, const TVectorD& state6D, const int pdgCode)
+{
+  time_ = time;
+  set6DSeedAndPdgCode(state6D, pdgCode);
+}
+
+void TrackCand::setTimePosMomSeed(double time, const TVector3& pos,
+				  const TVector3& mom, const double charge)
+{
+  time_ = time;
+  setPosMomSeed(pos, mom, charge);
+}
+
+void TrackCand::setTimePosMomSeedAndPdgCode(double time, const TVector3& pos,
+					    const TVector3& mom, const int pdgCode)
+{
+  time_ = time;
+  setPosMomSeedAndPdgCode(pos, mom, pdgCode);
 }
 
 

@@ -156,6 +156,9 @@ class Track : public TObject {
 
   void setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep);
 
+  double getTimeSeed() const {return timeSeed_;}
+  void setTimeSeed(double time) {timeSeed_ = time;}
+
   const TVectorD& getStateSeed() const {return stateSeed_;}
   void setStateSeed(const TVectorD& s) {stateSeed_.ResizeTo(s); stateSeed_ = s;}
   void setStateSeed(const TVector3& pos, const TVector3& mom);
@@ -298,13 +301,15 @@ class Track : public TObject {
   std::map< const AbsTrackRep*, FitStatus* > fitStatuses_; // Ownership over FitStatus*
 
   int mcTrackId_; /**< if MC simulation, store the mc track id here */
+  double timeSeed_;
   TVectorD stateSeed_; // 6D: position, momentum
   TMatrixDSym covSeed_; // 6D
 
 
  public:
-  ClassDef(Track,2)
-
+  ClassDef(Track,3)
+  // Class version history:
+  //  ver 3: introduces timeSeed_
 };
 
 } /* End of namespace genfit */
