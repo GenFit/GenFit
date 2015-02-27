@@ -1198,13 +1198,13 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   if(jacobianT != NULL){
 
     // jacobianT
-    // 1 0 0 0 0 0 0
-    // 0 1 0 0 0 0 0
-    // 0 0 1 0 0 0 0
-    // x x x x x x 0
-    // x x x x x x 0
-    // x x x x x x 0
-    // x x x x x x 1
+    // 1 0 0 0 0 0 0  x
+    // 0 1 0 0 0 0 0  y
+    // 0 0 1 0 0 0 0  z
+    // x x x x x x 0  a_x
+    // x x x x x x 0  a_y
+    // x x x x x x 0  a_z
+    // x x x x x x 1  q/p
 
     double   dA0(0), dA2(0), dA3(0), dA4(0), dA5(0), dA6(0);
     double   dB0(0), dB2(0), dB3(0), dB4(0), dB5(0), dB6(0);
@@ -1695,11 +1695,12 @@ void RKTrackRep::transformM6P(const M6x6& in6x6,
 bool RKTrackRep::RKutta(const M1x4& SU,
                         const DetPlane& plane,
                         double charge,
-			double mass,
+                        double mass,
                         M1x7& state7,
                         M7x7* jacobianT,
+                        M1x7* J_MMT_unprojected_lastRow,
                         double& coveredDistance,
-			double& flightTime,
+                        double& flightTime,
                         bool& checkJacProj,
                         M7x7& noiseProjection,
                         StepLimits& limits,
@@ -1920,8 +1921,13 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       if (calcOnlyLastRowOfJ)
         i = 42;
 
+      double* jacPtr = *jacobianT;
+
+      for(unsigned int j=42; j<49; j+=7) {
+        (*J_MMT_unprojected_lastRow)[j-42] = jacPtr[j];
+      }
+
       for(; i<49; i+=7) {
-	      double* jacPtr = *jacobianT;
         norm = (jacPtr[i]*SU[0] + jacPtr[i+1]*SU[1] + jacPtr[i+2]*SU[2]) * An;  // dR_normal / A_normal
         jacPtr[i]   -= norm*A [0];   jacPtr[i+1] -= norm*A [1];   jacPtr[i+2] -= norm*A [2];
         jacPtr[i+3] -= norm*SA[0];   jacPtr[i+4] -= norm*SA[1];   jacPtr[i+5] -= norm*SA[2];
@@ -1937,9 +1943,8 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       if (!calcOnlyLastRowOfJ) {
         for (int iRow = 0; iRow < 3; ++iRow) {
           for (int iCol = 0; iCol < 3; ++iCol) {
-	    noiseProjection[iRow*7 + iCol]       = (iRow == iCol) - An * SU[iCol] * A[iRow];
-	    noiseProjection[(iRow + 3)*7 + iCol] =                - An * SU[iCol] * SA[iRow];
-
+            noiseProjection[iRow*7 + iCol]       = (iRow == iCol) - An * SU[iCol] * A[iRow];
+            noiseProjection[(iRow + 3)*7 + iCol] =                - An * SU[iCol] * SA[iRow];
           }
         }
 
@@ -2202,10 +2207,10 @@ TVector3 RKTrackRep::pocaOnLine(const TVector3& linePoint, const TVector3& lineD
 double RKTrackRep::Extrap(const DetPlane& startPlane,
                           const DetPlane& destPlane,
                           double charge,
-			  double mass,
+                          double mass,
                           bool& isAtBoundary,
                           M1x7& state7,
-			  double& flightTime,
+                          double& flightTime,
                           bool fillExtrapSteps,
                           TMatrixDSym* cov, // 5D
                           bool onlyOneStep,
@@ -2247,7 +2252,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     }
 
     // initialize jacobianT with unit matrix
-    for(int i = 0; i < 7*7; ++i) J_MMT_[i] = 0; // invalid: J_MMT_.fill(0);
+    for(int i = 0; i < 7*7; ++i) J_MMT_[i] = 0;
     for(int i=0; i<7; ++i) J_MMT_[8*i] = 1.;
 
     M7x7* noise = NULL;
@@ -2262,7 +2267,9 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     limits_.reset();
     limits_.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
-    if( ! RKutta(SU, destPlane, charge, mass, state7, &J_MMT_,
+    M1x7 J_MMT_unprojected_lastRow;
+
+    if( ! RKutta(SU, destPlane, charge, mass, state7, &J_MMT_, &J_MMT_unprojected_lastRow,
 		 coveredDistance, flightTime, checkJacProj, noiseProjection_,
 		 limits_, onlyOneStep, !fillExtrapSteps) ) {
       Exception exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
@@ -2305,7 +2312,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       RKStepsFXStart_ = RKStepsFXStop_;
 
       if (debugLvl_ > 0) {
-        std::cout << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6]) << "\n";
+        std::cout << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6])
+            << "; coveredDistance = " << coveredDistance << "\n";
         if (debugLvl_ > 1 && noise != NULL) {
           std::cout << "7D noise: \n";
           RKTools::printDim(*noise, 7, 7);
@@ -2314,17 +2322,74 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
       // do momLoss only for defined 1/momentum .ne.0
       if(fabs(state7[6])>1.E-10) {
+
+        if (debugLvl_ > 0) {
+          std::cout << "correct state7 with dx/dqop, dy/dqop ...\n";
+        }
+
+        dqop = charge/(fabs(charge/state7[6])-momLoss) - state7[6];
+
+        // Correct coveredDistance and flightTime and momLoss if checkJacProj == true
+        // The idea is to calculate the state correction (based on the mometum loss) twice:
+        // Once with the unprojected Jacobian (which preserves coveredDistance),
+        // and once with the projected Jacobian (which is constrained to the plane and does NOT preserve coveredDistance).
+        // The difference of these two corrections can then be used to calculate a correction factor.
+        if (checkJacProj) {
+          M1x3 state7_correction_unprojected;
+          for (unsigned int i=0; i<3; ++i) {
+            state7_correction_unprojected[i] = 0.5 * dqop * J_MMT_unprojected_lastRow[i];
+            //std::cout << "J_MMT_unprojected_lastRow[i] " << J_MMT_unprojected_lastRow[i] << "\n";
+            //std::cout << "state7_correction_unprojected[i] " << state7_correction_unprojected[i] << "\n";
+          }
+
+          M1x3 state7_correction_projected;
+          for (unsigned int i=0; i<3; ++i) {
+            state7_correction_projected[i] = 0.5 * dqop * J_MMT_[6*7 + i];
+            //std::cout << "J_MMT_[6*7 + i] " << J_MMT_[6*7 + i] << "\n";
+            //std::cout << "state7_correction_projected[i] " << state7_correction_projected[i] << "\n";
+          }
+
+          // delta distance
+          M1x3 delta_state;
+          for (unsigned int i=0; i<3; ++i) {
+            delta_state[i] = state7_correction_unprojected[i] - state7_correction_projected[i];
+          }
+
+          double Dist = sqrt(delta_state[0]*delta_state[0]
+              + delta_state[1]*delta_state[1]
+              + delta_state[2]*delta_state[2] );
+
+          // sign: delta * a
+          if (delta_state[0]*state7[3] + delta_state[1]*state7[4] + delta_state[2]*state7[5] > 0)
+            Dist *= -1.;
+          //if (coveredDistance < 0)
+          //  Dist *= -1.;
+
+          double correctionFactor = 1. + Dist / coveredDistance;
+          flightTime *= correctionFactor;
+          momLoss *= correctionFactor;
+          coveredDistance = coveredDistance + Dist;
+
+          if (debugLvl_ > 0) {
+            std::cout << "correctionFactor-1 = " << correctionFactor-1. << "; Dist = " << Dist << "\n";
+            std::cout << "corrected momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6])
+                << "; corrected coveredDistance = " << coveredDistance << "\n";
+          }
+        }
+
+        // correct state7 with dx/dqop, dy/dqop ... Greatly improves extrapolation accuracy!
         double qop = charge/(fabs(charge/state7[6])-momLoss);
         dqop = qop - state7[6];
         state7[6] = qop;
 
-        // correct state7 with dx/dqop, dy/dqop ... Greatly improves extrapolation accuracy!
-        if (debugLvl_ > 0) {
-          std::cout << "correct state7 with dx/dqop, dy/dqop ...\n";
-        }
         for (unsigned int i=0; i<6; ++i) {
           state7[i] += 0.5 * dqop * J_MMT_[6*7 + i];
         }
+        // normalize direction, just to make sure
+        double norm = 1. / sqrt(state7[3]*state7[3] + state7[4]*state7[4] + state7[5]*state7[5]);
+        for (unsigned int i=3; i<6; ++i)
+          state7[i] *= norm;
+
       }
     } // finished MatFX
 
@@ -2386,6 +2451,9 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
           std::cout << "In active area of destPlane. \n";
         else
           std::cout << "NOT in active area of plane. \n";
+
+        std::cout << "  position:  "; TVector3(state7[0], state7[1], state7[2]).Print();
+        std::cout << "  direction: "; TVector3(state7[3], state7[4], state7[5]).Print();
       }
       break;
     }
