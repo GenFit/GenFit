@@ -2258,10 +2258,6 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     M7x7* noise = NULL;
     isAtBoundary = false;
 
-    // Remember previous state
-    M1x7 oldState7;
-    memcpy(oldState7, state7, sizeof(M1x7));
-
     // propagation
     bool checkJacProj = false;
     limits_.reset();
@@ -2334,7 +2330,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         // Once with the unprojected Jacobian (which preserves coveredDistance),
         // and once with the projected Jacobian (which is constrained to the plane and does NOT preserve coveredDistance).
         // The difference of these two corrections can then be used to calculate a correction factor.
-        if (checkJacProj) {
+        if (checkJacProj && fabs(coveredDistance) > MINSTEP) {
           M1x3 state7_correction_unprojected;
           for (unsigned int i=0; i<3; ++i) {
             state7_correction_unprojected[i] = 0.5 * dqop * J_MMT_unprojected_lastRow[i];
@@ -2362,8 +2358,6 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
           // sign: delta * a
           if (delta_state[0]*state7[3] + delta_state[1]*state7[4] + delta_state[2]*state7[5] > 0)
             Dist *= -1.;
-          //if (coveredDistance < 0)
-          //  Dist *= -1.;
 
           double correctionFactor = 1. + Dist / coveredDistance;
           flightTime *= correctionFactor;
