@@ -42,10 +42,15 @@
 #include <TEveManager.h>
 #include <TGeoManager.h>
 #include <TH1D.h>
+#include <TH2D.h>
 #include <TRandom.h>
 #include <TStyle.h>
 #include <TVector3.h>
+
 #include <vector>
+#include <map>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <TROOT.h>
 #include <TFile.h>
@@ -53,6 +58,15 @@
 #include "TDatabasePDG.h"
 #include <TMath.h>
 #include <TString.h>
+
+//#include <callgrind/callgrind.h>
+
+
+enum e_testStatus {
+  kPassed,
+  kFailed,
+  kException
+};
 
 
 void handler(int sig) {
@@ -101,8 +115,8 @@ int randomSign() {
 }
 
 
-bool compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<double>& B, double maxRelErr) {
-  bool retVal = true;
+e_testStatus compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<double>& B, double maxRelErr) {
+  e_testStatus retVal = kPassed;
 
   // search max abs value
   double max(0);
@@ -122,7 +136,7 @@ bool compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<double>& 
         double relErr = A(i,j)/B(i,j) - 1;
         if ( fabs(relErr) > maxRelErr ) {
           std::cout << "compareMatrices: A("<<i<<","<<j<<") = " << A(i,j) << "  B("<<i<<","<<j<<") = " << B(i,j) << "     absErr = " << absErr << "    relErr = " << relErr << "\n";
-          retVal = false;
+          retVal = kFailed;
         }
       }
     }
@@ -130,32 +144,35 @@ bool compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<double>& 
   return retVal;
 }
 
-bool isCovMatrix(TMatrixTBase<double>& cov) {
+e_testStatus isCovMatrix(TMatrixTBase<double>& cov) {
 
   if (!(cov.IsSymmetric())) {
     std::cout << "isCovMatrix: not symmetric\n";
-    return false;
+    return kFailed;
   }
 
   for (int i=0; i<cov.GetNrows(); ++i) {
     for (int j=0; j<cov.GetNcols(); ++j) {
        if (isnan(cov(i,j))) {
          std::cout << "isCovMatrix: element isnan\n";
-         return false;
+         return kFailed;
        }
        if (i==j && cov(i,j) < 0) {
          std::cout << "isCovMatrix: negative diagonal element\n";
-         return false;
+         return kFailed;
        }
     }
   }
 
-  return true;
+  return kPassed;
 }
 
 
 
-bool checkSetGetPosMom() {
+e_testStatus checkSetGetPosMom(bool writeHisto = false) {
+
+  if (writeHisto)
+    return kPassed;
 
   double epsilonLen = 1.E-10;
   double epsilonMom = 1.E-10;
@@ -195,7 +212,7 @@ bool checkSetGetPosMom() {
     if (state.getPlane() != plane) {
       std::cout << "plane has changed unexpectedly! \n";
       delete rep;
-      return false;
+      return kFailed;
     }
   }
 
@@ -212,30 +229,81 @@ bool checkSetGetPosMom() {
     std::cout << std::endl;
 
     delete rep;
-    return false;
+    return kFailed;
   }
 
   delete rep;
-  return true;
+  return kPassed;
 
 }
 
 
-bool compareForthBackExtrapolation() {
+e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
+  static std::map<int, std::vector<TH2D*> > histoMap;
+
+  static const int nPDGs(5);
+  int pdgs[nPDGs]={0, 211,13,11,2212};
+  static bool fill(true);
+  if (fill) {
+    for (int i = 0; i<nPDGs; ++i) {
+      int pdg = pdgs[i];
+
+      std::string Result;//string which will contain the result
+      std::stringstream convert; // stringstream used for the conversion
+      convert << pdg;//add the value of Number to the characters in the stream
+      Result = convert.str();//set Result to the content of the stream
+
+      histoMap[pdg].push_back(new TH2D((std::string("deviationRel_")+Result).c_str(), "log(betaGamma) vs relative deviation", 100000, -1.e-2, 1.e-2, 50, -4, 8));
+      histoMap[pdg].push_back(new TH2D((std::string("deviationAbs_")+Result).c_str(), "log(betaGamma) vs absolute deviation; deviation (keV)", 100000, -90.0, 10.0, 50, -4, 8));
+      histoMap[pdg].push_back(new TH2D((std::string("ExtrapLen_")+Result).c_str(), "delta ExtrapLen vs relative deviation", 50000, -5.e-2, 5.e-2, 400, -0.1, 0.1));
+    }
+    fill = false;
+  }
+
+
+  if (writeHisto) {
+    TFile outfile("deviation.root", "recreate");
+    outfile.cd();
+
+    for (int i = 0; i<nPDGs; ++i) {
+      int pdg = pdgs[i];
+      histoMap[pdg][0]->Write();
+      histoMap[pdg][1]->Write();
+      histoMap[pdg][2]->Write();
+    }
+
+    outfile.Close();
+
+    return kPassed;
+  }
+
 
   double epsilonLen = 5.E-5; // 0.5 mu
-  double epsilonMom = 1.E-4; // 100 keV
+  double epsilonMom = 1.E-6; // 1 keV
 
   int pdg = randomPdg();
+  //pdg = 211;
   genfit::AbsTrackRep* rep;
   rep = new genfit::RKTrackRep(pdg);
+
+  //rep->setDebugLvl(1);
+  //genfit::MaterialEffects::getInstance()->setDebugLvl(1);
+
+
+
+  TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg);
+  double mass = part->Mass(); // GeV
 
   //TVector3 pos(0,0,0);
   TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
   TVector3 mom(0,0.5,gRandom->Gaus(0,0.3));
-  mom.SetMag(0.5);
+  mom.SetMag( exp(gRandom->Uniform(-4, 8)) * mass );
   mom *= randomSign();
 
+
+  double betaGamma = log(mom.Mag()/mass);
+
+  //mom.Print();
 
   genfit::StateOnPlane state(rep);
   rep->setPosMom(state, pos, mom);
@@ -245,28 +313,63 @@ bool compareForthBackExtrapolation() {
 
   genfit::StateOnPlane origState(state);
 
+  TVector3 mom2;
+  double momLoss1, momLoss2;
+
   // forth
   double extrapLen(0);
   try {
     extrapLen = rep->extrapolateToPlane(state, plane);
+
+    mom2 = state.getMom();
+    momLoss1 = mom.Mag()-mom2.Mag();
+
+    //mom2.Print();
+    //std::cout << "MomLoss = " << momLoss1 << "\n";
   }
   catch (genfit::Exception& e) {
+    std::cerr << "Exception in forth Extrapolation. PDG = " << pdg << "; mom: \n";
+    mom.Print();
+
     std::cerr << e.what();
 
     delete rep;
-    return false;
+    return kException;
   }
+
+
 
   // back
   double backExtrapLen(0);
   try {
     backExtrapLen = rep->extrapolateToPlane(state, origPlane);
+
+    momLoss2 = mom2.Mag()-state.getMom().Mag();
+
+    //state.getMom().Print();
+    //std::cout << "MomLoss = " << momLoss2 << "\n";
+
+    double deviation = 1. + momLoss1/momLoss2;
+    histoMap[abs(pdg)][0]->Fill(deviation, betaGamma);
+    histoMap[abs(pdg)][1]->Fill((mom.Mag() - state.getMom().Mag())*1e6, betaGamma);
+    histoMap[abs(pdg)][2]->Fill(deviation, extrapLen+backExtrapLen);
+
+    histoMap[0][0]->Fill(deviation, betaGamma);
+    histoMap[0][1]->Fill((mom.Mag() - state.getMom().Mag())*1e6, betaGamma);
+    histoMap[0][2]->Fill(deviation, extrapLen+backExtrapLen);
+
+    //std::cout << "deviation = " << deviation << "\n";
   }
   catch (genfit::Exception& e) {
+    std::cerr << "Exception in back Extrapolation. PDG = " << pdg << "; mom:  \n";
+    mom.Print();
+    std::cerr << "mom2:  \n";
+    mom2.Print();
+
     std::cerr << e.what();
 
     delete rep;
-    return false;
+    return kException;
   }
 
   // compare
@@ -284,18 +387,21 @@ bool compareForthBackExtrapolation() {
     std::cout << std::endl;
 
     delete rep;
-    return false;
+    return kFailed;
   }
 
   delete rep;
-  return true;
+  return kPassed;
 
 }
 
 
-bool compareForthBackJacNoise() {
+e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
 
-  bool retVal(true);
+  if (writeHisto)
+    return kPassed;
+
+  e_testStatus retVal(kPassed);
 
   bool fx( randomSign() > 0);
   genfit::MaterialEffects::getInstance()->setNoEffects(!fx);
@@ -388,7 +494,7 @@ bool compareForthBackJacNoise() {
 
     delete rep;
     genfit::MaterialEffects::getInstance()->setNoEffects(false);
-    return false;
+    return kException;
   }
 
   // back
@@ -404,7 +510,7 @@ bool compareForthBackJacNoise() {
 
     delete rep;
     genfit::MaterialEffects::getInstance()->setNoEffects(false);
-    return false;
+    return kException;
   }
 
 
@@ -413,7 +519,7 @@ bool compareForthBackJacNoise() {
     std::cout << "(origState.getState() - state.getState()) ";
     (origState.getState() - state.getState()).Print();
 
-    retVal = false;
+    retVal = kFailed;
   }
 
   // check c
@@ -431,59 +537,59 @@ bool compareForthBackJacNoise() {
     std::cout << "(jac_fi * extrapolatedState.getState() + c_fi  -  origState.getState()) ";
     (jac_fi * extrapolatedState.getState() + c_fi  -  origState.getState()).Print();
 
-    retVal = false;
+    retVal = kFailed;
   }
 
-  if (!isCovMatrix(state.getCov())) {
-    retVal = false;
+  if (isCovMatrix(state.getCov()) == kFailed) {
+    retVal = kFailed;
   }
 
 
   // compare
-  if (!compareMatrices(jac_f, jac_bi, deltaJac)) {
+  if (compareMatrices(jac_f, jac_bi, deltaJac) == kFailed) {
     std::cout << "jac_f = "; jac_f.Print();
     std::cout << "jac_bi = "; jac_bi.Print();
     std::cout << std::endl;
 
-    retVal = false;
+    retVal = kFailed;
   }
 
   // compare
-  if (!compareMatrices(jac_b, jac_fi, deltaJac)) {
+  if (compareMatrices(jac_b, jac_fi, deltaJac) == kFailed) {
     std::cout << "jac_b = "; jac_b.Print();
     std::cout << "jac_fi = "; jac_fi.Print();
     std::cout << std::endl;
 
-    retVal = false;
+    retVal = kFailed;
   }
 
   // compare
-  if (!compareMatrices(noise_f, noise_bi, deltaNoise)) {
+  if (compareMatrices(noise_f, noise_bi, deltaNoise) == kFailed) {
     std::cout << "noise_f = "; noise_f.Print();
     std::cout << "noise_bi = "; noise_bi.Print();
     std::cout << std::endl;
 
-    retVal = false;
+    retVal = kFailed;
   }
 
   // compare
-  if (!compareMatrices(noise_b, noise_fi, deltaNoise)) {
+  if (compareMatrices(noise_b, noise_fi, deltaNoise) == kFailed) {
     std::cout << "noise_b = "; noise_b.Print();
     std::cout << "noise_fi = "; noise_fi.Print();
     std::cout << std::endl;
 
-    retVal = false;
+    retVal = kFailed;
   }
 
 
   if (!fx) {
     // compare
-    if (!compareMatrices(jac_f, jac_f_num, deltaJac)) {
+    if (compareMatrices(jac_f, jac_f_num, deltaJac) == kFailed) {
       std::cout << "jac_f = "; jac_f.Print();
       std::cout << "jac_f_num = "; jac_f_num.Print();
       std::cout << std::endl;
 
-      retVal = false;
+      retVal = kFailed;
     }
   }
 
@@ -494,7 +600,10 @@ bool compareForthBackJacNoise() {
 }
 
 
-bool checkStopAtBoundary() {
+e_testStatus checkStopAtBoundary(bool writeHisto = false) {
+
+  if (writeHisto)
+    return kPassed;
 
   double epsilonLen = 1.E-4; // 1 mu
   //double epsilonMom = 1.E-5; // 10 keV
@@ -527,7 +636,7 @@ bool checkStopAtBoundary() {
     std::cerr << e.what();
 
     delete rep;
-    return false;
+    return kException;
   }
 
 
@@ -542,16 +651,19 @@ bool checkStopAtBoundary() {
       std::cerr << std::endl;
 
       delete rep;
-      return false;
+      return kFailed;
     }
 
     delete rep;
-    return true;
+    return kPassed;
 
 }
 
 
-bool checkErrorPropagation() {
+e_testStatus checkErrorPropagation(bool writeHisto = false) {
+
+  if (writeHisto)
+    return kPassed;
 
   //double epsilonLen = 1.E-4; // 1 mu
   //double epsilonMom = 1.E-5; // 10 keV
@@ -582,27 +694,30 @@ bool checkErrorPropagation() {
     std::cerr << e.what();
 
     delete rep;
-    return false;
+    return kException;
   }
 
 
   // check
-  if (!isCovMatrix(state.getCov())) {
+  if (isCovMatrix(state.getCov()) == kFailed) {
 
     origState.Print();
     state.Print();
 
     delete rep;
-    return false;
+    return kFailed;
   }
 
   delete rep;
-  return true;
+  return kPassed;
 
 }
 
 
-bool checkExtrapolateToLine() {
+e_testStatus checkExtrapolateToLine(bool writeHisto = false) {
+
+  if (writeHisto)
+    return kPassed;
 
   double epsilonLen = 1.E-4; // 1 mu
   double epsilonMom = 1.E-5; // 10 keV
@@ -634,7 +749,7 @@ bool checkExtrapolateToLine() {
     std::cerr << e.what();
 
     delete rep;
-    return false;
+    return kException;
   }
 
 
@@ -651,16 +766,19 @@ bool checkExtrapolateToLine() {
       std::cout << "direction * plane normal = " << rep->getMom(state).Unit() * state.getPlane()->getNormal() << "\n";
 
       delete rep;
-      return false;
+      return kFailed;
     }
 
     delete rep;
-    return true;
+    return kPassed;
 
 }
 
 
-bool checkExtrapolateToPoint() {
+e_testStatus checkExtrapolateToPoint(bool writeHisto = false) {
+
+  if (writeHisto)
+    return kPassed;
 
   double epsilonLen = 1.E-4; // 1 mu
   double epsilonMom = 1.E-5; // 10 keV
@@ -691,7 +809,7 @@ bool checkExtrapolateToPoint() {
     std::cerr << e.what();
 
     delete rep;
-    return false;
+    return kException;
   }
 
 
@@ -706,16 +824,19 @@ bool checkExtrapolateToPoint() {
       std::cout << "direction * plane normal = " << rep->getMom(state).Unit() * state.getPlane()->getNormal() << "\n";
 
       delete rep;
-      return false;
+      return kFailed;
     }
 
     delete rep;
-    return true;
+    return kPassed;
 
 }
 
 
-bool checkExtrapolateToCylinder() {
+e_testStatus checkExtrapolateToCylinder(bool writeHisto = false) {
+
+  if (writeHisto)
+    return kPassed;
 
   double epsilonLen = 1.E-4; // 1 mu
   //double epsilonMom = 1.E-5; // 10 keV
@@ -749,11 +870,7 @@ bool checkExtrapolateToCylinder() {
 
     delete rep;
 
-    static const char* bla = "cannot solve";
-    const char* what = e.what();
-    if (strstr(what, bla))
-      return true;
-    return false;
+    return kException;
   }
 
   TVector3 pocaOnLine(lineDirection);
@@ -775,16 +892,19 @@ bool checkExtrapolateToCylinder() {
       std::cout << "radiusVec.Mag()-radius = " << radiusVec.Mag()-radius << "\n";
 
       delete rep;
-      return false;
+      return kFailed;
     }
 
     delete rep;
-    return true;
+    return kPassed;
 
 }
 
 
-bool checkExtrapolateToSphere() {
+e_testStatus checkExtrapolateToSphere(bool writeHisto = false) {
+
+  if (writeHisto)
+    return kPassed;
 
   double epsilonLen = 1.E-4; // 1 mu
   //double epsilonMom = 1.E-5; // 10 keV
@@ -817,11 +937,7 @@ bool checkExtrapolateToSphere() {
 
     delete rep;
 
-    static const char* bla = "cannot solve";
-    const char* what = e.what();
-    if (strstr(what, bla))
-      return true;
-    return false;
+    return kException;
   }
 
 
@@ -838,16 +954,19 @@ bool checkExtrapolateToSphere() {
       std::cout << "radiusVec.Mag()-radius = " << radiusVec.Mag()-radius << "\n";
 
       delete rep;
-      return false;
+      return kFailed;
     }
 
     delete rep;
-    return true;
+    return kPassed;
 
 }
 
 
-bool checkExtrapolateBy() {
+e_testStatus checkExtrapolateBy(bool writeHisto = false) {
+
+  if (writeHisto)
+    return kPassed;
 
   double epsilonLen = 1.E-3; // 10 mu
 
@@ -877,7 +996,7 @@ bool checkExtrapolateBy() {
     extrapolatedLen = rep->extrapolateBy(state, step, false);
   }
   catch (genfit::Exception& e) {
-    return false;
+    return kException;
   }
 
   TVector3 posExt(state.getPos());
@@ -895,20 +1014,31 @@ bool checkExtrapolateBy() {
       std::cout << "extrapolatedLen-step = " << extrapolatedLen-step << "\n";
       std::cout << "started extrapolation from: "; posOrig.Print();
       std::cout << "extrapolated to "; posExt.Print();
-      std::cout << "difference = " << (posOrig - posExt).Mag() << "; step = " << step << "\n";
+      std::cout << "difference = " << (posOrig - posExt).Mag() << "; step = " << step << "; delta = " <<  (posOrig - posExt).Mag() - fabs(step) << "\n";
 
       delete rep;
-      return false;
+      return kFailed;
     }
 
     delete rep;
-    return true;
+    return kPassed;
 
 }
 //=====================================================================================================================
 //=====================================================================================================================
 //=====================================================================================================================
 //=====================================================================================================================
+
+struct TestCase {
+  TestCase(std::string name, e_testStatus(*function_)(bool)) : name_(name), function_(function_), nPassed_(0), nFailed_(0), nException_(0) {;}
+  void Print() {std::cout << name_ << " \t" << nPassed_ << " \t" << nFailed_ << " \t" << nException_ << "\n";}
+
+  std::string name_;
+  e_testStatus(*function_)(bool);
+  unsigned int nPassed_;
+  unsigned int nFailed_;
+  unsigned int nException_;
+};
 
 
 int main() {
@@ -925,73 +1055,60 @@ int main() {
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,BField));
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
+  /*genfit::MaterialEffects::getInstance()->drawdEdx(2212);
+  genfit::MaterialEffects::getInstance()->drawdEdx(11);
+  genfit::MaterialEffects::getInstance()->drawdEdx(211);
+  genfit::MaterialEffects::getInstance()->drawdEdx(13);
+  return 0;*/
+
   TDatabasePDG::Instance()->GetParticle(211);
 
 
   unsigned int nFailed(0);
-  const unsigned int nTests(100);
+  const unsigned int nTests(1000);
+
+  std::vector<TestCase> testCases;
+  testCases.push_back(TestCase(std::string("checkSetGetPosMom()            "), &checkSetGetPosMom));
+  testCases.push_back(TestCase(std::string("compareForthBackExtrapolation()"), &compareForthBackExtrapolation));
+  testCases.push_back(TestCase(std::string("checkStopAtBoundary()          "), &checkStopAtBoundary));
+  testCases.push_back(TestCase(std::string("checkErrorPropagation()        "), &checkErrorPropagation));
+  testCases.push_back(TestCase(std::string("checkExtrapolateToLine()       "), &checkExtrapolateToLine));
+  testCases.push_back(TestCase(std::string("checkExtrapolateToPoint()      "), &checkExtrapolateToPoint));
+  testCases.push_back(TestCase(std::string("checkExtrapolateToCylinder()   "), &checkExtrapolateToCylinder));
+  testCases.push_back(TestCase(std::string("checkExtrapolateToSphere()     "), &checkExtrapolateToSphere));
+  testCases.push_back(TestCase(std::string("checkExtrapolateBy()           "), &checkExtrapolateBy));
+  testCases.push_back(TestCase(std::string("compareForthBackJacNoise()     "), &compareForthBackJacNoise));
+
 
   for (unsigned int i=0; i<nTests; ++i) {
 
-    if (!checkSetGetPosMom()) {
-      std::cout << "failed checkSetGetPosMom nr" << i << "\n";
-      ++nFailed;
-    }
-
-    if (!compareForthBackExtrapolation()) {
-      std::cout << "failed compareForthBackExtrapolation nr" << i << "\n";
-      ++nFailed;
-    }
-
-    if (!checkStopAtBoundary()) {
-      std::cout << "failed checkStopAtBoundary nr" << i << "\n";
-      ++nFailed;
-    }
-
-    if (!checkErrorPropagation()) {
-      std::cout << "failed checkErrorPropagation nr" << i << "\n";
-      ++nFailed;
-    }
-
-    if (!checkExtrapolateToLine()) {
-      std::cout << "failed checkExtrapolateToLine nr" << i << "\n";
-      ++nFailed;
-    }
-
-    if (!checkExtrapolateToPoint()) {
-      std::cout << "failed checkExtrapolateToPoint nr" << i << "\n";
-      ++nFailed;
-    }
-
-    if (!checkExtrapolateToCylinder()) {
-      std::cout << "failed checkExtrapolateToCylinder nr" << i << "\n";
-      ++nFailed;
-    }
-
-    if (!checkExtrapolateToSphere()) {
-      std::cout << "failed checkExtrapolateToSphere nr" << i << "\n";
-      ++nFailed;
-    }
-
-    if (!checkExtrapolateBy()) {
-      std::cout << "failed checkExtrapolateBy nr" << i << "\n";
-      ++nFailed;
-    }
-
-    if (!compareForthBackJacNoise()) {
-      std::cout << "failed compareForthBackJacNoise nr" << i << "\n";
-      ++nFailed;
+    for (unsigned int j=0; j<testCases.size(); ++j) {
+      e_testStatus status = testCases[j].function_(false);
+      switch (status) {
+      case kPassed:
+        testCases[j].nPassed_++;
+        break;
+      case kFailed:
+        testCases[j].nFailed_++;
+        std::cout << "failed " << testCases[j].name_ << " nr " << i << "\n";
+        break;
+      case kException:
+        testCases[j].nException_++;
+        std::cout << "exception at " << testCases[j].name_ << " nr " << i << "\n";
+      }
     }
 
   }
 
-  std::cout << "failed " << nFailed << " of " << nTests << " Tests." << std::endl;
-  if (nFailed == 0) {
-    std::cout << "passed all tests!" << std::endl;
+  //CALLGRIND_STOP_INSTRUMENTATION;
+  std::cout << "name                           " << " \t" << "pass" << " \t" << "fail" << " \t" << "exception" << "\n";
+  for (unsigned int j=0; j<testCases.size(); ++j) {
+    testCases[j].Print();
   }
 
-
-
+  for (unsigned int j=0; j<testCases.size(); ++j) {
+    testCases[j].function_(true);
+  }
 
   return 0;
 }
