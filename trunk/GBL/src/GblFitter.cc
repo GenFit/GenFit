@@ -228,6 +228,7 @@ void GblFitter::sortHits(Track* trk, const AbsTrackRep* rep) const {
   int npoints_meas = trk->getNumPointsWithMeasurement();  
   // Prepare state for extrapolation of track seed
   StateOnPlane reference(rep);
+  rep->setTime(reference, trk->getTimeSeed());
   rep->setPosMom(reference, trk->getStateSeed());
   // Take the state to first plane
   SharedPlanePtr firstPlane(trk->getPointWithMeasurement(0)->getRawMeasurement(0)->constructPlane(reference));
@@ -364,7 +365,8 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep) const
   // Prepare state for extrapolation of track seed
   // Take the state to first plane
   StateOnPlane reference(rep);
-  rep->setPosMom(reference, trk->getStateSeed());  
+  rep->setTime(reference, trk->getTimeSeed());
+  rep->setPosMom(reference, trk->getStateSeed());
   SharedPlanePtr firstPlane(trk->getPointWithMeasurement(0)->getRawMeasurement(0)->constructPlane(reference));  
   reference.extrapolateToPlane(firstPlane);
   
