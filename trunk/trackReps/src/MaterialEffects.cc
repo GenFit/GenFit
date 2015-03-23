@@ -461,10 +461,10 @@ double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double g
   }
 
   // calc dEdx_, also needed in noiseBetheBloch!
-  double dEdx = 0.307075 * matZ_ / matA_ * matDensity_ / betaSquare * charge_ * charge_;
-  double massRatio = me_ / mass_;
-  double argument = gammaSquare * betaSquare * me_ * 1.E3 * 2. / ((1.E-6 * mEE_) *
-      sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio));
+  double dEdx( 0.307075 * matZ_ / matA_ * matDensity_ / betaSquare * charge_ * charge_ );
+  double massRatio( me_ / mass_ );
+  double argument( gammaSquare * betaSquare * me_ * 1.E3 * 2. / ((1.E-6 * mEE_) *
+      sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio)) );
   dEdx *= log(argument) - betaSquare; // Bethe-Bloch [MeV/cm]
   dEdx *= 1.E-3;  // in GeV/cm, hence 1.e-3
   if (dEdx < 0.) {
@@ -480,10 +480,10 @@ void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare
   // Code ported from GEANT 3
 
   // ENERGY LOSS FLUCTUATIONS; calculate sigma^2(E);
-  double sigma2E = 0.;
-  double zeta  = 153.4E3 * charge_ * charge_ / betaSquare * matZ_ / matA_ * matDensity_ * fabs(stepSize_); // eV
-  double Emax  = 2.E9 * me_ * betaSquare * gammaSquare / (1. + 2.*gamma * me_ / mass_ + (me_ / mass_) * (me_ / mass_)); // eV
-  double kappa = zeta / Emax;
+  double sigma2E ( 0. );
+  double zeta  ( 153.4E3 * charge_ * charge_ / betaSquare * matZ_ / matA_ * matDensity_ * fabs(stepSize_) ); // eV
+  double Emax  ( 2.E9 * me_ * betaSquare * gammaSquare / (1. + 2.*gamma * me_ / mass_ + (me_ / mass_) * (me_ / mass_)) ); // eV
+  double kappa ( zeta / Emax );
 
   if (kappa > 0.01) { // Vavilov-Gaussian regime
     sigma2E += zeta * Emax * (1. - betaSquare / 2.); // eV^2

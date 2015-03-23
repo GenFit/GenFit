@@ -31,7 +31,7 @@ void StateOnPlane::Print(Option_t*) const {
   std::cout << " state vector: "; state_.Print();
   if (sharedPlane_ != NULL) {
     std::cout << " defined in plane "; sharedPlane_->Print();
-    TVector3 pos, mom;
+    TVector3 pos(0,0,0), mom(0,0,0);
     getRep()->getPosMom(*this, pos, mom);
     std::cout << " 3D position: "; pos.Print();
     std::cout << " 3D momentum: "; mom.Print();
