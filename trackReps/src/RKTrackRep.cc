@@ -2264,7 +2264,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     limits_.reset();
     limits_.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
-    M1x7 J_MMT_unprojected_lastRow;
+    M1x7 J_MMT_unprojected_lastRow = {0, 0, 0, 0, 0, 0, 1};
 
     if( ! RKutta(SU, destPlane, charge, mass, state7, &J_MMT_, &J_MMT_unprojected_lastRow,
 		 coveredDistance, flightTime, checkJacProj, noiseProjection_,
