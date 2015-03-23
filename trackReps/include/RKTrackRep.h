@@ -263,10 +263,10 @@ class RKTrackRep : public AbsTrackRep {
   double Extrap(const DetPlane& startPlane, // plane where Extrap starts
                 const DetPlane& destPlane, // plane where Extrap has to extrapolate to
                 double charge,
-		double mass,
+                double mass,
                 bool& isAtBoundary,
                 M1x7& state7,
-		double& flightTime,
+                double& flightTime,
                 bool fillExtrapSteps,
                 TMatrixDSym* cov = nullptr,
                 bool onlyOneStep = false,
