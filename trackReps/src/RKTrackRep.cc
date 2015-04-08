@@ -1313,11 +1313,11 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   double EST ( fabs((A1+A6)-(A3+A4)) +
                fabs((B1+B6)-(B3+B4)) +
                fabs((C1+C6)-(C3+C4))  );  // EST = ||(ABC1+ABC6)-(ABC3+ABC4)||_1  =  ||(axzy x H0 + ABC5 x H2) - (ABC2 x H1 + ABC3 x H1)||_1
-  if (EST < 1.E-7) EST = 1.E-7; // prevent q from getting too large
+  if (EST < 1.E-7) return 11.78; // prevent q from getting too large, this is just pow(DLT/1e-7, par)
   if (debugLvl_ > 0) {
     std::cout << "    RKTrackRep::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
   }
-  return pow(DLT/EST, par);
+  return pow(DLT/EST, par);  // The history of this exponent is unknown.
 }
 
 

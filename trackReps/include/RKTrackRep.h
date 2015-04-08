@@ -165,6 +165,7 @@ class RKTrackRep : public AbsTrackRep {
 
   //! The actual Runge Kutta propagation
   /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).
+   *  This is a single Runge-Kutta step.
    *  If jacobian is NULL, only the state is propagated,
    *  otherwise also the 7x7 jacobian is calculated.
    *  If varField is false, the magnetic field will only be evaluated at the starting position.
