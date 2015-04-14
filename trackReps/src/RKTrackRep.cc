@@ -1144,7 +1144,6 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   static const double EC  ( 0.000149896229 );  // c/(2*10^12) resp. c/2Tera
   static const double P3  ( 1./3. );           // 1/3
   static const double DLT ( .0002 );           // max. deviation for approximation-quality test
-  static const double par ( 1./3.081615 );
   // Aux parameters
   M1x3&   R           = *((M1x3*) &state7[0]);       // Start coordinates  [cm]  (x,  y,  z)
   M1x3&   A           = *((M1x3*) &state7[3]);       // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
@@ -1313,11 +1312,18 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   double EST ( fabs((A1+A6)-(A3+A4)) +
                fabs((B1+B6)-(B3+B4)) +
                fabs((C1+C6)-(C3+C4))  );  // EST = ||(ABC1+ABC6)-(ABC3+ABC4)||_1  =  ||(axzy x H0 + ABC5 x H2) - (ABC2 x H1 + ABC3 x H1)||_1
-  if (EST < 1.E-7) return 11.78; // prevent q from getting too large, this is just pow(DLT/1e-7, par)
   if (debugLvl_ > 0) {
     std::cout << "    RKTrackRep::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
   }
-  return pow(DLT/EST, par);  // The history of this exponent is unknown.
+
+  // Prevent the step length increase from getting too large, this is
+  // just the point where it becomes 10.
+  if (EST < DLT*1e-5)
+    return 10;
+
+  // Step length increase for a fifth order Runge-Kutta, see e.g. 17.2
+  // in Numerical Recipes.  FIXME: move to caller.
+  return pow(DLT/EST, 1./5.);
 }
 
 
