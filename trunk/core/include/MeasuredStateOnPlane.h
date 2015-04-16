@@ -49,6 +49,8 @@ class MeasuredStateOnPlane : public StateOnPlane {
   void swap(MeasuredStateOnPlane& other); // nothrow
 
   virtual ~MeasuredStateOnPlane() {}
+  virtual MeasuredStateOnPlane* clone() {return new MeasuredStateOnPlane(*this);}
+
 
   const TMatrixDSym& getCov() const {return cov_;}
   TMatrixDSym& getCov() {return cov_;}
