@@ -41,7 +41,7 @@ TVectorD HMatrixV::Hv(const TVectorD& v) const {
 
   double* retValArray =(double *)alloca(sizeof(double) * 1);
 
-  retValArray[0] = v(4); // u
+  retValArray[0] = v(4); // v
 
   return TVectorD(1, retValArray);
 }
