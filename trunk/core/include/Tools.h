@@ -32,6 +32,9 @@
  * @brief Matrix inversion tools.
  */
 namespace genfit {
+
+class AbsHMatrix;
+
 namespace tools {
 
   /** @brief Invert a matrix, throwing an Exception when inversion fails.
@@ -70,6 +73,37 @@ namespace tools {
    */
 void safeAverage(const TMatrixDSym& C1, const TMatrixDSym& C2,
 		 TMatrixDSym& result);
+
+/** @brief Transport the state.
+ */
+void
+kalmanPrediction(const TVectorD& x,
+			const TVectorD& delta, const TMatrixD& F,
+			TVectorD& xNew);
+
+/** @brief Calculates the square root of the covariance matrix after
+ *  the Kalman prediction (i.e. extrapolation) with transport matrix F
+ *  and the noise square root Q.  Gives the new covariance square
+ *  root.  */
+void
+kalmanPredictionCovSqrt(const TMatrixD& S,
+			const TMatrixD& F, const TMatrixD& Q,
+			TMatrixD& Snew);
+
+/** @brief Calculate the Kalman measurement update with no transport.
+ *  x, S : state prediction, covariance square root
+ *  res, R, H : residual, measurement covariance square root, H matrix of the measurement
+ */
+void
+kalmanUpdateSqrt(const TVectorD& x, const TMatrixD& S,
+		 const TVectorD& res, const TMatrixD& R, const AbsHMatrix* H,
+		 TVectorD& xNew, TMatrixD& SNew);
+
+void
+kalmanPredictionUpdateSqrt(const TVectorD& x, const TMatrixD& S,
+			   const TMatrixD& F, const TMatrixD& Q,
+			   const TVectorD& res, const TMatrixD& R, const AbsHMatrix* H,
+			   TVectorD& xNew, TMatrixD& SNew);
 
 } /* End of namespace tools */
 } /* End of namespace genfit */

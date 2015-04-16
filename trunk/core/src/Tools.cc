@@ -28,6 +28,7 @@
 #include <TMatrixTSymCramerInv.h>
 #include <TMath.h>
 
+#include "AbsHMatrix.h"
 #include "Exception.h"
 
 // Use Cramer inversion for small matrices?
@@ -435,4 +436,140 @@ void tools::safeAverage(const TMatrixDSym& C1, const TMatrixDSym& C2,
   result.ResizeTo(inv.GetNcols(), inv.GetNcols());
   result = TMatrixDSym(TMatrixDSym::kAtA, inv);
 }
+
+
+// Transports the state.
+void
+tools::kalmanPrediction(const TVectorD& x,
+			const TVectorD& delta, const TMatrixD& F,
+			TVectorD& xNew)
+{
+  xNew = x;
+  xNew *= F;
+  xNew += delta;
+}
+
+// Transports the square root of the covariance matrix using a
+// square-root formalism
+//
+// With covariance square root S, transport matrix F and noise matrix
+// square root Q.
+void
+tools::kalmanPredictionCovSqrt(const TMatrixD& S,
+			       const TMatrixD& F, const TMatrixD& Q,
+			       TMatrixD& Snew)
+{
+  Snew.ResizeTo(S.GetNrows() + Q.GetNrows(),
+		S.GetNcols());
+
+  // This overwrites all elements, no precautions necessary
+  TMatrixD SFt(S, TMatrixD::kMultTranspose, F);
+  Snew.SetSub(0, 0, SFt);
+  if (Q.GetNrows() != 0)
+    Snew.SetSub(S.GetNrows(), 0, Q);
+
+  tools::QR(Snew);
+
+  // The result is in the upper right corner of the matrix.
+  Snew.ResizeTo(S.GetNrows(), S.GetNrows());
+}
+
+
+// Kalman measurement update (no transport)
+// x, S : state prediction, covariance square root
+// res, R, H : residual, measurement covariance square root, H matrix of the measurement
+void
+tools::kalmanUpdateSqrt(const TVectorD& x, const TMatrixD& S,
+			const TVectorD& res, const TMatrixD& R,
+			const AbsHMatrix* H,
+			TVectorD& update, TMatrixD& SNew)
+{
+  TMatrixD pre(S.GetNrows() + R.GetNrows(),
+	       S.GetNcols() + R.GetNcols());
+  pre.SetSub(0,            0, R);
+  pre.SetSub(R.GetNrows(), 0, H->MHt(S)); pre.SetSub(R.GetNrows(), R.GetNcols(), S);
+
+  tools::QR(pre);
+  const TMatrixD& r = pre;
+
+  const TMatrixD& a(r.GetSub(0, R.GetNrows()-1,
+			     0, R.GetNcols()-1));
+  TMatrixD K(TMatrixD::kTransposed, r.GetSub(0, R.GetNrows()-1, R.GetNcols(), pre.GetNcols()-1));
+  SNew = r.GetSub(R.GetNrows(), pre.GetNrows()-1, R.GetNcols(), pre.GetNcols()-1);
+
+  update.ResizeTo(res);
+  update = res;
+  tools::transposedForwardSubstitution(a, update);
+  update *= K;
+
+  if (0)
+      {
+	// calculate kalman gain ------------------------------
+	// calculate covsum (V + HCH^T) and invert
+	TMatrixDSym cov(TMatrixDSym::kAtA, S);
+	TMatrixDSym covSumInv(cov);
+	H->HMHt(covSumInv);
+	covSumInv += TMatrixDSym(TMatrixDSym::kAtA, R);
+	tools::invertMatrix(covSumInv);
+
+	TMatrixD CHt(H->MHt(cov));
+	TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
+	//TMatrixD(CHt, TMatrixD::kMult, covSumInv).Print();
+
+	if (1) {
+	  //std::co ut << "STATUS:" << std::endl;
+	  //stateVector.Print();
+	  std::cout << "\033[32m";
+	  std::cout << "Update: "; update.Print();
+	  std::cout << "\033[0m";
+	  //cov.Print();
+	}
+
+	//stateVector += update;
+	covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
+	cov -= covSumInv;
+
+	cov.Print();
+	TMatrixDSym(TMatrixDSym::kAtA, SNew).Print();
+      }
+
+}
+
+
+// Kalman transport + measurement update
+// x, S : state prediction, covariance square root
+// transport matrix F and noise matrix square root Q
+// res, R, H : residual, measurement covariance square root, H matrix of the measurement
+void
+tools::kalmanPredictionUpdateSqrt(const TVectorD& x, const TMatrixD& S,
+				  const TMatrixD& F, const TMatrixD& Q,
+				  const TVectorD& res, const TMatrixD& R,
+				  const AbsHMatrix* H,
+				  TVectorD& xNew, TMatrixD& SNew)
+{
+  TMatrixD pre(S.GetNrows() + Q.GetNrows() + R.GetNrows(),
+	       S.GetNcols() + R.GetNcols());
+  TMatrixD SFt(S, TMatrixD::kMultTranspose, F);
+  pre.SetSub(                        0,  0,          R);   /*           upper right block is zero               */
+  pre.SetSub(             R.GetNrows(),  0,H->MHt(SFt));   pre.SetSub(R.GetNrows(),             R.GetNcols(),SFt);
+  if (Q.GetNrows() > 0) { // needed to suppress warnings when inserting an empty Q
+    pre.SetSub(S.GetNrows()+R.GetNrows(),0,H->MHt(Q));     pre.SetSub(S.GetNrows()+R.GetNrows(),R.GetNcols(),  Q);
+  }
+
+  tools::QR(pre);
+  const TMatrixD& r = pre;
+
+  TMatrixD a(r.GetSub(0, R.GetNrows()-1, 0, R.GetNcols()-1));
+  TMatrixD K(TMatrixD::kTransposed, r.GetSub(0, R.GetNrows()-1, R.GetNcols(), pre.GetNcols()-1));
+  SNew = r.GetSub(R.GetNrows(), R.GetNrows() + S.GetNrows() - 1,
+		  R.GetNcols(), pre.GetNcols() - 1);
+  // No need for matrix inversion.
+  xNew.ResizeTo(res);
+  xNew = res;
+  tools::transposedForwardSubstitution(a, xNew);
+  xNew *= K;
+  xNew += x;
+}
+
+
 } /* End of namespace genfit */
