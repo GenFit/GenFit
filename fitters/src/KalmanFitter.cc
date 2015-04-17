@@ -434,7 +434,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
       fi->setWeights(oldWeights);
       fi->fixWeights(oldWeightsFixed);
       if (debugLvl_ > 0) {
-        std::cout << "set old weights \n";
+	std::cout << "set old weights \n";
       }
     }
     assert(fi->getPlane() == plane);
@@ -443,7 +443,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
 
   if (debugLvl_ > 0) {
     std::cout << "its plane is at R = " << plane->getO().Perp()
-        << " with normal pointing along (" << plane->getNormal().X() << ", " << plane->getNormal().Y() << ", " << plane->getNormal().Z() << ")" << std::endl;
+	      << " with normal pointing along (" << plane->getNormal().X() << ", " << plane->getNormal().Y() << ", " << plane->getNormal().Z() << ")" << std::endl;
   }
 
   TVectorD stateVector(state->getState());
@@ -454,119 +454,119 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
   if (!squareRootFormalism_) {
     // update(s)
     const std::vector<MeasurementOnPlane *>& measurements = getMeasurements(fi, tp, direction);
-  for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
-    const MeasurementOnPlane& mOnPlane = **it;
-    const double weight = mOnPlane.getWeight();
+    for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
+      const MeasurementOnPlane& mOnPlane = **it;
+      const double weight = mOnPlane.getWeight();
 
-    if (debugLvl_ > 0) {
-      std::cout << "Weight of measurement: " << weight << "\n";
-    }
-
-    if (!canIgnoreWeights() && weight <= 1.01E-10) {
       if (debugLvl_ > 0) {
-        std::cout << "Weight of measurement is almost 0, continue ... \n";
+	std::cout << "Weight of measurement: " << weight << "\n";
       }
-      continue;
-    }
 
-    const TVectorD& measurement(mOnPlane.getState());
-    const AbsHMatrix* H(mOnPlane.getHMatrix());
-    // (weighted) cov
-    const TMatrixDSym& V((!canIgnoreWeights() && weight < 0.99999) ?
-                          1./weight * mOnPlane.getCov() :
-                          mOnPlane.getCov());
-    if (debugLvl_ > 1) {
-      std::cout << "\033[31m";
-      std::cout << "State prediction: "; stateVector.Print();
-      std::cout << "Cov prediction: "; state->getCov().Print();
-      std::cout << "\033[0m";
-      std::cout << "\033[34m";
-      std::cout << "measurement: "; measurement.Print();
-      std::cout << "measurement covariance V: "; V.Print();
-      //cov.Print();
-      //measurement.Print();
-    }
+      if (!canIgnoreWeights() && weight <= 1.01E-10) {
+	if (debugLvl_ > 0) {
+	  std::cout << "Weight of measurement is almost 0, continue ... \n";
+	}
+	continue;
+      }
 
-    TVectorD res(measurement - H->Hv(stateVector));
-    if (debugLvl_ > 1) {
-      std::cout << "Residual = (" << res(0);
-      if (res.GetNrows() > 1)
-        std::cout << ", " << res(1);
-      std::cout << ")" << std::endl;
-      std::cout << "\033[0m";
-    }
-    // If hit, do Kalman algebra.
+      const TVectorD& measurement(mOnPlane.getState());
+      const AbsHMatrix* H(mOnPlane.getHMatrix());
+      // (weighted) cov
+      const TMatrixDSym& V((!canIgnoreWeights() && weight < 0.99999) ?
+			   1./weight * mOnPlane.getCov() :
+			   mOnPlane.getCov());
+      if (debugLvl_ > 1) {
+	std::cout << "\033[31m";
+	std::cout << "State prediction: "; stateVector.Print();
+	std::cout << "Cov prediction: "; state->getCov().Print();
+	std::cout << "\033[0m";
+	std::cout << "\033[34m";
+	std::cout << "measurement: "; measurement.Print();
+	std::cout << "measurement covariance V: "; V.Print();
+	//cov.Print();
+	//measurement.Print();
+      }
+
+      TVectorD res(measurement - H->Hv(stateVector));
+      if (debugLvl_ > 1) {
+	std::cout << "Residual = (" << res(0);
+	if (res.GetNrows() > 1)
+	  std::cout << ", " << res(1);
+	std::cout << ")" << std::endl;
+	std::cout << "\033[0m";
+      }
+      // If hit, do Kalman algebra.
 
       {
-        // calculate kalman gain ------------------------------
-        // calculate covsum (V + HCH^T) and invert
-        TMatrixDSym covSumInv(cov);
-        H->HMHt(covSumInv);
-        covSumInv += V;
-        tools::invertMatrix(covSumInv);
+	// calculate kalman gain ------------------------------
+	// calculate covsum (V + HCH^T) and invert
+	TMatrixDSym covSumInv(cov);
+	H->HMHt(covSumInv);
+	covSumInv += V;
+	tools::invertMatrix(covSumInv);
 
-        TMatrixD CHt(H->MHt(cov));
-        TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
-        //TMatrixD(CHt, TMatrixD::kMult, covSumInv).Print();
+	TMatrixD CHt(H->MHt(cov));
+	TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
+	//TMatrixD(CHt, TMatrixD::kMult, covSumInv).Print();
 
-        if (debugLvl_ > 1) {
-          //std::cout << "STATUS:" << std::endl;
-          //stateVector.Print();
-          std::cout << "\033[32m";
-          std::cout << "Update: "; update.Print();
-          std::cout << "\033[0m";
-          //cov.Print();
-        }
+	if (debugLvl_ > 1) {
+	  //std::cout << "STATUS:" << std::endl;
+	  //stateVector.Print();
+	  std::cout << "\033[32m";
+	  std::cout << "Update: "; update.Print();
+	  std::cout << "\033[0m";
+	  //cov.Print();
+	}
 
-        stateVector += update;
-        covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
-        cov -= covSumInv;
+	stateVector += update;
+	covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
+	cov -= covSumInv;
       }
 
-    if (debugLvl_ > 1) {
-      std::cout << "\033[32m";
-      std::cout << "updated state: "; stateVector.Print();
-      std::cout << "updated cov: "; cov.Print();
-    }
+      if (debugLvl_ > 1) {
+	std::cout << "\033[32m";
+	std::cout << "updated state: "; stateVector.Print();
+	std::cout << "updated cov: "; cov.Print();
+      }
 
-    TVectorD resNew(measurement - H->Hv(stateVector));
-    if (debugLvl_ > 1) {
-      std::cout << "Residual New = (" << resNew(0);
+      TVectorD resNew(measurement - H->Hv(stateVector));
+      if (debugLvl_ > 1) {
+	std::cout << "Residual New = (" << resNew(0);
 
-      if (resNew.GetNrows() > 1)
-        std::cout << ", " << resNew(1);
-      std::cout << ")" << std::endl;
-      std::cout << "\033[0m";
-    }
+	if (resNew.GetNrows() > 1)
+	  std::cout << ", " << resNew(1);
+	std::cout << ")" << std::endl;
+	std::cout << "\033[0m";
+      }
 
-    // Calculate chi²
-    TMatrixDSym HCHt(cov);
-    H->HMHt(HCHt);
-    HCHt -= V;
-    HCHt *= -1;
+      // Calculate chi²
+      TMatrixDSym HCHt(cov);
+      H->HMHt(HCHt);
+      HCHt -= V;
+      HCHt *= -1;
 
-    tools::invertMatrix(HCHt);
+      tools::invertMatrix(HCHt);
 
-    chi2inc += HCHt.Similarity(resNew);
+      chi2inc += HCHt.Similarity(resNew);
 
-    if (!canIgnoreWeights()) {
-      ndfInc += weight * measurement.GetNrows();
-    }
-    else
-      ndfInc += measurement.GetNrows();
+      if (!canIgnoreWeights()) {
+	ndfInc += weight * measurement.GetNrows();
+      }
+      else
+	ndfInc += measurement.GetNrows();
 
-    if (debugLvl_ > 0) {
-      std::cout << "chi² increment = " << chi2inc << std::endl;
-    }
-  } // end loop over measurements
+      if (debugLvl_ > 0) {
+	std::cout << "chi² increment = " << chi2inc << std::endl;
+      }
+    } // end loop over measurements
   } else {
     // The square-root formalism is applied only to the updates, not
     // the prediction even though the addition of the noise covariance
     // (which in implicit in the extrapolation) is probably the most
     // fragile part of the numerical procedure.  This would require
     // calculating the transport matrices also here, which would be
-    // possible but not done, as this is not the preferred form of the
-    // Kalman Fitter, anyway.
+    // possible but is not done, as this is not the preferred form of
+    // the Kalman Fitter, anyway.
 
     TDecompChol decompCov(cov);
     decompCov.Decompose();
@@ -620,7 +620,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
       const TMatrixD& R(decompR.GetU());
 
       TVectorD update(stateVector.GetNrows());
-      tools::kalmanUpdateSqrt(stateVector, S, res, R, H,
+      tools::kalmanUpdateSqrt(S, res, R, H,
 			      update, S);
       stateVector += update;
 
