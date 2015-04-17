@@ -30,6 +30,7 @@
 
 #include "boost/scoped_ptr.hpp"
 
+#include <TDecompChol.h>
 #include <Math/ProbFunc.h>
 
 
@@ -919,6 +920,11 @@ KalmanFitterRefTrack::removeForwardBackwardInfo(Track* tr, const AbsTrackRep* re
 void
 KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, const TrackPoint* tp, double& chi2, double& ndf, int direction)
 {
+  if(squareRootFormalism_) {
+    processTrackPointSqrt(fi, prevFi, tp, chi2, ndf, direction);
+    return;
+  }
+
   if (debugLvl_ > 0) {
     std::cout << " KalmanFitterRefTrack::processTrackPoint " << fi->getTrackPoint() << "\n";
   }
@@ -1092,6 +1098,218 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
 
 
   } // end loop over measurements
+
+  chi2 += chi2inc;
+  ndf += ndfInc;
+
+
+  KalmanFittedStateOnPlane* upState = new KalmanFittedStateOnPlane(p_, C_, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), fi->getReferenceState()->getAuxInfo(), chi2inc, ndfInc);
+  upState->setAuxInfo(fi->getReferenceState()->getAuxInfo());
+  fi->setUpdate(upState, direction);
+
+
+  if (debugLvl_ > 0) {
+    std::cout << " chi² inc " << chi2inc << "\t";
+    std::cout << " ndf inc  " << ndfInc << "\t";
+    std::cout << " charge of update  " << fi->getRep()->getCharge(*upState) << "\n";
+  }
+
+  // check
+  assert(fi->checkConsistency());
+
+}
+
+
+
+
+void
+KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi,
+					    const TrackPoint* tp, double& chi2, double& ndf, int direction)
+{
+  if (debugLvl_ > 0) {
+    std::cout << " KalmanFitterRefTrack::processTrackPointSqrt " << fi->getTrackPoint() << "\n";
+  }
+
+  unsigned int dim = fi->getRep()->getDim();
+
+  p_.Zero(); // p_{k|k-1}
+  C_.Zero(); // C_{k|k-1}
+
+  TMatrixD S(dim, dim); // sqrt(C_);
+
+  // predict
+  if (prevFi != NULL) {
+    const TMatrixD& F = fi->getReferenceState()->getTransportMatrix(direction); // Transport matrix
+    assert(F.GetNcols() == (int)dim);
+    const TMatrixDSym& N = fi->getReferenceState()->getNoiseMatrix(direction); // Noise matrix
+    //N = 0;
+
+    //p_ = ( F * prevFi->getUpdate(direction)->getState() ) + fi->getReferenceState()->getDeltaState(direction);
+    p_ = prevFi->getUpdate(direction)->getState();
+    p_ *= F;
+    p_ += fi->getReferenceState()->getDeltaState(direction);
+
+
+    TDecompChol decompS(prevFi->getUpdate(direction)->getCov());
+    decompS.Decompose();
+    TMatrixD Q;
+    tools::noiseMatrixSqrt(N, Q);
+    tools::kalmanPredictionCovSqrt(decompS.GetU(), F, Q, S);
+
+    fi->setPrediction(new MeasuredStateOnPlane(p_, TMatrixDSym(TMatrixDSym::kAtA, S), fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), fi->getReferenceState()->getAuxInfo()), direction);
+    if (debugLvl_ > 1) {
+      std::cout << "\033[31m";
+      std::cout << "F (Transport Matrix) "; F.Print();
+      std::cout << "p_{k,r} (reference state) "; fi->getReferenceState()->getState().Print();
+      std::cout << "c (delta state) "; fi->getReferenceState()->getDeltaState(direction).Print();
+      std::cout << "F*p_{k-1,r} + c "; (F *prevFi->getReferenceState()->getState() + fi->getReferenceState()->getDeltaState(direction)).Print();
+    }
+  }
+  else {
+    if (fi->hasPrediction(direction)) {
+      if (debugLvl_ > 0) {
+        std::cout << "  Use prediction as start \n";
+      }
+      p_ = fi->getPrediction(direction)->getState();
+      TDecompChol decompS(fi->getPrediction(direction)->getCov());
+      decompS.Decompose();
+      S = decompS.GetU();
+    }
+    else {
+      if (debugLvl_ > 0) {
+        std::cout << "  Use reference state and seed cov as start \n";
+      }
+      const AbsTrackRep *rep = fi->getReferenceState()->getRep();
+      p_ = fi->getReferenceState()->getState();
+
+      // Convert from 6D covariance of the seed to whatever the trackRep wants.
+      TMatrixDSym dummy(p_.GetNrows());
+      MeasuredStateOnPlane mop(p_, dummy, fi->getReferenceState()->getPlane(), rep, fi->getReferenceState()->getAuxInfo());
+      TVector3 pos, mom;
+      rep->getPosMom(mop, pos, mom);
+      rep->setPosMomCov(mop, pos, mom, fi->getTrackPoint()->getTrack()->getCovSeed());
+      // Blow up, set.
+      mop.blowUpCov(blowUpFactor_, resetOffDiagonals_, blowUpMaxVal_);
+      fi->setPrediction(new MeasuredStateOnPlane(mop), direction);
+      TDecompChol decompS(mop.getCov());
+      decompS.Decompose();
+      S = decompS.GetU();
+    }
+    if (debugLvl_ > 1) {
+      std::cout << "\033[31m";
+      std::cout << "p_{k,r} (reference state)"; fi->getReferenceState()->getState().Print();
+    }
+  }
+
+  if (debugLvl_ > 1) {
+    std::cout << " p_{k|k-1} (state prediction)"; p_.Print();
+    std::cout << " C_{k|k-1} (covariance prediction)"; C_.Print();
+    std::cout << "\033[0m";
+  }
+
+  // update(s)
+  double chi2inc = 0;
+  double ndfInc = 0;
+
+  const std::vector<MeasurementOnPlane *> measurements = getMeasurements(fi, tp, direction);
+  for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
+    const MeasurementOnPlane& m = **it;
+
+    if (!canIgnoreWeights() && m.getWeight() <= 1.01E-10) {
+      if (debugLvl_ > 1) {
+        std::cout << "Weight of measurement is almost 0, continue ... /n";
+      }
+      continue;
+    }
+
+    const AbsHMatrix* H(m.getHMatrix());
+    // (weighted) cov
+    const TMatrixDSym& V((!canIgnoreWeights() && m.getWeight() < 0.99999) ?
+                          1./m.getWeight() * m.getCov() :
+                          m.getCov());
+    TDecompChol decompR(V);
+    decompR.Decompose();
+    const TMatrixD& R(decompR.GetU());
+
+    res_.ResizeTo(m.getState());
+    res_ = m.getState();
+    res_ -= H->Hv(p_); // residual
+
+    TVectorD update;
+    tools::kalmanUpdateSqrt(S, res_, R, H,
+			    update, S);
+
+    if (debugLvl_ > 1) {
+      std::cout << "\033[34m";
+      std::cout << "m (measurement) "; m.getState().Print();
+      std::cout << "V ((weighted) measurement covariance) "; (1./m.getWeight() * m.getCov()).Print();
+      std::cout << "residual        "; res_.Print();
+      std::cout << "\033[0m";
+    }
+
+    p_ += update;
+    if (debugLvl_ > 1) {
+      std::cout << "\033[32m";
+      std::cout << " update"; update.Print();
+      std::cout << "\033[0m";
+    }
+
+    if (debugLvl_ > 1) {
+      //std::cout << " C update "; covSumInv_.Print();
+      std::cout << "\033[32m";
+      std::cout << " p_{k|k} (updated state)"; p_.Print();
+      std::cout << " C_{k|k} (updated covariance)"; C_.Print();
+      std::cout << "\033[0m";
+    }
+
+    // Calculate chi² increment.  At the first point chi2inc == 0 and
+    // the matrix will not be invertible.
+    res_ = m.getState();
+    res_ -= H->Hv(p_); // new residual
+    if (debugLvl_ > 1) {
+      std::cout << " resNew ";
+      res_.Print();
+    }
+
+    // only calculate chi2inc if res != 0.
+    // If matrix inversion fails, chi2inc = 0
+    if (res_ != 0) {
+      Rinv_.ResizeTo(C_);
+      Rinv_ = TMatrixDSym(TMatrixDSym::kAtA, S);
+      H->HMHt(Rinv_);
+      Rinv_ -= V;
+      Rinv_ *= -1;
+
+      bool couldInvert(true);
+      try {
+        tools::invertMatrix(Rinv_);
+      }
+      catch (Exception& e) {
+        if (debugLvl_ > 1) {
+          std::cerr << e.what();
+        }
+        couldInvert = false;
+      }
+
+      if (couldInvert) {
+        if (debugLvl_ > 1) {
+          std::cout << " Rinv ";
+          Rinv_.Print();
+        }
+        chi2inc += Rinv_.Similarity(res_);
+      }
+    }
+
+    if (!canIgnoreWeights()) {
+      ndfInc += m.getWeight() * m.getState().GetNrows();
+    }
+    else
+      ndfInc += m.getState().GetNrows();
+
+
+  } // end loop over measurements
+
+  C_ = TMatrixDSym(TMatrixDSym::kAtA, S);
 
   chi2 += chi2inc;
   ndf += ndfInc;

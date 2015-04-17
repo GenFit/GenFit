@@ -36,8 +36,11 @@ class TrackPoint;
  */
 class KalmanFitterRefTrack : public AbsKalmanFitter {
  public:
-  KalmanFitterRefTrack(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
-    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), refitAll_(false), deltaChi2Ref_(1) {}
+  KalmanFitterRefTrack(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3,
+		       bool squareRootFormalism = true)
+    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), refitAll_(false), deltaChi2Ref_(1),
+      squareRootFormalism_(squareRootFormalism)
+  {}
 
   virtual ~KalmanFitterRefTrack() {}
 
@@ -69,6 +72,7 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
 
  private:
   void processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, const TrackPoint* tp, double& chi2, double& ndf, int direction);
+  void processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, const TrackPoint* tp, double& chi2, double& ndf, int direction);
 
   /**
    * @brief Remove referenceStates if they are too far from smoothed states.
@@ -101,6 +105,8 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
 
   // aux variables for removeOutdated
   TVectorD resM_; //!
+
+  bool squareRootFormalism_;
 
  public:
   ClassDef(KalmanFitterRefTrack, 1)
