@@ -1264,8 +1264,7 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
 
     // Calculate chi² increment.  At the first point chi2inc == 0 and
     // the matrix will not be invertible.
-    res_ = m.getState();
-    res_ -= H->Hv(p_); // new residual
+    res_ -= H->Hv(update); // new residual
     if (debugLvl_ > 1) {
       std::cout << " resNew ";
       res_.Print();
@@ -1274,11 +1273,8 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
     // only calculate chi2inc if res != 0.
     // If matrix inversion fails, chi2inc = 0
     if (res_ != 0) {
-      Rinv_.ResizeTo(C_);
-      Rinv_ = TMatrixDSym(TMatrixDSym::kAtA, S);
-      H->HMHt(Rinv_);
-      Rinv_ -= V;
-      Rinv_ *= -1;
+      Rinv_.ResizeTo(V);
+      Rinv_ = V - TMatrixDSym(TMatrixDSym::kAtA, H->MHt(S));
 
       bool couldInvert(true);
       try {
