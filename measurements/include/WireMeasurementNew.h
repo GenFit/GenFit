@@ -89,9 +89,10 @@ class WireMeasurementNew : public AbsMeasurement {
   void setMaxDistance(double d){maxDistance_ = d;}
   /**
    * select how to resolve the left/right ambiguity:
-   * -1: negative (left) side on vector (track direction) x (wire direction)
-   * 0: auto select (take side with smallest distance to track)
-   * 1: positive (right) side on vector (track direction) x (wire direction)
+   * -1: negative (left) side on vector (wire direction) x (track direction)
+   * 0: mirrors enter with same weight, DAF will decide.
+   * 1: positive (right) side on vector (wire direction) x (track direction)
+   * where the wire direction is pointing from endPoint1 to endPoint2
    */
   void setLeftRightResolution(int lr);
 

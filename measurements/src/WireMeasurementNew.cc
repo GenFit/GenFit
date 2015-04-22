@@ -88,7 +88,7 @@ SharedPlanePtr WireMeasurementNew::constructPlane(const StateOnPlane& state) con
   }
   
   // construct orthogonal vector
-  TVector3 U = dirInPoca.Cross(wireDirection);
+  TVector3 U = wireDirection.Cross(dirInPoca);
   // U.SetMag(1.); automatically assured
 
   return SharedPlanePtr(new DetPlane(pocaOnWire, U, wireDirection));
