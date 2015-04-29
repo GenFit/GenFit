@@ -540,15 +540,16 @@ tools::kalmanUpdateSqrt(const TMatrixD& S,
 
 
 // Kalman transport + measurement update
-// x, S : state prediction, covariance square root (pre-prediction)
+// S : covariance square root (pre-prediction)
 // transport matrix F and noise matrix square root Q
 // res, R, H : residual, measurement covariance square root, H matrix of the measurement
+// The new state is xnew = F*xold + update
 void
-tools::kalmanPredictionUpdateSqrt(const TVectorD& x, const TMatrixD& S,
+tools::kalmanPredictionUpdateSqrt(const TMatrixD& S,
 				  const TMatrixD& F, const TMatrixD& Q,
 				  const TVectorD& res, const TMatrixD& R,
 				  const AbsHMatrix* H,
-				  TVectorD& xNew, TMatrixD& SNew)
+				  TVectorD& update, TMatrixD& SNew)
 {
   TMatrixD pre(S.GetNrows() + Q.GetNrows() + R.GetNrows(),
 	       S.GetNcols() + R.GetNcols());
@@ -568,11 +569,10 @@ tools::kalmanPredictionUpdateSqrt(const TVectorD& x, const TMatrixD& S,
   SNew = r.GetSub(R.GetNrows(), R.GetNrows() + S.GetNrows() - 1,
 		  R.GetNcols(), pre.GetNcols() - 1);
 
-  xNew.ResizeTo(res);
-  xNew = res;
-  tools::transposedForwardSubstitution(a, xNew);
-  xNew *= K;
-  xNew += x;
+  update.ResizeTo(res);
+  update = res;
+  tools::transposedForwardSubstitution(a, update);
+  update *= K;
 }
 
 
