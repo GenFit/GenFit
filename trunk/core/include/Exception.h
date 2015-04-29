@@ -45,7 +45,7 @@ namespace genfit {
  * is detected and the C++ exception handling facilities can be used to
  * catch and process the exception.
  */
-class Exception : public TObject {
+class Exception {
 
  public:
   /** @brief Initializing constructor
