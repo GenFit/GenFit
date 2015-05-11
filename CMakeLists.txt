@@ -1,5 +1,8 @@
-CMAKE_MINIMUM_REQUIRED( VERSION 2.6 )
-cmake_policy(SET CMP0042 NEW) # Mac OS -rpath behavior
+CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
+if(POLICY CMP0042)
+   # policies not known to CMake 2.8 ...
+   cmake_policy(SET CMP0042 NEW) # Mac OS -rpath behavior
+endif(POLICY CMP0042)
 
 # declare the project name
 PROJECT(genfit2)
