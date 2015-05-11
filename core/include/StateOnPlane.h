@@ -91,6 +91,11 @@ class StateOnPlane {
         const TVector3& lineDirection = TVector3(0.,0.,1.),
         bool stopAtBoundary = false,
         bool calcJacobianNoise = false) {return rep_->extrapolateToCylinder(*this, radius, linePoint, lineDirection, stopAtBoundary, calcJacobianNoise);}
+  double extrapolateToCone(double openingAngle,
+        const TVector3& conePoint = TVector3(0.,0.,0.),
+        const TVector3& coneDirection = TVector3(0.,0.,1.),
+        bool stopAtBoundary = false,
+        bool calcJacobianNoise = false) {return rep_->extrapolateToCone(*this, openingAngle, conePoint, coneDirection, stopAtBoundary, calcJacobianNoise);}
   double extrapolateToSphere(double radius,
         const TVector3& point = TVector3(0.,0.,0.),
         bool stopAtBoundary = false,

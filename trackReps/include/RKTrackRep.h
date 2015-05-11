@@ -114,6 +114,14 @@ class RKTrackRep : public AbsTrackRep {
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const;
 
+  
+  virtual double extrapolateToCone(StateOnPlane& state,
+      double radius,
+      const TVector3& linePoint = TVector3(0.,0.,0.),
+      const TVector3& lineDirection = TVector3(0.,0.,1.),
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const;
+
   virtual double extrapolateToSphere(StateOnPlane& state,
       double radius,
       const TVector3& point = TVector3(0.,0.,0.),

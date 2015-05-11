@@ -470,6 +470,140 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
   return tracklength;
 }
 
+  
+double RKTrackRep::extrapolateToCone(StateOnPlane& state,
+    double openingAngle,
+    const TVector3& conePoint,
+    const TVector3& coneDirection,
+    bool stopAtBoundary,
+    bool calcJacobianNoise) const {
+
+  if (debugLvl_ > 0) {
+    std::cout << "RKTrackRep::extrapolateToCone()\n";
+  }
+
+  checkCache(state, NULL);
+
+  static const unsigned int maxIt(1000);
+
+  // to 7D
+  M1x7 state7;
+  getState7(state, state7);
+
+  bool fillExtrapSteps(false);
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+    fillExtrapSteps = true;
+  }
+  else if (calcJacobianNoise)
+    fillExtrapSteps = true;
+
+  double tracklength(0.), maxStep(1.E99);
+
+  TVector3 dest, pos, dir;
+
+  bool isAtBoundary(false);
+
+  DetPlane startPlane(*(state.getPlane()));
+  SharedPlanePtr plane(new DetPlane());
+  unsigned int iterations(0);
+  double charge = getCharge(state);
+  double mass = getMass(state);
+  double flightTime = 0;
+
+  while(true){
+    if(++iterations == maxIt) {
+      Exception exc("RKTrackRep::extrapolateToCone ==> maximum number of iterations reached",__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    }
+
+    pos.SetXYZ(state7[0], state7[1], state7[2]);
+    dir.SetXYZ(state7[3], state7[4], state7[5]);
+
+    // solve quadratic equation a k^2 + 2 b k + c = 0
+    // a = (U . D)^2 - cos^2 alpha * U^2
+    // b = (Delta . D) * (U . D) - cos^2 alpha * (U . Delta)
+    // c = (Delta . D)^2 - cos^2 alpha * Delta^2
+    // Delta = P - V, P track point, U track direction, V cone point, D cone direction, alpha opening angle of cone
+    TVector3 cDirection = coneDirection.Unit();
+    TVector3 Delta = (pos - conePoint);
+    double DirDelta = cDirection * Delta;
+    double Delta2 = Delta*Delta;
+    double UDir = dir * cDirection;
+    double UDelta = dir * Delta;
+    double U2 = dir * dir;
+    double cosAngle2 = cos(openingAngle)*cos(openingAngle);
+    double a = UDir*UDir - cosAngle2*U2;
+    double b = UDir*DirDelta - cosAngle2*UDelta;
+    double c = DirDelta*DirDelta - cosAngle2*Delta2;
+    
+    double arg = b*b - a*c;
+    if(arg < -1e-9) {
+      Exception exc("RKTrackRep::extrapolateToCone ==> cannot solve",__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    } else if(arg < 0) {
+      arg = 0;
+    }
+
+    double term = sqrt(arg);
+    double k1, k2;
+    k1 = (-b + term) / a;
+    k2 = (-b - term) / a;
+
+    // select smallest absolute solution -> closest cone surface
+    double k = k1;
+    if(fabs(k2) < fabs(k)) {
+      k = k2;
+    }
+
+    if (debugLvl_ > 0) {
+      std::cout << "RKTrackRep::extrapolateToCone(); k = " << k << "\n";
+    }
+
+    dest = pos + k * dir;
+    // std::cout << "In cone extrapolation ";
+    // dest.Print();
+
+    plane->setO(dest);
+    plane->setUV((dest-conePoint).Cross(coneDirection), dest-conePoint);
+
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+
+    // check break conditions
+    if (stopAtBoundary && isAtBoundary) {
+      pos.SetXYZ(state7[0], state7[1], state7[2]);
+      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      plane->setO(pos);
+      plane->setUV((pos-conePoint).Cross(coneDirection), pos-conePoint);
+      break;
+    }
+
+    if(fabs(k)<MINSTEP) break;
+
+    startPlane = *plane;
+
+  }
+
+  if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
+    // make use of the cache
+    lastEndState_.setPlane(plane);
+    getState5(lastEndState_, state7);
+
+    tracklength = extrapolateToPlane(state, plane, false, true);
+    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
+  }
+  else {
+    state.setPlane(plane);
+    getState5(state, state7);
+    state.getAuxInfo()(1) += flightTime;
+  }
+
+  lastEndState_ = state;
+
+  return tracklength;
+}
+
 
 double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
     double radius,
