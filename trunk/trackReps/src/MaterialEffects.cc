@@ -175,18 +175,18 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 
       if (doNoise){
         // get values for the "effective" energy of the RK step E_
-        double mom(0), gammaSquare(0), gamma(0), betaSquare(0);
-        this->getMomGammaBeta(E_, mom, gammaSquare, gamma, betaSquare);
-        double momSquare = mom*mom;
+        double p(0), gammaSquare(0), gamma(0), betaSquare(0);
+        this->getMomGammaBeta(E_, p, gammaSquare, gamma, betaSquare);
+        double pSquare = p*p;
 
         if (energyLossBetheBloch_ && noiseBetheBloch_)
-          this->noiseBetheBloch(*noise, mom, betaSquare, gamma, gammaSquare);
+          this->noiseBetheBloch(*noise, p, betaSquare, gamma, gammaSquare);
 
         if (noiseCoulomb_)
-          this->noiseCoulomb(*noise, *((M1x3*) &it->state7_[3]), momSquare, betaSquare);
+          this->noiseCoulomb(*noise, *((M1x3*) &it->state7_[3]), pSquare, betaSquare);
 
         if (energyLossBrems_ && noiseBrems_)
-          this->noiseBrems(*noise, momSquare, betaSquare);
+          this->noiseBrems(*noise, pSquare, betaSquare);
       } // end doNoise
 
     }
@@ -439,15 +439,15 @@ double MaterialEffects::dEdx(double Energy) const {
   double mom(0), gammaSquare(0), gamma(0), betaSquare(0);
   this->getMomGammaBeta(Energy, mom, gammaSquare, gamma, betaSquare);
 
-  double dEdx(0);
+  double result(0);
 
   if (energyLossBetheBloch_)
-    dEdx += dEdxBetheBloch(betaSquare, gamma, gammaSquare);
+    result += dEdxBetheBloch(betaSquare, gamma, gammaSquare);
 
   if (energyLossBrems_)
-    dEdx += dEdxBrems(mom);
+    result += dEdxBrems(mom);
 
-  return dEdx;
+  return result;
 }
 
 
@@ -461,17 +461,17 @@ double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double g
   }
 
   // calc dEdx_, also needed in noiseBetheBloch!
-  double dEdx( 0.307075 * matZ_ / matA_ * matDensity_ / betaSquare * charge_ * charge_ );
+  double result( 0.307075 * matZ_ / matA_ * matDensity_ / betaSquare * charge_ * charge_ );
   double massRatio( me_ / mass_ );
   double argument( gammaSquare * betaSquare * me_ * 1.E3 * 2. / ((1.E-6 * mEE_) *
       sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio)) );
-  dEdx *= log(argument) - betaSquare; // Bethe-Bloch [MeV/cm]
-  dEdx *= 1.E-3;  // in GeV/cm, hence 1.e-3
-  if (dEdx < 0.) {
-    dEdx = 0;
+  result *= log(argument) - betaSquare; // Bethe-Bloch [MeV/cm]
+  result *= 1.E-3;  // in GeV/cm, hence 1.e-3
+  if (result < 0.) {
+    result = 0;
   }
 
-  return dEdx;
+  return result;
 }
 
 
@@ -814,8 +814,8 @@ void MaterialEffects::drawdEdx(int pdg) {
   int nSteps(10000);
   double logStepSize = (log10(maxMom) - log10(minMom)) / (nSteps-1);
 
-  TH1D dEdxBethe("dEdxBethe", "dEdxBethe; log10(mom)", nSteps, log10(minMom), log10(maxMom));
-  TH1D dEdxBrems("dEdxBrems", "dEdxBrems; log10(mom)", nSteps, log10(minMom), log10(maxMom));
+  TH1D hdEdxBethe("dEdxBethe", "dEdxBethe; log10(mom)", nSteps, log10(minMom), log10(maxMom));
+  TH1D hdEdxBrems("dEdxBrems", "dEdxBrems; log10(mom)", nSteps, log10(minMom), log10(maxMom));
 
   for (int i=0; i<nSteps; ++i) {
     double mom = pow(10., log10(minMom) + i*logStepSize);
@@ -825,7 +825,7 @@ void MaterialEffects::drawdEdx(int pdg) {
     energyLossBetheBloch_ = true;
 
     try {
-      dEdxBethe.Fill(log10(mom), dEdx(E));
+      hdEdxBethe.Fill(log10(mom), dEdx(E));
     }
     catch (...) {
 
@@ -837,7 +837,7 @@ void MaterialEffects::drawdEdx(int pdg) {
     energyLossBrems_ = true;
     energyLossBetheBloch_ = false;
     try {
-      dEdxBrems.Fill(log10(mom), dEdx(E));
+      hdEdxBrems.Fill(log10(mom), dEdx(E));
     }
     catch (...) {
 
@@ -854,8 +854,8 @@ void MaterialEffects::drawdEdx(int pdg) {
 
   TFile outfile("dEdx_" + TString(Result) + ".root", "recreate");
   outfile.cd();
-  dEdxBethe.Write();
-  dEdxBrems.Write();
+  hdEdxBethe.Write();
+  hdEdxBrems.Write();
   outfile.Close();
 }
 
