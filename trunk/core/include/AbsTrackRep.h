@@ -183,6 +183,22 @@ class AbsTrackRep : public TObject {
       bool calcJacobianNoise = false) const = 0;
 
   /**
+   * @brief Extrapolates the state to the cone surface, and returns the extrapolation length
+   *       and, via reference, the extrapolated state.
+   *
+   * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
+   *
+   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
+   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
+   */
+  virtual double extrapolateToCone(StateOnPlane& state,
+      double radius,
+      const TVector3& linePoint = TVector3(0.,0.,0.),
+      const TVector3& lineDirection = TVector3(0.,0.,1.),
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const = 0;
+
+  /**
    * @brief Extrapolates the state to the sphere surface, and returns the extrapolation length
    *       and, via reference, the extrapolated state.
    *
