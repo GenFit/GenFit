@@ -1532,7 +1532,7 @@ void Track::Streamer(TBuffer &R__b)
       TObject::Streamer(R__b);
       {
         std::vector<AbsTrackRep*> &R__stl =  trackReps_;
-        int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+        int R__n=int(R__stl.size());
         R__b << R__n;
         if(R__n) {
           TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
@@ -1550,7 +1550,7 @@ void Track::Streamer(TBuffer &R__b)
       if (streamTrackPoints)
       {
         std::vector<TrackPoint*> &R__stl =  trackPoints_;
-        int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+        int R__n=int(R__stl.size());
         R__b << R__n;
         if(R__n) {
           std::vector<TrackPoint*>::iterator R__k;
@@ -1561,7 +1561,7 @@ void Track::Streamer(TBuffer &R__b)
       }
       {
         std::map<const AbsTrackRep*,FitStatus*> &R__stl =  fitStatuses_;
-        int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+        int R__n=int(R__stl.size());
         R__b << R__n;
         if(R__n) {
           TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
