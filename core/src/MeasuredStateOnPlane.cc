@@ -141,9 +141,14 @@ MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, 
   // Num. Math. 7, 206 (1965) to the least-squares problem underlying
   // averaging.
   TDecompChol d1(forwardState.getCov());
-  d1.Decompose();
+  bool success = d1.Decompose();
   TDecompChol d2(backwardState.getCov());
-  d2.Decompose();
+  success &= d2.Decompose();
+
+  if (!success) {
+    Exception e("KalmanFitterInfo::calcAverageState: ill-conditioned covariance matrix.", __LINE__,__FILE__);
+    throw e;
+  }
 
   int nRows = d1.GetU().GetNrows();
   assert(nRows == d2.GetU().GetNrows());
