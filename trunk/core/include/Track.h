@@ -111,7 +111,7 @@ class Track : public TObject {
   const std::vector< genfit::TrackPoint* > & getPointsWithMeasurement() const  {return trackPointsWithMeasurement_;}
   unsigned int getNumPointsWithMeasurement() const {return trackPointsWithMeasurement_.size();}
 
-  TrackPoint* getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRep* rep) const;
+  TrackPoint* getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRep* rep = NULL) const;
   TrackPoint* getPointWithFitterInfo(int id, const AbsTrackRep* rep = NULL) const;
 
   /**

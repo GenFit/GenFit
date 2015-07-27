@@ -219,22 +219,32 @@ TrackPoint* Track::getPointWithMeasurement(int id) const {
 
 
 TrackPoint* Track::getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRep* rep) const {
-  int i(0);
-  for (std::vector<TrackPoint*>::const_iterator it = trackPointsWithMeasurement_.begin(); it != trackPointsWithMeasurement_.end(); ++it) {
-    if ((*it)->hasFitterInfo(rep)) {
-      if (id == i)
-        return (*it);
-      ++i;
+  if (rep == NULL)
+    rep = getCardinalRep();
+
+  if (id >= 0) {
+    int i = 0;
+    for (std::vector<TrackPoint*>::const_iterator it = trackPointsWithMeasurement_.begin(); it != trackPointsWithMeasurement_.end(); ++it) {
+      if ((*it)->hasFitterInfo(rep)) {
+        if (id == i)
+          return (*it);
+        ++i;
+      }
+    }
+  } else {
+    // Search backwards.
+    int i = -1;
+    for (std::vector<TrackPoint*>::const_reverse_iterator it = trackPointsWithMeasurement_.rbegin(); it != trackPointsWithMeasurement_.rend(); ++it) {
+      if ((*it)->hasFitterInfo(rep)) {
+        if (id == i)
+          return (*it);
+        --i;
+      }
     }
   }
 
-  if (i == 0)
-    return NULL;
-
-  if (id < 0)
-    id += i;
-
-  return getPointWithMeasurementAndFitterInfo(id, rep);
+  // Not found, i.e. abs(id) > number of fitted TrackPoints
+  return 0;
 }
 
 
@@ -246,9 +256,9 @@ TrackPoint* Track::getPointWithFitterInfo(int id, const AbsTrackRep* rep) const 
     int i = 0;
     for (std::vector<TrackPoint*>::const_iterator it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
       if ((*it)->hasFitterInfo(rep)) {
-	if (id == i)
-	  return (*it);
-	++i;
+        if (id == i)
+          return (*it);
+        ++i;
       }
     }
   } else {
@@ -256,9 +266,9 @@ TrackPoint* Track::getPointWithFitterInfo(int id, const AbsTrackRep* rep) const 
     int i = -1;
     for (std::vector<TrackPoint*>::const_reverse_iterator it = trackPoints_.rbegin(); it != trackPoints_.rend(); ++it) {
       if ((*it)->hasFitterInfo(rep)) {
-	if (id == i)
-	  return (*it);
-	--i;
+        if (id == i)
+          return (*it);
+        --i;
       }
     }
   }
