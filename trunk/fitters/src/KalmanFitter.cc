@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 /* This implements the simple Kalman fitter with no reference track
    that uses the stateSeed only until it forgets about it after the
@@ -205,8 +205,8 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
         std::cout << "\033[0m";
 
         std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
-		  << " new chi2s: " << chi2BW << ", " << chi2FW
-		  << " oldPvals " << oldPvalFW << ", " << oldPvalBW << std::endl;
+            << " new chi2s: " << chi2BW << ", " << chi2FW
+            << " oldPvals " << oldPvalFW << ", " << oldPvalBW << std::endl;
       }
       ++nIt;
 
@@ -434,7 +434,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
       fi->setWeights(oldWeights);
       fi->fixWeights(oldWeightsFixed);
       if (debugLvl_ > 0) {
-	std::cout << "set old weights \n";
+        std::cout << "set old weights \n";
       }
     }
     assert(fi->getPlane() == plane);
@@ -443,7 +443,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
 
   if (debugLvl_ > 0) {
     std::cout << "its plane is at R = " << plane->getO().Perp()
-	      << " with normal pointing along (" << plane->getNormal().X() << ", " << plane->getNormal().Y() << ", " << plane->getNormal().Z() << ")" << std::endl;
+	          << " with normal pointing along (" << plane->getNormal().X() << ", " << plane->getNormal().Y() << ", " << plane->getNormal().Z() << ")" << std::endl;
   }
 
   TVectorD stateVector(state->getState());
@@ -459,84 +459,84 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
       const double weight = mOnPlane.getWeight();
 
       if (debugLvl_ > 0) {
-	std::cout << "Weight of measurement: " << weight << "\n";
+        std::cout << "Weight of measurement: " << weight << "\n";
       }
 
       if (!canIgnoreWeights() && weight <= 1.01E-10) {
-	if (debugLvl_ > 0) {
-	  std::cout << "Weight of measurement is almost 0, continue ... \n";
-	}
-	continue;
+        if (debugLvl_ > 0) {
+          std::cout << "Weight of measurement is almost 0, continue ... \n";
+        }
+        continue;
       }
 
       const TVectorD& measurement(mOnPlane.getState());
       const AbsHMatrix* H(mOnPlane.getHMatrix());
       // (weighted) cov
       const TMatrixDSym& V((!canIgnoreWeights() && weight < 0.99999) ?
-			   1./weight * mOnPlane.getCov() :
-			   mOnPlane.getCov());
+          1./weight * mOnPlane.getCov() :
+          mOnPlane.getCov());
       if (debugLvl_ > 1) {
-	std::cout << "\033[31m";
-	std::cout << "State prediction: "; stateVector.Print();
-	std::cout << "Cov prediction: "; state->getCov().Print();
-	std::cout << "\033[0m";
-	std::cout << "\033[34m";
-	std::cout << "measurement: "; measurement.Print();
-	std::cout << "measurement covariance V: "; V.Print();
-	//cov.Print();
-	//measurement.Print();
+        std::cout << "\033[31m";
+        std::cout << "State prediction: "; stateVector.Print();
+        std::cout << "Cov prediction: "; state->getCov().Print();
+        std::cout << "\033[0m";
+        std::cout << "\033[34m";
+        std::cout << "measurement: "; measurement.Print();
+        std::cout << "measurement covariance V: "; V.Print();
+        //cov.Print();
+        //measurement.Print();
       }
 
       TVectorD res(measurement - H->Hv(stateVector));
       if (debugLvl_ > 1) {
-	std::cout << "Residual = (" << res(0);
-	if (res.GetNrows() > 1)
-	  std::cout << ", " << res(1);
-	std::cout << ")" << std::endl;
-	std::cout << "\033[0m";
+        std::cout << "Residual = (" << res(0);
+        if (res.GetNrows() > 1)
+          std::cout << ", " << res(1);
+        std::cout << ")" << std::endl;
+        std::cout << "\033[0m";
       }
       // If hit, do Kalman algebra.
 
       {
-	// calculate kalman gain ------------------------------
-	// calculate covsum (V + HCH^T) and invert
-	TMatrixDSym covSumInv(cov);
-	H->HMHt(covSumInv);
-	covSumInv += V;
-	tools::invertMatrix(covSumInv);
+        // calculate kalman gain ------------------------------
+        // calculate covsum (V + HCH^T) and invert
+        TMatrixDSym covSumInv(cov);
+        H->HMHt(covSumInv);
+        covSumInv += V;
+        tools::invertMatrix(covSumInv);
 
-	TMatrixD CHt(H->MHt(cov));
-	TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
-	//TMatrixD(CHt, TMatrixD::kMult, covSumInv).Print();
+        TMatrixD CHt(H->MHt(cov));
+        TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
+        //TMatrixD(CHt, TMatrixD::kMult, covSumInv).Print();
 
-	if (debugLvl_ > 1) {
-	  //std::cout << "STATUS:" << std::endl;
-	  //stateVector.Print();
-	  std::cout << "\033[32m";
-	  std::cout << "Update: "; update.Print();
-	  std::cout << "\033[0m";
-	  //cov.Print();
-	}
+        if (debugLvl_ > 1) {
+          //std::cout << "STATUS:" << std::endl;
+          //stateVector.Print();
+          std::cout << "\033[32m";
+          std::cout << "Update: "; update.Print();
+          std::cout << "\033[0m";
+          //cov.Print();
+        }
 
-	stateVector += update;
-	covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
-	cov -= covSumInv;
+        stateVector += update;
+        covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
+        cov -= covSumInv;
       }
 
       if (debugLvl_ > 1) {
-	std::cout << "\033[32m";
-	std::cout << "updated state: "; stateVector.Print();
-	std::cout << "updated cov: "; cov.Print();
+        std::cout << "\033[32m";
+        std::cout << "updated state: "; stateVector.Print();
+        std::cout << "updated cov: "; cov.Print();
       }
 
       TVectorD resNew(measurement - H->Hv(stateVector));
       if (debugLvl_ > 1) {
-	std::cout << "Residual New = (" << resNew(0);
+        std::cout << "Residual New = (" << resNew(0);
 
-	if (resNew.GetNrows() > 1)
-	  std::cout << ", " << resNew(1);
-	std::cout << ")" << std::endl;
-	std::cout << "\033[0m";
+        if (resNew.GetNrows() > 1)
+          std::cout << ", " << resNew(1);
+        std::cout << ")" << std::endl;
+        std::cout << "\033[0m";
       }
 
       // Calculate chi²
@@ -550,13 +550,13 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
       chi2inc += HCHt.Similarity(resNew);
 
       if (!canIgnoreWeights()) {
-	ndfInc += weight * measurement.GetNrows();
+        ndfInc += weight * measurement.GetNrows();
       }
       else
-	ndfInc += measurement.GetNrows();
+        ndfInc += measurement.GetNrows();
 
       if (debugLvl_ > 0) {
-	std::cout << "chi² increment = " << chi2inc << std::endl;
+        std::cout << "chi² increment = " << chi2inc << std::endl;
       }
     } // end loop over measurements
   } else {
@@ -578,41 +578,41 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
       const double weight = mOnPlane.getWeight();
 
       if (debugLvl_ > 0) {
-	std::cout << "Weight of measurement: " << weight << "\n";
+        std::cout << "Weight of measurement: " << weight << "\n";
       }
 
       if (!canIgnoreWeights() && weight <= 1.01E-10) {
-	if (debugLvl_ > 0) {
-	  std::cout << "Weight of measurement is almost 0, continue ... \n";
-	}
-	continue;
+        if (debugLvl_ > 0) {
+          std::cout << "Weight of measurement is almost 0, continue ... \n";
+        }
+        continue;
       }
 
       const TVectorD& measurement(mOnPlane.getState());
       const AbsHMatrix* H(mOnPlane.getHMatrix());
       // (weighted) cov
       const TMatrixDSym& V((!canIgnoreWeights() && weight < 0.99999) ?
-			   1./weight * mOnPlane.getCov() :
-			   mOnPlane.getCov());
+          1./weight * mOnPlane.getCov() :
+          mOnPlane.getCov());
       if (debugLvl_ > 1) {
-	std::cout << "\033[31m";
-	std::cout << "State prediction: "; stateVector.Print();
-	std::cout << "Cov prediction: "; state->getCov().Print();
-	std::cout << "\033[0m";
-	std::cout << "\033[34m";
-	std::cout << "measurement: "; measurement.Print();
-	std::cout << "measurement covariance V: "; V.Print();
-	//cov.Print();
-	//measurement.Print();
+        std::cout << "\033[31m";
+        std::cout << "State prediction: "; stateVector.Print();
+        std::cout << "Cov prediction: "; state->getCov().Print();
+        std::cout << "\033[0m";
+        std::cout << "\033[34m";
+        std::cout << "measurement: "; measurement.Print();
+        std::cout << "measurement covariance V: "; V.Print();
+        //cov.Print();
+        //measurement.Print();
       }
 
       TVectorD res(measurement - H->Hv(stateVector));
       if (debugLvl_ > 1) {
-	std::cout << "Residual = (" << res(0);
-	if (res.GetNrows() > 1)
-	  std::cout << ", " << res(1);
-	std::cout << ")" << std::endl;
-	std::cout << "\033[0m";
+        std::cout << "Residual = (" << res(0);
+        if (res.GetNrows() > 1)
+          std::cout << ", " << res(1);
+        std::cout << ")" << std::endl;
+        std::cout << "\033[0m";
       }
 
       TDecompChol decompR(V);
@@ -621,26 +621,26 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
 
       TVectorD update(stateVector.GetNrows());
       tools::kalmanUpdateSqrt(S, res, R, H,
-			      update, S);
+          update, S);
       stateVector += update;
 
       // Square root is such that
       //    cov = TMatrixDSym(TMatrixDSym::kAtA, S);
 
       if (debugLvl_ > 1) {
-	std::cout << "\033[32m";
-	std::cout << "updated state: "; stateVector.Print();
-	std::cout << "updated cov: "; TMatrixDSym(TMatrixDSym::kAtA, S).Print() ;
+        std::cout << "\033[32m";
+        std::cout << "updated state: "; stateVector.Print();
+        std::cout << "updated cov: "; TMatrixDSym(TMatrixDSym::kAtA, S).Print() ;
       }
 
       res -= H->Hv(update);
       if (debugLvl_ > 1) {
-	std::cout << "Residual New = (" << res(0);
+        std::cout << "Residual New = (" << res(0);
 
-	if (res.GetNrows() > 1)
-	  std::cout << ", " << res(1);
-	std::cout << ")" << std::endl;
-	std::cout << "\033[0m";
+        if (res.GetNrows() > 1)
+          std::cout << ", " << res(1);
+        std::cout << ")" << std::endl;
+        std::cout << "\033[0m";
       }
 
       // Calculate chi²
@@ -657,13 +657,13 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
       chi2inc += HCHt.Similarity(res);
 
       if (!canIgnoreWeights()) {
-	ndfInc += weight * measurement.GetNrows();
+        ndfInc += weight * measurement.GetNrows();
       }
       else
-	ndfInc += measurement.GetNrows();
+        ndfInc += measurement.GetNrows();
 
       if (debugLvl_ > 0) {
-	std::cout << "chi² increment = " << chi2inc << std::endl;
+        std::cout << "chi² increment = " << chi2inc << std::endl;
       }
     } // end loop over measurements
 
@@ -685,26 +685,26 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
 // Modified from auto-generated streamer to deal with scoped_ptr correctly.
 void KalmanFitter::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class genfit::KalmanFitter.
+  // Stream an object of class genfit::KalmanFitter.
 
-   //This works around a msvc bug and should be harmless on other platforms
-   typedef ::genfit::KalmanFitter thisClass;
-   UInt_t R__s, R__c;
-   if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
-      //This works around a msvc bug and should be harmless on other platforms
-      typedef genfit::AbsKalmanFitter baseClass0;
-      baseClass0::Streamer(R__b);
-      MeasuredStateOnPlane *p = 0;
-      R__b >> p;
-      currentState_.reset(p);
-      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
-   } else {
-      R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
-      //This works around a msvc bug and should be harmless on other platforms
-      typedef genfit::AbsKalmanFitter baseClass0;
-      baseClass0::Streamer(R__b);
-      R__b << currentState_.get();
-      R__b.SetByteCount(R__c, kTRUE);
-   }
+  //This works around a msvc bug and should be harmless on other platforms
+  typedef ::genfit::KalmanFitter thisClass;
+  UInt_t R__s, R__c;
+  if (R__b.IsReading()) {
+    Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+    //This works around a msvc bug and should be harmless on other platforms
+    typedef genfit::AbsKalmanFitter baseClass0;
+    baseClass0::Streamer(R__b);
+    MeasuredStateOnPlane *p = 0;
+    R__b >> p;
+    currentState_.reset(p);
+    R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+  } else {
+    R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+    //This works around a msvc bug and should be harmless on other platforms
+    typedef genfit::AbsKalmanFitter baseClass0;
+    baseClass0::Streamer(R__b);
+    R__b << currentState_.get();
+    R__b.SetByteCount(R__c, kTRUE);
+  }
 }
