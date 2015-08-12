@@ -1273,6 +1273,18 @@ double RKTrackRep::RKPropagate(M1x7& state7,
                         double S,
                         bool varField,
                         bool calcOnlyLastRowOfJ) const {
+  // The algorithm is
+  //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
+  //  "Track parameter propagation through the application of a new adaptive Runge-Kutta-Nyström method in the ATLAS experiment"
+  //  http://inspirehep.net/search?ln=en&ln=en&p=10.1088/1748-0221/4/04/P04001&of=hb&action_search=Search&sf=earliestdate&so=d&rm=&rg=25&sc=0
+  // where the transport of the Jacobian is described in
+  //   L. Bugge, J. Myrheim  Nucl.Instrum.Meth. 160 (1979) 43-48
+  //   "A Fast Runge-kutta Method For Fitting Tracks In A Magnetic Field"
+  //   http://inspirehep.net/record/145692
+  // and
+  //   L. Bugge, J. Myrheim  Nucl.Instrum.Meth. 179 (1981) 365-381
+  //   "Tracking And Track Fitting"
+  //   http://inspirehep.net/record/160548
 
   // important fixed numbers
   static const double EC  ( 0.000149896229 );  // c/(2*10^12) resp. c/2Tera
@@ -1808,6 +1820,10 @@ void RKTrackRep::transformM6P(const M6x6& in6x6,
 //
 // Runge-Kutta method for tracking a particles through a magnetic field.
 // Uses Nystroem algorithm (See Handbook Nat. Bur. of Standards, procedure 25.5.20)
+// in the way described in
+//  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
+//  "Track parameter propagation through the application of a new adaptive Runge-Kutta-Nyström method in the ATLAS experiment"
+//  http://inspirehep.net/search?ln=en&ln=en&p=10.1088/1748-0221/4/04/P04001&of=hb&action_search=Search&sf=earliestdate&so=d&rm=&rg=25&sc=0
 //
 // Input parameters:
 //    SU     - plane parameters
