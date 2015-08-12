@@ -346,6 +346,15 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(unsigned int iMeasurement, bool
 }
 
 
+double KalmanFitterInfo::getSmoothedChi2(unsigned int iMeasurement) {
+  const MeasurementOnPlane& res = getResidual(iMeasurement, true, false);
+
+  TMatrixDSym Rinv;
+  tools::invertMatrix(res.getCov(), Rinv);
+  return Rinv.Similarity(res.getState());
+}
+
+
 void KalmanFitterInfo::setReferenceState(ReferenceStateOnPlane* referenceState) {
   referenceState_.reset(referenceState);
   if (referenceState_)
