@@ -69,6 +69,27 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
 
   void Print(Option_t* option = "") const ;
 
+ private:
+  TVector3 getPos() const;
+  TVector3 getMom() const;
+  TVector3 getDir() const;
+  void getPosMom(TVector3& pos, TVector3& mom) const;
+  void getPosDir(TVector3& pos, TVector3& dir) const;
+  TVectorD get6DState() const;
+  double getMomMag() const;
+  int getPDG() const;
+  double getCharge() const;
+  double getQop() const;
+  double getMass() const;
+  double getTime() const;
+
+  void setPosMom(const TVector3& pos, const TVector3& mom);
+  void setPosMom(const TVectorD& state6);
+  void setChargeSign(double charge);
+  void setQop(double qop);
+  void setTime(double time);
+
+
  protected:
 
 #ifndef __CINT__
