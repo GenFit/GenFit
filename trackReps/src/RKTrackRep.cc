@@ -2636,9 +2636,9 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
   initArrays();
 
 
-  if (plane != NULL &&
-      lastStartState_.getPlane().get() != NULL &&
-      lastEndState_.getPlane().get() != NULL &&
+  if (plane &&
+      lastStartState_.getPlane() &&
+      lastEndState_.getPlane() &&
       state.getPlane() == lastStartState_.getPlane() &&
       state.getState() == lastStartState_.getState() &&
       (*plane)->distance(getPos(lastEndState_)) <= MINSTEP) {
