@@ -30,7 +30,6 @@
 #include <iostream>
 #include <vector>
 
-#include <TObject.h>
 #include <TVector3.h>
 
 
@@ -48,7 +47,7 @@ namespace genfit {
  *  You have to set which energy-loss and noise mechanisms you want to use.
  *  At the moment, per default all energy loss and noise options are ON.
  */
-class MaterialEffects : public TObject {
+class MaterialEffects {
 
  private:
 
