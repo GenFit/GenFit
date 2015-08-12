@@ -28,7 +28,7 @@
 #include <TDecompLU.h>
 #include <TMath.h>
 
-#include <map>
+#include <algorithm>
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
 
@@ -95,7 +95,7 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane& state,
   checkCache(state, &plane);
 
   // to 7D
-  M1x7 state7 = {0, 0, 0, 0, 0, 0, 0};
+  M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
   getState7(state, state7);
 
   TMatrixDSym* covPtr(NULL);
@@ -820,7 +820,7 @@ TVector3 RKTrackRep::getPos(const StateOnPlane& state) const {
 
 
 TVector3 RKTrackRep::getMom(const StateOnPlane& state) const {
-  M1x7 state7 = {0, 0, 0, 0, 0, 0, 0};
+  M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
   getState7(state, state7);
 
   TVector3 mom(state7[3], state7[4], state7[5]);
@@ -830,7 +830,7 @@ TVector3 RKTrackRep::getMom(const StateOnPlane& state) const {
 
 
 void RKTrackRep::getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const {
-  M1x7 state7 = {0, 0, 0, 0, 0, 0, 0};
+  M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
   getState7(state, state7);
 
   pos.SetXYZ(state7[0], state7[1], state7[2]);
@@ -939,15 +939,15 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
   }
 
   // The Jacobians returned from RKutta are transposed.
-  TMatrixD jac(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_.back().jac7_));
-  TMatrixDSym noise(7, ExtrapSteps_.back().noise7_);
+  TMatrixD jac(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_.back().jac7_.begin()));
+  TMatrixDSym noise(7, ExtrapSteps_.back().noise7_.begin());
   for (int i = ExtrapSteps_.size() - 2; i >= 0; --i) {
-    noise += TMatrixDSym(7, ExtrapSteps_[i].noise7_).Similarity(jac);
-    jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_[i].jac7_));
+    noise += TMatrixDSym(7, ExtrapSteps_[i].noise7_.begin()).Similarity(jac);
+    jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_[i].jac7_.begin()));
   }
 
   // Project into 5x5 space.
-  M1x3 pTilde = {startState7[3], startState7[4], startState7[5]};
+  M1x3 pTilde = {{startState7[3], startState7[4], startState7[5]}};
   const TVector3& normal = startPlane.getNormal();
   double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
   double spu = pTildeW > 0 ? 1 : -1;
@@ -1282,8 +1282,8 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   M1x3&   R           = *((M1x3*) &state7[0]);       // Start coordinates  [cm]  (x,  y,  z)
   M1x3&   A           = *((M1x3*) &state7[3]);       // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
   double  S3(0), S4(0), PS2(0);
-  M1x3     H0 = {0.,0.,0.}, H1 = {0.,0.,0.}, H2 = {0.,0.,0.};
-  M1x3     r = {0.,0.,0.};
+  M1x3     H0 = {{0.,0.,0.}}, H1 = {{0.,0.,0.}}, H2 = {{0.,0.,0.}};
+  M1x3     r = {{0.,0.,0.}};
   // Variables for Runge Kutta solver
   double   A0(0), A1(0), A2(0), A3(0), A4(0), A5(0), A6(0);
   double   B0(0), B1(0), B2(0), B3(0), B4(0), B5(0), B6(0);
@@ -1310,7 +1310,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
     FieldManager::getInstance()->getFieldVal(r[0], r[1], r[2], H1[0], H1[1], H1[2]);
     H1[0] *= PS2; H1[1] *= PS2; H1[2] *= PS2; // H1 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * [(A0, B0, C0) + 2*(ax, ay, az)]
   }
-  else { H1[0] = H0[0]; H1[1] = H0[1]; H1[2] = H0[2];  }; // invalid: H1 = H0; !!
+  else { H1 = H0; };
   A3 = B2*H1[2]-C2*H1[1]+A[0]; B3 = C2*H1[0]-A2*H1[2]+A[1]; C3 = A2*H1[1]-B2*H1[0]+A[2]; // (A2, B2, C2) x H1 + (ax, ay, az)
   A4 = B3*H1[2]-C3*H1[1]+A[0]; B4 = C3*H1[0]-A3*H1[2]+A[1]; C4 = A3*H1[1]-B3*H1[0]+A[2]; // (A3, B3, C3) x H1 + (ax, ay, az)
   A5 = A4-A[0]+A4            ; B5 = B4-A[1]+B4            ; C5 = C4-A[2]+C4            ; //    2*(A4, B4, C4) - (ax, ay, az)
@@ -1321,7 +1321,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
     FieldManager::getInstance()->getFieldVal(r[0], r[1], r[2], H2[0], H2[1], H2[2]);
     H2[0] *= PS2; H2[1] *= PS2; H2[2] *= PS2; // H2 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * (A4, B4, C4)
   }
-  else { H2[0] = H0[0]; H2[1] = H0[1]; H2[2] = H0[2];  }; // invalid: H2 = H0; !!
+  else { H2 = H0; };
   A6 = B5*H2[2]-C5*H2[1]; B6 = C5*H2[0]-A5*H2[2]; C6 = A5*H2[1]-B5*H2[0]; // (A5, B5, C5) x H2
 
 
@@ -1338,6 +1338,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
     // x x x x x x 0  a_y
     // x x x x x x 0  a_z
     // x x x x x x 1  q/p
+    M7x7& J = *jacobianT;
 
     double   dA0(0), dA2(0), dA3(0), dA4(0), dA5(0), dA6(0);
     double   dB0(0), dB2(0), dB3(0), dB4(0), dB5(0), dB6(0);
@@ -1349,84 +1350,82 @@ double RKTrackRep::RKPropagate(M1x7& state7,
 
       if (!varField) {
         // d(x, y, z)/d(x, y, z) submatrix is unit matrix
-        (*jacobianT)[0] = 1;  (*jacobianT)[8] = 1;  (*jacobianT)[16] = 1;
+        J(0, 0) = 1;  J(1, 1) = 1;  J(2, 2) = 1;
         // d(ax, ay, az)/d(ax, ay, az) submatrix is 0
         // start with d(x, y, z)/d(ax, ay, az)
         start = 3;
       }
 
-      for(int i=start*7; i<42; i+=7) {
+      for(int i=start; i<6; ++i) {
 
         //first point
-        dA0 = H0[2]*(*jacobianT)[i+4]-H0[1]*(*jacobianT)[i+5];    // dA0/dp }
-        dB0 = H0[0]*(*jacobianT)[i+5]-H0[2]*(*jacobianT)[i+3];    // dB0/dp  } = dA x H0
-        dC0 = H0[1]*(*jacobianT)[i+3]-H0[0]*(*jacobianT)[i+4];    // dC0/dp }
+        dA0 = H0[2]*J(i, 4)-H0[1]*J(i, 5);    // dA0/dp }
+        dB0 = H0[0]*J(i, 5)-H0[2]*J(i, 3);    // dB0/dp  } = dA x H0
+        dC0 = H0[1]*J(i, 3)-H0[0]*J(i, 4);    // dC0/dp }
 
-        dA2 = dA0+(*jacobianT)[i+3];        // }
-        dB2 = dB0+(*jacobianT)[i+4];        //  } = (dA0, dB0, dC0) + dA
-        dC2 = dC0+(*jacobianT)[i+5];        // }
+        dA2 = dA0+J(i, 3);        // }
+        dB2 = dB0+J(i, 4);        //  } = (dA0, dB0, dC0) + dA
+        dC2 = dC0+J(i, 5);        // }
 
         //second point
-        dA3 = (*jacobianT)[i+3]+dB2*H1[2]-dC2*H1[1];    // dA3/dp }
-        dB3 = (*jacobianT)[i+4]+dC2*H1[0]-dA2*H1[2];    // dB3/dp  } = dA + (dA2, dB2, dC2) x H1
-        dC3 = (*jacobianT)[i+5]+dA2*H1[1]-dB2*H1[0];    // dC3/dp }
+        dA3 = J(i, 3)+dB2*H1[2]-dC2*H1[1];    // dA3/dp }
+        dB3 = J(i, 4)+dC2*H1[0]-dA2*H1[2];    // dB3/dp  } = dA + (dA2, dB2, dC2) x H1
+        dC3 = J(i, 5)+dA2*H1[1]-dB2*H1[0];    // dC3/dp }
 
-        dA4 = (*jacobianT)[i+3]+dB3*H1[2]-dC3*H1[1];    // dA4/dp }
-        dB4 = (*jacobianT)[i+4]+dC3*H1[0]-dA3*H1[2];    // dB4/dp  } = dA + (dA3, dB3, dC3) x H1
-        dC4 = (*jacobianT)[i+5]+dA3*H1[1]-dB3*H1[0];    // dC4/dp }
+        dA4 = J(i, 3)+dB3*H1[2]-dC3*H1[1];    // dA4/dp }
+        dB4 = J(i, 4)+dC3*H1[0]-dA3*H1[2];    // dB4/dp  } = dA + (dA3, dB3, dC3) x H1
+        dC4 = J(i, 5)+dA3*H1[1]-dB3*H1[0];    // dC4/dp }
 
         //last point
-        dA5 = dA4+dA4-(*jacobianT)[i+3];      // }
-        dB5 = dB4+dB4-(*jacobianT)[i+4];      //  } =  2*(dA4, dB4, dC4) - dA
-        dC5 = dC4+dC4-(*jacobianT)[i+5];      // }
+        dA5 = dA4+dA4-J(i, 3);      // }
+        dB5 = dB4+dB4-J(i, 4);      //  } =  2*(dA4, dB4, dC4) - dA
+        dC5 = dC4+dC4-J(i, 5);      // }
 
         dA6 = dB5*H2[2]-dC5*H2[1];      // dA6/dp }
         dB6 = dC5*H2[0]-dA5*H2[2];      // dB6/dp  } = (dA5, dB5, dC5) x H2
         dC6 = dA5*H2[1]-dB5*H2[0];      // dC6/dp }
 
         // this gives the same results as multiplying the old with the new Jacobian
-        (*jacobianT)[i]   += (dA2+dA3+dA4)*S3;  (*jacobianT)[i+3] = ((dA0+2.*dA3)+(dA5+dA6))*P3; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
-        (*jacobianT)[i+1] += (dB2+dB3+dB4)*S3;  (*jacobianT)[i+4] = ((dB0+2.*dB3)+(dB5+dB6))*P3; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
-        (*jacobianT)[i+2] += (dC2+dC3+dC4)*S3;  (*jacobianT)[i+5] = ((dC0+2.*dC3)+(dC5+dC6))*P3;
+        J(i, 0) += (dA2+dA3+dA4)*S3;  J(i, 3) = ((dA0+2.*dA3)+(dA5+dA6))*P3; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
+        J(i, 1) += (dB2+dB3+dB4)*S3;  J(i, 4) = ((dB0+2.*dB3)+(dB5+dB6))*P3; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
+        J(i, 2) += (dC2+dC3+dC4)*S3;  J(i, 5) = ((dC0+2.*dC3)+(dC5+dC6))*P3;
       }
 
     } // end if (!calcOnlyLastRowOfJ)
 
-    unsigned int i = 42;
-
-    (*jacobianT)[i+3] *= state7[6]; (*jacobianT)[i+4] *= state7[6]; (*jacobianT)[i+5] *= state7[6];
+    J(6, 3) *= state7[6]; J(6, 4) *= state7[6]; J(6, 5) *= state7[6];
 
     //first point
-    dA0 = H0[2]*(*jacobianT)[i+4]-H0[1]*(*jacobianT)[i+5] + A0;    // dA0/dp }
-    dB0 = H0[0]*(*jacobianT)[i+5]-H0[2]*(*jacobianT)[i+3] + B0;    // dB0/dp  } = dA x H0 + (A0, B0, C0)
-    dC0 = H0[1]*(*jacobianT)[i+3]-H0[0]*(*jacobianT)[i+4] + C0;    // dC0/dp }
+    dA0 = H0[2]*J(6, 4)-H0[1]*J(6, 5) + A0;    // dA0/dp }
+    dB0 = H0[0]*J(6, 5)-H0[2]*J(6, 3) + B0;    // dB0/dp  } = dA x H0 + (A0, B0, C0)
+    dC0 = H0[1]*J(6, 3)-H0[0]*J(6, 4) + C0;    // dC0/dp }
 
-    dA2 = dA0+(*jacobianT)[i+3];        // }
-    dB2 = dB0+(*jacobianT)[i+4];        //  } = (dA0, dB0, dC0) + dA
-    dC2 = dC0+(*jacobianT)[i+5];        // }
+    dA2 = dA0+J(6, 3);        // }
+    dB2 = dB0+J(6, 4);        //  } = (dA0, dB0, dC0) + dA
+    dC2 = dC0+J(6, 5);        // }
 
     //second point
-    dA3 = (*jacobianT)[i+3]+dB2*H1[2]-dC2*H1[1] + (A3-A[0]);    // dA3/dp }
-    dB3 = (*jacobianT)[i+4]+dC2*H1[0]-dA2*H1[2] + (B3-A[1]);    // dB3/dp  } = dA + (dA2, dB2, dC2) x H1
-    dC3 = (*jacobianT)[i+5]+dA2*H1[1]-dB2*H1[0] + (C3-A[2]);    // dC3/dp }
+    dA3 = J(6, 3)+dB2*H1[2]-dC2*H1[1] + (A3-A[0]);    // dA3/dp }
+    dB3 = J(6, 4)+dC2*H1[0]-dA2*H1[2] + (B3-A[1]);    // dB3/dp  } = dA + (dA2, dB2, dC2) x H1
+    dC3 = J(6, 5)+dA2*H1[1]-dB2*H1[0] + (C3-A[2]);    // dC3/dp }
 
-    dA4 = (*jacobianT)[i+3]+dB3*H1[2]-dC3*H1[1] + (A4-A[0]);    // dA4/dp }
-    dB4 = (*jacobianT)[i+4]+dC3*H1[0]-dA3*H1[2] + (B4-A[1]);    // dB4/dp  } = dA + (dA3, dB3, dC3) x H1
-    dC4 = (*jacobianT)[i+5]+dA3*H1[1]-dB3*H1[0] + (C4-A[2]);    // dC4/dp }
+    dA4 = J(6, 3)+dB3*H1[2]-dC3*H1[1] + (A4-A[0]);    // dA4/dp }
+    dB4 = J(6, 4)+dC3*H1[0]-dA3*H1[2] + (B4-A[1]);    // dB4/dp  } = dA + (dA3, dB3, dC3) x H1
+    dC4 = J(6, 5)+dA3*H1[1]-dB3*H1[0] + (C4-A[2]);    // dC4/dp }
 
     //last point
-    dA5 = dA4+dA4-(*jacobianT)[i+3];      // }
-    dB5 = dB4+dB4-(*jacobianT)[i+4];      //  } =  2*(dA4, dB4, dC4) - dA
-    dC5 = dC4+dC4-(*jacobianT)[i+5];      // }
+    dA5 = dA4+dA4-J(6, 3);      // }
+    dB5 = dB4+dB4-J(6, 4);      //  } =  2*(dA4, dB4, dC4) - dA
+    dC5 = dC4+dC4-J(6, 5);      // }
 
     dA6 = dB5*H2[2]-dC5*H2[1] + A6;      // dA6/dp }
     dB6 = dC5*H2[0]-dA5*H2[2] + B6;      // dB6/dp  } = (dA5, dB5, dC5) x H2 + (A6, B6, C6)
     dC6 = dA5*H2[1]-dB5*H2[0] + C6;      // dC6/dp }
 
     // this gives the same results as multiplying the old with the new Jacobian
-    (*jacobianT)[i]   += (dA2+dA3+dA4)*S3/state7[6];  (*jacobianT)[i+3] = ((dA0+2.*dA3)+(dA5+dA6))*P3/state7[6]; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
-    (*jacobianT)[i+1] += (dB2+dB3+dB4)*S3/state7[6];  (*jacobianT)[i+4] = ((dB0+2.*dB3)+(dB5+dB6))*P3/state7[6]; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
-    (*jacobianT)[i+2] += (dC2+dC3+dC4)*S3/state7[6];  (*jacobianT)[i+5] = ((dC0+2.*dC3)+(dC5+dC6))*P3/state7[6];
+    J(6, 0) += (dA2+dA3+dA4)*S3/state7[6];  J(6, 3) = ((dA0+2.*dA3)+(dA5+dA6))*P3/state7[6]; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
+    J(6, 1) += (dB2+dB3+dB4)*S3/state7[6];  J(6, 4) = ((dB0+2.*dB3)+(dB5+dB6))*P3/state7[6]; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
+    J(6, 2) += (dC2+dC3+dC4)*S3/state7[6];  J(6, 5) = ((dC0+2.*dC3)+(dC5+dC6))*P3/state7[6];
 
   }
 
@@ -1463,11 +1462,11 @@ double RKTrackRep::RKPropagate(M1x7& state7,
 
 
 void RKTrackRep::initArrays() const {
-  memset(noiseArray_, 0x00, 7*7*sizeof(double));
-  memset(noiseProjection_, 0x00, 7*7*sizeof(double));
+  std::fill(noiseArray_.begin(), noiseArray_.end(), 0);
+  std::fill(noiseProjection_.begin(), noiseProjection_.end(), 0);
   for (unsigned int i=0; i<7; ++i) // initialize as diagonal matrix
     noiseProjection_[i*8] = 1;
-  memset(J_MMT_,      0x00, 7*7*sizeof(double));
+  std::fill(J_MMT_.begin(), J_MMT_.end(), 0);
 
   fJacobian_.UnitMatrix();
   fNoise_.Zero();
@@ -1588,7 +1587,7 @@ void RKTrackRep::calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, 
     std::cout << "  spu = " << spu << "\n";
   }*/
 
-  memset(J_pM, 0, sizeof(M5x7));
+  std::fill(J_pM.begin(), J_pM.end(), 0);
 
   const double pTildeMag = sqrt(pTilde[0]*pTilde[0] + pTilde[1]*pTilde[1] + pTilde[2]*pTilde[2]);
   const double pTildeMag2 = pTildeMag*pTildeMag;
@@ -1652,7 +1651,7 @@ void RKTrackRep::transformPM6(const MeasuredStateOnPlane& state,
   const double p = getCharge(state)/qop; // momentum
 
   M5x6 J_pM_5x6;
-  memset(J_pM_5x6, 0, sizeof(M5x6));
+  std::fill(J_pM_5x6.begin(), J_pM_5x6.end(), 0);
 
   // d(px,py,pz)/d(q/p)
   double fact = -1. * p / (pTildeMag * qop);
@@ -1697,7 +1696,7 @@ void RKTrackRep::transformM7P(const M7x7& in7x7,
 
   M1x3& A = *((M1x3*) &state7[3]);
 
-  M5x7 J_Mp;
+  M7x5 J_Mp;
   calcJ_Mp_7x5(J_Mp, U, V, W, A);
 
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
@@ -1719,7 +1718,7 @@ void RKTrackRep::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, 
     std::cout << "  A = "; RKTools::printDim(A, 3,1);
   }*/
 
-  memset(J_Mp, 0, sizeof(M7x5));
+  std::fill(J_Mp.begin(), J_Mp.end(), 7*5);
 
   const double AtU = A[0]*U.X() + A[1]*U.Y() + A[2]*U.Z();
   const double AtV = A[0]*V.X() + A[1]*V.Y() + A[2]*V.Z();
@@ -1773,7 +1772,7 @@ void RKTrackRep::transformM6P(const M6x6& in6x6,
   const double p = getCharge(state)/qop; // momentum
 
   M6x5 J_Mp_6x5;
-  memset(J_Mp_6x5, 0, sizeof(M6x5));
+  std::fill(J_Mp_6x5.begin(), J_Mp_6x5.end(), 0);
 
   //d(u)/d(x,y,z)
   J_Mp_6x5[3]  = U.X(); // [0][3]
@@ -1855,7 +1854,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
   // Aux parameters
   M1x3&   R          ( *((M1x3*) &state7[0]) );  // Start coordinates  [cm]  (x,  y,  z)
   M1x3&   A          ( *((M1x3*) &state7[3]) );  // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
-  M1x3    SA         = {0.,0.,0.};             // Start directions derivatives dA/S
+  M1x3    SA         = {{0.,0.,0.}};             // Start directions derivatives dA/S
   double  Way        ( 0. );                     // Sum of absolute values of all extrapolation steps [cm]
   double  momentum   ( fabs(charge/state7[6]) ); // momentum [GeV]
   double  relMomLoss ( 0 );                      // relative momentum loss in RKutta
@@ -1902,7 +1901,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       std::cout << "------ RKutta main loop nr. " << counter-1 << " ------\n";
     }
 
-    M1x3 ABefore = { A[0], A[1], A[2] }; // M1x3 ABefore(A);
+    M1x3 ABefore = {{ A[0], A[1], A[2] }};
     RKPropagate(state7, jacobianT, SA, S, true, calcOnlyLastRowOfJ); // the actual Runge Kutta propagation
 
     // update paths
@@ -2061,7 +2060,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       if (calcOnlyLastRowOfJ)
         i = 42;
 
-      double* jacPtr = *jacobianT;
+      double* jacPtr = jacobianT->begin();
 
       for(unsigned int j=42; j<49; j+=7) {
         (*J_MMT_unprojected_lastRow)[j-42] = jacPtr[j];
@@ -2192,8 +2191,8 @@ double RKTrackRep::estimateStep(const M1x7& state7,
       break;
     }
 
-    M1x7 state7_temp = { state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] }; // invalid: M1x7 state7_temp(state7);
-    M1x3 SA = {0, 0, 0};
+    M1x7 state7_temp = state7;
+    M1x3 SA = {{0, 0, 0}};
 
     double q ( RKPropagate(state7_temp, NULL, SA, fieldCurvLimit, true) );
     if (debugLvl_ > 0) {
@@ -2295,7 +2294,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   if (/*!fNoMaterial*/ true){
 
     if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
-      M1x7 state7_temp = {  state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] }; // invalid: ... = (state7);
+      M1x7 state7_temp = {{ state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] }};
 
       MaterialEffects::getInstance()->stepper(this,
                                               state7_temp,
@@ -2365,7 +2364,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
   double dqop(0.);
 
   const TVector3 W(destPlane.getNormal());
-  M1x4 SU = {W.X(), W.Y(), W.Z(), destPlane.distance(0., 0., 0.)};
+  M1x4 SU = {{W.X(), W.Y(), W.Z(), destPlane.distance(0., 0., 0.)}};
 
   // make SU vector point away from origin
   if (W*destPlane.getO() < 0) {
@@ -2375,8 +2374,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
   }
 
 
-  M1x7 startState7;
-  memcpy(startState7, state7, sizeof(M1x7));
+  M1x7 startState7 = state7;
 
   while(true){
 
@@ -2404,7 +2402,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     limits_.reset();
     limits_.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
-    M1x7 J_MMT_unprojected_lastRow = {0, 0, 0, 0, 0, 0, 1};
+    M1x7 J_MMT_unprojected_lastRow = {{0, 0, 0, 0, 0, 0, 1}};
 
     if( ! RKutta(SU, destPlane, charge, mass, state7, &J_MMT_, &J_MMT_unprojected_lastRow,
 		 coveredDistance, flightTime, checkJacProj, noiseProjection_,
@@ -2453,7 +2451,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
             << "; coveredDistance = " << coveredDistance << "\n";
         if (debugLvl_ > 1 && noise != NULL) {
           std::cout << "7D noise: \n";
-          RKTools::printDim(*noise, 7, 7);
+          RKTools::printDim(noise->begin(), 7, 7);
         }
       }
 
@@ -2472,14 +2470,14 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         // and once with the projected Jacobian (which is constrained to the plane and does NOT preserve coveredDistance).
         // The difference of these two corrections can then be used to calculate a correction factor.
         if (checkJacProj && fabs(coveredDistance) > MINSTEP) {
-          M1x3 state7_correction_unprojected = {0, 0, 0};
+          M1x3 state7_correction_unprojected = {{0, 0, 0}};
           for (unsigned int i=0; i<3; ++i) {
             state7_correction_unprojected[i] = 0.5 * dqop * J_MMT_unprojected_lastRow[i];
             //std::cout << "J_MMT_unprojected_lastRow[i] " << J_MMT_unprojected_lastRow[i] << "\n";
             //std::cout << "state7_correction_unprojected[i] " << state7_correction_unprojected[i] << "\n";
           }
 
-          M1x3 state7_correction_projected = {0, 0, 0};
+          M1x3 state7_correction_projected = {{0, 0, 0}};
           for (unsigned int i=0; i<3; ++i) {
             state7_correction_projected[i] = 0.5 * dqop * J_MMT_[6*7 + i];
             //std::cout << "J_MMT_[6*7 + i] " << J_MMT_[6*7 + i] << "\n";
@@ -2487,7 +2485,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
           }
 
           // delta distance
-          M1x3 delta_state = {0, 0, 0};
+          M1x3 delta_state = {{0, 0, 0}};
           for (unsigned int i=0; i<3; ++i) {
             delta_state[i] = state7_correction_unprojected[i] - state7_correction_projected[i];
           }
@@ -2536,7 +2534,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       std::vector<ExtrapStep>::iterator lastStep = ExtrapSteps_.end() - 1;
 
       // Store Jacobian of this step for final calculation.
-      memcpy(lastStep->jac7_, J_MMT_, sizeof(M7x7));
+      lastStep->jac7_ = J_MMT_;
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane
@@ -2544,18 +2542,18 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
         if (debugLvl_ > 1) {
           std::cout << "7D noise projected onto plane: \n";
-          RKTools::printDim(noiseArray_, 7, 7);
+          RKTools::printDim(noiseArray_.begin(), 7, 7);
         }
       }
 
       // Store this step's noise for final calculation.
-      memcpy(lastStep->noise7_, noiseArray_, sizeof(M7x7));
+      lastStep->noise7_ = noiseArray_;
 
       if (debugLvl_ > 2) {
         std::cout<<"ExtrapSteps \n";
         for (std::vector<ExtrapStep>::iterator it = ExtrapSteps_.begin(); it != ExtrapSteps_.end(); ++it){
-          std::cout << "7D Jacobian: "; RKTools::printDim((it->jac7_), 5,5);
-          std::cout << "7D noise:    "; RKTools::printDim((it->noise7_), 5,5);
+          std::cout << "7D Jacobian: "; RKTools::printDim((it->jac7_.begin()), 5,5);
+          std::cout << "7D noise:    "; RKTools::printDim((it->noise7_.begin()), 5,5);
         }
         std::cout<<"\n";
       }

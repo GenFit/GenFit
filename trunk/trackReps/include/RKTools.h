@@ -24,24 +24,46 @@
 #ifndef genfit_RKTools_h
 #define genfit_RKTools_h
 
+#include <stddef.h>
+#include <algorithm>
+
 namespace genfit {
 
-/**
- * Array Matrix typedefs. They are needed for SSE optimization:
- * gcc can vectorize loops only if the array sizes are known.
- */
-typedef double M1x3[1*3];
-typedef double M1x4[1*4];
-typedef double M1x6[1*6];
-typedef double M1x7[1*7];
-typedef double M5x5[5*5];
-typedef double M6x6[6*6];
-typedef double M7x7[7*7];
-typedef double M8x7[8*7];
-typedef double M6x5[6*5];
-typedef double M7x5[7*5];
-typedef double M5x6[5*6];
-typedef double M5x7[5*7];
+template <size_t nRows, size_t nCols>
+struct RKMatrix {
+  double vals[nRows * nCols];
+
+  double& operator()(size_t iRow, size_t iCol) {
+    return vals[nCols*iRow + iCol];
+  }
+  double& operator[](size_t n) {
+    return vals[n];
+  }
+  const double& operator[](size_t n) const {
+    return vals[n];
+  }
+  double* begin() { return vals; }
+  double* end() { return vals + nRows * nCols; }
+  const double* begin() const { return vals; }
+  const double* end() const { return vals + nRows * nCols; }
+  RKMatrix<nRows, nCols>& operator=(const RKMatrix<nRows, nCols>& o) {
+    std::copy(o.begin(), o.end(), this->begin());
+    return *this;
+  }
+
+  void print();
+};
+
+typedef RKMatrix<1, 3> M1x3;
+typedef RKMatrix<1, 4> M1x4;
+typedef RKMatrix<1, 7> M1x7;
+typedef RKMatrix<5, 5> M5x5;
+typedef RKMatrix<6, 6> M6x6;
+typedef RKMatrix<7, 7> M7x7;
+typedef RKMatrix<6, 5> M6x5;
+typedef RKMatrix<7, 5> M7x5;
+typedef RKMatrix<5, 6> M5x6;
+typedef RKMatrix<5, 7> M5x7;
 
 /**
  * @brief Array matrix multiplications used in RKTrackRep
@@ -64,6 +86,12 @@ namespace RKTools {
 
   void printDim(const double* mat, unsigned int dimX, unsigned int dimY);
 
+}
+
+template<size_t nRows, size_t nCols>
+inline void
+RKMatrix<nRows, nCols>::print() {
+  RKTools::printDim(this->vals, nRows, nCols);
 }
 
 } /* End of namespace genfit */

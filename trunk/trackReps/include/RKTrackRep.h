@@ -29,6 +29,7 @@
 #include "RKTools.h"
 #include "StepLimits.h"
 
+#include <algorithm>
 
 namespace genfit {
 
@@ -41,7 +42,7 @@ struct RKStep {
   StepLimits limits_;
 
   RKStep() {
-    memset(state7_, 0x00, 7*sizeof(double));
+    std::fill(state7_.begin(), state7_.end(), 0);
   }
 };
 
@@ -54,8 +55,8 @@ struct ExtrapStep {
   M7x7 noise7_; // 5D noise matrix
 
   ExtrapStep() {
-    memset(jac7_,   0, sizeof(M7x7));
-    memset(noise7_, 0, sizeof(M7x7));
+    std::fill(jac7_.begin(), jac7_.end(), 0);
+    std::fill(noise7_.begin(), jac7_.end(), 0);
   }
 };
 

@@ -556,10 +556,10 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
   sigma2 = (sigma2 > 0.0 ? sigma2 : 0.0);
   //XXX std::cout << "MaterialEffects::noiseCoulomb the MSC variance is " << sigma2 << std::endl;
 
-  double noiseAfter[7 * 7]; // will hold the new MSC noise to cause by the current stepSize_ length
-  memset(noiseAfter, 0x00, 7 * 7 * sizeof(double));
+  M7x7 noiseAfter; // will hold the new MSC noise to cause by the current stepSize_ length
+  std::fill(noiseAfter.begin(), noiseAfter.end(), 0);
 
-  const double *a = direction;
+  const M1x3& a = direction; // as an abbreviation
   // This calculates the MSC angular spread in the 7D global
   // coordinate system.  See PDG 2010, Sec. 27.3 for formulae.
   noiseAfter[0 * 7 + 0] =  sigma2 * step2 / 3.0 * (1 - a[0]*a[0]);
