@@ -55,6 +55,25 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<AbsMeasurement
   if (rep != NULL)
     addTrackRep(rep);
 
+  createMeasurements(trackCand, factory);
+
+  // Copy seed information from candidate
+  timeSeed_ = trackCand.getTimeSeed();
+  stateSeed_ = trackCand.getStateSeed();
+  covSeed_ = trackCand.getCovSeed();
+
+  mcTrackId_ = trackCand.getMcTrackId();
+
+  // fill cache
+  fillPointsWithMeasurement();
+
+  // self test
+  assert(checkConsistency());
+}
+
+void
+Track::createMeasurements(const TrackCand& trackCand, const MeasurementFactory<AbsMeasurement>& factory)
+{
   // create the measurements using the factory.
   std::vector <AbsMeasurement*> factoryHits = factory.createMany(trackCand);
 
@@ -70,19 +89,6 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<AbsMeasurement
     tp->setSortingParameter(trackCand.getHit(i)->getSortingParameter());
     insertPoint(tp);
   }
-
-  // Copy seed information from candidate
-  timeSeed_ = trackCand.getTimeSeed();
-  stateSeed_ = trackCand.getStateSeed();
-  covSeed_ = trackCand.getCovSeed();
-
-  mcTrackId_ = trackCand.getMcTrackId();
-
-  // fill cache
-  fillPointsWithMeasurement();
-
-  // self test
-  assert(checkConsistency());
 }
 
 
