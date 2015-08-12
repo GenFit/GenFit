@@ -391,6 +391,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
     }
 
     if (debugLvl_>0) {
+      std::cout << "track " << i << std::endl;
       //track->Print();
       track->Print("C");
       track->getFitStatus(rep)->Print();
@@ -505,28 +506,13 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
 
       // determine measurement type
-      bool full_hit = false;
-      bool planar_hit = false;
-      bool planar_pixel_hit = false;
-      bool space_hit = false;
-      bool wire_hit = false;
-      bool wirepoint_hit = false;
-      if (dynamic_cast<const FullMeasurement*>(m) != NULL) {
-        full_hit = true;
-      }
-      else if(dynamic_cast<const PlanarMeasurement*>(m) != NULL) {
-        planar_hit = true;
-        if(hit_coords_dim == 2) {
-          planar_pixel_hit = true;
-        }
-      } else if (dynamic_cast<const SpacepointMeasurement*>(m) != NULL) {
-        space_hit = true;
-      } else if (dynamic_cast<const WireMeasurement*>(m) != NULL) {
-        wire_hit = true;
-        if (dynamic_cast<const WirePointMeasurement*>(m) != NULL) {
-          wirepoint_hit = true;
-        }
-      } else {
+      bool full_hit =  (dynamic_cast<const FullMeasurement*>(m) != NULL);
+      bool planar_hit = (dynamic_cast<const PlanarMeasurement*>(m) != NULL);
+      bool planar_pixel_hit = planar_hit && hit_coords_dim == 2;
+      bool space_hit = (dynamic_cast<const SpacepointMeasurement*>(m) != NULL);
+      bool wire_hit = m && m->isLeftRightMeasurement();
+      bool wirepoint_hit = wire_hit &&  (dynamic_cast<const WirePointMeasurement*>(m) != NULL);
+      if (!full_hit && !planar_hit && !planar_pixel_hit && !space_hit && !wire_hit && !wirepoint_hit) {
         std::cout << "Track " << i << ", Hit " << j << ": Unknown measurement type: skipping hit!" << std::endl;
         continue;
       }
