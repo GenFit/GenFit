@@ -26,7 +26,6 @@
 
 #include <TObject.h>
 
-
 namespace genfit {
 
 
@@ -47,6 +46,7 @@ class MaterialProperties {
                      const double& A,
                      const double& radiationLength,
                      const double& mEE);
+  virtual ~MaterialProperties() {}; // Root I/O wants a virtual destructor.
 
   double getDensity() const {return density_;}
   double getZ() const {return Z_;}
