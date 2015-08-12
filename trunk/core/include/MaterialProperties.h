@@ -33,7 +33,7 @@ namespace genfit {
 /**
  * @brief Material properties needed e.g. for material effects calculation.
  */
-class MaterialProperties : public TObject {
+class MaterialProperties {
 
  public:
 
