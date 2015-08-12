@@ -49,10 +49,6 @@ void Exception::setMatrices(std::string _matricesLabel,
 }
 
 const char* Exception::what() const throw(){
-  //std::cerr << errorMessage_.c_str() << std::endl; // FIXME just for debugging purposes
-  if(quiet_) {
-    return "";
-  }
   return errorMessage_.c_str();
 }
 
