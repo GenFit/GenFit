@@ -2304,8 +2304,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   static const RKStep defaultRKStep;
   RKSteps_.push_back( defaultRKStep );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
-  //!invalid:  RKSteps_.back().state7_ = { state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] };
-  for(int n = 0; n < 1*7; ++n) lastStep->state7_[n] = state7[n];
+  lastStep->state7_ = state7;
   ++RKStepsFXStop_;
   if (/*!fNoMaterial*/ true){
 
