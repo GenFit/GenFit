@@ -38,7 +38,7 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7){
     TMatrixD JpM(5, 7, (const double*)&J_pM);
     TMatrixDSym J5(5, (const double*)&cov5);
     J5.SimilarityT(JpM);
-    memcpy(out7, J5.GetMatrixArray(), 7*7*sizeof(double));
+    std::copy(J5.GetMatrixArray(), J5.GetMatrixArray() + 7*7, out7.begin());
     return;
   }
 
@@ -128,7 +128,7 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x6& J_pM, const M5x5& cov5, M6x6& out6){
     TMatrixD JpM(5, 6, (const double*)&J_pM);
     TMatrixDSym J5(5, (const double*)&cov5);
     J5.SimilarityT(JpM);
-    memcpy(out6, J5.GetMatrixArray(), 6*6*sizeof(double));
+    std::copy(J5.GetMatrixArray(), J5.GetMatrixArray() + 6*6, out6.begin());
     return;
   }
 
@@ -215,7 +215,7 @@ void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5)
     TMatrixD J7(7, 7, (const double*)&cov7);
     TMatrixD result(JMp, TMatrixD::kTransposeMult,
                     TMatrixD(J7, TMatrixD::kMult, JMp));
-    memcpy(out5, result.GetMatrixArray(), 5*5*sizeof(double));
+    std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 5*5, out5.begin());
     return;
   }
 
@@ -296,7 +296,7 @@ void RKTools::J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5)
     TMatrixDSym J7(6, (const double*)&cov6);
     TMatrixD result(JMp, TMatrixD::kTransposeMult,
                     TMatrixD(J7, TMatrixD::kMult, JMp));
-    memcpy(out5, result.GetMatrixArray(), 5*5*sizeof(double));
+    std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 5*5, out5.begin());
     return;
   }
 
@@ -378,7 +378,7 @@ void RKTools::J_MMTxcov7xJ_MM(const M7x7& J_MM, M7x7& cov7){
     TMatrixD JMM(7, 7, (const double*)&J_MM);
     TMatrixDSym J7(7, (const double*)&cov7);
     J7.SimilarityT(JMM);
-    memcpy(cov7, J7.GetMatrixArray(), 7*7*sizeof(double));
+    std::copy(J7.GetMatrixArray(), J7.GetMatrixArray() + 7*7, cov7.begin());
     return;
   }
 
@@ -465,8 +465,7 @@ void RKTools::J_MMxJ_MM(M7x7& J_MM, const M7x7& J_MM_old){
   // x x x x x x 0
   // x x x x x x x
 
-  M7x7 J_MM_temp;
-  memcpy(J_MM_temp, J_MM, 7*7*sizeof(double));
+  M7x7 J_MM_temp = J_MM;
 
   /*J_MM[0] = 1;
   J_MM[1] = 0;
@@ -542,7 +541,7 @@ void RKTools::J_pMTTxJ_MMTTxJ_MpTT(const M7x5& J_pMT, const M7x7& J_MMT, const M
                     TMatrixD(JMpT, TMatrixD::kMult,
                              TMatrixD(J7, TMatrixD::kMult, JpMT)));
 
-    memcpy(J_pp, result.GetMatrixArray(), 5*5*sizeof(double));
+    std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 5*5, J_pp.begin());
     return;
   }
 
@@ -654,10 +653,10 @@ void RKTools::Np_N_NpT(const M7x7& Np, M7x7& N) {
   // Np * N * Np^T
 
   if (debugFlags & flagSlowMatrix) {
-    TMatrixDSym n(7,N);
-    TMatrixD np(7,7,Np);
+    TMatrixDSym n(7,N.begin());
+    TMatrixD np(7,7,Np.begin());
     n.Similarity(np);
-    memcpy(N, n.GetMatrixArray(), sizeof(M7x7));
+    std::copy(n.GetMatrixArray(), n.GetMatrixArray() + 7*7, N.begin());
     return;
   }
 

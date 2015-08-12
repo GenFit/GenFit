@@ -101,7 +101,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 
   M1x3 SA;
   M1x7 state7, oldState7;
-  memcpy(oldState7, stateOrig, sizeof(state7));
+  oldState7 = stateOrig;
 
   int stepSign(sMax < 0 ? -1 : 1);
 
@@ -154,7 +154,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
     // Follow curved arch, then see if we may have missed a boundary.
     // Always propagate complete way from original start to avoid
     // inconsistent extrapolations.
-    memcpy(state7, stateOrig, sizeof(state7));
+    state7 = stateOrig;
     rep->RKPropagate(state7, NULL, SA, stepSign*(s + step), varField);
 
     // Straight line distance² between extrapolation finish and
@@ -205,7 +205,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
         // we're in the new place, the step was safe, advance
         s += step;
 
-        memcpy(oldState7, state7, sizeof(state7));
+        oldState7 = state7;
         gGeoManager->PopDummy();  // Pop stack, but stay in place.
 
         gGeoManager->FindNextBoundary(fabs(sMax) - s);
