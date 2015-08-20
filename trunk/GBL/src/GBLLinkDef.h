@@ -15,5 +15,6 @@
 #pragma link C++ class genfit::ICalibrationParametersDerivatives+;
 #pragma link C++ class genfit::GblFitStatus+;
 #pragma link C++ class genfit::GblFitterInfo+;
+#pragma link C++ class genfit::GblTrackSegmentController+;
 
 #endif

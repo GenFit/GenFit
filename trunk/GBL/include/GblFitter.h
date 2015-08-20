@@ -28,6 +28,7 @@
 #include "AbsTrackRep.h"
 #include "GblFitterInfo.h"
 #include "GblFitStatus.h"
+#include "GblTrackSegmentController.h"
 
 #include <map>
 #include <iostream>
@@ -42,6 +43,7 @@
 
 namespace genfit {
   
+  class GblTrackSegmentController;
   
   /** @brief Generic GBL implementation
    * 
@@ -62,19 +64,20 @@ namespace genfit {
     
     // Minimum scattering sigma (will be squared and inverted...)
     double scatEpsilon;
+    GblTrackSegmentController* m_segmentController;
     
   public:
     
     /**
      * Default (and only) constructor
      */
-    GblFitter() : AbsFitter(), m_gblInternalIterations(""), m_enableScatterers(true), m_enableIntermediateScatterer(true), m_externalIterations(1), m_recalcJacobians(0), scatEpsilon(1.e-8) {;}
+    GblFitter() : AbsFitter(), m_gblInternalIterations(""), m_enableScatterers(true), m_enableIntermediateScatterer(true), m_externalIterations(1), m_recalcJacobians(0), scatEpsilon(1.e-8), m_segmentController(NULL) {;}
     
     /**
      * Destructor
      */
-    virtual ~GblFitter() {;}    
-    
+    virtual ~GblFitter();    
+
     /**
      * @brief Set options of the fitter/GBL
      * 
@@ -98,6 +101,22 @@ namespace genfit {
       m_externalIterations = externalIterations;
       m_gblInternalIterations = internalIterations;
       m_recalcJacobians = recalcJacobians;
+      if (!enableScatterers)
+        enableIntermediateScatterer = false;
+      m_enableScatterers = enableScatterers;
+      m_enableIntermediateScatterer = enableIntermediateScatterer;
+    }
+
+    
+    /**
+     * @brief Set multiple scattering options of the fitter/GBL
+     * 
+     * @return void
+     * @param enableScatterers If false, no scatterers will be added to GBL trajectory
+     * @param enableIntermediateScatterer True to simulate thick sctatterers by two thin scatterers
+     *                                    1st at detector plane and intermediate between each two planes
+     */
+    void setMSOptions(bool enableScatterers = true, bool enableIntermediateScatterer = true) {
       if (!enableScatterers)
         enableIntermediateScatterer = false;
       m_enableScatterers = enableScatterers;
@@ -143,7 +162,7 @@ namespace genfit {
      * @param rep TrackRep to which fitter info shall be attached
      * @return Length of track from extrapolations
      */
-    double constructGblInfo(Track* trk, const AbsTrackRep* rep) const;
+    double constructGblInfo(Track* trk, const AbsTrackRep* rep);
     
     /**
      * @brief Populate all fitter infos in track for rep with
@@ -195,10 +214,12 @@ namespace genfit {
      */
     void sortHits(Track* trk, const AbsTrackRep* rep) const;
     
+    void setTrackSegmentController(GblTrackSegmentController* controler);
+    
     
   public:
     
-    ClassDef(GblFitter, 1)
+    ClassDef(GblFitter, 2)
     
   };
   

@@ -236,7 +236,8 @@ void GFGbl::endRun()
   diag->Close();
   #endif
   // This is needed to close the file before alignment starts
-  delete milleFile;
+  if (milleFile)
+    delete milleFile;
 }
 
 /**
