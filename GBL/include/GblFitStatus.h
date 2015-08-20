@@ -42,7 +42,7 @@ namespace genfit {
     
     GblFitStatus() :
     FitStatus(), numIterations_(0), fittedWithReferenceTrack_(false),
-    trackLen_(0), curvatureFlag_(true) {;}
+    trackLen_(0), curvatureFlag_(true), maxLocalFitParams_(0) {;}
     
     virtual ~GblFitStatus() {};
     
@@ -50,6 +50,8 @@ namespace genfit {
     
     void setCurvature(bool useCurvature) {curvatureFlag_ = useCurvature;}
     bool hasCurvature() { return curvatureFlag_; }
+    void setMaxLocalFitParams(unsigned maxLocalFitParams) {maxLocalFitParams_ = maxLocalFitParams;}
+    bool getMaxLocalFitParams() { return maxLocalFitParams_; }
     
     unsigned int getNumIterations() const {return numIterations_;}
     bool isFittedWithReferenceTrack() const {return fittedWithReferenceTrack_;}
@@ -69,6 +71,7 @@ namespace genfit {
     
     double trackLen_;
     bool curvatureFlag_;
+    int maxLocalFitParams_;
     
     
   public:

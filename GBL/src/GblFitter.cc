@@ -85,6 +85,25 @@ using namespace gbl;
 using namespace std;
 using namespace genfit;
 
+/**
+ * Destructor
+ */
+GblFitter::~GblFitter() {
+  if (m_segmentController) {
+    delete m_segmentController;
+    m_segmentController = NULL;
+  }
+}
+
+void GblFitter::setTrackSegmentController(GblTrackSegmentController* controler)
+{
+  if (m_segmentController) {
+    delete m_segmentController;
+    m_segmentController = NULL;
+  }
+  m_segmentController = controler;      
+}
+
 void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits)
 {
   cleanGblInfo(trk, rep);
@@ -153,7 +172,7 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
     }
     gbl::GblTrajectory traj(points, gblfs->hasCurvature());
     
-    fitRes = traj.fit(Chi2, Ndf, lostWeight, (iIter < gblIterations.size()) ? gblIterations[iIter] : "");
+    fitRes = traj.fit(Chi2, Ndf, lostWeight, (iIter == m_externalIterations - 1) ? m_gblInternalIterations : "");
     
     // Update fit results in fitterinfos
     updateGblInfo(traj, trk, rep);
@@ -174,7 +193,7 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
         
     gblfs->setIsFitted(true);
     gblfs->setIsFitConvergedPartially(fitRes == 0);
-    nFailed = trk->getNumPoints() - points.size();
+    nFailed = trk->getNumPointsWithMeasurement() - nmeas;
     gblfs->setNFailedPoints(nFailed);
     gblfs->setIsFitConvergedFully(fitRes == 0 && nFailed == 0);
     gblfs->setNumIterations(iIter + 1);
@@ -274,7 +293,7 @@ void GblFitter::updateGblInfo(gbl::GblTrajectory& traj, genfit::Track* trk, cons
     return;
   
   // Update points in track and fitterInfo(rep)
-  unsigned int igblfi = -1;
+  int igblfi = -1;
   for (unsigned int ip = 0; ip < trk->getNumPoints(); ip++) {      
     GblFitterInfo * gblfi = dynamic_cast<GblFitterInfo*>(trk->getPoint(ip)->getFitterInfo(rep));
     if (!gblfi)
@@ -285,10 +304,12 @@ void GblFitter::updateGblInfo(gbl::GblTrajectory& traj, genfit::Track* trk, cons
     // (counting fitter infos) which hopefully
     gblfi->updateFitResults(traj);
     
-    if (igblfi == 0) {
-      trk->setStateSeed( gblfi->getFittedState(true).getPos(), gblfi->getFittedState(true).getMom() );
-      trk->setCovSeed( gblfi->getFittedState(true).get6DCov() ); 
-    }    
+    // This is agains logic. User can do this if he wants and it is recommended usually
+    // so that following fit could reuse the updated seed
+    //if (igblfi == 0) {
+    //  trk->setStateSeed( gblfi->getFittedState(true).getPos(), gblfi->getFittedState(true).getMom() );
+    //  trk->setCovSeed( gblfi->getFittedState(true).get6DCov() ); 
+    //}    
   }
 }
 
@@ -352,7 +373,7 @@ void GblFitter::getScattererFromMatList(double& length,
   #endif
 }
 
-double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep) const
+double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
 { 
   // All measurement points in ref. track
   int npoints_meas = trk->getNumPointsWithMeasurement();  
@@ -367,6 +388,7 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep) const
   StateOnPlane reference(rep);
   rep->setTime(reference, trk->getTimeSeed());
   rep->setPosMom(reference, trk->getStateSeed());
+
   SharedPlanePtr firstPlane(trk->getPointWithMeasurement(0)->getRawMeasurement(0)->constructPlane(reference));  
   reference.extrapolateToPlane(firstPlane);
   
@@ -418,7 +440,10 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep) const
     
     // Extrapolation for multiple scattering calculation
     // Extrap to point + 1, do NOT stop at boundary
+    TVector3 segmentEntry = refCopy.getPos();
     rep->extrapolateToPlane(refCopy, nextPlane, false, false);
+    TVector3 segmentExit = refCopy.getPos();
+    
     getScattererFromMatList(trackLen,
                             scatTheta,
                             scatSMean,
@@ -432,6 +457,10 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep) const
     s1 = 0.; s2 = scatSMean + scatDeltaS * scatDeltaS / (scatSMean - s1);
     theta1 = sqrt(scatTheta * scatTheta * scatDeltaS * scatDeltaS / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
     theta2 = sqrt(scatTheta * scatTheta * (scatSMean - s1) * (scatSMean - s1) / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1))); 
+    
+    // Call segment controller to set MS options:    
+    if (m_segmentController)
+      m_segmentController->controlTrackSegment(segmentEntry, segmentExit, this);    
     
     // Scattering options: OFF / THIN / THICK
     if (m_enableScatterers && !m_enableIntermediateScatterer) {

@@ -177,8 +177,14 @@ namespace genfit {
         thePoint.addGlobals(labels, derivs);
       }        
       TMatrixD locals = globals->localDerivatives(&sop);      
-      if (locals.GetNoElements() > 0)
-        thePoint.addLocals(locals);        
+      if (locals.GetNcols() > 0) {
+        thePoint.addLocals(locals);
+        GblFitStatus* gblfs = dynamic_cast<GblFitStatus*>(trackPoint_->getTrack()->getFitStatus(rep_));
+        if (gblfs) {
+          if (gblfs->getMaxLocalFitParams() < locals.GetNcols())
+            gblfs->setMaxLocalFitParams(locals.GetNcols());
+        }
+      }
     }
     
     return thePoint;
@@ -194,6 +200,26 @@ namespace genfit {
       return;
     }
     std::vector<MeasurementOnPlane*> allMeas = trackPoint_->getRawMeasurement(0)->constructMeasurementsOnPlane(sop);
+    
+    /*
+    double normMin(9.99E99);
+    unsigned int imop(0);
+    const AbsHMatrix* H = allMeas[0]->getHMatrix();
+    for (unsigned int i=0; i<allMeas.size(); ++i) {
+      if (*(allMeas[i]->getHMatrix()) != *H){
+        Exception e("GblFitterInfo::updateMeasurementAndPlane: Cannot compare measurements with different H-Matrices.", __LINE__,__FILE__);
+        e.setFatal();
+        throw e;
+      }
+      
+      TVectorD res = allMeas[i]->getState() - H->Hv(sop.getState());
+      double norm = sqrt(res.Norm2Sqr());
+      if (norm < normMin) {
+        normMin = norm;
+        imop = i;
+      }
+    }
+    */
     unsigned int imop = 0;
     double maxWeight = allMeas.at(0)->getWeight();
     for (unsigned int i = 0; i < allMeas.size(); i++)
@@ -253,9 +279,16 @@ namespace genfit {
     if (0 != traj.getScatResults(label, numKRes, kResiduals, kMeasErrors, kResErrors, kDownWeights))
       throw genfit::Exception(" NO scattering results ", __LINE__, __FILE__);        
     
+    // Check for local derivatives    
+    int nLocals = 0;
+    GblFitStatus* gblfs = dynamic_cast<GblFitStatus*>(trackPoint_->getTrack()->getFitStatus(rep_));
+    if (gblfs)
+      nLocals = gblfs->getMaxLocalFitParams();
+     
     // Predictions (different at scatterer)
-    TVectorD bwdUpdate(5), fwdUpdate(5);
-    TMatrixDSym bwdCov(5), fwdCov(5);
+    TVectorD bwdUpdate(5 + nLocals), fwdUpdate(5 + nLocals);
+    TMatrixDSym bwdCov(5 + nLocals), fwdCov(5 + nLocals);
+    
     // forward prediction
     if (0 != traj.getResults(label, fwdUpdate, fwdCov))
       throw genfit::Exception(" NO forward results ", __LINE__, __FILE__);        
@@ -264,10 +297,29 @@ namespace genfit {
     if (0 != traj.getResults(-1 * label, bwdUpdate, bwdCov))
       throw genfit::Exception(" NO backward results ", __LINE__, __FILE__);        
     
+    if (nLocals > 0) {
+      TVectorD _bwdUpdate(5 + nLocals), _fwdUpdate(5 + nLocals);
+      TMatrixDSym _bwdCov(5 + nLocals), _fwdCov(5 + nLocals);
+      _bwdUpdate = bwdUpdate;
+      _fwdUpdate = fwdUpdate;
+      _bwdCov = bwdCov;
+      _fwdCov = fwdCov;
+      bwdUpdate.ResizeTo(5);
+      fwdUpdate.ResizeTo(5);
+      bwdCov.ResizeTo(TMatrixDSym(5));
+      fwdCov.ResizeTo(TMatrixDSym(5));
+      for (int i = 0; i < 5; i++) {
+        bwdUpdate(i) = _bwdUpdate(i);
+        fwdUpdate(i) = _fwdUpdate(i);
+        for (int j = 0; j < 5; j++) {
+          bwdCov(i, j) = _bwdCov(i, j);
+          fwdCov(i, j) = _fwdCov(i, j);
+        }        
+      }
+    }
     // Now update the the fitter info
     //
     //-------------------------------------------------
-    
     // Backward/forward prediction (residual) (differs at scatterers) AFTER GBL fit
     bwdStateCorrection_ = bwdUpdate;
     fwdStateCorrection_ = fwdUpdate;
