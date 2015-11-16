@@ -31,6 +31,7 @@
 #include <cmath>
 
 //root stuff
+#include <TBuffer.h>
 #include <TMath.h>
 #include <Math/QuantFuncMathCore.h>
 

@@ -31,6 +31,7 @@
 #include "Tools.h"
 
 #include <Math/ProbFunc.h>
+#include <TBuffer.h>
 #include <TDecompChol.h>
 #include <TMatrixDSymEigen.h>
 #include <algorithm>

@@ -26,7 +26,7 @@
 #include "MeasurementOnPlane.h"
 
 #include <cassert>
-
+#include <TBuffer.h>
 
 namespace genfit {
 

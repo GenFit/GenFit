@@ -24,7 +24,7 @@
 #include "KalmanFitterInfo.h"
 
 #include <iostream>
-
+#include <TBuffer.h>
 
 namespace genfit {
 

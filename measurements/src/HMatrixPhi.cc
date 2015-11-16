@@ -22,7 +22,7 @@
 #include <alloca.h>
 #include <math.h>
 #include <iostream>
-
+#include <TBuffer.h>
 
 namespace genfit {
 
