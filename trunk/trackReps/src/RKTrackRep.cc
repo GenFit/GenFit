@@ -25,6 +25,7 @@
 #include <MeasuredStateOnPlane.h>
 #include <MeasurementOnPlane.h>
 
+#include <TBuffer.h>
 #include <TDecompLU.h>
 #include <TMath.h>
 

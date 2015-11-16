@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <TClass.h>
+#include <TBuffer.h>
 
 #include "MeasurementOnPlane.h"
 

@@ -24,7 +24,7 @@
 #include <cmath>
 #include <TMath.h>
 #include <TClass.h>
-
+#include <TBuffer.h>
 
 namespace genfit {
 

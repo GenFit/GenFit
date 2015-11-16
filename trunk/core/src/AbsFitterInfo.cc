@@ -20,6 +20,7 @@
 #include "AbsFitterInfo.h"
 
 #include <TClass.h>
+#include <TBuffer.h>
 
 namespace genfit {
 

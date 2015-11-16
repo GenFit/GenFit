@@ -22,6 +22,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <TBuffer.h>
 
 namespace genfit {
 

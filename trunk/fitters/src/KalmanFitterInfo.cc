@@ -21,6 +21,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <TBuffer.h>
 
 #include "Exception.h"
 #include "FitStatus.h"
