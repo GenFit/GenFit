@@ -45,8 +45,10 @@ enum eMeasurementType { Pixel = 0,
         StripU,
         StripV,
         StripUV,
-        Wire,
-        WirePoint };
+			Wire,
+	WirePoint,
+			nMeasurementTypes,
+        };
 
 
 /**
