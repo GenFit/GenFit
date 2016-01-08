@@ -19,10 +19,9 @@
 
 
 #include "FitStatus.h"
+#include "IO.h"
 
 #include <TString.h>
-
-#include <iostream>
 
 namespace genfit {
 
@@ -72,38 +71,38 @@ bool PruneFlags::isPruned() const {
 
 
 void PruneFlags::Print(const Option_t*) const {
-  std::cout << "PruneFlags: ";
-  if (value & C) std::cout << "C";
-  if (value & F) std::cout << "F";
-  if (value & L) std::cout << "L";
-  if (value & W) std::cout << "W";
-  if (value & R) std::cout << "R";
-  if (value & M) std::cout << "M";
-  if (value & I) std::cout << "I";
-  if (value & U) std::cout << "U";
-  std::cout << "\n";
+  printOut << "PruneFlags: ";
+  if (value & C) printOut << "C";
+  if (value & F) printOut << "F";
+  if (value & L) printOut << "L";
+  if (value & W) printOut << "W";
+  if (value & R) printOut << "R";
+  if (value & M) printOut << "M";
+  if (value & I) printOut << "I";
+  if (value & U) printOut << "U";
+  printOut << "\n";
 }
 
 
 
 void FitStatus::Print(const Option_t*) const
 {
-  std::cout << "fitStatus \n";
+  printOut << "fitStatus \n";
   if (isFitted_) {
-    std::cout << " track has been fitted,";
+    printOut << " track has been fitted,";
     if (isFitConvergedFully_)
-      std::cout << " fit has converged fully,";
+      printOut << " fit has converged fully,";
     else if (isFitConvergedPartially_)
-      std::cout << " fit has converged partially,";
+      printOut << " fit has converged partially,";
     else
-      std::cout << " fit has NOT converged,";
-    std::cout << " " << nFailedPoints_ << " TrackPoints could not be processed,";
-    if (trackHasChanged_) std::cout << " track has changed since the fit,";
-    std::cout << " fitted charge = " << charge_ << ", ";
+      printOut << " fit has NOT converged,";
+    printOut << " " << nFailedPoints_ << " TrackPoints could not be processed,";
+    if (trackHasChanged_) printOut << " track has changed since the fit,";
+    printOut << " fitted charge = " << charge_ << ", ";
     pruneFlags_.Print();
   }
   else
-    std::cout << " track has NOT been fitted,";
+    printOut << " track has NOT been fitted,";
 }
 
 } /* End of namespace genfit */

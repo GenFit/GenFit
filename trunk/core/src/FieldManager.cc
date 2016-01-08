@@ -17,8 +17,8 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "FieldManager.h"
+#include "IO.h"
 
-#include <iostream>
 #include <math.h>
 
 namespace genfit {
@@ -61,7 +61,7 @@ void FieldManager::getFieldVal(const double& posX, const double& posY, const dou
         Bz = cache_[i].Bz;
         #ifdef DEBUG
         ++used;
-        std::cout<<"used the cache! " << double(used)/(used + notUsed) << "\n";
+        debugOut<<"used the cache! " << double(used)/(used + notUsed) << "\n";
         #endif
         return;
       }
@@ -81,7 +81,7 @@ void FieldManager::getFieldVal(const double& posX, const double& posY, const dou
     Bz = cache_[last_written_i].Bz;
     #ifdef DEBUG
     ++notUsed;
-    std::cout<<"did NOT use the cache! \n";
+    debugOut<<"did NOT use the cache! \n";
     #endif
     return;
 

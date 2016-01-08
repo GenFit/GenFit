@@ -19,7 +19,7 @@
 
 #include "MaterialProperties.h"
 
-#include <iostream>
+#include "IO.h"
 
 namespace genfit {
 
@@ -68,11 +68,11 @@ void MaterialProperties::setMaterialProperties(const double& density,
 
 
 void MaterialProperties::Print(const Option_t*) const {
-  std::cout << "Density = " << density_ << ", \t" <<
-               "Z = " << Z_ << ", \t" <<
-               "A = " << A_ << ", \t" <<
-               "radiationLength = " << radiationLength_ << ", \t" <<
-               "mEE = " << mEE_ << "\n";
+  printOut << "Density = " << density_ << ", \t"
+           << "Z = " << Z_ << ", \t"
+           << "A = " << A_ << ", \t"
+           << "radiationLength = " << radiationLength_ << ", \t"
+           << "mEE = " << mEE_ << "\n";
 }
 
 

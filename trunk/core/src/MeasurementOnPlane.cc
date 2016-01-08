@@ -17,11 +17,12 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <iostream>
+#include "MeasurementOnPlane.h"
+
+#include "IO.h"
+
 #include <TClass.h>
 #include <TBuffer.h>
-
-#include "MeasurementOnPlane.h"
 
 namespace genfit {
 
@@ -48,12 +49,12 @@ void MeasurementOnPlane::swap(MeasurementOnPlane& other) {
 
 void MeasurementOnPlane::Print(Option_t*) const
 {
-  std::cout << "genfit::MeasurementOnPlane, weight = " << weight_ << "\n";
-  std::cout << " state vector: "; state_.Print();
-  std::cout << " covariance matrix: "; cov_.Print();
+  printOut << "genfit::MeasurementOnPlane, weight = " << weight_ << "\n";
+  printOut << " state vector: "; state_.Print();
+  printOut << " covariance matrix: "; cov_.Print();
   if (sharedPlane_ != NULL)
-    std::cout << " defined in plane "; sharedPlane_->Print();
-  std::cout << " hMatrix: "; hMatrix_->Print();
+    printOut << " defined in plane "; sharedPlane_->Print();
+  printOut << " hMatrix: "; hMatrix_->Print();
 
 }
 

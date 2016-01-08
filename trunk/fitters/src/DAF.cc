@@ -19,6 +19,7 @@
 
 #include "DAF.h"
 #include "Exception.h"
+#include "IO.h"
 #include "KalmanFitterInfo.h"
 #include "KalmanFitter.h"
 #include "KalmanFitterRefTrack.h"
@@ -75,7 +76,7 @@ DAF::DAF(AbsKalmanFitter* kalman, double deltaPval, double deltaWeight)
 void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits) {
 
   if (debugLvl_ > 0) {
-    std::cout<<"DAF::processTrack //////////////////////////////////////////////////////////////// \n";
+    debugOut<<"DAF::processTrack //////////////////////////////////////////////////////////////// \n";
   }
 
   KalmanFitStatus* status = 0;
@@ -86,7 +87,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
   for(unsigned int iBeta = 0;; ++iBeta) {
 
     if (debugLvl_ > 0) {
-      std::cout<<"DAF::processTrack, trackRep  " << rep << ", iteration " << iBeta+1 << ", beta = " << betas_.at(iBeta) << "\n";
+      debugOut<<"DAF::processTrack, trackRep  " << rep << ", iteration " << iBeta+1 << ", beta = " << betas_.at(iBeta) << "\n";
     }
 
     kalman_->processTrackWithRep(tr, rep, resortHits);
@@ -100,7 +101,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
 
     if (! status->isFitted()){
       if (debugLvl_ > 0) {
-        std::cout << "DAF::Kalman could not fit!\n";
+        debugOut << "DAF::Kalman could not fit!\n";
       }
       status->setIsFitted(false);
       break;
@@ -108,7 +109,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
 
     if( oneLastIter == true){
       if (debugLvl_ > 0) {
-        std::cout << "DAF::break after one last iteration\n";
+        debugOut << "DAF::break after one last iteration\n";
       }
       status->setIsFitConvergedFully(status->getNFailedPoints() == 0);
       status->setIsFitConvergedPartially();
@@ -119,7 +120,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
       status->setIsFitConvergedFully(false);
       status->setIsFitConvergedPartially(false);
       if (debugLvl_ > 0) {
-        std::cout << "DAF::number of max iterations reached!\n";
+        debugOut << "DAF::number of max iterations reached!\n";
       }
       break;
     }
@@ -132,15 +133,15 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
       if (!converged && iBeta >= minIterations_-1 &&
           status->getBackwardPVal() != 0 && abs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
         if (debugLvl_ > 0) {
-          std::cout << "converged by Pval = " << status->getBackwardPVal() << " even though weights changed at iBeta = " << iBeta << std::endl;
+          debugOut << "converged by Pval = " << status->getBackwardPVal() << " even though weights changed at iBeta = " << iBeta << std::endl;
         }
         converged = true;
       }
       lastPval = status->getBackwardPVal();
     } catch(Exception& e) {
-      std::cerr<<e.what();
+      errorOut<<e.what();
       e.info();
-      //std::cerr << "calc weights failed" << std::endl;
+      //errorOut << "calc weights failed" << std::endl;
       //mini_trk->getTrackRep(0)->setStatusFlag(1);
       status->setIsFitted(false);
       status->setIsFitConvergedFully(false);
@@ -151,7 +152,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
     // check if converged
     if (iBeta >= minIterations_-1 && converged) {
       if (debugLvl_ > 0) {
-        std::cout << "DAF::convergence reached in iteration " << iBeta+1 << " -> Do one last iteration with updated weights.\n";
+        debugOut << "DAF::convergence reached in iteration " << iBeta+1 << " -> Do one last iteration with updated weights.\n";
       }
       oneLastIter = true;
       status->setIsFitConvergedFully(status->getNFailedPoints() == 0);
@@ -246,7 +247,7 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
   betas_.resize(maxIterations_,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
 
   /*for (unsigned int i=0; i<betas_.size(); ++i) {
-    std::cout<< betas_.at(i) << ", ";
+    debugOut<< betas_.at(i) << ", ";
   }*/
 }
 
@@ -254,7 +255,7 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
 bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
 
   if (debugLvl_ > 0) {
-    std::cout<<"DAF::calcWeights \n";
+    debugOut<<"DAF::calcWeights \n";
   }
 
   bool converged(true);
@@ -274,7 +275,7 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
 
     if (kfi->areWeightsFixed()) {
       if (debugLvl_ > 0) {
-        std::cout<<"weights are fixed, continue \n";
+        debugOut<<"weights are fixed, continue \n";
       }
       continue;
     }
@@ -304,7 +305,7 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
 
         double chi2 = Vinv.Similarity(resid);
         if (debugLvl_ > 1) {
-          std::cout<<"chi2 = " << chi2 << "\n";
+          debugOut<<"chi2 = " << chi2 << "\n";
         }
 
 	// The common factor beta is eliminated.
@@ -312,21 +313,21 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
 
         phi[j] = norm*exp(-0.5*chi2/beta);
 	phi_sum += phi[j];
-        //std::cerr << "hitDim " << hitDim << " fchi2Cuts[hitDim] " << fchi2Cuts[hitDim] << std::endl;
+        //errorOut << "hitDim " << hitDim << " fchi2Cuts[hitDim] " << fchi2Cuts[hitDim] << std::endl;
         double cutVal = chi2Cuts_[hitDim];
         assert(cutVal>1.E-6);
         //the following assumes that in the competing hits could have different V otherwise calculation could be simplified
         phi_cut += norm*exp(-0.5*cutVal/beta);
       }
       catch(Exception& e) {
-        std::cerr << e.what();
+        errorOut << e.what();
         e.info();
       }
     }
 
     for(unsigned int j=0; j<nMeas; j++) {
       double weight = phi[j]/(phi_sum+phi_cut);
-      //std::cout << phi_sum << " " << phi_cut << " " << weight << std::endl;
+      //debugOut << phi_sum << " " << phi_cut << " " << weight << std::endl;
 
       // check convergence
       double absChange(fabs(weight - kfi->getMeasurementOnPlane(j)->getWeight()));
@@ -338,8 +339,8 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
 
       if (debugLvl_ > 0) {
         if (debugLvl_ > 1 || absChange > deltaWeight_) {
-          std::cout<<"\t old weight: " << kfi->getMeasurementOnPlane(j)->getWeight();
-          std::cout<<"\t new weight: " << weight;
+          debugOut<<"\t old weight: " << kfi->getMeasurementOnPlane(j)->getWeight();
+          debugOut<<"\t new weight: " << weight;
         }
       }
 
@@ -348,8 +349,8 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
   }
 
   if (debugLvl_ > 0) {
-    std::cout << "\t  ";
-    std::cout << "max abs weight change = " << maxAbsChange << "\n";
+    debugOut << "\t  ";
+    debugOut << "max abs weight change = " << maxAbsChange << "\n";
   }
 
   return converged;

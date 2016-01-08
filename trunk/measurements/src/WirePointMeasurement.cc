@@ -50,14 +50,9 @@ SharedPlanePtr WirePointMeasurement::constructPlane(const StateOnPlane& state) c
   TVector3 wire1(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
   TVector3 wire2(rawHitCoords_(3), rawHitCoords_(4), rawHitCoords_(5));
 
-  //std::cout << " wire1(" << rawHitCoords_(0) << ", " << rawHitCoords_(1) << ", " << rawHitCoords_(2) << ")" << std::endl;
-  //std::cout << " wire2(" << rawHitCoords_(3) << ", " << rawHitCoords_(4) << ", " << rawHitCoords_(5) << ")" << std::endl;
-
   // unit vector along the wire (V)
   TVector3 wireDirection = wire2 - wire1;
   wireDirection.SetMag(1.);
-
-  //std::cout << " wireDirection(" << wireDirection.X() << ", " << wireDirection.Y() << ", " << wireDirection.Z() << ")" << std::endl;
 
   // point of closest approach
   const AbsTrackRep* rep = state.getRep();

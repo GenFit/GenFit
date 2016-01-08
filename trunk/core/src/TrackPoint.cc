@@ -22,8 +22,8 @@
 #include "TrackPoint.h"
 #include "Exception.h"
 #include "KalmanFitterInfo.h"
+#include "IO.h"
 
-#include <iostream>
 #include <TBuffer.h>
 
 namespace genfit {
@@ -200,19 +200,19 @@ void TrackPoint::setFitterInfo(genfit::AbsFitterInfo* fitterInfo) {
 
 
 void TrackPoint::Print(const Option_t*) const {
-  std::cout << "genfit::TrackPoint, belonging to Track " << track_ << "; sorting parameter = " << sortingParameter_ << "\n";
-  std::cout << "contains " << rawMeasurements_.size() << " rawMeasurements and " << getFitterInfos().size() << " fitterInfos for " << fitterInfos_.size() << " TrackReps.\n";
+  printOut << "genfit::TrackPoint, belonging to Track " << track_ << "; sorting parameter = " << sortingParameter_ << "\n";
+  printOut << "contains " << rawMeasurements_.size() << " rawMeasurements and " << getFitterInfos().size() << " fitterInfos for " << fitterInfos_.size() << " TrackReps.\n";
 
   for (unsigned int i=0; i<rawMeasurements_.size(); ++i) {
-    std::cout << "RawMeasurement Nr. " << i << "\n";
+    printOut << "RawMeasurement Nr. " << i << "\n";
     rawMeasurements_[i]->Print();
-    std::cout << "............\n";
+    printOut << "............\n";
   }
 
   for (std::map< const AbsTrackRep*, AbsFitterInfo* >::const_iterator it = fitterInfos_.begin(); it != fitterInfos_.end();  ++it ) {
-    std::cout << "FitterInfo for TrackRep " << it->first << "\n";
+    printOut << "FitterInfo for TrackRep " << it->first << "\n";
     it->second->Print();
-    std::cout << "............\n";
+    printOut << "............\n";
   }
 
   if (thinScatterer_)

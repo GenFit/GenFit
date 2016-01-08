@@ -18,9 +18,11 @@
 */
 
 #include "HMatrixU.h"
+
+#include "IO.h"
+
 #include <cassert>
 #include <alloca.h>
-#include <iostream>
 
 
 namespace genfit {
@@ -86,7 +88,7 @@ void HMatrixU::HMHt(TMatrixDSym& M) const {
 
 
 void HMatrixU::Print(const Option_t*) const {
-  std::cout << "U" << std::endl;
+  printOut << "U" << std::endl;
 }
 
 

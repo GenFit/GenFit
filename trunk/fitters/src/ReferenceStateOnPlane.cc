@@ -19,8 +19,7 @@
 
 #include "ReferenceStateOnPlane.h"
 
-#include <iostream>
-
+#include "IO.h"
 
 namespace genfit {
 
@@ -83,7 +82,7 @@ ReferenceStateOnPlane::ReferenceStateOnPlane(const StateOnPlane& state) :
   forwardDeltaState_(state.getRep()->getDim()),
   backwardDeltaState_(state.getRep()->getDim())
 {
-  std::cout << "should never come here" << std::endl;
+  errorOut << "should never come here" << std::endl;
   exit(0);
 }
 
@@ -130,16 +129,15 @@ void ReferenceStateOnPlane::resetBackward() {
 void ReferenceStateOnPlane::Print(Option_t*) const {
   StateOnPlane::Print();
 
-  std::cout << " forwardSegmentLength: " << forwardSegmentLength_ << "\n";
-  std::cout << " forwardTransportMatrix: "; forwardTransportMatrix_.Print();
-  std::cout << " forwardNoiseMatrix: "; forwardNoiseMatrix_.Print();
-  std::cout << " forwardDeltaState: "; forwardDeltaState_.Print();
+  printOut << " forwardSegmentLength: " << forwardSegmentLength_ << "\n";
+  printOut << " forwardTransportMatrix: "; forwardTransportMatrix_.Print();
+  printOut << " forwardNoiseMatrix: "; forwardNoiseMatrix_.Print();
+  printOut << " forwardDeltaState: "; forwardDeltaState_.Print();
 
-  std::cout << " backwardSegmentLength_: " << backwardSegmentLength_ << "\n";
-  std::cout << " backwardTransportMatrix: "; backwardTransportMatrix_.Print();
-  std::cout << " backwardNoiseMatrix: "; backwardNoiseMatrix_.Print();
-  std::cout << " backwardDeltaState: "; backwardDeltaState_.Print();
-
+  printOut << " backwardSegmentLength_: " << backwardSegmentLength_ << "\n";
+  printOut << " backwardTransportMatrix: "; backwardTransportMatrix_.Print();
+  printOut << " backwardNoiseMatrix: "; backwardNoiseMatrix_.Print();
+  printOut << " backwardDeltaState: "; backwardDeltaState_.Print();
 }
 
 

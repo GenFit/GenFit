@@ -21,27 +21,27 @@
 #include "AbsTrackRep.h"
 #include "Exception.h"
 #include "Tools.h"
+#include "IO.h"
 
 #include <cassert>
-#include <iostream>
 
 #include "TDecompChol.h"
 
 namespace genfit {
 
 void MeasuredStateOnPlane::Print(Option_t*) const {
-  std::cout << "genfit::MeasuredStateOnPlane ";
-  std::cout << "my address " << this << " my plane's address " << this->sharedPlane_.get() << "; use count: " << sharedPlane_.use_count() << std::endl;
-  std::cout << " state vector: "; state_.Print();
-  std::cout << " covariance matrix: "; cov_.Print();
+  printOut << "genfit::MeasuredStateOnPlane ";
+  printOut << "my address " << this << " my plane's address " << this->sharedPlane_.get() << "; use count: " << sharedPlane_.use_count() << std::endl;
+  printOut << " state vector: "; state_.Print();
+  printOut << " covariance matrix: "; cov_.Print();
   if (sharedPlane_ != NULL) {
-    std::cout << " defined in plane "; sharedPlane_->Print();
+    printOut << " defined in plane "; sharedPlane_->Print();
     TVector3 pos, mom;
     TMatrixDSym cov(6,6);
     getRep()->getPosMomCov(*this, pos, mom, cov);
-    std::cout << " 3D position: "; pos.Print();
-    std::cout << " 3D momentum: "; mom.Print();
-    //std::cout << " 6D covariance: "; cov.Print();
+    printOut << " 3D position: "; pos.Print();
+    printOut << " 3D momentum: "; mom.Print();
+    //printOut << " 6D covariance: "; cov.Print();
   }
 }
 

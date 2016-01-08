@@ -18,14 +18,12 @@
 */
 
 #include <RKTools.h>
+#include "IO.h"
 
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
 
 #include <iostream>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 static const int flagSlowMatrix = 1 << 10; // Replace custom matrix multiplications with general equivalents
 static const int debugFlags = 0;// | flagSlowMatrix;
@@ -711,14 +709,14 @@ void RKTools::Np_N_NpT(const M7x7& Np, M7x7& N) {
 
 void RKTools::printDim(const double* mat, unsigned int dimX, unsigned int dimY){
 
-  std::cout << dimX << " x " << dimY << " matrix as follows: \n";
+  printOut << dimX << " x " << dimY << " matrix as follows: \n";
   for (unsigned int i=0; i< dimX; ++i){
     for (unsigned int j=0; j< dimY; ++j){
       printf("  %11.5g", mat[i*dimY+j]);
     }
-    std::cout<<"\n";
+    printOut<<"\n";
   }
-  std::cout<<std::endl;
+  printOut<<std::endl;
 
 }
 

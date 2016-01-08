@@ -18,6 +18,7 @@
 */
 
 #include "Exception.h"
+#include "IO.h"
 
 namespace genfit {
 
@@ -55,28 +56,28 @@ const char* Exception::what() const throw(){
 void Exception::info() {
   if(quiet_) return;
   if(numbers_.empty() && matrices_.empty()) return; //do nothing
-  std::cout << "genfit::Exception Info Output" << std::endl;
-  std::cout << "===========================" << std::endl;
+  debugOut << "genfit::Exception Info Output" << std::endl;
+  debugOut << "===========================" << std::endl;
   if(numbersLabel_ != "") {
-  std::cout << "Numbers Label String:" << std::endl;
-  std::cout << numbersLabel_ << std::endl;
+  debugOut << "Numbers Label String:" << std::endl;
+  debugOut << numbersLabel_ << std::endl;
   }
   if(!numbers_.empty()) {
-  std::cout << "---------------------------" << std::endl;
-  std::cout << "Numbers:" << std::endl;
-  for(unsigned int i=0;i<numbers_.size(); ++i ) std::cout << numbers_[i] << std::endl;
+  debugOut << "---------------------------" << std::endl;
+  debugOut << "Numbers:" << std::endl;
+  for(unsigned int i=0;i<numbers_.size(); ++i ) debugOut << numbers_[i] << std::endl;
   }
   if(matricesLabel_ != "") {
-  std::cout << "---------------------------" << std::endl;
-  std::cout << "Matrices Label String:" << std::endl;
-  std::cout << matricesLabel_ << std::endl;
+  debugOut << "---------------------------" << std::endl;
+  debugOut << "Matrices Label String:" << std::endl;
+  debugOut << matricesLabel_ << std::endl;
   }
   if(!matrices_.empty()) {
-  std::cout << "---------------------------" << std::endl;
-  std::cout << "Matrices:" << std::endl;
+  debugOut << "---------------------------" << std::endl;
+  debugOut << "Matrices:" << std::endl;
   for(unsigned int i=0;i<matrices_.size(); ++i ) matrices_[i].Print();
   }
-  std::cout << "===========================" << std::endl;
+  debugOut << "===========================" << std::endl;
 }
 
 } /* End of namespace genfit */

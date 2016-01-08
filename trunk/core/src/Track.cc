@@ -20,6 +20,7 @@
 #include "Track.h"
 
 #include "Exception.h"
+#include "IO.h"
 #include "KalmanFitterInfo.h"
 #include "KalmanFitStatus.h"
 #include "PlanarMeasurement.h"
@@ -28,7 +29,6 @@
 #include "WireTrackCandHit.h"
 
 #include <algorithm>
-#include <iostream>
 #include <map>
 
 #include <TDatabasePDG.h>
@@ -365,7 +365,7 @@ void Track::insertPoint(TrackPoint* point, int id) {
   point->setTrack(this);
 
   #ifdef DEBUG
-  std::cout << "Track::insertPoint at position " << id  << "\n";
+  debugOut << "Track::insertPoint at position " << id  << "\n";
   #endif
   assert(point!=NULL);
   trackHasChanged();
@@ -473,7 +473,7 @@ void Track::insertPoints(std::vector<TrackPoint*> points, int id) {
 void Track::deletePoint(int id) {
 
   #ifdef DEBUG
-  std::cout << "Track::deletePoint at position " << id  << "\n";
+  debugOut << "Track::deletePoint at position " << id  << "\n";
   #endif
 
   trackHasChanged();
@@ -513,7 +513,7 @@ void Track::insertMeasurement(AbsMeasurement* measurement, int id) {
 void Track::mergeTrack(const Track* other, int id) {
 
   #ifdef DEBUG
-  std::cout << "Track::mergeTrack\n";
+  debugOut << "Track::mergeTrack\n";
   #endif
 
   if (other->getNumPoints() == 0)
@@ -528,7 +528,7 @@ void Track::mergeTrack(const Track* other, int id) {
       if ((*thisRep)->isSame(*otherRep)) {
         otherRepThisRep[*otherRep] = *thisRep;
         #ifdef DEBUG
-        std::cout << " map other rep " << *otherRep << " to " << (*thisRep) << "\n";
+        debugOut << " map other rep " << *otherRep << " to " << (*thisRep) << "\n";
         #endif
         if (found) {
           Exception exc("Track::mergeTrack ==> more than one matching rep.",__LINE__,__FILE__);
@@ -542,7 +542,7 @@ void Track::mergeTrack(const Track* other, int id) {
     if (!found) {
       otherRepsToRemove.push_back(*otherRep);
       #ifdef DEBUG
-      std::cout << " remove other rep " << *otherRep << "\n";
+      debugOut << " remove other rep " << *otherRep << "\n";
       #endif
     }
   }
@@ -601,7 +601,7 @@ void Track::setCardinalRep(int id) {
     cardinalRep_ = id;
   else {
     cardinalRep_ = 0;
-    std::cerr << "Track::setCardinalRep: Attempted to set cardinalRep_ to a value out of bounds. Resetting  cardinalRep_ to 0." << std::endl;
+    errorOut << "Track::setCardinalRep: Attempted to set cardinalRep_ to a value out of bounds. Resetting  cardinalRep_ to 0." << std::endl;
   }
 }
 
@@ -633,7 +633,7 @@ void Track::determineCardinalRep() {
 
 bool Track::sort() {
   #ifdef DEBUG
-  std::cout << "Track::sort \n";
+  debugOut << "Track::sort \n";
   #endif
 
   int nPoints(trackPoints_.size());
@@ -666,7 +666,7 @@ bool Track::sort() {
   }
 
   #ifdef DEBUG
-  std::cout << "Track::sort. Equal up to (including) hit " << equalUntil << " and from (including) hit " << equalFrom << " \n";
+  debugOut << "Track::sort. Equal up to (including) hit " << equalUntil << " and from (including) hit " << equalFrom << " \n";
   #endif
 
   deleteForwardInfo(equalUntil+1, -1);
@@ -737,7 +737,7 @@ void Track::reverseTrack() {
 
 void Track::deleteForwardInfo(int startId, int endId, const AbsTrackRep* rep) {
   #ifdef DEBUG
-  std::cout << "Track::deleteForwardInfo from position " << startId  << " to " << endId << "\n";
+  debugOut << "Track::deleteForwardInfo from position " << startId  << " to " << endId << "\n";
   #endif
 
   trackHasChanged();
@@ -767,7 +767,7 @@ void Track::deleteForwardInfo(int startId, int endId, const AbsTrackRep* rep) {
 void Track::deleteBackwardInfo(int startId, int endId, const AbsTrackRep* rep) {
 
   #ifdef DEBUG
-  std::cout << "Track::deleteBackwardInfo from position " << startId  << " to " << endId << "\n";
+  debugOut << "Track::deleteBackwardInfo from position " << startId  << " to " << endId << "\n";
   #endif
 
   trackHasChanged();
@@ -798,7 +798,7 @@ void Track::deleteBackwardInfo(int startId, int endId, const AbsTrackRep* rep) {
 void Track::deleteReferenceInfo(int startId, int endId, const AbsTrackRep* rep) {
 
   #ifdef DEBUG
-  std::cout << "Track::deleteReferenceInfo from position " << startId  << " to " << endId << "\n";
+  debugOut << "Track::deleteReferenceInfo from position " << startId  << " to " << endId << "\n";
   #endif
 
   trackHasChanged();
@@ -828,7 +828,7 @@ void Track::deleteReferenceInfo(int startId, int endId, const AbsTrackRep* rep) 
 void Track::deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep) {
 
   #ifdef DEBUG
-  std::cout << "Track::deleteMeasurementInfo from position " << startId  << " to " << endId << "\n";
+  debugOut << "Track::deleteMeasurementInfo from position " << startId  << " to " << endId << "\n";
   #endif
 
   trackHasChanged();
@@ -858,7 +858,7 @@ void Track::deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep
 void Track::deleteFitterInfo(int startId, int endId, const AbsTrackRep* rep) {
 
   #ifdef DEBUG
-  std::cout << "Track::deleteFitterInfo from position " << startId  << " to " << endId << "\n";
+  debugOut << "Track::deleteFitterInfo from position " << startId  << " to " << endId << "\n";
   #endif
 
   trackHasChanged();
@@ -1100,7 +1100,7 @@ void Track::prune(const Option_t* option) {
   fillPointsWithMeasurement();
 
   #ifdef DEBUG
-  std::cout << "pruned Track: "; Print();
+  debugOut << "pruned Track: "; Print();
   #endif
 
 }
@@ -1111,163 +1111,163 @@ void Track::Print(const Option_t* option) const {
   opt.ToUpper();
   if (opt.Contains("C")) { // compact
 
-    std::cout << "\n    ";
+    printOut << "\n    ";
     for (unsigned int i=0; i<trackPoints_.size(); ++i) {
 
       int color = 32*(size_t)(trackPoints_[i]) % 15;
       switch (color) {
         case 0:
-          std::cout<<"\033[1;30m";
+          printOut<<"\033[1;30m";
           break;
         case 1:
-          std::cout<<"\033[0;34m";
+          printOut<<"\033[0;34m";
           break;
         case 2:
-          std::cout<<"\033[1;34m";
+          printOut<<"\033[1;34m";
           break;
         case 3:
-          std::cout<<"\033[0;32m";
+          printOut<<"\033[0;32m";
           break;
         case 4:
-          std::cout<<"\033[1;32m";
+          printOut<<"\033[1;32m";
           break;
         case 5:
-          std::cout<<"\033[0;36m";
+          printOut<<"\033[0;36m";
           break;
         case 6:
-          std::cout<<"\033[1;36m";
+          printOut<<"\033[1;36m";
           break;
         case 7:
-          std::cout<<"\033[0;31m";
+          printOut<<"\033[0;31m";
           break;
         case 8:
-          std::cout<<"\033[1;31m";
+          printOut<<"\033[1;31m";
           break;
         case 9:
-          std::cout<<"\033[0;35m";
+          printOut<<"\033[0;35m";
           break;
         case 10:
-          std::cout<<"\033[1;35m";
+          printOut<<"\033[1;35m";
           break;
         case 11:
-          std::cout<<"\033[0;33m";
+          printOut<<"\033[0;33m";
           break;
         case 12:
-          std::cout<<"\033[1;33m";
+          printOut<<"\033[1;33m";
           break;
         case 13:
-          std::cout<<"\033[0;37m";
+          printOut<<"\033[0;37m";
           break;
         default:
           ;
       }
-      std::cout << trackPoints_[i] << "\033[00m  ";
+      printOut << trackPoints_[i] << "\033[00m  ";
     }
-    std::cout << "\n";
+    printOut << "\n";
 
-    std::cout << "   ";
+    printOut << "   ";
     for (unsigned int i=0; i<trackPoints_.size(); ++i) {
       printf("% -9.3g  ", trackPoints_[i]->getSortingParameter());
     }
 
     for (std::vector<AbsTrackRep*>::const_iterator rep = trackReps_.begin(); rep != trackReps_.end(); ++rep) {
-      std::cout << "\n" << getIdForRep(*rep) << "   ";
+      printOut << "\n" << getIdForRep(*rep) << "   ";
       for (unsigned int i=0; i<trackPoints_.size(); ++i) {
         if (! trackPoints_[i]->hasFitterInfo(*rep)) {
-          std::cout << "           ";
+          printOut << "           ";
           continue;
         }
         AbsFitterInfo* fi = trackPoints_[i]->getFitterInfo(*rep);
         if (fi->hasMeasurements())
-          std::cout << "M";
+          printOut << "M";
         else
-          std::cout << " ";
+          printOut << " ";
 
         if (fi->hasReferenceState())
-          std::cout << "R";
+          printOut << "R";
         else
-          std::cout << " ";
+          printOut << " ";
 
-        std::cout << "         ";
+        printOut << "         ";
       }
-      std::cout << "\n";
+      printOut << "\n";
 
-      std::cout << " -> ";
+      printOut << " -> ";
       for (unsigned int i=0; i<trackPoints_.size(); ++i) {
         if (! trackPoints_[i]->hasFitterInfo(*rep)) {
-          std::cout << "           ";
+          printOut << "           ";
           continue;
         }
         AbsFitterInfo* fi = trackPoints_[i]->getFitterInfo(*rep);
         if (fi->hasForwardPrediction())
-          std::cout << "P";
+          printOut << "P";
         else
-          std::cout << " ";
+          printOut << " ";
 
         if (fi->hasForwardUpdate())
-          std::cout << "U";
+          printOut << "U";
         else
-          std::cout << " ";
+          printOut << " ";
 
-        std::cout << "         ";
+        printOut << "         ";
       }
-      std::cout << "\n";
+      printOut << "\n";
 
-      std::cout << " <- ";
+      printOut << " <- ";
       for (unsigned int i=0; i<trackPoints_.size(); ++i) {
         if (! trackPoints_[i]->hasFitterInfo(*rep)) {
-          std::cout << "           ";
+          printOut << "           ";
           continue;
         }
         AbsFitterInfo* fi = trackPoints_[i]->getFitterInfo(*rep);
         if (fi->hasBackwardPrediction())
-          std::cout << "P";
+          printOut << "P";
         else
-          std::cout << " ";
+          printOut << " ";
 
         if (fi->hasBackwardUpdate())
-          std::cout << "U";
+          printOut << "U";
         else
-          std::cout << " ";
+          printOut << " ";
 
-        std::cout << "         ";
+        printOut << "         ";
       }
 
-      std::cout << "\n";
+      printOut << "\n";
 
     } //end loop over reps
 
-    std::cout << "\n";
+    printOut << "\n";
     return;
   }
 
 
 
-  std::cout << "=======================================================================================\n";
-  std::cout << "genfit::Track, containing " << trackPoints_.size() << " TrackPoints and " << trackReps_.size() << " TrackReps.\n";
-  std::cout << " Seed state: "; stateSeed_.Print();
+  printOut << "=======================================================================================\n";
+  printOut << "genfit::Track, containing " << trackPoints_.size() << " TrackPoints and " << trackReps_.size() << " TrackReps.\n";
+  printOut << " Seed state: "; stateSeed_.Print();
 
   for (unsigned int i=0; i<trackReps_.size(); ++i) {
-    std::cout << " TrackRep Nr. " << i;
+    printOut << " TrackRep Nr. " << i;
     if (i == cardinalRep_)
-      std::cout << " (This is the cardinal rep)";
-    std::cout << "\n";
+      printOut << " (This is the cardinal rep)";
+    printOut << "\n";
     trackReps_[i]->Print();
   }
 
-  std::cout << "---------------------------------------------------------------------------------------\n";
+  printOut << "---------------------------------------------------------------------------------------\n";
 
   for (unsigned int i=0; i<trackPoints_.size(); ++i) {
-    std::cout << "TrackPoint Nr. " << i << "\n";
+    printOut << "TrackPoint Nr. " << i << "\n";
     trackPoints_[i]->Print();
-    std::cout << "..........................................................................\n";
+    printOut << "..........................................................................\n";
   }
 
   for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it=fitStatuses_.begin(); it!=fitStatuses_.end(); ++it) {
     it->second->Print();
   }
 
-  std::cout << "=======================================================================================\n";
+  printOut << "=======================================================================================\n";
 
 }
 
@@ -1280,49 +1280,49 @@ bool Track::checkConsistency() const {
 
   // check if seed is 6D
   if (stateSeed_.GetNrows() != 6) {
-    std::cerr << "Track::checkConsistency(): stateSeed_ dimension != 6" << std::endl;
+    errorOut << "Track::checkConsistency(): stateSeed_ dimension != 6" << std::endl;
     retVal = false;
   }
 
   if (covSeed_.GetNrows() != 6) {
-    std::cerr << "Track::checkConsistency(): covSeed_ dimension != 6" << std::endl;
+    errorOut << "Track::checkConsistency(): covSeed_ dimension != 6" << std::endl;
     retVal = false;
   }
 
   if (covSeed_.Max() == 0.) {
-    std::cerr << "Track::checkConsistency(): Warning: covSeed_ is zero" << std::endl;
+    errorOut << "Track::checkConsistency(): Warning: covSeed_ is zero" << std::endl;
     //retVal = false;
   }
 
   // check if correct number of fitStatuses
   if (fitStatuses_.size() != trackReps_.size()) {
-    std::cerr << "Track::checkConsistency(): Number of fitStatuses is != number of TrackReps " << std::endl;
+    errorOut << "Track::checkConsistency(): Number of fitStatuses is != number of TrackReps " << std::endl;
     retVal = false;
   }
 
   // check if cardinalRep_ is in range of trackReps_
   if (trackReps_.size() && cardinalRep_ >= trackReps_.size()) {
-    std::cerr << "Track::checkConsistency(): cardinalRep id " << cardinalRep_ << " out of bounds" << std::endl;
+    errorOut << "Track::checkConsistency(): cardinalRep id " << cardinalRep_ << " out of bounds" << std::endl;
     retVal = false;
   }
 
   for (std::vector<AbsTrackRep*>::const_iterator rep = trackReps_.begin(); rep != trackReps_.end(); ++rep) {
     // check for NULL
     if ((*rep) == NULL) {
-      std::cerr << "Track::checkConsistency(): TrackRep is NULL" << std::endl;
+      errorOut << "Track::checkConsistency(): TrackRep is NULL" << std::endl;
       retVal = false;
     }
 
     // check for valid pdg code
     TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle((*rep)->getPDG());
     if (particle == NULL) {
-      std::cerr << "Track::checkConsistency(): TrackRep pdg ID " << (*rep)->getPDG() << " is not valid" << std::endl;
+      errorOut << "Track::checkConsistency(): TrackRep pdg ID " << (*rep)->getPDG() << " is not valid" << std::endl;
       retVal = false;
     }
 
     // check if corresponding FitStatus is there
     if (fitStatuses_.find(*rep) == fitStatuses_.end() and fitStatuses_.find(*rep)->second != NULL) {
-      std::cerr << "Track::checkConsistency(): No FitStatus for Rep or FitStatus is NULL" << std::endl;
+      errorOut << "Track::checkConsistency(): No FitStatus for Rep or FitStatus is NULL" << std::endl;
       retVal = false;
     }
   }
@@ -1331,12 +1331,12 @@ bool Track::checkConsistency() const {
   for (std::vector<TrackPoint*>::const_iterator tp = trackPoints_.begin(); tp != trackPoints_.end(); ++tp) {
     // check for NULL
     if ((*tp) == NULL) {
-      std::cerr << "Track::checkConsistency(): TrackPoint is NULL" << std::endl;
+      errorOut << "Track::checkConsistency(): TrackPoint is NULL" << std::endl;
       retVal = false;
     }
     // check if trackPoint points back to this track
     if ((*tp)->getTrack() != this) {
-      std::cerr << "Track::checkConsistency(): TrackPoint does not point back to this track" << std::endl;
+      errorOut << "Track::checkConsistency(): TrackPoint does not point back to this track" << std::endl;
       retVal = false;
     }
 
@@ -1345,12 +1345,12 @@ bool Track::checkConsistency() const {
     for (std::vector<AbsMeasurement*>::const_iterator m = rawMeasurements.begin(); m != rawMeasurements.end(); ++m) {
       // check for NULL
       if ((*m) == NULL) {
-        std::cerr << "Track::checkConsistency(): Measurement is NULL" << std::endl;
+        errorOut << "Track::checkConsistency(): Measurement is NULL" << std::endl;
         retVal = false;
       }
       // check if measurement points back to TrackPoint
       if ((*m)->getTrackPoint() != *tp) {
-        std::cerr << "Track::checkConsistency(): Measurement does not point back to correct TrackPoint" << std::endl;
+        errorOut << "Track::checkConsistency(): Measurement does not point back to correct TrackPoint" << std::endl;
         retVal = false;
       }
     }
@@ -1360,7 +1360,7 @@ bool Track::checkConsistency() const {
     for (std::vector<AbsFitterInfo*>::const_iterator fi = fitterInfos.begin(); fi != fitterInfos.end(); ++fi) {
       // check for NULL
       if ((*fi) == NULL) {
-        std::cerr << "Track::checkConsistency(): FitterInfo is NULL. TrackPoint: " << *tp << std::endl;
+        errorOut << "Track::checkConsistency(): FitterInfo is NULL. TrackPoint: " << *tp << std::endl;
         retVal = false;
       }
 
@@ -1372,12 +1372,12 @@ bool Track::checkConsistency() const {
         }
       }
       if (mycount ==  0) {
-        std::cerr << "Track::checkConsistency(): fitterInfo points to TrackRep which is not in Track" << std::endl;
+        errorOut << "Track::checkConsistency(): fitterInfo points to TrackRep which is not in Track" << std::endl;
         retVal = false;
       }
 
       if (!( (*fi)->checkConsistency(&(this->getFitStatus((*fi)->getRep())->getPruneFlags())) ) ) {
-        std::cerr << "Track::checkConsistency(): FitterInfo not consistent. TrackPoint: " << *tp << std::endl;
+        errorOut << "Track::checkConsistency(): FitterInfo not consistent. TrackPoint: " << *tp << std::endl;
         retVal = false;
       }
 
@@ -1388,9 +1388,9 @@ bool Track::checkConsistency() const {
           double len = static_cast<KalmanFitterInfo*>(*fi)->getReferenceState()->getForwardSegmentLength();
           double prevLen = prevFis[(*fi)->getRep()]->getReferenceState()->getBackwardSegmentLength();
           if (fabs(prevLen + len) > 1E-10 ) {
-            std::cerr << "Track::checkConsistency(): segment lengths of reference states for rep " << (*fi)->getRep() << " (id " << getIdForRep((*fi)->getRep()) << ") at TrackPoint " << (*tp) << " don't match" << std::endl;
-            std::cerr << prevLen << " + " << len << " = " << prevLen + len << std::endl;
-            std::cerr << "TrackPoint " << *tp << ", FitterInfo " << *fi << ", rep " << getIdForRep((*fi)->getRep()) << std::endl;
+            errorOut << "Track::checkConsistency(): segment lengths of reference states for rep " << (*fi)->getRep() << " (id " << getIdForRep((*fi)->getRep()) << ") at TrackPoint " << (*tp) << " don't match" << std::endl;
+            errorOut << prevLen << " + " << len << " = " << prevLen + len << std::endl;
+            errorOut << "TrackPoint " << *tp << ", FitterInfo " << *fi << ", rep " << getIdForRep((*fi)->getRep()) << std::endl;
             retVal = false;
           }
         }
@@ -1415,15 +1415,15 @@ bool Track::checkConsistency() const {
   }
 
   if (trackPointsWithMeasurement.size() != trackPointsWithMeasurement_.size()) {
-    std::cerr << "Track::checkConsistency(): trackPointsWithMeasurement_ has incorrect size" << std::endl;
+    errorOut << "Track::checkConsistency(): trackPointsWithMeasurement_ has incorrect size" << std::endl;
     retVal = false;
   }
 
   for (unsigned int i = 0; i < trackPointsWithMeasurement.size(); ++i) {
     if (trackPointsWithMeasurement[i] != trackPointsWithMeasurement_[i]) {
-      std::cerr << "Track::checkConsistency(): trackPointsWithMeasurement_ is not correct" << std::endl;
-      std::cerr << "has         id " << i << ", address " << trackPointsWithMeasurement_[i] << std::endl;
-      std::cerr << "should have id " << i << ", address " << trackPointsWithMeasurement[i] << std::endl;
+      errorOut << "Track::checkConsistency(): trackPointsWithMeasurement_ is not correct" << std::endl;
+      errorOut << "has         id " << i << ", address " << trackPointsWithMeasurement_[i] << std::endl;
+      errorOut << "should have id " << i << ", address " << trackPointsWithMeasurement[i] << std::endl;
       retVal = false;
     }
   }
@@ -1435,7 +1435,7 @@ bool Track::checkConsistency() const {
 void Track::trackHasChanged() {
 
   #ifdef DEBUG
-  std::cout << "Track::trackHasChanged \n";
+  debugOut << "Track::trackHasChanged \n";
   #endif
 
   if (fitStatuses_.empty())

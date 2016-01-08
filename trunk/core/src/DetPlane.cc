@@ -18,9 +18,9 @@
 */
 
 #include "DetPlane.h"
+#include "IO.h"
 
 #include <cassert>
-#include <iostream>
 #include <cmath>
 #include <TMath.h>
 #include <TClass.h>
@@ -218,7 +218,7 @@ void DetPlane::sane(){
 
 void DetPlane::Print(const Option_t* option) const
 {
-  std::cout<<"DetPlane: "
+  printOut<<"DetPlane: "
      <<"O("<<o_.X()<<", "<<o_.Y()<<", "<<o_.Z()<<") "
      <<"u("<<u_.X()<<", "<<u_.Y()<<", "<<u_.Z()<<") "
      <<"v("<<v_.X()<<", "<<v_.Y()<<", "<<v_.Z()<<") "

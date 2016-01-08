@@ -18,10 +18,10 @@
 */
 
 #include "StepLimits.h"
+#include "IO.h"
 
 #include <algorithm>
 #include <assert.h>
-#include <iostream>
 #include <limits>
 
 
@@ -118,34 +118,34 @@ void StepLimits::Print() {
     if (limits_[i] >= maxLimit_)
       continue;
 
-    std::cout << "   | " << limits_[i] << " cm due to ";
+    printOut << "   | " << limits_[i] << " cm due to ";
     switch (static_cast<StepLimitType>(i)) {
     case stp_noLimit:
       break;
     case stp_fieldCurv:
-      std::cout << "stp_fieldCurv (medium limit): stepsize limited by curvature and magnetic field inhomogenities";
+      printOut << "stp_fieldCurv (medium limit): stepsize limited by curvature and magnetic field inhomogenities";
       break;
     case stp_momLoss:
-      std::cout << "stp_momLoss (medium limit): stepsize limited by stepper because maximum momLoss is reached";
+      printOut << "stp_momLoss (medium limit): stepsize limited by stepper because maximum momLoss is reached";
       break;
     case stp_sMax:
-      std::cout << "stp_sMax (medium limit): stepsize limited by SMax defined in #estimateStep()";
+      printOut << "stp_sMax (medium limit): stepsize limited by SMax defined in #estimateStep()";
       break;
     case stp_sMaxArg:
-      std::cout << "stp_sMaxArg (hard limit): stepsize limited by argument maxStepArg passed to #estimateStep()";
+      printOut << "stp_sMaxArg (hard limit): stepsize limited by argument maxStepArg passed to #estimateStep()";
       break;
     case stp_boundary:
-      std::cout << "stp_boundary (hard limit): stepsize limited by stepper because material boundary is encountered";
+      printOut << "stp_boundary (hard limit): stepsize limited by stepper because material boundary is encountered";
       break;
     case stp_plane:
-      std::cout << "stp_plane (hard limit):  stepsize limited because destination plane is reached";
+      printOut << "stp_plane (hard limit):  stepsize limited because destination plane is reached";
       break;
     case ENUM_NR_ITEMS:
       break;
     }
-    std::cout << "\n";
+    printOut << "\n";
   }
-  std::cout << "\n";
+  printOut << "\n";
 }
 
 } /* End of namespace genfit */

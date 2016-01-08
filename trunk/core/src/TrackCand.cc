@@ -20,9 +20,9 @@
 #include "TrackCand.h"
 #include "Exception.h"
 #include "TDatabasePDG.h"
+#include "IO.h"
 
 #include <algorithm>
-#include <iostream>
 #include <utility>
 
 namespace genfit {
@@ -200,12 +200,12 @@ bool operator== (const TrackCand& lhs, const TrackCand& rhs){
 
 
 void TrackCand::Print(const Option_t* option) const {
-  std::cout << "======== TrackCand::print ========\n";
-  std::cout << "mcTrackId=" << mcTrackId_ << "\n";
-  std::cout << "seed values for 6D state: \n";
+  printOut << "======== TrackCand::print ========\n";
+  printOut << "mcTrackId=" << mcTrackId_ << "\n";
+  printOut << "seed values for 6D state: \n";
   state6D_.Print(option);
-  std::cout << "charge = " << q_ << "\n";
-  std::cout << "PDG code = " << pdg_ << "\n";
+  printOut << "charge = " << q_ << "\n";
+  printOut << "PDG code = " << pdg_ << "\n";
   for(unsigned int i=0; i<hits_.size(); ++i){
     hits_[i]->Print();
   }

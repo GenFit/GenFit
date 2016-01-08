@@ -20,10 +20,10 @@
 #include "AbsTrackRep.h"
 #include "StateOnPlane.h"
 #include "AbsMeasurement.h"
+#include "IO.h"
 
 #include <TDatabasePDG.h>
 
-#include <iostream>
 
 
 namespace genfit {
@@ -192,7 +192,7 @@ bool AbsTrackRep::switchPDGSign() {
 
 
 void AbsTrackRep::Print(const Option_t*) const {
-  std::cout << "genfit::AbsTrackRep, pdgCode = " << pdgCode_ << ". PropDir = " << (int)propDir_ << "\n";
+  printOut << "genfit::AbsTrackRep, pdgCode = " << pdgCode_ << ". PropDir = " << (int)propDir_ << "\n";
 }
 
 

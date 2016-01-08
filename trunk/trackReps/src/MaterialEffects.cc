@@ -19,8 +19,8 @@
 
 #include "MaterialEffects.h"
 #include "Exception.h"
+#include "IO.h"
 
-#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <stdlib.h>
@@ -103,7 +103,7 @@ void MaterialEffects::setMscModel(const std::string& modelName)
     std::string errorMsg = std::string("There is no MSC model called \"") + modelName + "\". Maybe it is not implemented or you misspelled the model name";
     Exception exc(errorMsg, __LINE__, __FILE__);
     exc.setFatal();
-    std::cerr << exc.what();
+    errorOut << exc.what();
     throw exc;
   }
 }
@@ -118,15 +118,15 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 {
 
   if (debugLvl_ > 0) {
-    std::cout << "     MaterialEffects::effects \n";
+    debugOut << "     MaterialEffects::effects \n";
   }
 
-  /*std::cout << "noEffects_ " << noEffects_ << "\n";
-  std::cout << "energyLossBetheBloch_ " << energyLossBetheBloch_ << "\n";
-  std::cout << "noiseBetheBloch_ " << noiseBetheBloch_ << "\n";
-  std::cout << "noiseCoulomb_ " << noiseCoulomb_ << "\n";
-  std::cout << "energyLossBrems_ " << energyLossBrems_ << "\n";
-  std::cout << "noiseBrems_ " << noiseBrems_ << "\n";*/
+  /*debugOut << "noEffects_ " << noEffects_ << "\n";
+  debugOut << "energyLossBetheBloch_ " << energyLossBetheBloch_ << "\n";
+  debugOut << "noiseBetheBloch_ " << noiseBetheBloch_ << "\n";
+  debugOut << "noiseCoulomb_ " << noiseCoulomb_ << "\n";
+  debugOut << "energyLossBrems_ " << energyLossBrems_ << "\n";
+  debugOut << "noiseBrems_ " << noiseBrems_ << "\n";*/
 
 
   if (noEffects_) return 0.;
@@ -153,11 +153,11 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
     }
 
     if (debugLvl_ > 0) {
-      std::cout << "     calculate matFX ";
+      debugOut << "     calculate matFX ";
       if (doNoise) 
-        std::cout << "and noise";
-      std::cout << " for ";
-      std::cout << "stepSize = " << it->matStep_.stepSize_ << "\t";
+        debugOut << "and noise";
+      debugOut << " for ";
+      debugOut << "stepSize = " << it->matStep_.stepSize_ << "\t";
       it->matStep_.materialProperties_.Print();
     }
 
@@ -266,7 +266,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
 
   if (debugLvl_ > 0) {
-    std::cout << "     currentMaterial "; currentMaterial.Print();
+    debugOut << "     currentMaterial "; currentMaterial.Print();
   }
 
   // limit due to momloss
@@ -281,7 +281,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   limits.setLimit(stp_momLoss, maxStepMomLoss);
 
   if (debugLvl_ > 0) {
-    std::cout << "     momLoss exceeded after a step of " <<  maxStepMomLoss
+    debugOut << "     momLoss exceeded after a step of " <<  maxStepMomLoss
         << "; relMomLoss up to now = " << relMomLoss << "\n";
   }
 
@@ -296,13 +296,13 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
   for (unsigned int i=0; i<100; ++i) {
     if (debugLvl_ > 0) {
-      std::cout << "     find next boundary\n";
+      debugOut << "     find next boundary\n";
     }
     double step =  materialInterface_->findNextBoundary(rep, state7, boundaryStep, varField);
 
     if (debugLvl_ > 0) {
       if (step == 0) {
-        std::cout << "     materialInterface_ returned a step of 0 \n";
+        debugOut << "     materialInterface_ returned a step of 0 \n";
       }
     }
 
@@ -310,7 +310,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
     boundaryStep -= step;
 
     if (debugLvl_ > 0) {
-      std::cout << "     made a step of " << step << "\n";
+      debugOut << "     made a step of " << step << "\n";
     }
 
     if (! ignoreBoundariesBetweenEqualMaterials_)
@@ -333,7 +333,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
     materialInterface_->getMaterialParameters(materialAfter);
 
     if (debugLvl_ > 0) {
-      std::cout << "     material after step: "; materialAfter.Print();
+      debugOut << "     material after step: "; materialAfter.Print();
     }
 
     if (materialAfter != currentMaterial)
@@ -423,7 +423,7 @@ double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear)
   else momLoss = mom - sqrt(pow(E0 - dE, 2) - mass_*mass_); // momLoss; positive for positive stepSign
 
   if (debugLvl_ > 0) {
-    std::cout << "      MaterialEffects::momentumLoss: mom = " << mom << "; E0 = " << E0
+    debugOut << "      MaterialEffects::momentumLoss: mom = " << mom << "; E0 = " << E0
         << "; dEdx = " << dEdx_
         << "; dE = " << dE << "; mass = " << mass_ << "\n";
   }
@@ -554,7 +554,7 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
   }
   //assert(sigma2 >= 0.0);
   sigma2 = (sigma2 > 0.0 ? sigma2 : 0.0);
-  //XXX std::cout << "MaterialEffects::noiseCoulomb the MSC variance is " << sigma2 << std::endl;
+  //XXX debugOut << "MaterialEffects::noiseCoulomb the MSC variance is " << sigma2 << std::endl;
 
   M7x7 noiseAfter; // will hold the new MSC noise to cause by the current stepSize_ length
   std::fill(noiseAfter.begin(), noiseAfter.end(), 0);
@@ -598,7 +598,7 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
   noiseAfter[3 * 7 + 5] = noiseAfter[5 * 7 + 3];
   noiseAfter[4 * 7 + 5] = noiseAfter[5 * 7 + 4];
   noiseAfter[5 * 7 + 5] = sigma2 * (1 - a[2]*a[2]);
-//    std::cout << "new noise\n";
+//    debugOut << "new noise\n";
 //    RKTools::printDim(noiseAfter, 7,7);
   for (unsigned int i = 0; i < 7 * 7; ++i) {
     noise[i] += noiseAfter[i];
@@ -784,7 +784,7 @@ void MaterialEffects::noiseBrems(M7x7& noise, double momSquare, double betaSquar
 
   double minusXOverLn2  = -1.442695 * fabs(stepSize_) / radiationLength_;
   double sigma2 = 1.44*(pow(3., minusXOverLn2) - pow(4., minusXOverLn2)) / momSquare;
-  //XXX std::cout << "breams sigma: " << sigma2E << std::endl;
+  //XXX debugOut << "breams sigma: " << sigma2E << std::endl;
   //assert(sigma2 >= 0.0);
   sigma2 = (sigma2 > 0.0 ? sigma2 : 0.0);
   noise[6 * 7 + 6] +=  charge_*charge_/betaSquare / (momSquare*momSquare) * sigma2;
@@ -832,7 +832,7 @@ void MaterialEffects::drawdEdx(int pdg) {
     }
 
 
-    //std::cout<< "E = " << E << "; dEdx = " << dEdx(E) <<"\n";
+    //debugOut<< "E = " << E << "; dEdx = " << dEdx(E) <<"\n";
 
     energyLossBrems_ = true;
     energyLossBetheBloch_ = false;

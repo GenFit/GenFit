@@ -18,6 +18,7 @@
 */
 
 #include "RKTrackRep.h"
+#include "IO.h"
 
 #include <Exception.h>
 #include <FieldManager.h>
@@ -82,13 +83,13 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane& state,
     bool calcJacobianNoise) const {
 
   if (debugLvl_ > 0) {
-    std::cout << "RKTrackRep::extrapolateToPlane()\n";
+    debugOut << "RKTrackRep::extrapolateToPlane()\n";
   }
 
 
   if (state.getPlane() == plane) {
     if (debugLvl_ > 0) {
-      std::cout << "state is already defined at plane. Do nothing! \n";
+      debugOut << "state is already defined at plane. Do nothing! \n";
     }
     return 0;
   }
@@ -138,7 +139,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
     bool calcJacobianNoise) const {
 
   if (debugLvl_ > 0) {
-    std::cout << "RKTrackRep::extrapolateToLine()\n";
+    debugOut << "RKTrackRep::extrapolateToLine()\n";
   }
 
   checkCache(state, NULL);
@@ -222,7 +223,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
   }
 
   if (debugLvl_ > 0) {
-    std::cout << "RKTrackRep::extrapolateToLine(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (poca_onwire-poca).Mag() << " cm. Angle deviation: " << dir.Angle((poca_onwire-poca))-TMath::PiOver2() << " rad \n";
+    debugOut << "RKTrackRep::extrapolateToLine(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (poca_onwire-poca).Mag() << " cm. Angle deviation: " << dir.Angle((poca_onwire-poca))-TMath::PiOver2() << " rad \n";
   }
 
   lastEndState_ = state;
@@ -238,7 +239,7 @@ double RKTrackRep::extrapToPoint(StateOnPlane& state,
     bool calcJacobianNoise) const {
 
   if (debugLvl_ > 0) {
-    std::cout << "RKTrackRep::extrapolateToPoint()\n";
+    debugOut << "RKTrackRep::extrapolateToPoint()\n";
   }
 
   checkCache(state, NULL);
@@ -338,7 +339,7 @@ double RKTrackRep::extrapToPoint(StateOnPlane& state,
 
 
   if (debugLvl_ > 0) {
-    std::cout << "RKTrackRep::extrapolateToPoint(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (point-poca).Mag() << " cm. Angle deviation: " << dir.Angle((point-poca))-TMath::PiOver2() << " rad \n";
+    debugOut << "RKTrackRep::extrapolateToPoint(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (point-poca).Mag() << " cm. Angle deviation: " << dir.Angle((point-poca))-TMath::PiOver2() << " rad \n";
   }
 
   lastEndState_ = state;
@@ -355,7 +356,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     bool calcJacobianNoise) const {
 
   if (debugLvl_ > 0) {
-    std::cout << "RKTrackRep::extrapolateToCylinder()\n";
+    debugOut << "RKTrackRep::extrapolateToCylinder()\n";
   }
 
   checkCache(state, NULL);
@@ -427,7 +428,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     k = k2;
 
     if (debugLvl_ > 0) {
-      std::cout << "RKTrackRep::extrapolateToCylinder(); k = " << k << "\n";
+      debugOut << "RKTrackRep::extrapolateToCylinder(); k = " << k << "\n";
     }
 
     dest = pos + k * dir;
@@ -480,7 +481,7 @@ double RKTrackRep::extrapolateToCone(StateOnPlane& state,
     bool calcJacobianNoise) const {
 
   if (debugLvl_ > 0) {
-    std::cout << "RKTrackRep::extrapolateToCone()\n";
+    debugOut << "RKTrackRep::extrapolateToCone()\n";
   }
 
   checkCache(state, NULL);
@@ -559,11 +560,11 @@ double RKTrackRep::extrapolateToCone(StateOnPlane& state,
     }
 
     if (debugLvl_ > 0) {
-      std::cout << "RKTrackRep::extrapolateToCone(); k = " << k << "\n";
+      debugOut << "RKTrackRep::extrapolateToCone(); k = " << k << "\n";
     }
 
     dest = pos + k * dir;
-    // std::cout << "In cone extrapolation ";
+    // debugOut << "In cone extrapolation ";
     // dest.Print();
 
     plane->setO(dest);
@@ -613,7 +614,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
     bool calcJacobianNoise) const {
 
   if (debugLvl_ > 0) {
-    std::cout << "RKTrackRep::extrapolateToSphere()\n";
+    debugOut << "RKTrackRep::extrapolateToSphere()\n";
   }
 
   checkCache(state, NULL);
@@ -674,7 +675,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
     k = k2;
 
     if (debugLvl_ > 0) {
-      std::cout << "RKTrackRep::extrapolateToSphere(); k = " << k << "\n";
+      debugOut << "RKTrackRep::extrapolateToSphere(); k = " << k << "\n";
     }
 
     dest = pos + k * dir;
@@ -723,7 +724,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
     bool calcJacobianNoise) const {
 
   if (debugLvl_ > 0) {
-    std::cout << "RKTrackRep::extrapolateBy()\n";
+    debugOut << "RKTrackRep::extrapolateBy()\n";
   }
 
   checkCache(state, NULL);
@@ -780,7 +781,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
 
     if (fabs(tracklength-step) < MINSTEP) {
       if (debugLvl_ > 0) {
-        std::cout << "RKTrackRep::extrapolateBy(): reached after " << iterations << " iterations. \n";
+        debugOut << "RKTrackRep::extrapolateBy(): reached after " << iterations << " iterations. \n";
       }
       pos.SetXYZ(state7[0], state7[1], state7[2]);
       dir.SetXYZ(state7[3], state7[4], state7[5]);
@@ -931,7 +932,7 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
 					     const M1x7& destState7, const DetPlane& destPlane) const {
 
   if (debugLvl_ > 0) {
-    std::cout << "RKTrackRep::calcForwardJacobianAndNoise " << std::endl;
+    debugOut << "RKTrackRep::calcForwardJacobianAndNoise " << std::endl;
   }
 
   if (ExtrapSteps_.size() == 0) {
@@ -966,8 +967,8 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
 			   *(M5x5 *)fNoise_.GetMatrixArray());
 
   if (debugLvl_ > 0) {
-    std::cout << "total jacobian : "; fJacobian_.Print();
-    std::cout << "total noise : "; fNoise_.Print();
+    debugOut << "total jacobian : "; fJacobian_.Print();
+    debugOut << "total noise : "; fNoise_.Print();
   }
 
 }
@@ -992,7 +993,7 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
 
 
   if (debugLvl_ > 0) {
-    std::cout << "delta state : "; deltaState.Print();
+    debugOut << "delta state : "; deltaState.Print();
   }
 }
 
@@ -1000,7 +1001,7 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
 void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
 
   if (debugLvl_ > 0) {
-    std::cout << "RKTrackRep::getBackwardJacobianAndNoise " << std::endl;
+    debugOut << "RKTrackRep::getBackwardJacobianAndNoise " << std::endl;
   }
 
   if (ExtrapSteps_.size() == 0) {
@@ -1459,7 +1460,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
                fabs((B1+B6)-(B3+B4)) +
                fabs((C1+C6)-(C3+C4))  );  // EST = ||(ABC1+ABC6)-(ABC3+ABC4)||_1  =  ||(axzy x H0 + ABC5 x H2) - (ABC2 x H1 + ABC3 x H1)||_1
   if (debugLvl_ > 0) {
-    std::cout << "    RKTrackRep::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
+    debugOut << "    RKTrackRep::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
   }
 
   // Prevent the step length increase from getting too large, this is
@@ -1593,11 +1594,11 @@ void RKTrackRep::transformPM7(const MeasuredStateOnPlane& state,
 
 void RKTrackRep::calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const {
   /*if (debugLvl_ > 1) {
-    std::cout << "RKTrackRep::calcJ_pM_5x7 \n";
-    std::cout << "  U = "; U.Print();
-    std::cout << "  V = "; V.Print();
-    std::cout << "  pTilde = "; RKTools::printDim(pTilde, 3,1);
-    std::cout << "  spu = " << spu << "\n";
+    debugOut << "RKTrackRep::calcJ_pM_5x7 \n";
+    debugOut << "  U = "; U.Print();
+    debugOut << "  V = "; V.Print();
+    debugOut << "  pTilde = "; RKTools::printDim(pTilde, 3,1);
+    debugOut << "  spu = " << spu << "\n";
   }*/
 
   std::fill(J_pM.begin(), J_pM.end(), 0);
@@ -1631,7 +1632,7 @@ void RKTrackRep::calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, 
   J_pM[19] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
 
   /*if (debugLvl_ > 1) {
-    std::cout << "  J_pM_5x7_ = "; RKTools::printDim(J_pM_5x7_, 5,7);
+    debugOut << "  J_pM_5x7_ = "; RKTools::printDim(J_pM_5x7_, 5,7);
   }*/
 }
 
@@ -1724,11 +1725,11 @@ void RKTrackRep::transformM7P(const M7x7& in7x7,
 void RKTrackRep::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const {
 
   /*if (debugLvl_ > 1) {
-    std::cout << "RKTrackRep::calcJ_Mp_7x5 \n";
-    std::cout << "  U = "; U.Print();
-    std::cout << "  V = "; V.Print();
-    std::cout << "  W = "; W.Print();
-    std::cout << "  A = "; RKTools::printDim(A, 3,1);
+    debugOut << "RKTrackRep::calcJ_Mp_7x5 \n";
+    debugOut << "  U = "; U.Print();
+    debugOut << "  V = "; V.Print();
+    debugOut << "  W = "; W.Print();
+    debugOut << "  A = "; RKTools::printDim(A, 3,1);
   }*/
 
   std::fill(J_Mp.begin(), J_Mp.end(), 7*5);
@@ -1760,7 +1761,7 @@ void RKTrackRep::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, 
   J_Mp[14] = V.Z(); // [2][4]
 
   /*if (debugLvl_ > 1) {
-    std::cout << "  J_Mp_7x5_ = "; RKTools::printDim(J_Mp, 7,5);
+    debugOut << "  J_Mp_7x5_ = "; RKTools::printDim(J_Mp, 7,5);
   }*/
 
 }
@@ -1880,11 +1881,11 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
 
   if (debugLvl_ > 0) {
-    std::cout << "RKTrackRep::RKutta \n";
-    std::cout << "position: "; TVector3(R[0], R[1], R[2]).Print();
-    std::cout << "direction: "; TVector3(A[0], A[1], A[2]).Print();
-    std::cout << "momentum: " << momentum << " GeV\n";
-    std::cout << "destination: "; plane.Print();
+    debugOut << "RKTrackRep::RKutta \n";
+    debugOut << "position: "; TVector3(R[0], R[1], R[2]).Print();
+    debugOut << "direction: "; TVector3(A[0], A[1], A[2]).Print();
+    debugOut << "momentum: " << momentum << " GeV\n";
+    debugOut << "destination: "; plane.Print();
   }
 
   checkJacProj = false;
@@ -1915,7 +1916,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
     }
 
     if (debugLvl_ > 0) {
-      std::cout << "------ RKutta main loop nr. " << counter-1 << " ------\n";
+      debugOut << "------ RKutta main loop nr. " << counter-1 << " ------\n";
     }
 
     M1x3 ABefore = {{ A[0], A[1], A[2] }};
@@ -1942,7 +1943,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
     // if stepsize has been limited by material, break the loop and return. No linear extrapolation!
     if (limits.getLowestLimit().first == stp_momLoss) {
       if (debugLvl_ > 0) {
-        std::cout<<" momLossExceeded -> return(true); \n";
+        debugOut<<" momLossExceeded -> return(true); \n";
       }
       return(true);
     }
@@ -1950,7 +1951,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
     // if stepsize has been limited by material boundary, break the loop and return. No linear extrapolation!
     if (limits.getLowestLimit().first == stp_boundary) {
       if (debugLvl_ > 0) {
-        std::cout<<" at boundary -> return(true); \n";
+        debugOut<<" at boundary -> return(true); \n";
       }
       return(true);
     }
@@ -1967,14 +1968,14 @@ bool RKTrackRep::RKutta(const M1x4& SU,
     if (limits.getLowestLimit().first == stp_plane &&
         fabs(S) < MINSTEP) {
       if (debugLvl_ > 0) {
-        std::cout<<" (at Plane && fabs(S) < MINSTEP) -> break and do linear extrapolation \n";
+        debugOut<<" (at Plane && fabs(S) < MINSTEP) -> break and do linear extrapolation \n";
       }
       break;
     }
     if (limits.getLowestLimit().first == stp_momLoss &&
         fabs(S) < MINSTEP) {
       if (debugLvl_ > 0) {
-        std::cout<<" (momLossExceeded && fabs(S) < MINSTEP) -> return(true), no linear extrapolation; \n";
+        debugOut<<" (momLossExceeded && fabs(S) < MINSTEP) -> return(true), no linear extrapolation; \n";
       }
       RKSteps_.erase(RKSteps_.end()-1);
       --RKStepsFXStop_;
@@ -2015,7 +2016,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
     if (fabs(Sl) > 0.001*MINSTEP){
       if (debugLvl_ > 0) {
-        std::cout << " RKutta - linear extrapolation to surface\n";
+        debugOut << " RKutta - linear extrapolation to surface\n";
       }
       Sl = 1./Sl;        // Sl = inverted last Stepsize Sl
 
@@ -2043,7 +2044,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       flightTime += S / beta / 29.9792458; // in ns;
     }
     else if (debugLvl_ > 0)  {
-      std::cout << " RKutta - last stepsize too small -> can't do linear extrapolation! \n";
+      debugOut << " RKutta - last stepsize too small -> can't do linear extrapolation! \n";
     }
 
     //
@@ -2066,9 +2067,9 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       }
 
       if (debugLvl_ > 0) {
-        //std::cout << "  Jacobian^T of extrapolation before Projection:\n";
+        //debugOut << "  Jacobian^T of extrapolation before Projection:\n";
         //RKTools::printDim(*jacobianT, 7,7);
-        std::cout << "  Project Jacobian of extrapolation onto destination plane\n";
+        debugOut << "  Project Jacobian of extrapolation onto destination plane\n";
       }
       An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
       An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
@@ -2092,7 +2093,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
 
       if (debugLvl_ > 0) {
-        //std::cout << "  Jacobian^T of extrapolation after Projection:\n";
+        //debugOut << "  Jacobian^T of extrapolation after Projection:\n";
         //RKTools::printDim(*jacobianT, 7,7);
       }
 
@@ -2141,7 +2142,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
       }
       else {
         if (debugLvl_ > 0) {
-          std::cout << " RKTrackRep::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_.at(cachePos_).matStep_.stepSize_ << "\n";
+          debugOut << " RKTrackRep::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_.at(cachePos_).matStep_.stepSize_ << "\n";
         }
         //for(int n = 0; n < 1*7; ++n) RKSteps_[cachePos_].state7_[n] = state7[n];
         ++RKStepsFXStop_;
@@ -2154,9 +2155,9 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   limits.setLimit(stp_sMax, 25.); // max. step allowed [cm]
 
   if (debugLvl_ > 0) {
-    std::cout << " RKTrackRep::estimateStep \n";
-    std::cout << "  position:  "; TVector3(state7[0], state7[1], state7[2]).Print();
-    std::cout << "  direction: "; TVector3(state7[3], state7[4], state7[5]).Print();
+    debugOut << " RKTrackRep::estimateStep \n";
+    debugOut << "  position:  "; TVector3(state7[0], state7[1], state7[2]).Print();
+    debugOut << "  direction: "; TVector3(state7[3], state7[4], state7[5]).Print();
   }
 
   // calculate SL distance to surface
@@ -2179,12 +2180,12 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   limits.setStepSign(SLDist);
 
   if (debugLvl_ > 0) {
-    std::cout << "  Distance to plane: " << Dist << "\n";
-    std::cout << "  SL distance to plane: " << SLDist << "\n";
+    debugOut << "  Distance to plane: " << Dist << "\n";
+    debugOut << "  SL distance to plane: " << SLDist << "\n";
     if (limits.getStepSign()>0) 
-      std::cout << "  Direction is  pointing towards surface.\n";
+      debugOut << "  Direction is  pointing towards surface.\n";
     else  
-      std::cout << "  Direction is pointing away from surface.\n";
+      debugOut << "  Direction is pointing away from surface.\n";
   }
   // DONE calculate SL distance to surface
 
@@ -2213,7 +2214,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
     double q ( RKPropagate(state7_temp, NULL, SA, fieldCurvLimit, true) );
     if (debugLvl_ > 0) {
-      std::cout << "  maxStepArg = " << fieldCurvLimit << "; q = " << q  << " \n";
+      debugOut << "  maxStepArg = " << fieldCurvLimit << "; q = " << q  << " \n";
     }
 
     // remember steps and resulting SL distances to plane for stepsize improvement
@@ -2263,21 +2264,21 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   // auto select
   if (propDir_ == 0 || !plane.isFinite()){
     if (debugLvl_ > 0) {
-      std::cout << "  auto select direction";
-      if (!plane.isFinite()) std::cout << ", plane is not finite";
-      std::cout << ".\n";
+      debugOut << "  auto select direction";
+      if (!plane.isFinite()) debugOut << ", plane is not finite";
+      debugOut << ".\n";
     }
   }
   // see if straight line approximation is ok
   else if ( limits.getLimit(stp_plane) < 0.2*limits.getLimit(stp_fieldCurv) ){
     if (debugLvl_ > 0) {
-      std::cout << "  straight line approximation is fine.\n";
+      debugOut << "  straight line approximation is fine.\n";
     }
 
     // if direction is pointing to active part of surface
     if( plane.isInActive(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5]) ) {
       if (debugLvl_ > 0) {
-        std::cout << "  direction is pointing to active part of surface. \n";
+        debugOut << "  direction is pointing to active part of surface. \n";
       }
     }
     // if we are near the plane, but not pointing to the active area, make a big step!
@@ -2285,7 +2286,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
       limits.removeLimit(stp_plane);
       limits.setStepSign(propDir_);
       if (debugLvl_ > 0) {
-        std::cout << "  we are near the plane, but not pointing to the active area. make a big step! \n";
+        debugOut << "  we are near the plane, but not pointing to the active area. make a big step! \n";
       }
     }
   }
@@ -2295,7 +2296,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
       limits.removeLimit(stp_plane);
       limits.setStepSign(propDir_);
       if (debugLvl_ > 0) {
-        std::cout << "  invert Step according to propDir_ and make a big step. \n";
+        debugOut << "  invert Step according to propDir_ and make a big step. \n";
       }
     }
   }
@@ -2326,7 +2327,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   }
 
   if (debugLvl_ > 0) {
-    std::cout << "   final limits:\n";
+    debugOut << "   final limits:\n";
     limits.Print();
   }
 
@@ -2336,7 +2337,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   lastStep->limits_ = limits;
 
   if (debugLvl_ > 0) {
-    std::cout << "  --> Step to be used: " << finalStep << "\n";
+    debugOut << "  --> Step to be used: " << finalStep << "\n";
   }
 
   return finalStep;
@@ -2392,9 +2393,9 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
   while(true){
 
     if (debugLvl_ > 0) {
-      std::cout << "\n============ RKTrackRep::Extrap loop nr. " << numIt << " ============\n";
-      std::cout << "Start plane: "; startPlane.Print();
-      std::cout << "fillExtrapSteps " << fillExtrapSteps << "\n";
+      debugOut << "\n============ RKTrackRep::Extrap loop nr. " << numIt << " ============\n";
+      debugOut << "Start plane: "; startPlane.Print();
+      debugOut << "fillExtrapSteps " << fillExtrapSteps << "\n";
     }
 
     if(++numIt > maxNumIt){
@@ -2431,12 +2432,12 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
 
     if (debugLvl_ > 0) {
-      std::cout<<"RKSteps \n";
+      debugOut<<"RKSteps \n";
       for (std::vector<RKStep>::iterator it = RKSteps_.begin(); it != RKSteps_.end(); ++it){
-        std::cout << "stepSize = " << it->matStep_.stepSize_ << "\t";
+        debugOut << "stepSize = " << it->matStep_.stepSize_ << "\t";
         it->matStep_.materialProperties_.Print();
       }
-      std::cout<<"\n";
+      debugOut<<"\n";
     }
 
 
@@ -2460,10 +2461,10 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       RKStepsFXStart_ = RKStepsFXStop_;
 
       if (debugLvl_ > 0) {
-        std::cout << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6])
+        debugOut << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6])
             << "; coveredDistance = " << coveredDistance << "\n";
         if (debugLvl_ > 1 && noise != NULL) {
-          std::cout << "7D noise: \n";
+          debugOut << "7D noise: \n";
           RKTools::printDim(noise->begin(), 7, 7);
         }
       }
@@ -2472,7 +2473,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       if(fabs(state7[6])>1.E-10) {
 
         if (debugLvl_ > 0) {
-          std::cout << "correct state7 with dx/dqop, dy/dqop ...\n";
+          debugOut << "correct state7 with dx/dqop, dy/dqop ...\n";
         }
 
         dqop = charge/(fabs(charge/state7[6])-momLoss) - state7[6];
@@ -2486,15 +2487,15 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
           M1x3 state7_correction_unprojected = {{0, 0, 0}};
           for (unsigned int i=0; i<3; ++i) {
             state7_correction_unprojected[i] = 0.5 * dqop * J_MMT_unprojected_lastRow[i];
-            //std::cout << "J_MMT_unprojected_lastRow[i] " << J_MMT_unprojected_lastRow[i] << "\n";
-            //std::cout << "state7_correction_unprojected[i] " << state7_correction_unprojected[i] << "\n";
+            //debugOut << "J_MMT_unprojected_lastRow[i] " << J_MMT_unprojected_lastRow[i] << "\n";
+            //debugOut << "state7_correction_unprojected[i] " << state7_correction_unprojected[i] << "\n";
           }
 
           M1x3 state7_correction_projected = {{0, 0, 0}};
           for (unsigned int i=0; i<3; ++i) {
             state7_correction_projected[i] = 0.5 * dqop * J_MMT_[6*7 + i];
-            //std::cout << "J_MMT_[6*7 + i] " << J_MMT_[6*7 + i] << "\n";
-            //std::cout << "state7_correction_projected[i] " << state7_correction_projected[i] << "\n";
+            //debugOut << "J_MMT_[6*7 + i] " << J_MMT_[6*7 + i] << "\n";
+            //debugOut << "state7_correction_projected[i] " << state7_correction_projected[i] << "\n";
           }
 
           // delta distance
@@ -2517,8 +2518,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
           coveredDistance = coveredDistance + Dist;
 
           if (debugLvl_ > 0) {
-            std::cout << "correctionFactor-1 = " << correctionFactor-1. << "; Dist = " << Dist << "\n";
-            std::cout << "corrected momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6])
+            debugOut << "correctionFactor-1 = " << correctionFactor-1. << "; Dist = " << Dist << "\n";
+            debugOut << "corrected momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6])
                 << "; corrected coveredDistance = " << coveredDistance << "\n";
           }
         }
@@ -2554,7 +2555,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         RKTools::Np_N_NpT(noiseProjection_, noiseArray_);
 
         if (debugLvl_ > 1) {
-          std::cout << "7D noise projected onto plane: \n";
+          debugOut << "7D noise projected onto plane: \n";
           RKTools::printDim(noiseArray_.begin(), 7, 7);
         }
       }
@@ -2563,12 +2564,12 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       lastStep->noise7_ = noiseArray_;
 
       if (debugLvl_ > 2) {
-        std::cout<<"ExtrapSteps \n";
+        debugOut<<"ExtrapSteps \n";
         for (std::vector<ExtrapStep>::iterator it = ExtrapSteps_.begin(); it != ExtrapSteps_.end(); ++it){
-          std::cout << "7D Jacobian: "; RKTools::printDim((it->jac7_.begin()), 5,5);
-          std::cout << "7D noise:    "; RKTools::printDim((it->noise7_.begin()), 5,5);
+          debugOut << "7D Jacobian: "; RKTools::printDim((it->jac7_.begin()), 5,5);
+          debugOut << "7D noise:    "; RKTools::printDim((it->noise7_.begin()), 5,5);
         }
-        std::cout<<"\n";
+        debugOut<<"\n";
       }
     }
 
@@ -2577,14 +2578,14 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     // check if at boundary
     if (stopAtBoundary) {
       if (debugLvl_ > 0) {
-        std::cout << "stopAtBoundary -> break; \n ";
+        debugOut << "stopAtBoundary -> break; \n ";
       }
       break;
     }
 
     if (onlyOneStep) {
       if (debugLvl_ > 0) {
-        std::cout << "onlyOneStep -> break; \n ";
+        debugOut << "onlyOneStep -> break; \n ";
       }
       break;
     }
@@ -2592,14 +2593,14 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     //break if we arrived at destPlane
     if(atPlane) {
       if (debugLvl_ > 0) {
-        std::cout << "arrived at destPlane with a distance of  " << destPlane.distance(state7[0], state7[1], state7[2]) << " cm left. ";
+        debugOut << "arrived at destPlane with a distance of  " << destPlane.distance(state7[0], state7[1], state7[2]) << " cm left. ";
         if (destPlane.isInActive(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5]))
-          std::cout << "In active area of destPlane. \n";
+          debugOut << "In active area of destPlane. \n";
         else
-          std::cout << "NOT in active area of plane. \n";
+          debugOut << "NOT in active area of plane. \n";
 
-        std::cout << "  position:  "; TVector3(state7[0], state7[1], state7[2]).Print();
-        std::cout << "  direction: "; TVector3(state7[3], state7[4], state7[5]).Print();
+        debugOut << "  position:  "; TVector3(state7[0], state7[1], state7[2]).Print();
+        debugOut << "  direction: "; TVector3(state7[3], state7[4], state7[5]).Print();
       }
       break;
     }
@@ -2617,7 +2618,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
     if (debugLvl_ > 0) {
       if (cov != NULL) {
-        std::cout << "final covariance matrix after Extrap: "; cov->Print();
+        debugOut << "final covariance matrix after Extrap: "; cov->Print();
       }
     }
   }
@@ -2671,24 +2672,24 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
     }
 
     if (debugLvl_ > 0) {
-        std::cout << "RKTrackRep::checkCache: use cached material and step values.\n";
+        debugOut << "RKTrackRep::checkCache: use cached material and step values.\n";
     }
   }
   else {
 
     if (debugLvl_ > 0) {
-      std::cout << "RKTrackRep::checkCache: can NOT use cached material and step values.\n";
+      debugOut << "RKTrackRep::checkCache: can NOT use cached material and step values.\n";
 
       if (plane != NULL) {
         if (state.getPlane() != lastStartState_.getPlane()) {
-          std::cout << "state.getPlane() != lastStartState_.getPlane()\n";
+          debugOut << "state.getPlane() != lastStartState_.getPlane()\n";
         }
         else {
           if (! (state.getState() == lastStartState_.getState())) {
-            std::cout << "state.getState() != lastStartState_.getState()\n";
+            debugOut << "state.getState() != lastStartState_.getState()\n";
           }
           else if (lastEndState_.getPlane().get() != NULL) {
-            std::cout << "distance " << (*plane)->distance(getPos(lastEndState_)) << "\n";
+            debugOut << "distance " << (*plane)->distance(getPos(lastEndState_)) << "\n";
           }
         }
       }

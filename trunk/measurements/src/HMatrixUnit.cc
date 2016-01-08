@@ -18,9 +18,11 @@
 */
 
 #include "HMatrixUnit.h"
+
+#include "IO.h"
+
 #include <cassert>
 #include <alloca.h>
-#include <iostream>
 
 namespace genfit {
 
@@ -44,7 +46,7 @@ const TMatrixD& HMatrixUnit::getMatrix() const {
 }
 
 void HMatrixUnit::Print(const Option_t*) const {
-  std::cout << "Unit" << std::endl;
+  printOut << "Unit" << std::endl;
 }
 
 } /* End of namespace genfit */
