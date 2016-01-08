@@ -17,8 +17,9 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <TGeoMaterialInterface.h>
-#include <Exception.h>
+#include "TGeoMaterialInterface.h"
+#include "Exception.h"
+#include "IO.h"
 
 #include <TGeoMedium.h>
 #include <TGeoMaterial.h>
@@ -37,9 +38,9 @@ bool
 TGeoMaterialInterface::initTrack(double posX, double posY, double posZ,
                                    double dirX, double dirY, double dirZ){
   #ifdef DEBUG
-  std::cout << "TGeoMaterialInterface::initTrack. \n";
-  std::cout << "Pos    "; TVector3(posX, posY, posZ).Print();
-  std::cout << "Dir    "; TVector3(dirX, dirY, dirZ).Print();
+  debugOut << "TGeoMaterialInterface::initTrack. \n";
+  debugOut << "Pos    "; TVector3(posX, posY, posZ).Print();
+  debugOut << "Dir    "; TVector3(dirX, dirY, dirZ).Print();
   #endif
 
   // Move to the new point.
@@ -48,9 +49,9 @@ TGeoMaterialInterface::initTrack(double posX, double posY, double posZ,
   gGeoManager->SetCurrentDirection(dirX, dirY, dirZ);
 
   if (debugLvl_ > 0) {
-    std::cout << "      TGeoMaterialInterface::initTrack at \n";
-    std::cout << "      position:  "; TVector3(posX, posY, posZ).Print();
-    std::cout << "      direction: "; TVector3(dirX, dirY, dirZ).Print();
+    debugOut << "      TGeoMaterialInterface::initTrack at \n";
+    debugOut << "      position:  "; TVector3(posX, posY, posZ).Print();
+    debugOut << "      direction: "; TVector3(dirX, dirY, dirZ).Print();
   }
 
   return result;
@@ -124,7 +125,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
   double step = slDist;
 
   if (debugLvl_ > 0)
-    std::cout << "   safety = " << safety << "; step, slDist = " << step << "\n";
+    debugOut << "   safety = " << safety << "; step, slDist = " << step << "\n";
 
   while (1) {
     if (++it > maxIt){
@@ -136,14 +137,14 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
     // No boundary in sight?
     if (s + safety > fabs(sMax)) {
       if (debugLvl_ > 0)
-        std::cout << "   next boundary is further away than sMax \n";
+        debugOut << "   next boundary is further away than sMax \n";
       return stepSign*(s + safety); //sMax;
     }
 
     // Are we at the boundary?
     if (slDist < delta) {
       if (debugLvl_ > 0)
-        std::cout << "   very close to the boundary -> return"
+        debugOut << "   very close to the boundary -> return"
         << " stepSign*(s + slDist) = "
         << stepSign << "*(" << s + slDist << ")\n";
       return stepSign*(s + slDist);
@@ -184,7 +185,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 
       if (volChanged) {
         if (debugLvl_ > 0)
-          std::cout << "   volChanged\n";
+          debugOut << "   volChanged\n";
         // Move back to start.
         gGeoManager->PopPoint();
 
@@ -194,7 +195,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
         // can get of the distance to the boundary with the stepper.
         if (step <= safety) {
           if (debugLvl_ > 0)
-            std::cout << "   step <= safety, return stepSign*(s + step) = " << stepSign*(s + step) << "\n";
+            debugOut << "   step <= safety, return stepSign*(s + step) = " << stepSign*(s + step) << "\n";
           return stepSign*(s + step);
         }
 
@@ -220,7 +221,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
           slDist = safety;
         step = slDist;
         if (debugLvl_ > 0)
-          std::cout << "   safety = " << safety << "; step, slDist = " << step << "\n";
+          debugOut << "   safety = " << safety << "; step, slDist = " << step << "\n";
       }
     }
   }

@@ -20,26 +20,26 @@
 
 #include "KalmanFitStatus.h"
 
-#include <iostream>
+#include "IO.h"
 
 namespace genfit {
 
 void KalmanFitStatus::Print(const Option_t*) const
 {
   FitStatus::Print();
-  if (fittedWithDaf_) std::cout << " track has been fitted with DAF,";
-  if (fittedWithReferenceTrack_) std::cout << " track has been fitted with reference track,";
+  if (fittedWithDaf_) printOut << " track has been fitted with DAF,";
+  if (fittedWithReferenceTrack_) printOut << " track has been fitted with reference track,";
   if (isFitted_) {
-    std::cout << " numIterations = " << numIterations_ << ", ";
-    std::cout << "track length = " << trackLen_ << ", ";
-    std::cout << "fChi2 = " << fChi2_ << ", ";
-    std::cout << "bChi2 = " << FitStatus::getChi2() << ", ";
-    std::cout << "fNdf = " << fNdf_ << ", ";
-    std::cout << "bNdf = " << FitStatus::getNdf() << ", ";
-    std::cout << "fPVal = " << getForwardPVal() << ", ";
-    std::cout << "bPVal = " << getBackwardPVal() << "\n";
+    printOut << " numIterations = " << numIterations_ << ", ";
+    printOut << "track length = " << trackLen_ << ", ";
+    printOut << "fChi2 = " << fChi2_ << ", ";
+    printOut << "bChi2 = " << FitStatus::getChi2() << ", ";
+    printOut << "fNdf = " << fNdf_ << ", ";
+    printOut << "bNdf = " << FitStatus::getNdf() << ", ";
+    printOut << "fPVal = " << getForwardPVal() << ", ";
+    printOut << "bPVal = " << getBackwardPVal() << "\n";
   }
-  std::cout << "\n";
+  printOut << "\n";
 }
 
 } /* End of namespace genfit */

@@ -19,23 +19,23 @@
 
 #include "StateOnPlane.h"
 #include "AbsTrackRep.h"
+#include "IO.h"
 
 #include <cassert>
-#include <iostream>
 #include <TBuffer.h>
 
 namespace genfit {
 
 
 void StateOnPlane::Print(Option_t*) const {
-  std::cout << "genfit::StateOnPlane ";
-  std::cout << " state vector: "; state_.Print();
+  printOut << "genfit::StateOnPlane ";
+  printOut << " state vector: "; state_.Print();
   if (sharedPlane_ != NULL) {
-    std::cout << " defined in plane "; sharedPlane_->Print();
+    printOut << " defined in plane "; sharedPlane_->Print();
     TVector3 pos(0,0,0), mom(0,0,0);
     getRep()->getPosMom(*this, pos, mom);
-    std::cout << " 3D position: "; pos.Print();
-    std::cout << " 3D momentum: "; mom.Print();
+    printOut << " 3D position: "; pos.Print();
+    printOut << " 3D momentum: "; mom.Print();
   }
 }
 

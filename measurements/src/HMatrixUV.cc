@@ -18,9 +18,11 @@
 */
 
 #include "HMatrixUV.h"
+
+#include "IO.h"
+
 #include <cassert>
 #include <alloca.h>
-#include <iostream>
 
 namespace genfit {
 
@@ -101,7 +103,7 @@ void HMatrixUV::HMHt(TMatrixDSym& M) const {
 
 
 void HMatrixUV::Print(const Option_t*) const {
-  std::cout << "UV" << std::endl;
+  printOut << "UV" << std::endl;
 }
 
 

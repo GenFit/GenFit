@@ -29,6 +29,7 @@
 #include "Track.h"
 #include "TrackPoint.h"
 #include "Tools.h"
+#include "IO.h"
 
 #include <Math/ProbFunc.h>
 #include <TBuffer.h>
@@ -68,21 +69,21 @@ bool KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
   nFailedHits = 0;
 
   if (debugLvl_ > 0) {
-    std::cout << tr->getNumPointsWithMeasurement() << " TrackPoints w/ measurement in this track." << std::endl;
+    debugOut << tr->getNumPointsWithMeasurement() << " TrackPoints w/ measurement in this track." << std::endl;
   }
   for (int i = startId; ; i+=direction) {
     TrackPoint *tp = tr->getPointWithMeasurement(i);
     assert(direction == +1 || direction == -1);
 
     if (debugLvl_ > 0) {
-      std::cout << " process TrackPoint nr. " << i << " (" << tp << ")\n";
+      debugOut << " process TrackPoint nr. " << i << " (" << tp << ")\n";
     }
 
     try {
       processTrackPoint(tp, rep, chi2, ndf, direction);
     }
     catch (Exception& e) {
-      std::cerr << e.what();
+      errorOut << e.what();
 
       ++nFailedHits;
       if (maxFailedHits_<0 || nFailedHits <= maxFailedHits_) {
@@ -92,7 +93,7 @@ bool KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
           break;
 
         if (debugLvl_ > 0)
-          std::cout << "There was an exception, try to continue with next TrackPoint " << i+direction << " \n";
+          debugOut << "There was an exception, try to continue with next TrackPoint " << i+direction << " \n";
 
         continue;
       }
@@ -124,14 +125,14 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
     MeasuredStateOnPlane* update = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(rep))->getUpdate(-1);
     currentState_.reset(new MeasuredStateOnPlane(*update));
     if (debugLvl_ > 0)
-      std::cout << "take backward update of previous iteration as seed \n";
+      debugOut << "take backward update of previous iteration as seed \n";
   }
   if (rep != tr->getCardinalRep() &&
       trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
       dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
       static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
     if (debugLvl_ > 0)
-      std::cout << "take smoothed state of cardinal rep fit as seed \n";
+      debugOut << "take smoothed state of cardinal rep fit as seed \n";
     TVector3 pos, mom;
     TMatrixDSym cov;
     const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
@@ -145,7 +146,7 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
     rep->setTime(*currentState_, tr->getTimeSeed());
     rep->setPosMomCov(*currentState_, tr->getStateSeed(), tr->getCovSeed());
     if (debugLvl_ > 0)
-      std::cout << "take seed state of track as seed \n";
+      debugOut << "take seed state of track as seed \n";
   }
 
   // Only after we have linearly propagated the error into the TrackRep can we
@@ -170,9 +171,9 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
   for(;;) {
     try {
       if (debugLvl_ > 0) {
-        std::cout << "\033[1;21mstate pre" << std::endl;
+        debugOut << "\033[1;21mstate pre" << std::endl;
         currentState_->Print();
-        std::cout << "\033[0mfitting" << std::endl;
+        debugOut << "\033[0mfitting" << std::endl;
       }
 
       if (!fitTrack(tr, rep, chi2FW, ndfFW, 0, -1, nFailedHitsForward)) {
@@ -184,9 +185,9 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
       }
 
       if (debugLvl_ > 0) {
-        std::cout << "\033[1;21mstate post forward" << std::endl;
+        debugOut << "\033[1;21mstate post forward" << std::endl;
         currentState_->Print();
-        std::cout << "\033[0m";
+        debugOut << "\033[0m";
       }
 
       // Backwards iteration:
@@ -201,11 +202,11 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
       }
 
       if (debugLvl_ > 0) {
-        std::cout << "\033[1;21mstate post backward" << std::endl;
+        debugOut << "\033[1;21mstate post backward" << std::endl;
         currentState_->Print();
-        std::cout << "\033[0m";
+        debugOut << "\033[0m";
 
-        std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
+        debugOut << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
             << " new chi2s: " << chi2BW << ", " << chi2FW
             << " oldPvals " << oldPvalFW << ", " << oldPvalBW << std::endl;
       }
@@ -239,10 +240,10 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
 
       if (finished) {
         if (debugLvl_ > 0) {
-          std::cout << "Fit is finished! ";
+          debugOut << "Fit is finished! ";
           if(converged)
-            std::cout << "Fit is converged! ";
-          std::cout << "\n";
+            debugOut << "Fit is converged! ";
+          debugOut << "\n";
         }
 
         if (nFailedHitsForward == 0 && nFailedHitsBackward == 0)
@@ -268,12 +269,12 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
 
       if (nIt >= maxIterations_) {
         if (debugLvl_ > 0)
-          std::cout << "KalmanFitter::number of max iterations reached!\n";
+          debugOut << "KalmanFitter::number of max iterations reached!\n";
         break;
       }
     }
     catch(Exception& e) { // should not happen, but I leave it in for safety
-      std::cerr << e.what();
+      errorOut << e.what();
       status->setIsFitted(false);
       status->setIsFitConvergedFully(false);
       status->setIsFitConvergedPartially(false);
@@ -333,14 +334,14 @@ KalmanFitter::processTrackPartially(Track* tr, const AbsTrackRep* rep, int start
       static_cast<KalmanFitterInfo*>(prevTrackPoint->getFitterInfo(rep))->hasUpdate(direction)) {
     currentState_.reset(new MeasuredStateOnPlane(*(static_cast<KalmanFitterInfo*>(prevTrackPoint->getFitterInfo(rep))->getUpdate(direction))));
     if (debugLvl_ > 0)
-      std::cout << "take update of previous fitter info as seed \n";
+      debugOut << "take update of previous fitter info as seed \n";
   }
   else if (rep != tr->getCardinalRep() &&
       trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
       dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
       static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
     if (debugLvl_ > 0)
-      std::cout << "take smoothed state of cardinal rep fit as seed \n";
+      debugOut << "take smoothed state of cardinal rep fit as seed \n";
     TVector3 pos, mom;
     TMatrixDSym cov;
     const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
@@ -354,20 +355,20 @@ KalmanFitter::processTrackPartially(Track* tr, const AbsTrackRep* rep, int start
     rep->setTime(*currentState_, tr->getTimeSeed());
     rep->setPosMomCov(*currentState_, tr->getStateSeed(), tr->getCovSeed());
     if (debugLvl_ > 0)
-      std::cout << "take seed of track as seed \n";
+      debugOut << "take seed of track as seed \n";
   }
 
   // if at first or last hit, blow up
   if (startId == 0 || startId == (int)tr->getNumPointsWithMeasurement() - 1) {
     currentState_->blowUpCov(blowUpFactor_, resetOffDiagonals_, blowUpMaxVal_);
     if (debugLvl_ > 0)
-      std::cout << "blow up seed \n";
+      debugOut << "blow up seed \n";
   }
 
   if (debugLvl_ > 0) {
-    std::cout << "\033[1;21mstate pre" << std::endl;
+    debugOut << "\033[1;21mstate pre" << std::endl;
     currentState_->Print();
-    std::cout << "\033[0mfitting" << std::endl;
+    debugOut << "\033[0mfitting" << std::endl;
   }
 
   double chi2, ndf;
@@ -420,7 +421,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
 
   double extLen = rep->extrapolateToPlane(*currentState_, plane);
   if (debugLvl_ > 0) {
-    std::cout << "extrapolated by " << extLen << std::endl;
+    debugOut << "extrapolated by " << extLen << std::endl;
   }
   fi->setPrediction(currentState_->clone(), direction);
   MeasuredStateOnPlane *state = fi->getPrediction(direction);
@@ -435,7 +436,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
       fi->setWeights(oldWeights);
       fi->fixWeights(oldWeightsFixed);
       if (debugLvl_ > 0) {
-        std::cout << "set old weights \n";
+        debugOut << "set old weights \n";
       }
     }
     assert(fi->getPlane() == plane);
@@ -443,7 +444,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
   }
 
   if (debugLvl_ > 0) {
-    std::cout << "its plane is at R = " << plane->getO().Perp()
+    debugOut << "its plane is at R = " << plane->getO().Perp()
 	          << " with normal pointing along (" << plane->getNormal().X() << ", " << plane->getNormal().Y() << ", " << plane->getNormal().Z() << ")" << std::endl;
   }
 
@@ -460,12 +461,12 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
       const double weight = mOnPlane.getWeight();
 
       if (debugLvl_ > 0) {
-        std::cout << "Weight of measurement: " << weight << "\n";
+        debugOut << "Weight of measurement: " << weight << "\n";
       }
 
       if (!canIgnoreWeights() && weight <= 1.01E-10) {
         if (debugLvl_ > 0) {
-          std::cout << "Weight of measurement is almost 0, continue ... \n";
+          debugOut << "Weight of measurement is almost 0, continue ... \n";
         }
         continue;
       }
@@ -477,24 +478,24 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
           1./weight * mOnPlane.getCov() :
           mOnPlane.getCov());
       if (debugLvl_ > 1) {
-        std::cout << "\033[31m";
-        std::cout << "State prediction: "; stateVector.Print();
-        std::cout << "Cov prediction: "; state->getCov().Print();
-        std::cout << "\033[0m";
-        std::cout << "\033[34m";
-        std::cout << "measurement: "; measurement.Print();
-        std::cout << "measurement covariance V: "; V.Print();
+        debugOut << "\033[31m";
+        debugOut << "State prediction: "; stateVector.Print();
+        debugOut << "Cov prediction: "; state->getCov().Print();
+        debugOut << "\033[0m";
+        debugOut << "\033[34m";
+        debugOut << "measurement: "; measurement.Print();
+        debugOut << "measurement covariance V: "; V.Print();
         //cov.Print();
         //measurement.Print();
       }
 
       TVectorD res(measurement - H->Hv(stateVector));
       if (debugLvl_ > 1) {
-        std::cout << "Residual = (" << res(0);
+        debugOut << "Residual = (" << res(0);
         if (res.GetNrows() > 1)
-          std::cout << ", " << res(1);
-        std::cout << ")" << std::endl;
-        std::cout << "\033[0m";
+          debugOut << ", " << res(1);
+        debugOut << ")" << std::endl;
+        debugOut << "\033[0m";
       }
       // If hit, do Kalman algebra.
 
@@ -511,11 +512,11 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
         //TMatrixD(CHt, TMatrixD::kMult, covSumInv).Print();
 
         if (debugLvl_ > 1) {
-          //std::cout << "STATUS:" << std::endl;
+          //debugOut << "STATUS:" << std::endl;
           //stateVector.Print();
-          std::cout << "\033[32m";
-          std::cout << "Update: "; update.Print();
-          std::cout << "\033[0m";
+          debugOut << "\033[32m";
+          debugOut << "Update: "; update.Print();
+          debugOut << "\033[0m";
           //cov.Print();
         }
 
@@ -525,19 +526,19 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
       }
 
       if (debugLvl_ > 1) {
-        std::cout << "\033[32m";
-        std::cout << "updated state: "; stateVector.Print();
-        std::cout << "updated cov: "; cov.Print();
+        debugOut << "\033[32m";
+        debugOut << "updated state: "; stateVector.Print();
+        debugOut << "updated cov: "; cov.Print();
       }
 
       TVectorD resNew(measurement - H->Hv(stateVector));
       if (debugLvl_ > 1) {
-        std::cout << "Residual New = (" << resNew(0);
+        debugOut << "Residual New = (" << resNew(0);
 
         if (resNew.GetNrows() > 1)
-          std::cout << ", " << resNew(1);
-        std::cout << ")" << std::endl;
-        std::cout << "\033[0m";
+          debugOut << ", " << resNew(1);
+        debugOut << ")" << std::endl;
+        debugOut << "\033[0m";
       }
 
       // Calculate chi²
@@ -557,7 +558,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
         ndfInc += measurement.GetNrows();
 
       if (debugLvl_ > 0) {
-        std::cout << "chi² increment = " << chi2inc << std::endl;
+        debugOut << "chi² increment = " << chi2inc << std::endl;
       }
     } // end loop over measurements
   } else {
@@ -579,12 +580,12 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
       const double weight = mOnPlane.getWeight();
 
       if (debugLvl_ > 0) {
-        std::cout << "Weight of measurement: " << weight << "\n";
+        debugOut << "Weight of measurement: " << weight << "\n";
       }
 
       if (!canIgnoreWeights() && weight <= 1.01E-10) {
         if (debugLvl_ > 0) {
-          std::cout << "Weight of measurement is almost 0, continue ... \n";
+          debugOut << "Weight of measurement is almost 0, continue ... \n";
         }
         continue;
       }
@@ -596,24 +597,24 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
           1./weight * mOnPlane.getCov() :
           mOnPlane.getCov());
       if (debugLvl_ > 1) {
-        std::cout << "\033[31m";
-        std::cout << "State prediction: "; stateVector.Print();
-        std::cout << "Cov prediction: "; state->getCov().Print();
-        std::cout << "\033[0m";
-        std::cout << "\033[34m";
-        std::cout << "measurement: "; measurement.Print();
-        std::cout << "measurement covariance V: "; V.Print();
+        debugOut << "\033[31m";
+        debugOut << "State prediction: "; stateVector.Print();
+        debugOut << "Cov prediction: "; state->getCov().Print();
+        debugOut << "\033[0m";
+        debugOut << "\033[34m";
+        debugOut << "measurement: "; measurement.Print();
+        debugOut << "measurement covariance V: "; V.Print();
         //cov.Print();
         //measurement.Print();
       }
 
       TVectorD res(measurement - H->Hv(stateVector));
       if (debugLvl_ > 1) {
-        std::cout << "Residual = (" << res(0);
+        debugOut << "Residual = (" << res(0);
         if (res.GetNrows() > 1)
-          std::cout << ", " << res(1);
-        std::cout << ")" << std::endl;
-        std::cout << "\033[0m";
+          debugOut << ", " << res(1);
+        debugOut << ")" << std::endl;
+        debugOut << "\033[0m";
       }
 
       TDecompChol decompR(V);
@@ -629,19 +630,19 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
       //    cov = TMatrixDSym(TMatrixDSym::kAtA, S);
 
       if (debugLvl_ > 1) {
-        std::cout << "\033[32m";
-        std::cout << "updated state: "; stateVector.Print();
-        std::cout << "updated cov: "; TMatrixDSym(TMatrixDSym::kAtA, S).Print() ;
+        debugOut << "\033[32m";
+        debugOut << "updated state: "; stateVector.Print();
+        debugOut << "updated cov: "; TMatrixDSym(TMatrixDSym::kAtA, S).Print() ;
       }
 
       res -= H->Hv(update);
       if (debugLvl_ > 1) {
-        std::cout << "Residual New = (" << res(0);
+        debugOut << "Residual New = (" << res(0);
 
         if (res.GetNrows() > 1)
-          std::cout << ", " << res(1);
-        std::cout << ")" << std::endl;
-        std::cout << "\033[0m";
+          debugOut << ", " << res(1);
+        debugOut << ")" << std::endl;
+        debugOut << "\033[0m";
       }
 
       // Calculate chi²
@@ -664,7 +665,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
         ndfInc += measurement.GetNrows();
 
       if (debugLvl_ > 0) {
-        std::cout << "chi² increment = " << chi2inc << std::endl;
+        debugOut << "chi² increment = " << chi2inc << std::endl;
       }
     } // end loop over measurements
 

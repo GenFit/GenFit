@@ -18,17 +18,17 @@
 */
 
 #include "ThinScatterer.h"
+#include "IO.h"
 
-#include <iostream>
 #include <TBuffer.h>
 
 namespace genfit {
 
 
 void ThinScatterer::Print(const Option_t*) const {
-  std::cout << "ThinScatterer, defined in plane: ";
+  printOut << "ThinScatterer, defined in plane: ";
   sharedPlane_->Print();
-  std::cout << "Material properties: ";
+  printOut << "Material properties: ";
   material_.Print();
 }
 

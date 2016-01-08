@@ -18,8 +18,7 @@
  */
 
 #include "TrackCandHit.h"
-
-#include <iostream>
+#include "IO.h"
 
 namespace genfit {
 
@@ -37,10 +36,10 @@ TrackCandHit::TrackCandHit(int detId,
 
 
 void TrackCandHit::Print(Option_t*) const {
-  std::cout << "  TrackCandHit. DetId = " << detId_
-            << " \t HitId = " << hitId_
-            << " \t PlaneId = " << planeId_
-            << " \t SortingParameter = " << sortingParameter_ << "\n";
+  printOut << "  TrackCandHit. DetId = " << detId_
+           << " \t HitId = " << hitId_
+           << " \t PlaneId = " << planeId_
+           << " \t SortingParameter = " << sortingParameter_ << "\n";
 }
 
 

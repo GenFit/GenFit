@@ -18,9 +18,11 @@
 */
 
 #include "HMatrixV.h"
+
+#include "IO.h"
+
 #include <cassert>
 #include <alloca.h>
-#include <iostream>
 
 namespace genfit {
 
@@ -85,7 +87,7 @@ void HMatrixV::HMHt(TMatrixDSym& M) const {
 
 
 void HMatrixV::Print(const Option_t*) const {
-  std::cout << "V" << std::endl;
+  printOut << "V" << std::endl;
 }
 
 } /* End of namespace genfit */

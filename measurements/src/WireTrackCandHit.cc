@@ -19,7 +19,7 @@
 
 #include "WireTrackCandHit.h"
 
-#include <iostream>
+#include "IO.h"
 
 namespace genfit {
 
@@ -36,11 +36,11 @@ WireTrackCandHit::WireTrackCandHit(int detId,
 
 
 void WireTrackCandHit::Print(Option_t*) const {
-  std::cout << "  WireTrackCandHit. DetId = " << detId_
-            << " \t HitId = " << hitId_
-            << " \t PlaneId = " << planeId_
-            << " \t SortingParameter = " << sortingParameter_
-            << " \t leftRight = " << (int)leftRight_ << "\n";
+  printOut << "  WireTrackCandHit. DetId = " << detId_
+           << " \t HitId = " << hitId_
+           << " \t PlaneId = " << planeId_
+           << " \t SortingParameter = " << sortingParameter_
+           << " \t leftRight = " << (int)leftRight_ << "\n";
 }
 
 } /* End of namespace genfit */

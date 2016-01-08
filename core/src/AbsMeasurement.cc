@@ -18,9 +18,9 @@
 */
 
 #include "AbsMeasurement.h"
+#include "IO.h"
 
 #include <cassert>
-#include <iostream>
 
 
 namespace genfit {
@@ -58,9 +58,9 @@ AbsMeasurement& AbsMeasurement::operator=(const AbsMeasurement&) {
 
 
 void AbsMeasurement::Print(const Option_t*) const {
-  std::cout << "genfit::AbsMeasurement, detId = " << detId_ << ". hitId = " << hitId_ << "\n";
-  std::cout << "Raw hit coordinates: "; rawHitCoords_.Print();
-  std::cout << "Raw hit covariance: "; rawHitCov_.Print();
+  printOut << "genfit::AbsMeasurement, detId = " << detId_ << ". hitId = " << hitId_ << "\n";
+  printOut << "Raw hit coordinates: "; rawHitCoords_.Print();
+  printOut << "Raw hit covariance: "; rawHitCov_.Print();
 }
 
 

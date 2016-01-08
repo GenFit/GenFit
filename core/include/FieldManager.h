@@ -25,8 +25,8 @@
 #define genfit_FieldManager_h
 
 #include "AbsBField.h"
+#include "IO.h"
 
-#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -83,7 +83,7 @@ class FieldManager {
 
   void checkInitialized() {
     if(! isInitialized()){
-      std::cerr << "FieldManager hasn't been initialized with a correct AbsBField pointer!" << std::endl;
+      errorOut << "FieldManager hasn't been initialized with a correct AbsBField pointer!" << std::endl;
       std::string msg("FieldManager hasn't been initialized with a correct AbsBField pointer!");
       std::runtime_error err(msg);
       throw err;
@@ -92,7 +92,7 @@ class FieldManager {
 
   static void checkInstanciated() {
     if(instance_==NULL){
-      std::cerr << "FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!" << std::endl;
+      errorOut << "FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!" << std::endl;
       std::string msg("FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!");
       std::runtime_error err(msg);
       throw err;
