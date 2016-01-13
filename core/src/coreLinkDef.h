@@ -38,6 +38,7 @@
 #pragma link C++ class genfit::ThinScatterer-; // sharedPlanePtr
 #pragma link C++ class genfit::Track-;
 #pragma link C++ class genfit::TrackPoint-; // track_, fixup the map
+#pragma link C++ class vector<genfit::TrackPoint*>-;
 
 // Schema Evolution rules.  The official documentation appears to be
 // 2010 J. Phys.: Conf. Ser. 219 032004
