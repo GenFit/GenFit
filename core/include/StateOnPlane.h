@@ -56,7 +56,7 @@ class StateOnPlane {
   void swap(StateOnPlane& other); // nothrow
 
   virtual ~StateOnPlane() {}
-  virtual StateOnPlane* clone() {return new StateOnPlane(*this);}
+  virtual StateOnPlane* clone() const {return new StateOnPlane(*this);}
 
   const TVectorD& getState() const {return state_;}
   TVectorD& getState() {return state_;}
