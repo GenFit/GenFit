@@ -493,7 +493,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       }
 
       if (fittedState == NULL) {
-        std::cout << "canot get any state from fitterInfo, continue.\n";
+        std::cout << "cannot get any state from fitterInfo, continue.\n";
         prevFi = fi;
         prevFittedState = fittedState;
         continue;
@@ -581,37 +581,43 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         // finished drawing planes ------------------------------------------------------------
 
         // draw track if corresponding option is set ------------------------------------------
-        if (j == 0) {
-          if (drawBackward_) {
-              MeasuredStateOnPlane update ( *fi->getBackwardUpdate() );
-              update.extrapolateBy(-3.);
-              makeLines(&update, fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
-          }
-        }
-        if (j > 0 && prevFi != NULL) {
-          if(drawTrack_) {
-            makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers_, drawErrors_, 3);
-            if (drawErrors_) { // make sure to draw errors in both directions
-              makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, false, drawErrors_, 0, 0);
+        try {
+            if (j == 0) {
+              if (drawBackward_) {
+                  MeasuredStateOnPlane update ( *fi->getBackwardUpdate() );
+                  update.extrapolateBy(-3.);
+                  makeLines(&update, fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
+              }
             }
-          }
-          if (drawForward_) {
-            makeLines(prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
-            if (j == numhits-1) {
-              MeasuredStateOnPlane update ( *fi->getForwardUpdate() );
-              update.extrapolateBy(3.);
-              makeLines(fi->getForwardUpdate(), &update, rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
+            if (j > 0 && prevFi != NULL) {
+              if(drawTrack_) {
+                makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers_, drawErrors_, 3);
+                if (drawErrors_) { // make sure to draw errors in both directions
+                  makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, false, drawErrors_, 0, 0);
+                }
+              }
+              if (drawForward_) {
+                makeLines(prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
+                if (j == numhits-1) {
+                  MeasuredStateOnPlane update ( *fi->getForwardUpdate() );
+                  update.extrapolateBy(3.);
+                  makeLines(fi->getForwardUpdate(), &update, rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
+                }
+              }
+              if (drawBackward_) {
+                makeLines(prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
+              }
+              // draw reference track if corresponding option is set ------------------------------------------
+              if(drawRefTrack_ && fi->hasReferenceState() && prevFi->hasReferenceState())
+                makeLines(prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers_, false, 3);
             }
-          }
-          if (drawBackward_) {
-            makeLines(prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
-          }
-          // draw reference track if corresponding option is set ------------------------------------------
-          if(drawRefTrack_ && fi->hasReferenceState() && prevFi->hasReferenceState())
-            makeLines(prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers_, false, 3);
+            else if (j > 0 && prevFi == NULL) {
+              std::cout << "previous FitterInfo == NULL \n";
+            }
         }
-        else if (j > 0 && prevFi == NULL) {
-          std::cout << "previous FitterInfo == NULL \n";
+        catch (Exception& e) {
+            std::cerr << "extrapolation failed, cannot draw track" << std::endl;
+            std::cerr << e.what();
         }
 
         // draw detectors if option is set, only important for wire hits ----------------------
