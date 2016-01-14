@@ -80,6 +80,8 @@ SET(GF_INC_DIRS
 	./trackReps/include/
 	./utilities/include/
     ${GF_INC_DIRS}
+#    $ENV{VALGRINDDIR}
+#    $ENV{VALGRINDDIR}/include/
 )
 
 #search for boost, provide some information to user
@@ -363,6 +365,7 @@ ENDMACRO( ADD_GENFIT_TEST )
 
 ADD_GENFIT_TEST( fitterTests               test/fitterTests/main.cc)
 ADD_GENFIT_TEST( minimalFittingExample     test/minimalFittingExample/main.cc)
+ADD_GENFIT_TEST( minimalFittingExample2     test/minimalFittingExample/main2.cc)
 ADD_GENFIT_TEST( measurementFactoryExample test/measurementFactoryExample/main.cc)
 ADD_GENFIT_TEST( streamerTest              test/streamerTest/main.cc)
 ADD_GENFIT_TEST( unitTests                 test/unitTests/main.cc)

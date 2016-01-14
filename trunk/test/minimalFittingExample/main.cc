@@ -102,13 +102,13 @@ int main() {
 
     // smeared start state
     genfit::MeasuredStateOnPlane stateSmeared(rep);
-    rep->setPosMomCov(stateSmeared, posM, momM, covM);
+    stateSmeared.setPosMomCov(posM, momM, covM);
 
 
     // create track
     TVectorD seedState(6);
     TMatrixDSym seedCov(6);
-    rep->get6DStateCov(stateSmeared, seedState, seedCov);
+    stateSmeared.get6DStateCov(seedState, seedCov);
     genfit::Track fitTrack(rep, seedState, seedCov);
 
 
