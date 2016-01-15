@@ -1,28 +1,31 @@
 To build GENFIT cmake is needed in version 2.6 or higher.
 
 To create the library, create a build directory and change into it. E.g.
- mkdir build; cd build
+  mkdir build; cd build
  
 Now create the Makefiles by invoking:
- cmake ..
+  cmake ..
+ 
+On some systems with an older boost version, you instead might have to type (cf. http://stackoverflow.com/questions/9948375/cmake-find-package-succeeds-but-returns-wrong-path):
+  cmake .. -DBoost_NO_BOOST_CMAKE=ON
 
 And build:
- make
+  make
  
 The libraries are created in the subdirectory lib/ of the build directory.
 
 To install the libraries and copy all header files into the directories lib/ and
 include/ in the root directory of the project, invoke
- make install
+  make install
 
  
 To build the doxygen:
- make doc
+  make doc
   
 To build the examples/tests (also see README in test/):
- make tests
+  make tests
 
 
 
 To build GFRave and the vertexing examples, you need an installation of Rave (https://rave.hepforge.org/), and the environment variable RAVEPATH set.
- export RAVEPATH=<yourRaveDirectory>
+  export RAVEPATH=<yourRaveDirectory>
