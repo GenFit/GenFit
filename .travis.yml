@@ -1,0 +1,27 @@
+sudo: required
+language: cpp
+services: docker
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+compiler: gcc
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - clang
+before_install:
+  - sudo apt-get -y install libboost1.54-all-dev root-system
+install: 
+  - cd .. && mkdir build && cd build
+  - cmake ../genfit
+  - make VERBOSE=1
+  - make tests
+script:
+  # generate test geometry
+  - cd bin
+  - root -l -b -q ../../genfit/test/makeGeom.C
+  - ./unitTests
+
