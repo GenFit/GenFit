@@ -128,6 +128,8 @@ class Track : public TObject {
   const MeasuredStateOnPlane& getFittedState(int id = 0, const AbsTrackRep* rep = NULL, bool biased = true) const;
 
   AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id);}
+  /// Return the track representations as a list of pointers.
+  const std::vector<genfit::AbsTrackRep*>& getTrackReps() const {return trackReps_;}
   unsigned int getNumReps() const {return trackReps_.size();}
 
   //! This is used when streaming TrackPoints.
