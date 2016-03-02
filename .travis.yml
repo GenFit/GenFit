@@ -18,13 +18,13 @@ before_install:
 install:
   # create dedicated build folder
   - cd .. && mkdir build && cd build
-  - cmake ../genfit
+  - cmake ../GenFit
   - make VERBOSE=1
   - make tests
 script:
   # generate test geometry
   - cd bin
-  - root -l -b -q ../../genfit/test/makeGeom.C
+  - root -l -b -q ../../GenFit/test/makeGeom.C
   # run unit tests
   - ./unitTests
 
