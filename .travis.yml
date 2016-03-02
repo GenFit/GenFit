@@ -13,8 +13,10 @@ addons:
     packages:
     - clang
 before_install:
+  # install boost and root
   - sudo apt-get -y install libboost1.54-all-dev root-system
-install: 
+install:
+  # create dedicated build folder
   - cd .. && mkdir build && cd build
   - cmake ../genfit
   - make VERBOSE=1
@@ -23,5 +25,6 @@ script:
   # generate test geometry
   - cd bin
   - root -l -b -q ../../genfit/test/makeGeom.C
+  # run unit tests
   - ./unitTests
 
