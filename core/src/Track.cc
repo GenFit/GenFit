@@ -1607,14 +1607,16 @@ void Track::Streamer(TBuffer &R__b)
 }
 
 void Track::deleteTrackPointsAndFitStatus() {
-  for (size_t i = 0; i < trackPoints_.size(); ++i)
-    delete trackPoints_[i];
+  for (TrackPoint* trackPoint : trackPoints_) {
+    delete trackPoint;
+  }
 
   trackPoints_.clear();
   trackPointsWithMeasurement_.clear();
 
-  for (std::map< const AbsTrackRep*, FitStatus* >::iterator it = fitStatuses_.begin(); it!= fitStatuses_.end(); ++it)
-    delete it->second;
+  for (const std::pair<const AbsTrackRep*, FitStatus*>& repWithFitStatus : fitStatuses_) {
+    delete repWithFitStatus.second;
+  }
   fitStatuses_.clear();
 }
 
