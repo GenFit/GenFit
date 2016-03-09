@@ -1063,8 +1063,6 @@ int main() {
 
   TDatabasePDG::Instance()->GetParticle(211);
 
-
-  unsigned int nFailed(0);
   const unsigned int nTests(1000);
 
   std::vector<TestCase> testCases;
