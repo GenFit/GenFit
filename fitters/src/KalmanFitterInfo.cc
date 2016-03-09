@@ -774,7 +774,7 @@ void KalmanFitterInfo::Streamer(TBuffer &R__b)
      baseClass0::Streamer(R__b);
      // "!!" forces the value to 1 or 0 (pointer != 0 or pointer == 0),
      // this value is then written as a bitfield.
-     int flag = (!!referenceState_
+     int flag = ((!!referenceState_)
 		 | (!!forwardPrediction_ << 1)
 		 | (!!forwardUpdate_ << 2)
 		 | (!!backwardPrediction_ << 3)
