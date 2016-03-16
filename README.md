@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/GenFit/GenFit.svg?branch=master)](https://travis-ci.org/GenFit/GenFit)
 
-GenFit Package
+# GenFit Package
 
 GenFit is an experiment-independent framework for track reconstruction for particle and nuclear physics. It consists of three modular components:
 
