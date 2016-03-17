@@ -5,6 +5,28 @@
  *      Author: kleinwrt
  */
 
+/** \file
+ *  GblTrajectory definition.
+ *
+ *  \author Claus Kleinwort, DESY, 2011 (Claus.Kleinwort@desy.de)
+ *
+ *  \copyright
+ *  Copyright (c) 2011 - 2016 Deutsches Elektronen-Synchroton,
+ *  Member of the Helmholtz Association, (DESY), HAMBURG, GERMANY \n\n
+ *  This library is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU Library General Public License as
+ *  published by the Free Software Foundation; either version 2 of the
+ *  License, or (at your option) any later version. \n\n
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Library General Public License for more details. \n\n
+ *  You should have received a copy of the GNU Library General Public
+ *  License along with this program (see the file COPYING.LIB for more
+ *  details); if not, write to the Free Software Foundation, Inc.,
+ *  675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
 #ifndef GBLTRAJECTORY_H_
 #define GBLTRAJECTORY_H_
 
@@ -36,6 +58,10 @@ public:
 			const std::vector<std::pair<std::vector<GblPoint>, TMatrixD> > &aPointaAndTransList,
 			const TMatrixD &extDerivatives, const TVectorD &extMeasurements,
 			const TVectorD &extPrecisions);
+	GblTrajectory(
+			const std::vector<std::pair<std::vector<GblPoint>, TMatrixD> > &aPointaAndTransList,
+			const TMatrixD &extDerivatives, const TVectorD &extMeasurements,
+			const TMatrixDSym &extPrecisions);
 	virtual ~GblTrajectory();
 	bool isValid() const;
 	unsigned int getNumPoints() const;
@@ -47,8 +73,8 @@ public:
 	unsigned int getScatResults(unsigned int aLabel, unsigned int &numRes,
 			TVectorD &aResiduals, TVectorD &aMeasErrors, TVectorD &aResErrors,
 			TVectorD &aDownWeights);
-	void getLabels(std::vector<unsigned int> &aLabelList);
-	void getLabels(std::vector<std::vector< unsigned int> > &aLabelList);
+	unsigned int getLabels(std::vector<unsigned int> &aLabelList);
+	unsigned int getLabels(std::vector<std::vector<unsigned int> > &aLabelList);
 	unsigned int fit(double &Chi2, int &Ndf, double &lostWeight,
 			std::string optionList = "");
 	void milleOut(MilleBinary &aMille);

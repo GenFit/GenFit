@@ -5,6 +5,28 @@
  *      Author: kleinwrt
  */
 
+/** \file
+ *  VMatrix methods.
+ *
+ *  \author Claus Kleinwort, DESY, 2011 (Claus.Kleinwort@desy.de)
+ *
+ *  \copyright
+ *  Copyright (c) 2011 - 2016 Deutsches Elektronen-Synchroton,
+ *  Member of the Helmholtz Association, (DESY), HAMBURG, GERMANY \n\n
+ *  This library is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU Library General Public License as
+ *  published by the Free Software Foundation; either version 2 of the
+ *  License, or (at your option) any later version. \n\n
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Library General Public License for more details. \n\n
+ *  You should have received a copy of the GNU Library General Public
+ *  License along with this program (see the file COPYING.LIB for more
+ *  details); if not, write to the Free Software Foundation, Inc.,
+ *  675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
 #include "VMatrix.h"
 
 //! Namespace for the general broken lines package
@@ -343,19 +365,19 @@ unsigned int VSymMatrix::invert() {
 		int k = 0;
 		double vkk = 0.0;
 
-		int jCandidate = first;
+		int j = first;
 		int previous = 0;
 		int last = previous;
 		// look for pivot
-		while (jCandidate > 0) {
-			int jj = (jCandidate * jCandidate + jCandidate) / 2 - 1;
-			if (fabs(theVec[jj]) > std::max(fabs(vkk), eps * diag[jCandidate - 1])) {
+		while (j > 0) {
+			int jj = (j * j + j) / 2 - 1;
+			if (fabs(theVec[jj]) > std::max(fabs(vkk), eps * diag[j - 1])) {
 				vkk = theVec[jj];
-				k = jCandidate;
+				k = j;
 				last = previous;
 			}
-			previous = jCandidate;
-			jCandidate = next[jCandidate - 1];
+			previous = j;
+			j = next[j - 1];
 		}
 		// pivot found
 		if (k > 0) {
@@ -409,12 +431,12 @@ unsigned int VSymMatrix::invert() {
 				}
 			}
 		} else {
-			for (int n = 1; n <= nSize; ++n) {
-				if (next[n - 1] >= 0) {
-					int nn = (n * n - n) / 2 - 1;
+			for (int k = 1; k <= nSize; ++k) {
+				if (next[k - 1] >= 0) {
+					int kk = (k * k - k) / 2 - 1;
 					for (int j = 1; j <= nSize; ++j) {
 						if (next[j - 1] >= 0) {
-							theVec[nn + j] = 0.0; // clear matrix row/col
+							theVec[kk + j] = 0.0; // clear matrix row/col
 						}
 					}
 				}
