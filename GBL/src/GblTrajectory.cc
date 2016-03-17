@@ -5,11 +5,12 @@
  *      Author: kleinwrt
  */
 
-/** 
+/** \file
  *  GblTrajectory methods.
  *
- *  author Claus Kleinwort, DESY, 2011 (Claus.Kleinwort@desy.de)
+ *  \author Claus Kleinwort, DESY, 2011 (Claus.Kleinwort@desy.de)
  *
+ *  \copyright
  *  Copyright (c) 2011 - 2016 Deutsches Elektronen-Synchroton,
  *  Member of the Helmholtz Association, (DESY), HAMBURG, GERMANY \n\n
  *  This library is free software; you can redistribute it and/or modify
@@ -24,6 +25,7 @@
  *  License along with this program (see the file COPYING.LIB for more
  *  details); if not, write to the Free Software Foundation, Inc.,
  *  675 Mass Ave, Cambridge, MA 02139, USA.
+ *
  *  
  *  General information
  *
