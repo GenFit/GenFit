@@ -87,7 +87,7 @@ class ICalibrationParametersDerivatives {
     * 
     * @return std::vector< int > Vector of integer labels
     */
-   virtual std::vector<int> labels() = 0;
+   virtual std::vector<int> labels() {return std::vector<int>();}
    
    /**
     * @brief Derivatives of residuals (local measurement coordinates) w.r.t. alignment/calibration parameters
@@ -126,7 +126,7 @@ class ICalibrationParametersDerivatives {
     * @return TMatrixD Matrix with #rows = dimension of residual, #columns = number of parameters.
     * #columns must match labels().size().
     */
-   virtual TMatrixD derivatives(const genfit::StateOnPlane* sop) = 0;
+   virtual TMatrixD derivatives(const genfit::StateOnPlane* sop) {return TMatrixD();}
    
    /**
     * @brief Derivatives for additional local parameters to be fitted
