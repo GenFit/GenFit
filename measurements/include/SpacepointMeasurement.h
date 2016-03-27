@@ -70,6 +70,12 @@ class SpacepointMeasurement : public AbsMeasurement {
 
   virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
 
+  bool getWeightedPlaneConstruction()           { return weightedPlaneConstruction_; }
+  void setWeightedPlaneConstruction(bool value) { weightedPlaneConstruction_ = value; }
+
+  bool getCutCob()           { return cutCov_; }
+  void setCutCob(bool value) { cutCov_ = value; }
+
  protected:
   void initG();
 
