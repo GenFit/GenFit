@@ -56,6 +56,7 @@ GFRaveVertexFactory::GFRaveVertexFactory(int verbosity, bool useVacuumPropagator
 
 
 GFRaveVertexFactory::~GFRaveVertexFactory(){
+  clearMap();
   delete magneticField_;
   delete propagator_;
   delete factory_;
