@@ -29,7 +29,8 @@
 #define GFRAVEMAGNETICFIELD_H
 
 #include <rave/MagneticField.h>
-
+#include <rave/Point3D.h>
+#include <rave/Vector3D.h>
 
 namespace genfit {
 

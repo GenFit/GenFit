@@ -33,11 +33,14 @@ GFRavePropagator::GFRavePropagator() :
   //std::cout << "GFRavePropagator::GFRavePropagator() \n";
 }
   
-GFRavePropagator*
+std::shared_ptr < rave::Propagator >
 GFRavePropagator::copy() const
 {
   //std::cout << "GFRavePropagator::copy() \n";
-  return new GFRavePropagator(*this);
+ // return new GFRavePropagator(*this);
+
+  return std::make_shared < GFRavePropagator > ( * this ); /* TODO actually copy object here */
+  //			std::shared_ptr < rave::Propagator > (new GFRavePropagator(*this));
 }
 
 

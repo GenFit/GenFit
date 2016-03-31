@@ -38,6 +38,7 @@
 #include <rave/Cylinder.h>
 
 #include <map>
+#include <memory>
 
 
 namespace genfit {
@@ -56,13 +57,13 @@ class GFRavePropagator : public rave::Propagator
 {
   public:
     GFRavePropagator();
-    virtual GFRavePropagator* copy() const;
+    virtual std::shared_ptr < rave::Propagator > copy() const override;
     virtual rave::Track closestTo ( const rave::Track &,
-                                    const rave::Point3D &, bool transverse ) const;
+                                    const rave::Point3D &, bool transverse ) const override;
     virtual std::pair < rave::Track, double > to ( const rave::Track & orig,
-                                                   const ravesurf::Plane & ) const;
+                                                   const ravesurf::Plane & ) const override;
     virtual std::pair < rave::Track, double > to ( const rave::Track & orig,
-                                                   const ravesurf::Cylinder & ) const;
+                                                   const ravesurf::Cylinder & ) const override;
 
     virtual ~GFRavePropagator();
 
