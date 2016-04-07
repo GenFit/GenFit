@@ -77,9 +77,11 @@ GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFv
                      IdGFTrackStateMap_);
   }
   catch(Exception & e){
+    clearMap();
     std::cerr << e.what();
   }
 
+  clearMap();
 }
 
 
@@ -98,9 +100,11 @@ GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFv
                      IdGFTrackStateMap_);
   }
   catch(Exception & e){
+    clearMap();
     std::cerr << e.what();
   }
 
+  clearMap();
 }
 
 
