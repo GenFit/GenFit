@@ -68,6 +68,11 @@ enum e_testStatus {
   kException
 };
 
+// c++11 has isnan as a function in std namespace and gcc 5.3 will not accept
+// it without it unless imported
+#if __cplusplus > 199711L
+using std::isnan;
+#endif
 
 void handler(int sig) {
   void *array[10];
