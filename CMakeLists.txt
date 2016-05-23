@@ -137,8 +137,8 @@ SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -O3 -g3")
 # include directories 
 INCLUDE_DIRECTORIES( 
 	BEFORE 
-	${GF_INC_DIRS}
-	${ROOT_INCLUDE_DIRS})
+	${ROOT_INCLUDE_DIRS}
+	${GF_INC_DIRS})
 
 
 # add a target to generate API documentation with Doxygen

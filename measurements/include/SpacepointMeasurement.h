@@ -70,6 +70,14 @@ class SpacepointMeasurement : public AbsMeasurement {
 
   virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
 
+  /// false: project 3D cov onto DetPlane. true: cut 3D cov with DetPlane
+  bool getWeightedPlaneConstruction() const     { return weightedPlaneContruction_; }
+  void setWeightedPlaneConstruction(bool value) { weightedPlaneContruction_ = value; }
+
+  /// false: use POCA to construct DetPlane. true: Use metric G to construct POCA
+  bool getCutCov() const     { return cutCov_; }
+  void setCutCov(bool value) { cutCov_ = value; }
+
  protected:
   void initG();
 

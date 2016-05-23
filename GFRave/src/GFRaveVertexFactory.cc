@@ -56,6 +56,7 @@ GFRaveVertexFactory::GFRaveVertexFactory(int verbosity, bool useVacuumPropagator
 
 
 GFRaveVertexFactory::~GFRaveVertexFactory(){
+  clearMap();
   delete magneticField_;
   delete propagator_;
   delete factory_;
@@ -76,9 +77,11 @@ GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFv
                      IdGFTrackStateMap_);
   }
   catch(Exception & e){
+    clearMap();
     std::cerr << e.what();
   }
 
+  clearMap();
 }
 
 
@@ -97,9 +100,11 @@ GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFv
                      IdGFTrackStateMap_);
   }
   catch(Exception & e){
+    clearMap();
     std::cerr << e.what();
   }
 
+  clearMap();
 }
 
 
