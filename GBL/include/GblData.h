@@ -54,6 +54,7 @@ namespace gbl {
  */
 class GblData {
 public:
+        GblData() : theLabel(0), theValue(0.), thePrecision(-1.), theDownWeight(0.), thePrediction(0.) {};
 	GblData(unsigned int aLabel, double aMeas, double aPrec);
 	virtual ~GblData();
 	void addDerivatives(unsigned int iRow,
