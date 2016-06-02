@@ -16,5 +16,7 @@
 #pragma link C++ class genfit::GblFitStatus+;
 #pragma link C++ class genfit::GblFitterInfo+;
 #pragma link C++ class genfit::GblTrackSegmentController+;
+#pragma link C++ class gbl::GblData+;
+#pragma link C++ class vector<gbl::GblData>+;
 
 #endif
