@@ -68,12 +68,6 @@ enum e_testStatus {
   kException
 };
 
-// c++11 has isnan as a function in std namespace and gcc 5.3 will not accept
-// it without it unless imported
-#if __cplusplus > 199711L
-using std::isnan;
-#endif
-
 void handler(int sig) {
   void *array[10];
   size_t size;
@@ -158,7 +152,7 @@ e_testStatus isCovMatrix(TMatrixTBase<double>& cov) {
 
   for (int i=0; i<cov.GetNrows(); ++i) {
     for (int j=0; j<cov.GetNcols(); ++j) {
-       if (isnan(cov(i,j))) {
+       if (std::isnan(cov(i,j))) {
          std::cout << "isCovMatrix: element isnan\n";
          return kFailed;
        }
