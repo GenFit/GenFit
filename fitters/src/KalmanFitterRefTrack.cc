@@ -606,6 +606,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           TVector3 pos, mom;
           const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
           stateToExtrapolate.reset(new StateOnPlane(fittedState));
+          stateToExtrapolate->setRep(rep);
         }
         else {
           if (debugLvl_ > 0) {
@@ -613,7 +614,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           }
           stateToExtrapolate.reset(new StateOnPlane(rep));
           rep->setPosMom(*stateToExtrapolate, tr->getStateSeed());
-	  rep->setTime(*stateToExtrapolate, tr->getTimeSeed());
+      	  rep->setTime(*stateToExtrapolate, tr->getTimeSeed());
         }
       } // end if (prevFitterInfo == NULL)
       else {
