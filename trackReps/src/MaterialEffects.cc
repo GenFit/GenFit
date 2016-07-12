@@ -774,21 +774,19 @@ double MaterialEffects::dEdxBrems(double mom) const
 
 void MaterialEffects::noiseBrems(M7x7& noise, double momSquare, double betaSquare) const
 {
-
-  // Code ported from GEANT 3 and simplified
-  // this formula assumes p >> m and therefore p^2 + m^2 = p^2
-  // the factor  1.44 is not in the original Behte-Heitler model.
+  // Code ported from GEANT 3 (erland.F) and simplified
+  // E \approx p is assumed.
+  // the factor  1.44 is not in the original Bethe-Heitler model.
   // It seems to be some empirical correction copied over from some other project.
 
   if (abs(pdg_) != 11) return; // only for electrons and positrons
 
   double minusXOverLn2  = -1.442695 * fabs(stepSize_) / radiationLength_;
-  double sigma2 = 1.44*(pow(3., minusXOverLn2) - pow(4., minusXOverLn2)) / momSquare;
-  //XXX debugOut << "breams sigma: " << sigma2E << std::endl;
-  //assert(sigma2 >= 0.0);
-  sigma2 = (sigma2 > 0.0 ? sigma2 : 0.0);
-  noise[6 * 7 + 6] +=  charge_*charge_/betaSquare / (momSquare*momSquare) * sigma2;
-
+  double sigma2E = 1.44*(pow(3., minusXOverLn2) - pow(4., minusXOverLn2)) * momSquare;
+  sigma2E = std::max(sigma2E, 0.0); // must be positive
+  
+  // update noise matrix, using linear error propagation from E to q/p
+  noise[6 * 7 + 6] += charge_*charge_/betaSquare / pow(momSquare, 2) * sigma2E;
 }
 
 
