@@ -714,7 +714,7 @@ double MaterialEffects::dEdxBrems(double mom) const
       // We use exp(beta * log(...) here because pow(..., beta) is
       // REALLY slow and we don't need ultimate numerical precision
       // for this approximation.
-      double FAC = matZ_ * (matZ_ + xi) * E * E / (E + me_);
+      double FAC = charge_ * (charge_ + xi) * E * E / (E + me_);
       if (beta == 1.)  // That is the #ifdef BETHE case
         FAC *= kc * CORR / T;
       else
