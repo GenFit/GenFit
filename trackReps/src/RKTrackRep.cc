@@ -2576,7 +2576,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
 
     // check if at boundary
-    if (stopAtBoundary) {
+    if (stopAtBoundary and isAtBoundary) {
       if (debugLvl_ > 0) {
         debugOut << "stopAtBoundary -> break; \n ";
       }
