@@ -24,6 +24,10 @@
 #define genfit_HMatrixPhi_h
 
 #include "AbsHMatrix.h"
+#include "Rtypes.h"
+#include "TMatrixDSymfwd.h"
+#include "TMatrixDfwd.h"
+#include "TVectorDfwd.h"
 
 
 namespace genfit {

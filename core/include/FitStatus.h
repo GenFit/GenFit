@@ -23,8 +23,9 @@
 #ifndef genfit_FitStatus_h
 #define genfit_FitStatus_h
 
-#include <Rtypes.h>
 #include <Math/ProbFuncMathCore.h>
+#include <Rtypes.h>
+
 
 
 namespace genfit {

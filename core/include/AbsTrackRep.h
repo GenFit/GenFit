@@ -23,15 +23,19 @@
 #ifndef genfit_AbsTrackRep_h
 #define genfit_AbsTrackRep_h
 
-#include "SharedPlanePtr.h"
-//#include "MaterialInfo.h"
-#include "MaterialProperties.h"
-
-#include <TVector3.h>
-#include <TObject.h>
-#include <TVectorD.h>
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
+#include <TObject.h>
+#include <TVector3.h>
+#include <TVectorD.h>
+
+//#include "MaterialInfo.h"
+#include "MaterialProperties.h"
+#include "Rtypes.h"
+#include "SharedPlanePtr.h"
+#include "TMatrixDSymfwd.h"
+#include "TMatrixDfwd.h"
+#include "TVectorDfwd.h"
 
 
 namespace genfit {
@@ -49,9 +53,9 @@ struct MatStep {
 
 };
 
-class StateOnPlane;
-class MeasuredStateOnPlane;
 class AbsMeasurement;
+class MeasuredStateOnPlane;
+class StateOnPlane;
 
 /**
  * @brief Abstract base class for a track representation

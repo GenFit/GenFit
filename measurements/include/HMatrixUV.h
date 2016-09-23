@@ -23,7 +23,13 @@
 #ifndef genfit_HMatrixUV_h
 #define genfit_HMatrixUV_h
 
+#include <stddef.h>
+
 #include "AbsHMatrix.h"
+#include "Rtypes.h"
+#include "TMatrixDSymfwd.h"
+#include "TMatrixDfwd.h"
+#include "TVectorDfwd.h"
 
 
 namespace genfit {

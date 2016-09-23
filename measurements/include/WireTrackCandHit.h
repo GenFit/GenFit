@@ -23,6 +23,7 @@
 #ifndef genfit_WireTrackCandHit_h
 #define genfit_WireTrackCandHit_h
 
+#include "Rtypes.h"
 #include "TrackCandHit.h"
 
 

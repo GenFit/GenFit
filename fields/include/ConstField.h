@@ -24,6 +24,7 @@
 #define genfit_ConstField_h
 
 #include "AbsBField.h"
+#include "TVector3.h"
 
 
 namespace genfit {

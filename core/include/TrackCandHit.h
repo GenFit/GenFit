@@ -25,6 +25,8 @@
 
 #include <TObject.h>
 
+#include "Rtypes.h"
+
 
 namespace genfit {
 

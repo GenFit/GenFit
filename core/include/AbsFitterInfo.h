@@ -24,17 +24,22 @@
 #ifndef genfit_AbsFitterInfo_h
 #define genfit_AbsFitterInfo_h
 
-#include "MeasurementOnPlane.h"
-#include "FitStatus.h"
-
 #include <TObject.h>
 #include <TVectorD.h>
+#include <stddef.h>
+
+#include "FitStatus.h"
+#include "MeasurementOnPlane.h"
+#include "Rtypes.h"
+#include "SharedPlanePtr.h"
 
 
 namespace genfit {
 
 class AbsTrackRep;
 class TrackPoint;
+class MeasuredStateOnPlane;
+struct PruneFlags;
 
 /**
  *  @brief This class collects all information needed and produced by a specific  AbsFitter and is specific to one AbsTrackRep of the Track.

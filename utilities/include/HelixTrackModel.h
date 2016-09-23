@@ -32,6 +32,8 @@
 #include <TObject.h>
 #include <TVector3.h>
 
+#include "Rtypes.h"
+
 
 namespace genfit {
 

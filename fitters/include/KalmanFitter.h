@@ -23,7 +23,16 @@
 #ifndef genfit_KalmanFitter_h
 #define genfit_KalmanFitter_h
 
+#include <boost/smart_ptr/scoped_ptr.hpp>
+#include <stddef.h>
+
 #include "AbsKalmanFitter.h"
+#include "Rtypes.h"
+
+namespace genfit {
+class AbsTrackRep;
+class Track;
+}  // namespace genfit
 
 #ifndef __CINT__
 #include <boost/scoped_ptr.hpp>

@@ -24,9 +24,14 @@
 #ifndef genfit_Tools_h
 #define genfit_Tools_h
 
-#include <TVectorD.h>
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
+#include <TVectorD.h>
+#include <stddef.h>
+
+#include "TMatrixDSymfwd.h"
+#include "TMatrixDfwd.h"
+#include "TVectorDfwd.h"
 
 /**
  * @brief Matrix inversion tools.

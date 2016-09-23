@@ -24,20 +24,33 @@
 #ifndef genfit_Track_h
 #define genfit_Track_h
 
+#include <TObject.h>
+#include <TVectorD.h>
+#include <stddef.h>
+#include <vector>
+
 #include "AbsTrackRep.h"
 #include "FitStatus.h"
 #include "MeasurementFactory.h"
+#include "Rtypes.h"
+#include "TMatrixDSymfwd.h"
+#include "TMatrixTSym.h"
+#include "TVector3.h"
+#include "TVectorDfwd.h"
+#include "TVectorT.h"
 #include "TrackCand.h"
 #include "TrackPoint.h"
-
-#include <vector>
-#include <TObject.h>
-#include <TVectorD.h>
 
 
 namespace genfit {
 
 class KalmanFitStatus;
+class AbsMeasurement;
+class AbsTrackRep;
+class FitStatus;
+class MeasuredStateOnPlane;
+class TrackCand;
+template <class measurement_T> class MeasurementFactory;
 
 /**
  * @brief Helper class for TrackPoint sorting, used in Track::sort().

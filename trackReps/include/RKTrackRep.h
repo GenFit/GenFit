@@ -24,12 +24,23 @@
 #ifndef genfit_RKTrackRep_h
 #define genfit_RKTrackRep_h
 
-#include "AbsTrackRep.h"
-#include "StateOnPlane.h"
-#include "RKTools.h"
-#include "StepLimits.h"
-
+#include <stddef.h>
 #include <algorithm>
+
+#include "AbsTrackRep.h"
+#include "DetPlane.h"
+#include "MeasuredStateOnPlane.h"
+#include "RKTools.h"
+#include "Rtypes.h"
+#include "SharedPlanePtr.h"
+#include "StateOnPlane.h"
+#include "StepLimits.h"
+#include "TMatrixDSymfwd.h"
+#include "TMatrixDfwd.h"
+#include "TMatrixT.h"
+#include "TMatrixTSym.h"
+#include "TVector3.h"
+#include "TVectorDfwd.h"
 
 namespace genfit {
 

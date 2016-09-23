@@ -24,11 +24,18 @@
 #ifndef genfit_StateOnPlane_h
 #define genfit_StateOnPlane_h
 
-#include "SharedPlanePtr.h"
-#include "AbsTrackRep.h"
-
 #include <TObject.h>
 #include <TVectorD.h>
+#include <assert.h>
+#include <stddef.h>
+
+#include "AbsTrackRep.h"
+#include "Rtypes.h"
+#include "SharedPlanePtr.h"
+#include "TMatrixDSymfwd.h"
+#include "TVector3.h"
+#include "TVectorDfwd.h"
+#include "TVectorT.h"
 
 
 namespace genfit {
@@ -42,6 +49,8 @@ namespace genfit {
  * It will provide functionality to extrapolate it and translate the state it into cartesian coordinates.
  * Shortcuts to all functions of the AbsTrackRep which use this StateOnPlane are also provided here.
  */
+class AbsMeasurement;
+
 class StateOnPlane {
 
  public:

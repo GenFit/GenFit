@@ -22,20 +22,23 @@
 #ifndef genfit_TrackCand_h
 #define genfit_TrackCand_h
 
-#include "TrackCandHit.h"
-
-#include <vector>
-#include <set>
-#include <assert.h>
-
+#include <TDatabasePDG.h>
+#include <TMatrixD.h>
+#include <TMatrixDSym.h>
 #include <TObject.h>
 #include <TVector3.h>
 #include <TVectorD.h>
-#include <TMatrixD.h>
-#include <TMatrixDSym.h>
-#include <TDatabasePDG.h>
-
+#include <assert.h>
 #include <cmath>
+#include <set>
+#include <vector>
+
+#include "Rtypes.h"
+#include "TMatrixDSymfwd.h"
+#include "TMatrixTSym.h"
+#include "TVectorDfwd.h"
+#include "TVectorT.h"
+#include "TrackCandHit.h"
 
 
 namespace genfit {

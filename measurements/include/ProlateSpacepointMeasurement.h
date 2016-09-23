@@ -23,7 +23,13 @@
 #ifndef genfit_ProlateSpacepointMeasurement_h
 #define genfit_ProlateSpacepointMeasurement_h
 
+#include "Rtypes.h"
+#include "SharedPlanePtr.h"
 #include "SpacepointMeasurement.h"
+#include "StateOnPlane.h"
+#include "TMatrixDSymfwd.h"
+#include "TVector3.h"
+#include "TVectorDfwd.h"
 
 
 namespace genfit {
@@ -43,6 +49,9 @@ namespace genfit {
  * The largest error direction can be set. Standard is in z.
  *
  */
+class AbsMeasurement;
+class TrackPoint;
+
 class ProlateSpacepointMeasurement : public SpacepointMeasurement {
 
  public:

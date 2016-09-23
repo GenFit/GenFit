@@ -23,8 +23,14 @@
 #ifndef genfit_SpacepointMeasurement_h
 #define genfit_SpacepointMeasurement_h
 
-#include "AbsMeasurement.h"
 #include "AbsHMatrix.h"
+#include "AbsMeasurement.h"
+#include "Rtypes.h"
+#include "SharedPlanePtr.h"
+#include "StateOnPlane.h"
+#include "TMatrixDSymfwd.h"
+#include "TMatrixTSym.h"
+#include "TVectorDfwd.h"
 
 
 namespace genfit {
@@ -43,6 +49,10 @@ namespace genfit {
  * data of the hit is used to define a proper detector plane into which the
  * hit coordinates are then projected.
  */
+class AbsHMatrix;
+class AbsTrackRep;
+class TrackPoint;
+
 class SpacepointMeasurement : public AbsMeasurement {
 
  public:

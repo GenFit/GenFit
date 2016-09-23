@@ -23,10 +23,12 @@
 #ifndef genfit_DAF_h
 #define genfit_DAF_h
 
-#include "AbsKalmanFitter.h"
-
-#include <vector>
+#include <boost/smart_ptr/scoped_ptr.hpp>
 #include <map>
+#include <vector>
+
+#include "AbsKalmanFitter.h"
+#include "Rtypes.h"
 
 
 namespace genfit {
@@ -45,6 +47,9 @@ namespace genfit {
  * The weights which were assigned to the hits by the DAF are accessible in the MeasurementOnPlane objects
  * in the KalmanFitterInfo objects.
  */
+class AbsTrackRep;
+class Track;
+
 class DAF : public AbsKalmanFitter {
 
  private:

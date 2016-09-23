@@ -23,9 +23,14 @@
 #ifndef genfit_WireMeasurement_h
 #define genfit_WireMeasurement_h
 
-#include "AbsMeasurement.h"
 #include "AbsHMatrix.h"
+#include "AbsMeasurement.h"
 #include "MeasurementOnPlane.h"
+#include "Rtypes.h"
+#include "SharedPlanePtr.h"
+#include "StateOnPlane.h"
+#include "TMatrixDSymfwd.h"
+#include "TVectorDfwd.h"
 
 
 namespace genfit {
@@ -49,6 +54,10 @@ namespace genfit {
  * coordinate in the plane)
  *
  */
+class AbsHMatrix;
+class AbsTrackRep;
+class TrackPoint;
+
 class WireMeasurement : public AbsMeasurement {
 
  public:

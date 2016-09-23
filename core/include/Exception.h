@@ -23,13 +23,12 @@
 #ifndef genfit_Exception_h
 #define genfit_Exception_h
 
+#include <TMatrixD.h>
 #include <exception>
-#include <string>
-#include <vector>
 #include <iostream>
 #include <sstream>
-
-#include <TMatrixD.h>
+#include <string>
+#include <vector>
 
 
 namespace genfit {

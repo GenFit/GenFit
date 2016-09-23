@@ -29,11 +29,12 @@
 #ifndef genfit_MeasurementOnPlaneCreator_h
 #define genfit_MeasurementOnPlaneCreator_h
 
-#include "AbsMeasurement.h"
-#include "HelixTrackModel.h"
-
 #include <TObject.h>
 #include <TVector3.h>
+
+#include "AbsMeasurement.h"
+#include "HelixTrackModel.h"
+#include "Rtypes.h"
 
 
 namespace genfit {

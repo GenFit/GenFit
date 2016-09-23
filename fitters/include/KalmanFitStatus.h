@@ -23,9 +23,10 @@
 #ifndef genfit_KalmanFitStatus_h
 #define genfit_KalmanFitStatus_h
 
-#include "FitStatus.h"
-
 #include <Math/ProbFunc.h>
+
+#include "FitStatus.h"
+#include "Rtypes.h"
 
 
 namespace genfit {

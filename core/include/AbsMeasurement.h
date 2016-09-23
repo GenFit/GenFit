@@ -23,16 +23,24 @@
 #ifndef genfit_AbsMeasurement_h
 #define genfit_AbsMeasurement_h
 
-#include "MeasurementOnPlane.h"
-#include "AbsHMatrix.h"
-
 #include <TObject.h>
+
+#include "AbsHMatrix.h"
+#include "MeasurementOnPlane.h"
+#include "Rtypes.h"
+#include "SharedPlanePtr.h"
+#include "StateOnPlane.h"
+#include "TMatrixDSymfwd.h"
+#include "TMatrixTSym.h"
+#include "TVectorDfwd.h"
+#include "TVectorT.h"
 
 
 namespace genfit {
 
 class AbsTrackRep;
 class TrackPoint;
+class AbsHMatrix;
 
 /**
  *  @brief Contains the measurement and covariance in raw detector coordinates.

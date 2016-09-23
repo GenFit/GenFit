@@ -23,20 +23,30 @@
 #ifndef genfit_EventDisplay_h
 #define genfit_EventDisplay_h
 
-#include "Track.h"
-#include "AbsKalmanFitter.h"
-
 #include <TEveBox.h>
+#include <TGButton.h>
+#include <TGButtonGroup.h>
+#include <TGNumberEntry.h>
 #include <TVector3.h>
 #include <string>
 #include <vector>
 
-#include <TGButton.h>
-#include <TGNumberEntry.h>
-#include <TGButtonGroup.h>
+#include "AbsKalmanFitter.h"
+#include "Rtypes.h"
+#include "TNamed.h"
+#include "Track.h"
+
+class TEveBox;
+class TGButtonGroup;
+class TGCheckButton;
+class TGNumberEntry;
 
 
 namespace genfit {
+
+class AbsTrackRep;
+class StateOnPlane;
+class Track;
 
 enum eFitterType {
   SimpleKalman,

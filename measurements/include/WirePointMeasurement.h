@@ -23,6 +23,11 @@
 #ifndef genfit_WirePointMeasurement_h
 #define genfit_WirePointMeasurement_h
 
+#include "Rtypes.h"
+#include "SharedPlanePtr.h"
+#include "StateOnPlane.h"
+#include "TMatrixDSymfwd.h"
+#include "TVectorDfwd.h"
 #include "WireMeasurement.h"
 
 
@@ -48,6 +53,11 @@ namespace genfit {
  * wire (w2 -w1) (in the plane reference frame, v coordinate).
  *
  */
+class AbsHMatrix;
+class AbsMeasurement;
+class AbsTrackRep;
+class TrackPoint;
+
 class WirePointMeasurement : public WireMeasurement {
 
  public:

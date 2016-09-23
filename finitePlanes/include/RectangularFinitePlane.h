@@ -24,6 +24,7 @@
 #define genfit_RectangularFinitePlane_h
 
 #include "AbsFinitePlane.h"
+#include "Rtypes.h"
 
 
 namespace genfit {
