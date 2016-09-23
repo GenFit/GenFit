@@ -31,7 +31,6 @@
 
 #include "AbsTrackRep.h"
 #include "Rtypes.h"
-#include "RtypesCore.h"
 #include "SharedPlanePtr.h"
 #include "TMatrixDSymfwd.h"
 #include "TVector3.h"

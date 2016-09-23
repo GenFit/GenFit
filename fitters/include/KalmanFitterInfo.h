@@ -33,7 +33,6 @@
 #include "MeasurementOnPlane.h"
 #include "ReferenceStateOnPlane.h"
 #include "Rtypes.h"
-#include "RtypesCore.h"
 #include "StateOnPlane.h"
 
 namespace genfit {

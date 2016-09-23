@@ -33,7 +33,6 @@
 
 #include "AbsKalmanFitter.h"
 #include "Rtypes.h"
-#include "RtypesCore.h"
 #include "TNamed.h"
 #include "Track.h"
 

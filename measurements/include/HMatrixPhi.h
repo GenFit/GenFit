@@ -25,7 +25,6 @@
 
 #include "AbsHMatrix.h"
 #include "Rtypes.h"
-#include "RtypesCore.h"
 #include "TMatrixDSymfwd.h"
 #include "TMatrixDfwd.h"
 #include "TVectorDfwd.h"

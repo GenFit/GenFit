@@ -31,7 +31,6 @@
 #include "FitStatus.h"
 #include "MeasurementOnPlane.h"
 #include "Rtypes.h"
-#include "RtypesCore.h"
 #include "SharedPlanePtr.h"
 
 

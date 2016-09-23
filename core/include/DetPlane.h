@@ -38,7 +38,6 @@
 
 #include "AbsFinitePlane.h"
 #include "Rtypes.h"
-#include "RtypesCore.h"
 #include "TVector2.h"
 
 namespace genfit {

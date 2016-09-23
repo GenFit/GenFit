@@ -34,7 +34,6 @@
 #include <vector>
 
 #include "Rtypes.h"
-#include "RtypesCore.h"
 #include "TMatrixDSymfwd.h"
 #include "TMatrixTSym.h"
 #include "TVectorDfwd.h"

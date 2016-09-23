@@ -27,7 +27,6 @@
 
 #include "FitStatus.h"
 #include "Rtypes.h"
-#include "RtypesCore.h"
 
 
 namespace genfit {

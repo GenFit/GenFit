@@ -24,7 +24,6 @@
 #define genfit_WireTrackCandHit_h
 
 #include "Rtypes.h"
-#include "RtypesCore.h"
 #include "TrackCandHit.h"
 
 

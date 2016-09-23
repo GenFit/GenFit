@@ -33,7 +33,6 @@
 #include "FitStatus.h"
 #include "MeasurementFactory.h"
 #include "Rtypes.h"
-#include "RtypesCore.h"
 #include "TMatrixDSymfwd.h"
 #include "TMatrixTSym.h"
 #include "TVector3.h"

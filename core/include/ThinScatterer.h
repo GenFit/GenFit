@@ -28,7 +28,6 @@
 
 #include "MaterialProperties.h"
 #include "Rtypes.h"
-#include "RtypesCore.h"
 #include "SharedPlanePtr.h"
 
 

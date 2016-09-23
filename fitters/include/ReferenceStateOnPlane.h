@@ -25,7 +25,6 @@
 #define genfit_ReferenceStateOnPlane_h
 
 #include "Rtypes.h"
-#include "RtypesCore.h"
 #include "SharedPlanePtr.h"
 #include "StateOnPlane.h"
 #include "TMatrixDSymfwd.h"

@@ -28,7 +28,6 @@
 #include "AbsHMatrix.h"
 #include "MeasurementOnPlane.h"
 #include "Rtypes.h"
-#include "RtypesCore.h"
 #include "SharedPlanePtr.h"
 #include "StateOnPlane.h"
 #include "TMatrixDSymfwd.h"
