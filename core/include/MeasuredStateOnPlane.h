@@ -24,10 +24,19 @@
 #ifndef genfit_MeasuredStateOnPlane_h
 #define genfit_MeasuredStateOnPlane_h
 
-#include "StateOnPlane.h"
-#include "AbsTrackRep.h"
-
 #include <TMatrixDSym.h>
+#include <assert.h>
+#include <stddef.h>
+
+#include "AbsTrackRep.h"
+#include "Rtypes.h"
+#include "RtypesCore.h"
+#include "SharedPlanePtr.h"
+#include "StateOnPlane.h"
+#include "TMatrixDSymfwd.h"
+#include "TMatrixTSym.h"
+#include "TVector3.h"
+#include "TVectorDfwd.h"
 
 
 namespace genfit {
@@ -35,6 +44,8 @@ namespace genfit {
 /**
  *  @brief #StateOnPlane with additional covariance matrix.
  */
+class AbsTrackRep;
+
 class MeasuredStateOnPlane : public StateOnPlane {
 
  public:

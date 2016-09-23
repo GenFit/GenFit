@@ -24,12 +24,20 @@
 #ifndef genfit_MeasurementOnPlane_h
 #define genfit_MeasurementOnPlane_h
 
-#include "MeasuredStateOnPlane.h"
-#include "AbsHMatrix.h"
-
 #include <TMatrixD.h>
-
+#include <boost/smart_ptr/scoped_ptr.hpp>
+#include <stddef.h>
 #include <cmath>
+
+#include "AbsHMatrix.h"
+#include "MeasuredStateOnPlane.h"
+#include "Rtypes.h"
+#include "RtypesCore.h"
+#include "SharedPlanePtr.h"
+#include "TMatrixDSymfwd.h"
+#include "TMatrixTSym.h"
+#include "TVector3.h"
+#include "TVectorDfwd.h"
 
 
 namespace genfit {
@@ -42,6 +50,9 @@ namespace genfit {
  * project the track parameters with the original dimensionality down
  * to the measured dimensionality.
  */
+class AbsHMatrix;
+class AbsTrackRep;
+
 class MeasurementOnPlane : public MeasuredStateOnPlane {
 
  public:

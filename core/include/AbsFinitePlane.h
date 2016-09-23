@@ -31,6 +31,8 @@
 
 #include <Rtypes.h> // for Option_t
 
+#include "RtypesCore.h"
+
 
 namespace genfit {
 

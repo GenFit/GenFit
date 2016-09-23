@@ -24,7 +24,16 @@
 #ifndef genfit_ReferenceStateOnPlane_h
 #define genfit_ReferenceStateOnPlane_h
 
+#include "Rtypes.h"
+#include "RtypesCore.h"
+#include "SharedPlanePtr.h"
 #include "StateOnPlane.h"
+#include "TMatrixDSymfwd.h"
+#include "TMatrixDfwd.h"
+#include "TMatrixT.h"
+#include "TMatrixTSym.h"
+#include "TVectorDfwd.h"
+#include "TVectorT.h"
 
 
 namespace genfit {
@@ -40,6 +49,8 @@ namespace genfit {
  * C = F * C_old * F^T + N
  *
  */
+class AbsTrackRep;
+
 class ReferenceStateOnPlane : public StateOnPlane {
 
  public:

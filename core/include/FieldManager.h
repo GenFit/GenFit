@@ -24,11 +24,13 @@
 #ifndef genfit_FieldManager_h
 #define genfit_FieldManager_h
 
-#include "AbsBField.h"
-#include "IO.h"
-
+#include <stddef.h>
 #include <stdexcept>
 #include <string>
+
+#include "AbsBField.h"
+#include "IO.h"
+#include "TVector3.h"
 
 #define CACHE
 

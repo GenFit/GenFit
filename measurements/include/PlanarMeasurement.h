@@ -23,14 +23,21 @@
 #ifndef genfit_PlanarMeasurement_h
 #define genfit_PlanarMeasurement_h
 
-#include "AbsMeasurement.h"
 #include "AbsHMatrix.h"
+#include "AbsMeasurement.h"
 #include "MeasurementOnPlane.h"
+#include "Rtypes.h"
+#include "SharedPlanePtr.h"
+#include "StateOnPlane.h"
+#include "TMatrixDSymfwd.h"
+#include "TVectorDfwd.h"
 
 
 namespace genfit {
 
 class AbsTrackRep;
+class AbsHMatrix;
+class TrackPoint;
 
 /** @brief Measurement class implementing a planar hit geometry (1 or 2D).
  *

@@ -23,14 +23,28 @@
 #ifndef genfit_KalmanFitterInfo_h
 #define genfit_KalmanFitterInfo_h
 
+#include <boost/smart_ptr/scoped_ptr.hpp>
+#include <stddef.h>
+#include <vector>
+
 #include "AbsFitterInfo.h"
 #include "KalmanFittedStateOnPlane.h"
 #include "MeasuredStateOnPlane.h"
 #include "MeasurementOnPlane.h"
 #include "ReferenceStateOnPlane.h"
+#include "Rtypes.h"
+#include "RtypesCore.h"
 #include "StateOnPlane.h"
 
-#include <vector>
+namespace genfit {
+class AbsTrackRep;
+class KalmanFittedStateOnPlane;
+class MeasuredStateOnPlane;
+class ReferenceStateOnPlane;
+class StateOnPlane;
+class TrackPoint;
+struct PruneFlags;
+}  // namespace genfit
 
 #ifndef __CINT__
 #include <boost/scoped_ptr.hpp>

@@ -24,10 +24,12 @@
 #ifndef genfit_ThinScatterer_h
 #define genfit_ThinScatterer_h
 
-#include "SharedPlanePtr.h"
-#include "MaterialProperties.h"
-
 #include <TObject.h>
+
+#include "MaterialProperties.h"
+#include "Rtypes.h"
+#include "RtypesCore.h"
+#include "SharedPlanePtr.h"
 
 
 namespace genfit {

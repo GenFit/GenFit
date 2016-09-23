@@ -23,7 +23,16 @@
 #ifndef genfit_HMatrixUnit_h
 #define genfit_HMatrixUnit_h
 
+#include <stddef.h>
+
 #include "AbsHMatrix.h"
+#include "Rtypes.h"
+#include "RtypesCore.h"
+#include "TMatrixDSymfwd.h"
+#include "TMatrixDfwd.h"
+#include "TMatrixT.h"
+#include "TVectorDfwd.h"
+#include "TVectorT.h"
 
 
 namespace genfit {

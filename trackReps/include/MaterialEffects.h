@@ -24,13 +24,13 @@
 #ifndef genfit_MaterialEffects_h
 #define genfit_MaterialEffects_h
 
-#include "RKTools.h"
-#include "AbsMaterialInterface.h"
-
+#include <TVector3.h>
 #include <iostream>
+#include <string>
 #include <vector>
 
-#include <TVector3.h>
+#include "AbsMaterialInterface.h"
+#include "RKTools.h"
 
 
 namespace genfit {
@@ -47,6 +47,11 @@ namespace genfit {
  *  You have to set which energy-loss and noise mechanisms you want to use.
  *  At the moment, per default all energy loss and noise options are ON.
  */
+class AbsMaterialInterface;
+class MaterialProperties;
+class RKTrackRep;
+class StepLimits;
+
 class MaterialEffects {
 
  private:

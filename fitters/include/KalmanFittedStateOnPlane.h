@@ -24,6 +24,10 @@
 #define genfit_KalmanFittedStateOnPlane_h
 
 #include "MeasuredStateOnPlane.h"
+#include "Rtypes.h"
+#include "SharedPlanePtr.h"
+#include "TMatrixDSymfwd.h"
+#include "TVectorDfwd.h"
 
 
 namespace genfit {
@@ -32,6 +36,8 @@ namespace genfit {
 /**
  *  @brief #MeasuredStateOnPlane with additional info produced by a Kalman filter or DAF.
  */
+class AbsTrackRep;
+
 class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
 
  public:

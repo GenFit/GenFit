@@ -31,10 +31,19 @@
 #ifndef genfit_DetPlane_h
 #define genfit_DetPlane_h
 
-#include "AbsFinitePlane.h"
-
 #include <TObject.h>
 #include <TVector3.h>
+#include <boost/smart_ptr/scoped_ptr.hpp>
+#include <stddef.h>
+
+#include "AbsFinitePlane.h"
+#include "Rtypes.h"
+#include "RtypesCore.h"
+#include "TVector2.h"
+
+namespace genfit {
+class AbsFinitePlane;
+}  // namespace genfit
 
 #ifndef __CINT__
 #include <boost/scoped_ptr.hpp>

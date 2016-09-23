@@ -23,14 +23,22 @@
 #ifndef genfit_FullMeasurement_h
 #define genfit_FullMeasurement_h
 
-#include "AbsMeasurement.h"
+#include <stddef.h>
+
 #include "AbsHMatrix.h"
+#include "AbsMeasurement.h"
+#include "MeasuredStateOnPlane.h"
 #include "MeasurementOnPlane.h"
+#include "Rtypes.h"
+#include "SharedPlanePtr.h"
+#include "StateOnPlane.h"
 
 
 namespace genfit {
 
 class AbsTrackRep;
+class AbsHMatrix;
+class TrackPoint;
 
 /** @brief Measurement class implementing a measurement of all track parameters.
  *

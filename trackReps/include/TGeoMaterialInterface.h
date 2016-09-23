@@ -25,6 +25,7 @@
 #define genfit_TGeoMaterialInterface_h
 
 #include "AbsMaterialInterface.h"
+#include "RKTools.h"
 
 
 namespace genfit {
@@ -32,6 +33,9 @@ namespace genfit {
 /**
  * @brief AbsMaterialInterface implementation for use with ROOT's TGeoManager.
  */
+class MaterialProperties;
+class RKTrackRep;
+
 class TGeoMaterialInterface : public AbsMaterialInterface {
 
  public:
