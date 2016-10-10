@@ -126,7 +126,7 @@ class ICalibrationParametersDerivatives {
     * @return TMatrixD Matrix with #rows = dimension of residual, #columns = number of parameters.
     * #columns must match labels().size().
     */
-   virtual TMatrixD derivatives(const genfit::StateOnPlane* sop) {return TMatrixD();}
+   virtual TMatrixD derivatives(const genfit::StateOnPlane*) {return TMatrixD();}
    
    /**
     * @brief Derivatives for additional local parameters to be fitted
