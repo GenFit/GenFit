@@ -77,7 +77,6 @@
 #include <TVectorDfwd.h>
 #include <TMatrixT.h>
 #include <TVector3.h>
-//#include "boost/algorithm/string.hpp"
 
 //#define DEBUG
 
@@ -153,8 +152,7 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
   int fitRes = 0;
   std::vector<std::string> gblIterations;
   gblIterations.push_back(m_gblInternalIterations);
-  //boost::split(gblIterations, m_gblInternalIterations, boost::is_any_of(","), boost::token_compress_off);
-  
+
   // Iterations and updates of fitter infos and fit status
   // ------------------------------------------------------------------- 
   for (unsigned int iIter = 0; iIter < m_externalIterations; iIter++) {
