@@ -53,7 +53,7 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<AbsMeasurement
   cardinalRep_(0), fitStatuses_(), stateSeed_(6), covSeed_(6)
 {
 
-  if (rep != NULL)
+  if (rep != nullptr)
     addTrackRep(rep);
 
   createMeasurements(trackCand, factory);
@@ -226,7 +226,7 @@ TrackPoint* Track::getPointWithMeasurement(int id) const {
 
 
 TrackPoint* Track::getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRep* rep) const {
-  if (rep == NULL)
+  if (rep == nullptr)
     rep = getCardinalRep();
 
   if (id >= 0) {
@@ -256,7 +256,7 @@ TrackPoint* Track::getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRe
 
 
 TrackPoint* Track::getPointWithFitterInfo(int id, const AbsTrackRep* rep) const {
-  if (rep == NULL)
+  if (rep == nullptr)
     rep = getCardinalRep();
 
   if (id >= 0) {
@@ -286,11 +286,11 @@ TrackPoint* Track::getPointWithFitterInfo(int id, const AbsTrackRep* rep) const 
 
 
 const MeasuredStateOnPlane& Track::getFittedState(int id, const AbsTrackRep* rep, bool biased) const {
-  if (rep == NULL)
+  if (rep == nullptr)
     rep = getCardinalRep();
 
   TrackPoint* point = getPointWithFitterInfo(id, rep);
-  if (point == NULL) {
+  if (point == nullptr) {
     Exception exc("Track::getFittedState ==> no trackPoint with fitterInfo for rep",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
@@ -312,24 +312,24 @@ int Track::getIdForRep(const AbsTrackRep* rep) const
 
 
 bool Track::hasFitStatus(const AbsTrackRep* rep) const {
-  if (rep == NULL)
+  if (rep == nullptr)
     rep = getCardinalRep();
 
   if (fitStatuses_.find(rep) == fitStatuses_.end())
     return false;
 
-  return (fitStatuses_.at(rep) != NULL);
+  return (fitStatuses_.at(rep) != nullptr);
 }
 
 
 bool Track::hasKalmanFitStatus(const AbsTrackRep* rep) const {
-  if (rep == NULL)
+  if (rep == nullptr)
     rep = getCardinalRep();
 
   if (fitStatuses_.find(rep) == fitStatuses_.end())
     return false;
 
-  return (dynamic_cast<KalmanFitStatus*>(fitStatuses_.at(rep)) != NULL);
+  return (dynamic_cast<KalmanFitStatus*>(fitStatuses_.at(rep)) != nullptr);
 }
 
 
@@ -367,7 +367,7 @@ void Track::insertPoint(TrackPoint* point, int id) {
   #ifdef DEBUG
   debugOut << "Track::insertPoint at position " << id  << "\n";
   #endif
-  assert(point!=NULL);
+  assert(point!=nullptr);
   trackHasChanged();
 
   point->setTrack(this);
@@ -614,7 +614,7 @@ void Track::determineCardinalRep() {
     return;
 
   double minChi2(9.E99);
-  const AbsTrackRep* bestRep(NULL);
+  const AbsTrackRep* bestRep(nullptr);
 
   for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it = fitStatuses_.begin(); it != fitStatuses_.end(); ++it) {
     if (it->second->isFitConverged()) {
@@ -625,7 +625,7 @@ void Track::determineCardinalRep() {
     }
   }
 
-  if (bestRep != NULL) {
+  if (bestRep != nullptr) {
     setCardinalRep(getIdForRep(bestRep));
   }
 }
@@ -716,7 +716,7 @@ void Track::reverseTrackPoints() {
 
 
 void Track::switchPDGSigns(AbsTrackRep* rep) {
-  if (rep != NULL) {
+  if (rep != nullptr) {
     rep->switchPDGSign();
     return;
   }
@@ -751,7 +751,7 @@ void Track::deleteForwardInfo(int startId, int endId, const AbsTrackRep* rep) {
   assert (endId >= startId);
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
-    if (rep != NULL) {
+    if (rep != nullptr) {
       if ((*pointIt)->hasFitterInfo(rep))
         (*pointIt)->getFitterInfo(rep)->deleteForwardInfo();
     }
@@ -782,7 +782,7 @@ void Track::deleteBackwardInfo(int startId, int endId, const AbsTrackRep* rep) {
 
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
-    if (rep != NULL) {
+    if (rep != nullptr) {
       if ((*pointIt)->hasFitterInfo(rep))
         (*pointIt)->getFitterInfo(rep)->deleteBackwardInfo();
     }
@@ -812,7 +812,7 @@ void Track::deleteReferenceInfo(int startId, int endId, const AbsTrackRep* rep) 
   assert (endId >= startId);
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
-    if (rep != NULL) {
+    if (rep != nullptr) {
       if ((*pointIt)->hasFitterInfo(rep))
         (*pointIt)->getFitterInfo(rep)->deleteReferenceInfo();
     }
@@ -842,7 +842,7 @@ void Track::deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep
   assert (endId >= startId);
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
-    if (rep != NULL) {
+    if (rep != nullptr) {
       if ((*pointIt)->hasFitterInfo(rep))
         (*pointIt)->getFitterInfo(rep)->deleteMeasurementInfo();
     }
@@ -872,7 +872,7 @@ void Track::deleteFitterInfo(int startId, int endId, const AbsTrackRep* rep) {
   assert (endId >= startId);
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
-    if (rep != NULL) {
+    if (rep != nullptr) {
       if ((*pointIt)->hasFitterInfo(rep))
         (*pointIt)->deleteFitterInfo(rep);
     }
@@ -903,7 +903,7 @@ double Track::getTrackLen(AbsTrackRep* rep, int startId, int endId) const {
 
   endId += 1;
 
-  if (rep == NULL)
+  if (rep == nullptr)
     rep = getCardinalRep();
 
   double trackLen(0);
@@ -978,7 +978,7 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
 
   endId += 1;
 
-  if (rep == NULL)
+  if (rep == nullptr)
     rep = getCardinalRep();
 
   StateOnPlane state;
@@ -1013,7 +1013,7 @@ void Track::fixWeights(AbsTrackRep* rep, int startId, int endId) {
 
   for (std::vector<TrackPoint*>::iterator tp = trackPoints_.begin() + startId; tp != trackPoints_.begin() + endId; ++tp) {
     fis.clear();
-    if (rep == NULL) {
+    if (rep == nullptr) {
       fis = (*tp)->getFitterInfos();
     }
     else if ((*tp)->hasFitterInfo(rep)) {
@@ -1022,7 +1022,7 @@ void Track::fixWeights(AbsTrackRep* rep, int startId, int endId) {
 
     for (std::vector< AbsFitterInfo* >::iterator fi = fis.begin(); fi != fis.end(); ++fi) {
       KalmanFitterInfo* kfi = dynamic_cast<KalmanFitterInfo*>(*fi);
-      if (kfi == NULL)
+      if (kfi == nullptr)
         continue;
 
       kfi->fixWeights();
@@ -1085,7 +1085,7 @@ void Track::prune(const Option_t* option) {
       else if (f.hasFlags("LI"))
         fis[j]->deleteBackwardInfo();
 
-      if (f.hasFlags("U") && dynamic_cast<KalmanFitterInfo*>(fis[j]) != NULL) {
+      if (f.hasFlags("U") && dynamic_cast<KalmanFitterInfo*>(fis[j]) != nullptr) {
         static_cast<KalmanFitterInfo*>(fis[j])->deletePredictions();
       }
 
@@ -1307,31 +1307,31 @@ bool Track::checkConsistency() const {
   }
 
   for (std::vector<AbsTrackRep*>::const_iterator rep = trackReps_.begin(); rep != trackReps_.end(); ++rep) {
-    // check for NULL
-    if ((*rep) == NULL) {
-      errorOut << "Track::checkConsistency(): TrackRep is NULL" << std::endl;
+    // check for nullptr
+    if ((*rep) == nullptr) {
+      errorOut << "Track::checkConsistency(): TrackRep is nullptr" << std::endl;
       retVal = false;
     }
 
     // check for valid pdg code
     TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle((*rep)->getPDG());
-    if (particle == NULL) {
+    if (particle == nullptr) {
       errorOut << "Track::checkConsistency(): TrackRep pdg ID " << (*rep)->getPDG() << " is not valid" << std::endl;
       retVal = false;
     }
 
     // check if corresponding FitStatus is there
-    if (fitStatuses_.find(*rep) == fitStatuses_.end() and fitStatuses_.find(*rep)->second != NULL) {
-      errorOut << "Track::checkConsistency(): No FitStatus for Rep or FitStatus is NULL" << std::endl;
+    if (fitStatuses_.find(*rep) == fitStatuses_.end() and fitStatuses_.find(*rep)->second != nullptr) {
+      errorOut << "Track::checkConsistency(): No FitStatus for Rep or FitStatus is nullptr" << std::endl;
       retVal = false;
     }
   }
 
   // check TrackPoints
   for (std::vector<TrackPoint*>::const_iterator tp = trackPoints_.begin(); tp != trackPoints_.end(); ++tp) {
-    // check for NULL
-    if ((*tp) == NULL) {
-      errorOut << "Track::checkConsistency(): TrackPoint is NULL" << std::endl;
+    // check for nullptr
+    if ((*tp) == nullptr) {
+      errorOut << "Track::checkConsistency(): TrackPoint is nullptr" << std::endl;
       retVal = false;
     }
     // check if trackPoint points back to this track
@@ -1343,9 +1343,9 @@ bool Track::checkConsistency() const {
     // check rawMeasurements
     const std::vector<AbsMeasurement*>& rawMeasurements = (*tp)->getRawMeasurements();
     for (std::vector<AbsMeasurement*>::const_iterator m = rawMeasurements.begin(); m != rawMeasurements.end(); ++m) {
-      // check for NULL
-      if ((*m) == NULL) {
-        errorOut << "Track::checkConsistency(): Measurement is NULL" << std::endl;
+      // check for nullptr
+      if ((*m) == nullptr) {
+        errorOut << "Track::checkConsistency(): Measurement is nullptr" << std::endl;
         retVal = false;
       }
       // check if measurement points back to TrackPoint
@@ -1358,9 +1358,9 @@ bool Track::checkConsistency() const {
     // check fitterInfos
     std::vector<AbsFitterInfo*> fitterInfos = (*tp)->getFitterInfos();
     for (std::vector<AbsFitterInfo*>::const_iterator fi = fitterInfos.begin(); fi != fitterInfos.end(); ++fi) {
-      // check for NULL
-      if ((*fi) == NULL) {
-        errorOut << "Track::checkConsistency(): FitterInfo is NULL. TrackPoint: " << *tp << std::endl;
+      // check for nullptr
+      if ((*fi) == nullptr) {
+        errorOut << "Track::checkConsistency(): FitterInfo is nullptr. TrackPoint: " << *tp << std::endl;
         retVal = false;
       }
 
@@ -1381,8 +1381,8 @@ bool Track::checkConsistency() const {
         retVal = false;
       }
 
-      if (dynamic_cast<KalmanFitterInfo*>(*fi) != NULL) {
-        if (prevFis[(*fi)->getRep()] != NULL &&
+      if (dynamic_cast<KalmanFitterInfo*>(*fi) != nullptr) {
+        if (prevFis[(*fi)->getRep()] != nullptr &&
             static_cast<KalmanFitterInfo*>(*fi)->hasReferenceState() &&
             prevFis[(*fi)->getRep()]->hasReferenceState() ) {
           double len = static_cast<KalmanFitterInfo*>(*fi)->getReferenceState()->getForwardSegmentLength();
@@ -1398,7 +1398,7 @@ bool Track::checkConsistency() const {
         prevFis[(*fi)->getRep()] = static_cast<KalmanFitterInfo*>(*fi);
       }
       else
-        prevFis[(*fi)->getRep()] = NULL;
+        prevFis[(*fi)->getRep()] = nullptr;
 
     } // end loop over FitterInfos
 

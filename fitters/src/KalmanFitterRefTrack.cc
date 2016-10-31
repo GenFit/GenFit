@@ -50,9 +50,9 @@ TrackPoint* KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, do
 
   chi2 = 0;
   ndf = -1. * dim;
-  KalmanFitterInfo* prevFi(NULL);
+  KalmanFitterInfo* prevFi(nullptr);
 
-  TrackPoint* retVal(NULL);
+  TrackPoint* retVal(nullptr);
 
   if (debugLvl_ > 0) {
     debugOut << tr->getNumPoints() << " TrackPoints with measurements in this track." << std::endl;
@@ -108,7 +108,7 @@ TrackPoint* KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, do
 void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits)
 {
 
-  if (tr->getFitStatus(rep) != NULL && tr->getFitStatus(rep)->isTrackPruned()) {
+  if (tr->getFitStatus(rep) != nullptr && tr->getFitStatus(rep)->isTrackPruned()) {
     Exception exc("KalmanFitterRefTrack::processTrack: Cannot process pruned track!", __LINE__,__FILE__);
     throw exc;
   }
@@ -198,7 +198,7 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
       }
 
       // backward fit must not necessarily start at last hit, set prediction = forward update and blow up cov
-      if (lastProcessedPoint != NULL) {
+      if (lastProcessedPoint != nullptr) {
         KalmanFitterInfo* lastInfo = static_cast<KalmanFitterInfo*>(lastProcessedPoint->getFitterInfo(rep));
         if (! lastInfo->hasBackwardPrediction()) {
           lastInfo->setBackwardPrediction(new MeasuredStateOnPlane(*(lastInfo->getForwardUpdate())));
@@ -299,13 +299,13 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
   TrackPoint* tp = tr->getPointWithMeasurementAndFitterInfo(0, rep);
 
   double charge(0);
-  if (tp != NULL) {
+  if (tp != nullptr) {
     if (static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep))->hasBackwardUpdate())
       charge = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep))->getBackwardUpdate()->getCharge();
   }
   status->setCharge(charge);
 
-  if (tp != NULL) {
+  if (tp != nullptr) {
     status->setIsFitted();
   }
   else { // none of the trackPoints has a fitterInfo
@@ -352,14 +352,14 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
   backwardDeltaState_.ResizeTo(rep->getDim());
 
   // declare stuff
-  KalmanFitterInfo* prevFitterInfo(NULL);
+  KalmanFitterInfo* prevFitterInfo(nullptr);
   boost::scoped_ptr<MeasuredStateOnPlane> firstBackwardUpdate;
 
-  ReferenceStateOnPlane* referenceState(NULL);
-  ReferenceStateOnPlane* prevReferenceState(NULL);
+  ReferenceStateOnPlane* referenceState(nullptr);
+  ReferenceStateOnPlane* prevReferenceState(nullptr);
 
-  const MeasuredStateOnPlane* smoothedState(NULL);
-  const MeasuredStateOnPlane* prevSmoothedState(NULL);
+  const MeasuredStateOnPlane* smoothedState(nullptr);
+  const MeasuredStateOnPlane* prevSmoothedState(nullptr);
 
   double trackLen(0);
 
@@ -396,12 +396,12 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
       // get fitterInfo
-      KalmanFitterInfo* fitterInfo(NULL);
+      KalmanFitterInfo* fitterInfo(nullptr);
       if (trackPoint->hasFitterInfo(rep))
         fitterInfo = dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(rep));
 
       // create new fitter info if none available
-      if (fitterInfo == NULL) {
+      if (fitterInfo == nullptr) {
         if (debugLvl_ > 0) {
           debugOut << "create new KalmanFitterInfo \n";
         }
@@ -414,7 +414,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           debugOut << "TrackPoint " << i << " (" << trackPoint << ") already has KalmanFitterInfo \n";
         }
 
-        if (prevFitterInfo == NULL) {
+        if (prevFitterInfo == nullptr) {
           if (fitterInfo->hasBackwardUpdate())
             firstBackwardUpdate.reset(new MeasuredStateOnPlane(*(fitterInfo->getBackwardUpdate())));
         }
@@ -429,7 +429,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         }
       }
       else {
-        smoothedState = NULL;
+        smoothedState = nullptr;
       }
 
 
@@ -455,9 +455,9 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         }
 
 
-        if (prevReferenceState == NULL) {
+        if (prevReferenceState == nullptr) {
           if (debugLvl_ > 0) {
-            debugOut << "TrackPoint already has referenceState but previous referenceState is NULL -> reset forward info of current reference state and continue \n";
+            debugOut << "TrackPoint already has referenceState but previous referenceState is nullptr -> reset forward info of current reference state and continue \n";
           }
 
           referenceState->resetForward();
@@ -528,19 +528,19 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
       // Construct plane
       SharedPlanePtr plane;
-      if (smoothedState != NULL) {
+      if (smoothedState != nullptr) {
         if (debugLvl_ > 0)
           debugOut << "construct plane with smoothedState \n";
         plane = trackPoint->getRawMeasurement(0)->constructPlane(*smoothedState);
       }
-      else if (prevSmoothedState != NULL) {
+      else if (prevSmoothedState != nullptr) {
         if (debugLvl_ > 0) {
           debugOut << "construct plane with prevSmoothedState \n";
           //prevSmoothedState->Print();
         }
         plane = trackPoint->getRawMeasurement(0)->constructPlane(*prevSmoothedState);
       }
-      else if (prevReferenceState != NULL) {
+      else if (prevReferenceState != nullptr) {
         if (debugLvl_ > 0) {
           debugOut << "construct plane with prevReferenceState \n";
         }
@@ -548,7 +548,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       }
       else if (rep != tr->getCardinalRep() &&
                 trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
-                dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
+                dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != nullptr &&
                 static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
         if (debugLvl_ > 0) {
           debugOut << "construct plane with smoothed state of cardinal rep fit \n";
@@ -570,8 +570,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         plane = trackPoint->getRawMeasurement(0)->constructPlane(seedFromTrack);
       }
 
-      if (plane.get() == NULL) {
-        Exception exc("KalmanFitterRefTrack::prepareTrack ==> construced plane is NULL!",__LINE__,__FILE__);
+      if (plane.get() == nullptr) {
+        Exception exc("KalmanFitterRefTrack::prepareTrack ==> construced plane is nullptr!",__LINE__,__FILE__);
         exc.setFatal();
         throw exc;
       }
@@ -579,18 +579,18 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
       // do extrapolation and set reference state infos
-      boost::scoped_ptr<StateOnPlane> stateToExtrapolate(NULL);
-      if (prevFitterInfo == NULL) { // first measurement
+      boost::scoped_ptr<StateOnPlane> stateToExtrapolate(nullptr);
+      if (prevFitterInfo == nullptr) { // first measurement
         if (debugLvl_ > 0) {
-          debugOut << "prevFitterInfo == NULL \n";
+          debugOut << "prevFitterInfo == nullptr \n";
         }
-        if (smoothedState != NULL) {
+        if (smoothedState != nullptr) {
           if (debugLvl_ > 0) {
             debugOut << "extrapolate smoothedState to plane\n";
           }
           stateToExtrapolate.reset(new StateOnPlane(*smoothedState));
         }
-        else if (referenceState != NULL) {
+        else if (referenceState != nullptr) {
           if (debugLvl_ > 0) {
             debugOut << "extrapolate referenceState to plane\n";
           }
@@ -598,7 +598,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         }
         else if (rep != tr->getCardinalRep() &&
                   trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
-                  dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
+                  dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != nullptr &&
                   static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
           if (debugLvl_ > 0) {
             debugOut << "extrapolate smoothed state of cardinal rep fit to plane\n";
@@ -616,16 +616,16 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           rep->setPosMom(*stateToExtrapolate, tr->getStateSeed());
       	  rep->setTime(*stateToExtrapolate, tr->getTimeSeed());
         }
-      } // end if (prevFitterInfo == NULL)
+      } // end if (prevFitterInfo == nullptr)
       else {
-        if (prevSmoothedState != NULL) {
+        if (prevSmoothedState != nullptr) {
           if (debugLvl_ > 0) {
             debugOut << "extrapolate prevSmoothedState to plane \n";
           }
           stateToExtrapolate.reset(new StateOnPlane(*prevSmoothedState));
         }
         else {
-          assert (prevReferenceState != NULL);
+          assert (prevReferenceState != nullptr);
           if (debugLvl_ > 0) {
             debugOut << "extrapolate prevReferenceState to plane \n";
           }
@@ -634,11 +634,11 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       }
 
       // make sure track is consistent if extrapolation fails
-      if (prevReferenceState != NULL)
+      if (prevReferenceState != nullptr)
         prevReferenceState->resetBackward();
       fitterInfo->deleteReferenceInfo();
 
-      if (prevFitterInfo != NULL) {
+      if (prevFitterInfo != nullptr) {
         rep->extrapolateToPlane(*stateToExtrapolate, prevFitterInfo->getPlane());
         if (debugLvl_ > 0) {
           debugOut << "extrapolated stateToExtrapolate to plane of prevFitterInfo (plane could have changed!) \n";
@@ -678,7 +678,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
       // set backward matrices for previous reference state
-      if (prevReferenceState != NULL) {
+      if (prevReferenceState != nullptr) {
         prevReferenceState->setBackwardSegmentLength(-segmentLen);
         prevReferenceState->setBackwardTransportMatrix(BTransportMatrix_);
         prevReferenceState->setBackwardNoiseMatrix(BNoiseMatrix_);
@@ -709,7 +709,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       fitterInfo->deleteMeasurementInfo();
       const std::vector<AbsMeasurement*>& rawMeasurements = trackPoint->getRawMeasurements();
       for ( std::vector< genfit::AbsMeasurement* >::const_iterator measurement = rawMeasurements.begin(), lastMeasurement = rawMeasurements.end(); measurement != lastMeasurement; ++measurement) {
-        assert((*measurement) != NULL);
+        assert((*measurement) != nullptr);
         fitterInfo->addMeasurementsOnPlane((*measurement)->constructMeasurementsOnPlane(*referenceState));
       }
       if (oldWeights.size() == fitterInfo->getNumMeasurements()) {
@@ -736,8 +736,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       ++nFailedHits;
       if (maxFailedHits_<0 || nFailedHits <= maxFailedHits_) {
         prevNewRefState = true;
-        referenceState = NULL;
-        smoothedState = NULL;
+        referenceState = nullptr;
+        smoothedState = nullptr;
         tr->getPoint(i)->deleteFitterInfo(rep);
 
         if (setSortingParams)
@@ -789,7 +789,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
   }
 
   KalmanFitStatus* fitStatus = dynamic_cast<KalmanFitStatus*>(tr->getFitStatus(rep));
-  if (fitStatus != NULL)
+  if (fitStatus != nullptr)
     fitStatus->setTrackLen(trackLen);
 
   if (debugLvl_ > 0) {
@@ -831,11 +831,11 @@ KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& not
     }
 
     // get fitterInfo
-    KalmanFitterInfo* fitterInfo(NULL);
+    KalmanFitterInfo* fitterInfo(nullptr);
     if (trackPoint->hasFitterInfo(rep))
       fitterInfo = dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(rep));
 
-    if (fitterInfo == NULL)
+    if (fitterInfo == nullptr)
       continue;
 
 
@@ -937,7 +937,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   C_.Zero(); // C_{k|k-1}
 
   // predict
-  if (prevFi != NULL) {
+  if (prevFi != nullptr) {
     const TMatrixD& F = fi->getReferenceState()->getTransportMatrix(direction); // Transport matrix
     assert(F.GetNcols() == (int)dim);
     const TMatrixDSym& N = fi->getReferenceState()->getNoiseMatrix(direction); // Noise matrix
@@ -1062,7 +1062,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
       res_.Print();
     }
 
-    // only calculate chi2inc if res != NULL.
+    // only calculate chi2inc if res != nullptr.
     // If matrix inversion fails, chi2inc = 0
     if (res_ != 0) {
       Rinv_.ResizeTo(C_);
@@ -1140,7 +1140,7 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
   TMatrixD S(dim, dim); // sqrt(C_);
 
   // predict
-  if (prevFi != NULL) {
+  if (prevFi != nullptr) {
     const TMatrixD& F = fi->getReferenceState()->getTransportMatrix(direction); // Transport matrix
     assert(F.GetNcols() == (int)dim);
     const TMatrixDSym& N = fi->getReferenceState()->getNoiseMatrix(direction); // Noise matrix

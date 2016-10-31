@@ -168,7 +168,7 @@ namespace genfit {
     }
     
     // Derivatives      
-    ICalibrationParametersDerivatives* globals = NULL;
+    ICalibrationParametersDerivatives* globals = nullptr;
     if (hasMeasurements() && (globals = dynamic_cast<ICalibrationParametersDerivatives*>(trackPoint_->getRawMeasurement(0)) )) {    
       std::pair<std::vector<int>, TMatrixD> labelsAndMatrix = globals->globalDerivatives(&sop);
       std::vector<int> labels = labelsAndMatrix.first;

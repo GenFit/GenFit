@@ -49,14 +49,14 @@ void tools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* deter
   }
   // do the trivial inversions for 1x1 and 2x2 matrices manually
   if (mat.GetNrows() == 1){
-    if (determinant != NULL) *determinant = mat(0,0);
+    if (determinant != nullptr) *determinant = mat(0,0);
     inv(0,0) = 1./mat(0,0);
     return;
   }
 
   if (mat.GetNrows() == 2){
     double det = mat(0,0)*mat(1,1) - mat(1,0)*mat(1,0);
-    if (determinant != NULL) *determinant = det;
+    if (determinant != nullptr) *determinant = det;
     if(fabs(det) < 1E-50){
       Exception e("Tools::invertMatrix() - cannot invert matrix , determinant = 0",
           __LINE__,__FILE__);
@@ -108,7 +108,7 @@ void tools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* deter
     throw e;
   }
 
-  if (determinant != NULL) {
+  if (determinant != nullptr) {
     double d1, d2;
     invertAlgo.Det(d1, d2);
     *determinant = ldexp(d1, d2);
@@ -125,7 +125,7 @@ void tools::invertMatrix(TMatrixDSym& mat, double* determinant){
   }
   // do the trivial inversions for 1x1 and 2x2 matrices manually
   if (mat.GetNrows() == 1){
-    if (determinant != NULL) *determinant = mat(0,0);
+    if (determinant != nullptr) *determinant = mat(0,0);
     mat(0,0) = 1./mat(0,0);
     return;
   }
@@ -133,7 +133,7 @@ void tools::invertMatrix(TMatrixDSym& mat, double* determinant){
   if (mat.GetNrows() == 2){
     double *arr = mat.GetMatrixArray();
     double det = arr[0]*arr[3] - arr[1]*arr[1];
-    if (determinant != NULL) *determinant = det;
+    if (determinant != nullptr) *determinant = det;
     if(fabs(det) < 1E-50){
       Exception e("Tools::invertMatrix() - cannot invert matrix, determinant = 0",
           __LINE__,__FILE__);
@@ -187,7 +187,7 @@ void tools::invertMatrix(TMatrixDSym& mat, double* determinant){
     throw e;
   }
 
-  if (determinant != NULL) {
+  if (determinant != nullptr) {
     double d1, d2;
     invertAlgo.Det(d1, d2);
     *determinant = ldexp(d1, d2);

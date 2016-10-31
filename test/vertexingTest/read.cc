@@ -20,8 +20,8 @@ int main() {
 
   genfit::Track tr; // pull in genfit libraries
 
-  //genfit::Track* aTrackPtr(NULL);
-  genfit::GFRaveVertex* aVertexPtr(NULL);
+  //genfit::Track* aTrackPtr(nullptr);
+  genfit::GFRaveVertex* aVertexPtr(nullptr);
 
   TFile* trackFile = TFile::Open("tracks.root", "READ");
   if (!trackFile) {

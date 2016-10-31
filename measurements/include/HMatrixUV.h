@@ -54,7 +54,7 @@ class HMatrixUV : public AbsHMatrix {
 
   virtual HMatrixUV* clone() const {return new HMatrixUV(*this);}
 
-  virtual bool isEqual(const AbsHMatrix& other) const {return (dynamic_cast<const HMatrixUV*>(&other) != NULL);}
+  virtual bool isEqual(const AbsHMatrix& other) const {return (dynamic_cast<const HMatrixUV*>(&other) != nullptr);}
 
   virtual void Print(const Option_t* = "") const;
 

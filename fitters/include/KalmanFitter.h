@@ -50,7 +50,7 @@ class KalmanFitter : public AbsKalmanFitter {
  public:
 
   KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3, bool squareRootFormalism = false)
-    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), currentState_(NULL),
+    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), currentState_(nullptr),
       squareRootFormalism_(squareRootFormalism)
   {}
 

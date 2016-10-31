@@ -34,7 +34,7 @@ void MeasuredStateOnPlane::Print(Option_t*) const {
   printOut << "my address " << this << " my plane's address " << this->sharedPlane_.get() << "; use count: " << sharedPlane_.use_count() << std::endl;
   printOut << " state vector: "; state_.Print();
   printOut << " covariance matrix: "; cov_.Print();
-  if (sharedPlane_ != NULL) {
+  if (sharedPlane_ != nullptr) {
     printOut << " defined in plane "; sharedPlane_->Print();
     TVector3 pos, mom;
     TMatrixDSym cov(6,6);

@@ -79,7 +79,7 @@ class AbsFitterInfo : public TObject {
 
   virtual void Print(const Option_t* = "") const {;}
 
-  virtual bool checkConsistency(const PruneFlags* = NULL) const = 0;
+  virtual bool checkConsistency(const PruneFlags* = nullptr) const = 0;
 
  protected:
 

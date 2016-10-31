@@ -97,7 +97,7 @@ class RKTrackRep : public AbsTrackRep {
       const TVector3& point,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const {
-    return extrapToPoint(state, point, NULL, stopAtBoundary, calcJacobianNoise);
+    return extrapToPoint(state, point, nullptr, stopAtBoundary, calcJacobianNoise);
   }
 
   virtual double extrapolateToPoint(StateOnPlane& state,
@@ -175,7 +175,7 @@ class RKTrackRep : public AbsTrackRep {
   //! The actual Runge Kutta propagation
   /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).
    *  This is a single Runge-Kutta step.
-   *  If jacobian is NULL, only the state is propagated,
+   *  If jacobian is nullptr, only the state is propagated,
    *  otherwise also the 7x7 jacobian is calculated.
    *  If varField is false, the magnetic field will only be evaluated at the starting position.
    *  The return value is an estimation on how good the extrapolation is, and it is usually fine if it is > 1.
@@ -197,7 +197,7 @@ class RKTrackRep : public AbsTrackRep {
 
   virtual double extrapToPoint(StateOnPlane& state,
       const TVector3& point,
-      const TMatrixDSym* G = NULL, // weight matrix (metric)
+      const TMatrixDSym* G = nullptr, // weight matrix (metric)
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const;
 
@@ -228,7 +228,7 @@ class RKTrackRep : public AbsTrackRep {
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successful and the plane is reached, the function returns true.
     * Propagated state and the jacobian of the extrapolation are written to state7 and jacobianT.
-    * The jacobian is only calculated if jacobianT != NULL.
+    * The jacobian is only calculated if jacobianT != nullptr.
     * In the main loop of the Runge Kutta algorithm, the estimateStep() is called
     * and may reduce the estimated stepsize so that a maximum momentum loss will not be exceeded,
     * and stop at material boundaries.

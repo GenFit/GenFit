@@ -245,7 +245,7 @@ namespace genfit {
     void deleteReferenceInfo() {;} // Empty because we really do not want to delete reference without a new one
     void deleteMeasurementInfo() {;} // We do not keep the measurements
     virtual void Print(const Option_t* = "") const;
-    virtual bool checkConsistency(const genfit::PruneFlags* = NULL) const;
+    virtual bool checkConsistency(const genfit::PruneFlags* = nullptr) const;
        
   private:
     TMatrixD jacobian_;

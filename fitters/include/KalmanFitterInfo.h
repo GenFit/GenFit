@@ -79,11 +79,11 @@ class KalmanFitterInfo : public AbsFitterInfo {
   double getSmoothedChi2(unsigned int iMeasurement = 0);
 
   bool hasMeasurements() const {return getNumMeasurements() > 0;}
-  bool hasReferenceState() const {return (referenceState_.get() != NULL);}
-  bool hasForwardPrediction() const {return (forwardPrediction_.get()  != NULL);}
-  bool hasBackwardPrediction() const {return (backwardPrediction_.get() != NULL);}
-  bool hasForwardUpdate() const {return (forwardUpdate_.get() != NULL);}
-  bool hasBackwardUpdate() const {return (backwardUpdate_.get() != NULL);}
+  bool hasReferenceState() const {return (referenceState_.get() != nullptr);}
+  bool hasForwardPrediction() const {return (forwardPrediction_.get()  != nullptr);}
+  bool hasBackwardPrediction() const {return (backwardPrediction_.get() != nullptr);}
+  bool hasForwardUpdate() const {return (forwardUpdate_.get() != nullptr);}
+  bool hasBackwardUpdate() const {return (backwardUpdate_.get() != nullptr);}
   bool hasUpdate(int direction) const {if (direction < 0) return hasBackwardUpdate(); return hasForwardUpdate();}
   bool hasPredictionsAndUpdates() const {return (hasForwardPrediction() && hasBackwardPrediction() && hasForwardUpdate() && hasBackwardUpdate());}
 
@@ -105,12 +105,12 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void deleteForwardInfo();
   void deleteBackwardInfo();
   void deletePredictions();
-  void deleteReferenceInfo() {setReferenceState(NULL);}
+  void deleteReferenceInfo() {setReferenceState(nullptr);}
   void deleteMeasurementInfo();
 
   virtual void Print(const Option_t* = "") const;
 
-  virtual bool checkConsistency(const genfit::PruneFlags* = NULL) const;
+  virtual bool checkConsistency(const genfit::PruneFlags* = nullptr) const;
 
  private:
 

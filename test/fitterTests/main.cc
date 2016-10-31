@@ -232,7 +232,7 @@ int main() {
   //if (debug)
   //  fitter->setDebugLvl(10);
 
-  /*if (dynamic_cast<genfit::DAF*>(fitter) != NULL) {
+  /*if (dynamic_cast<genfit::DAF*>(fitter) != nullptr) {
     //static_cast<genfit::DAF*>(fitter)->setBetas(100, 50, 25, 12, 6, 3, 1, 0.5, 0.1);
     //static_cast<genfit::DAF*>(fitter)->setBetas(81, 8, 4, 0.5, 0.1);
     static_cast<genfit::DAF*>(fitter)->setAnnealingScheme(100, 0.1, 5);
@@ -313,8 +313,8 @@ int main() {
 
   CALLGRIND_START_INSTRUMENTATION;
 
-  genfit::Track* fitTrack(NULL);
-  genfit::Track* secondTrack(NULL);
+  genfit::Track* fitTrack(nullptr);
+  genfit::Track* secondTrack(nullptr);
 
   // main loop
   for (unsigned int iEvent=0; iEvent<nEvents; ++iEvent){
@@ -333,9 +333,9 @@ int main() {
 
       // clean up
       delete fitTrack;
-      fitTrack = NULL;
+      fitTrack = nullptr;
       delete secondTrack;
-      secondTrack = NULL;
+      secondTrack = nullptr;
 
 
       // true start values
@@ -585,7 +585,7 @@ int main() {
 
 
       genfit::TrackPoint* tp = fitTrack->getPointWithMeasurementAndFitterInfo(0, rep);
-      if (tp == NULL) {
+      if (tp == nullptr) {
         std::cout << "Track has no TrackPoint with fitterInfo! \n";
         continue;
       }
@@ -645,7 +645,7 @@ int main() {
 
 
       // check l/r resolution and outlier rejection
-      if (dynamic_cast<genfit::DAF*>(fitter) != NULL) {
+      if (dynamic_cast<genfit::DAF*>(fitter) != nullptr) {
         for (unsigned int i=0; i<fitTrack->getNumPointsWithMeasurement(); ++i){
 
           if (! fitTrack->getPointWithMeasurement(i)->hasFitterInfo(rep))

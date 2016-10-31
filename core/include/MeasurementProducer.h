@@ -103,7 +103,7 @@ MeasurementProducer<hit_T, measurement_T>::~MeasurementProducer() {
 
 template <class hit_T, class measurement_T>
 AbsMeasurement* MeasurementProducer<hit_T, measurement_T>::produce(int index, const TrackCandHit* hit) {
-  assert(hitArrayTClones_ != NULL);
+  assert(hitArrayTClones_ != nullptr);
   //std::cout << "hit array with " << hitArrayTClones_->GetEntries() << " entries, looking for entry " << index << "." << std::endl;
   if(hitArrayTClones_->At(index) == 0) {
     Exception e("In MeasurementProducer: index for hit in TClonesArray out of bounds",__LINE__,__FILE__);

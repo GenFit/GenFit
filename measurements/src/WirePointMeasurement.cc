@@ -116,7 +116,7 @@ std::vector<MeasurementOnPlane*> WirePointMeasurement::constructMeasurementsOnPl
 }
 
 const AbsHMatrix* WirePointMeasurement::constructHMatrix(const AbsTrackRep* rep) const {
-  if (dynamic_cast<const RKTrackRep*>(rep) == NULL) {
+  if (dynamic_cast<const RKTrackRep*>(rep) == nullptr) {
     Exception exc("WirePointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
     throw exc;
   }

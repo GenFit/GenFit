@@ -28,7 +28,7 @@
 namespace genfit {
 
 GFRavePropagator::GFRavePropagator() :
-    IdGFTrackStateMap_(NULL)
+    IdGFTrackStateMap_(nullptr)
 {
   //std::cout << "GFRavePropagator::GFRavePropagator() \n";
 }
@@ -92,8 +92,8 @@ GFRavePropagator::setIdGFTrackStateMap(std::map < int, genfit::trackAndState > *
 
   IdGFTrackStateMap_ = map;
 
-  if (IdGFTrackStateMap_==NULL) {
-    Exception exc("GFRavePropagator::setIdGFMeasuredStateOnPlaneMap ==> map is NULL!",__LINE__,__FILE__);
+  if (IdGFTrackStateMap_==nullptr) {
+    Exception exc("GFRavePropagator::setIdGFMeasuredStateOnPlaneMap ==> map is nullptr!",__LINE__,__FILE__);
     throw exc;
   }
   //std::cout<<"IdGFTrackStateMap_: " << (int)IdGFTrackStateMap_ << std::endl;

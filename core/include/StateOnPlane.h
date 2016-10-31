@@ -47,7 +47,7 @@ class StateOnPlane {
  public:
 
 
-  StateOnPlane(const AbsTrackRep* rep = NULL);
+  StateOnPlane(const AbsTrackRep* rep = nullptr);
   //! state is defined by the TrackReps parameterization
   StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep);
   StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
@@ -153,7 +153,7 @@ class StateOnPlane {
 inline StateOnPlane::StateOnPlane(const AbsTrackRep* rep) :
   state_(0), auxInfo_(0), sharedPlane_(), rep_(rep)
 {
-  if (rep != NULL) {
+  if (rep != nullptr) {
     state_.ResizeTo(rep->getDim());
   }
 }
@@ -161,15 +161,15 @@ inline StateOnPlane::StateOnPlane(const AbsTrackRep* rep) :
 inline StateOnPlane::StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep) :
   state_(state), auxInfo_(0), sharedPlane_(plane), rep_(rep)
 {
-  assert(rep != NULL);
-  assert(sharedPlane_.get() != NULL);
+  assert(rep != nullptr);
+  assert(sharedPlane_.get() != nullptr);
 }
 
 inline StateOnPlane::StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo) :
   state_(state), auxInfo_(auxInfo), sharedPlane_(plane), rep_(rep)
 {
-  assert(rep != NULL);
-  assert(sharedPlane_.get() != NULL);
+  assert(rep != nullptr);
+  assert(sharedPlane_.get() != nullptr);
 }
 
 inline StateOnPlane& StateOnPlane::operator=(StateOnPlane other) {

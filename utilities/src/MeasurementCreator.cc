@@ -36,7 +36,7 @@
 namespace genfit {
 
 MeasurementCreator::MeasurementCreator() :
-    trackModel_(NULL),
+    trackModel_(nullptr),
     resolution_(0.01),
     resolutionWire_(0.1),
     outlierProb_(0),
