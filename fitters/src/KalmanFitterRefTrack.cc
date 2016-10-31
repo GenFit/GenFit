@@ -29,8 +29,6 @@
 #include "KalmanFitterInfo.h"
 #include "KalmanFitStatus.h"
 
-#include "boost/scoped_ptr.hpp"
-
 #include <TDecompChol.h>
 #include <Math/ProbFunc.h>
 
