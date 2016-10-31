@@ -32,9 +32,7 @@
 
 #include <vector>
 
-#ifndef __CINT__
-#include <boost/scoped_ptr.hpp>
-#endif
+#include <memory>
 
 
 namespace genfit {
@@ -117,13 +115,13 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
 #ifndef __CINT__
   //! Reference state. Used by KalmanFitterRefTrack.
-  boost::scoped_ptr<ReferenceStateOnPlane> referenceState_; // Ownership
-  boost::scoped_ptr<MeasuredStateOnPlane> forwardPrediction_; // Ownership
-  boost::scoped_ptr<KalmanFittedStateOnPlane> forwardUpdate_; // Ownership
-  boost::scoped_ptr<MeasuredStateOnPlane> backwardPrediction_; // Ownership
-  boost::scoped_ptr<KalmanFittedStateOnPlane> backwardUpdate_; // Ownership
-  mutable boost::scoped_ptr<MeasuredStateOnPlane> fittedStateUnbiased_; //!  cache
-  mutable boost::scoped_ptr<MeasuredStateOnPlane> fittedStateBiased_; //!  cache
+  std::unique_ptr<ReferenceStateOnPlane> referenceState_; // Ownership
+  std::unique_ptr<MeasuredStateOnPlane> forwardPrediction_; // Ownership
+  std::unique_ptr<KalmanFittedStateOnPlane> forwardUpdate_; // Ownership
+  std::unique_ptr<MeasuredStateOnPlane> backwardPrediction_; // Ownership
+  std::unique_ptr<KalmanFittedStateOnPlane> backwardUpdate_; // Ownership
+  mutable std::unique_ptr<MeasuredStateOnPlane> fittedStateUnbiased_; //!  cache
+  mutable std::unique_ptr<MeasuredStateOnPlane> fittedStateBiased_; //!  cache
 #else
   class ReferenceStateOnPlane* referenceState_;
   class MeasuredStateOnPlane* forwardPrediction_;

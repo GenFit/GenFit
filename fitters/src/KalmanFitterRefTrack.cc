@@ -353,7 +353,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
   // declare stuff
   KalmanFitterInfo* prevFitterInfo(nullptr);
-  boost::scoped_ptr<MeasuredStateOnPlane> firstBackwardUpdate;
+  std::unique_ptr<MeasuredStateOnPlane> firstBackwardUpdate;
 
   ReferenceStateOnPlane* referenceState(nullptr);
   ReferenceStateOnPlane* prevReferenceState(nullptr);
@@ -579,7 +579,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
       // do extrapolation and set reference state infos
-      boost::scoped_ptr<StateOnPlane> stateToExtrapolate(nullptr);
+      std::unique_ptr<StateOnPlane> stateToExtrapolate(nullptr);
       if (prevFitterInfo == nullptr) { // first measurement
         if (debugLvl_ > 0) {
           debugOut << "prevFitterInfo == nullptr \n";
