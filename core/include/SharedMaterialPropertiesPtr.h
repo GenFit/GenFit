@@ -26,16 +26,14 @@
 
 #include "MaterialProperties.h"
 
-#ifndef __CINT__
-#include <boost/shared_ptr.hpp>
-#endif
+#include <memory>
 
 
 
 namespace genfit {
 
 #ifndef __CINT__
-typedef boost::shared_ptr< const genfit::MaterialProperties > SharedMaterialPropertiesPtr;
+typedef std::shared_ptr< const genfit::MaterialProperties > SharedMaterialPropertiesPtr;
 #else
 class SharedMaterialPropertiesPrt;
 #endif
