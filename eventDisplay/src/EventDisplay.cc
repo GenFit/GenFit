@@ -54,8 +54,7 @@
 #include <TVectorD.h>
 #include <TSystem.h>
 
-#include "boost/scoped_ptr.hpp"
-
+#include <memory>
 
 ClassImp(genfit::EventDisplay)
 
@@ -308,12 +307,12 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
     }
 
 
-    boost::scoped_ptr<Track> refittedTrack(nullptr);
+    std::unique_ptr<Track> refittedTrack(nullptr);
     if (refit_) {
 
       std::cout << "Refit track:" << std::endl;
 
-      boost::scoped_ptr<AbsKalmanFitter> fitter;
+      std::unique_ptr<AbsKalmanFitter> fitter;
       switch (fitterId_) {
         case SimpleKalman:
           fitter.reset(new KalmanFitter(nMaxIter_, dPVal_));
