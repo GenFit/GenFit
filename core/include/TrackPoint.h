@@ -33,10 +33,6 @@
 #include <vector>
 #include <memory>
 
-#ifndef __CINT__
-#include <boost/scoped_ptr.hpp>
-#endif
-
 
 namespace genfit {
 
@@ -149,7 +145,7 @@ class TrackPoint : public TObject {
   std::vector< AbsFitterInfo* > vFitterInfos_; //!
 
 #ifndef __CINT__
-  boost::scoped_ptr<ThinScatterer> thinScatterer_; // Ownership
+  std::unique_ptr<ThinScatterer> thinScatterer_; // Ownership
 #else
   class ThinScatterer* thinScatterer_;
 #endif

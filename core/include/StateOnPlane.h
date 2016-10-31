@@ -30,6 +30,8 @@
 #include <TObject.h>
 #include <TVectorD.h>
 
+#include <cassert>
+
 
 namespace genfit {
 

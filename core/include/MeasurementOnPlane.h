@@ -30,6 +30,7 @@
 #include <TMatrixD.h>
 
 #include <cmath>
+#include <memory>
 
 
 namespace genfit {
@@ -93,7 +94,7 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
  protected:
 
 #ifndef __CINT__
-  boost::scoped_ptr<const AbsHMatrix> hMatrix_; // Ownership
+  std::unique_ptr<const AbsHMatrix> hMatrix_; // Ownership
 #else
   const AbsHMatrix* hMatrix_; //! Ownership. Projection matrix
 #endif

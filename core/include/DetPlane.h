@@ -36,9 +36,7 @@
 #include <TObject.h>
 #include <TVector3.h>
 
-#ifndef __CINT__
-#include <boost/scoped_ptr.hpp>
-#endif
+#include <memory>
 
 
 namespace genfit {
@@ -188,7 +186,7 @@ class DetPlane : public TObject {
   TVector3 v_;
 
 #ifndef __CINT__
-  boost::scoped_ptr<AbsFinitePlane> finitePlane_; // Ownership
+  std::unique_ptr<AbsFinitePlane> finitePlane_; // Ownership
 #else
   class AbsFinitePlane* finitePlane_; //! Shut ROOT up, this class has a custom streamer.
 #endif
