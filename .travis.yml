@@ -14,7 +14,7 @@ addons:
     - clang
 before_install:
   # install boost and root
-  - sudo apt-get -y install libboost1.54-all-dev root-system
+  - sudo apt-get -y install root-system
 install:
   # create dedicated build folder
   - cd .. && mkdir build && cd build
