@@ -56,7 +56,7 @@ struct ExtrapStep {
 
   ExtrapStep() {
     std::fill(jac7_.begin(), jac7_.end(), 0);
-    std::fill(noise7_.begin(), jac7_.end(), 0);
+    std::fill(noise7_.begin(), noise7_.end(), 0);
   }
 };
 
@@ -69,7 +69,10 @@ struct ExtrapStep {
  * u and v are positions on a DetPlane.
  */
 class RKTrackRep : public AbsTrackRep {
-
+    friend class RKTrackRepTests_momMag_Test;
+    friend class RKTrackRepTests_calcForwardJacobianAndNoise_Test;
+    friend class RKTrackRepTests_getState7_Test;
+    friend class RKTrackRepTests_getState5_Test;
 
  public:
 
@@ -204,6 +207,7 @@ class RKTrackRep : public AbsTrackRep {
   void getState7(const StateOnPlane& state, M1x7& state7) const;
   void getState5(StateOnPlane& state, const M1x7& state7) const; // state7 must already lie on plane of state!
 
+  /// TODO: Never used, can be deleted!
   void transformPM7(const MeasuredStateOnPlane& state,
                     M7x7& out7x7) const;
 
@@ -212,6 +216,7 @@ class RKTrackRep : public AbsTrackRep {
   void transformPM6(const MeasuredStateOnPlane& state,
                     M6x6& out6x6) const;
 
+  /// TODO: Never used, can be deleted!
   void transformM7P(const M7x7& in7x7,
                     const M1x7& state7,
                     MeasuredStateOnPlane& state) const; // plane must already be set!
