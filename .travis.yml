@@ -13,8 +13,7 @@ addons:
     packages:
     - clang
 before_install:
-  # install boost and root
-  - sudo apt-get -y install libboost1.54-all-dev
+  # install root
   - wget https://root.cern.ch/download/root_v6.06.08.Linux-ubuntu14-x86_64-gcc4.8.tar.gz
   - tar xvzf root_v6.06.08.Linux-ubuntu14-x86_64-gcc4.8.tar.gz
   - source root/bin/thisroot.sh

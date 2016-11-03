@@ -29,6 +29,7 @@
 
 #include <TMatrixDSym.h>
 
+#include <cassert>
 
 namespace genfit {
 

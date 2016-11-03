@@ -27,6 +27,7 @@
 
 #include <vector>
 #include <map>
+#include <memory>
 
 
 namespace genfit {
@@ -124,7 +125,7 @@ class DAF : public AbsKalmanFitter {
 			// where time may be used in the fit.  Zeroth
 			// entry is not used.
 #ifndef __CINT__
-  boost::scoped_ptr<AbsKalmanFitter> kalman_;
+  std::unique_ptr<AbsKalmanFitter> kalman_;
 #else
   AbsKalmanFitter* kalman_;
 #endif

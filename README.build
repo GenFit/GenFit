@@ -5,9 +5,6 @@ To create the library, create a build directory and change into it. E.g.
  
 Now create the Makefiles by invoking:
   cmake ..
- 
-On some systems with an older boost version, you instead might have to type (cf. http://stackoverflow.com/questions/9948375/cmake-find-package-succeeds-but-returns-wrong-path):
-  cmake .. -DBoost_NO_BOOST_CMAKE=ON
 
 And build:
   make

@@ -84,19 +84,6 @@ SET(GF_INC_DIRS
 #    $ENV{VALGRINDDIR}/include/
 )
 
-#search for boost, provide some information to user
-FIND_PACKAGE(Boost)
-IF (Boost_FOUND)
-    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
-    MESSAGE("-- Boost is found at: ${Boost_INCLUDE_DIR}")
-    INSTALL( DIRECTORY ${GF_INC_DIRS}
-    	DESTINATION ${INCLUDE_OUTPUT_DIRECTORY}
-	    PATTERN ".svn" EXCLUDE 
-	 )
-ELSE()
-    MESSAGE(SEND_ERROR " Boost was not found on your system, required for GENFIT.")
-ENDIF()
-
 
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
