@@ -9,7 +9,7 @@ PROJECT(genfit2)
 
 # set project version
 SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
-SET( ${PROJECT_NAME}_VERSION_MINOR 0 )
+SET( ${PROJECT_NAME}_VERSION_MINOR 1 )
 SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 
 # install destinations can be passed via the command line:
