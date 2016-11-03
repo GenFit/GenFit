@@ -101,7 +101,7 @@ void HMatrixPhi::HMHt(TMatrixDSym& M) const {
 
 
 bool HMatrixPhi::isEqual(const AbsHMatrix& other) const {
-  if (dynamic_cast<const HMatrixPhi*>(&other) == NULL)
+  if (dynamic_cast<const HMatrixPhi*>(&other) == nullptr)
     return false;
 
   return (phi_ == static_cast<const HMatrixPhi*>(&other)->phi_);

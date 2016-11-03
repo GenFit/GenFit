@@ -320,7 +320,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
       break;
 
     // propagate with found step to boundary
-    rep->RKPropagate(state7, NULL, SA, step, varField);
+    rep->RKPropagate(state7, nullptr, SA, step, varField);
 
     // make minStep to cross boundary
     state7[0] += limits.getStepSign() * minStep * state7[3];

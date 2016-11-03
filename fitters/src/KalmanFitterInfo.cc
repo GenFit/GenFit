@@ -138,7 +138,7 @@ MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane(bool ignor
 
 MeasurementOnPlane* KalmanFitterInfo::getClosestMeasurementOnPlane(const StateOnPlane* sop) const {
   if(measurementsOnPlane_.size() == 0)
-    return NULL;
+    return nullptr;
 
   if(measurementsOnPlane_.size() == 1)
     return getMeasurementOnPlane(0);
@@ -478,22 +478,22 @@ void KalmanFitterInfo::setWeights(const std::vector<double>& weights) {
 
 
 void KalmanFitterInfo::deleteForwardInfo() {
-  setForwardPrediction(NULL);
-  setForwardUpdate(NULL);
+  setForwardPrediction(nullptr);
+  setForwardUpdate(nullptr);
   fittedStateUnbiased_.reset();
   fittedStateBiased_.reset();
 }
 
 void KalmanFitterInfo::deleteBackwardInfo() {
-  setBackwardPrediction(NULL);
-  setBackwardUpdate(NULL);
+  setBackwardPrediction(nullptr);
+  setBackwardUpdate(nullptr);
   fittedStateUnbiased_.reset();
   fittedStateBiased_.reset();
 }
 
 void KalmanFitterInfo::deletePredictions() {
-  setForwardPrediction(NULL);
-  setBackwardPrediction(NULL);
+  setForwardPrediction(nullptr);
+  setBackwardPrediction(nullptr);
   fittedStateUnbiased_.reset();
   fittedStateBiased_.reset();
 }
@@ -542,22 +542,22 @@ bool KalmanFitterInfo::checkConsistency(const genfit::PruneFlags* flags) const {
 
   // check if in a TrackPoint
   if (!trackPoint_) {
-    errorOut << "KalmanFitterInfo::checkConsistency(): trackPoint_ is NULL" << std::endl;
+    errorOut << "KalmanFitterInfo::checkConsistency(): trackPoint_ is nullptr" << std::endl;
     retVal = false;
   }
 
   // check if there is a reference state
   /*if (!referenceState_) {
-    errorOut << "KalmanFitterInfo::checkConsistency(): referenceState_ is NULL" << std::endl;
+    errorOut << "KalmanFitterInfo::checkConsistency(): referenceState_ is nullptr" << std::endl;
     retVal = false;
   }*/
 
   SharedPlanePtr plane = getPlane();
 
-  if (plane.get() == NULL) {
+  if (plane.get() == nullptr) {
     if (!(referenceState_ || forwardPrediction_ || forwardUpdate_ || backwardPrediction_ || backwardUpdate_ || measurementsOnPlane_.size() > 0))
       return true;
-    errorOut << "KalmanFitterInfo::checkConsistency(): plane is NULL" << std::endl;
+    errorOut << "KalmanFitterInfo::checkConsistency(): plane is nullptr" << std::endl;
     retVal = false;
   }
 
@@ -669,7 +669,7 @@ bool KalmanFitterInfo::checkConsistency(const genfit::PruneFlags* flags) const {
     }
   }
 
-  if (flags == NULL or !flags->hasFlags("U")) { // if predictions have not been pruned
+  if (flags == nullptr or !flags->hasFlags("U")) { // if predictions have not been pruned
     // see if there is an update w/o prediction or measurement
     if (forwardUpdate_ && !forwardPrediction_) {
       errorOut << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ w/o forwardPrediction_" << std::endl;
@@ -682,7 +682,7 @@ bool KalmanFitterInfo::checkConsistency(const genfit::PruneFlags* flags) const {
       retVal = false;
     }
 
-    if (flags == NULL or !flags->hasFlags("M")) {
+    if (flags == nullptr or !flags->hasFlags("M")) {
       if (forwardUpdate_ && measurementsOnPlane_.size() == 0) {
         errorOut << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ w/o measurement" << std::endl;
         retVal = false;

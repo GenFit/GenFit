@@ -62,7 +62,7 @@ ClassImp(genfit::EventDisplay)
 namespace genfit {
 
 
-EventDisplay* EventDisplay::eventDisplay_ = NULL;
+EventDisplay* EventDisplay::eventDisplay_ = nullptr;
 
 EventDisplay::EventDisplay() :
   errorScale_(1.),
@@ -139,7 +139,7 @@ double EventDisplay::getErrScale() { return errorScale_; }
 
 EventDisplay* EventDisplay::getInstance() {
 
-  if(eventDisplay_ == NULL) {
+  if(eventDisplay_ == nullptr) {
     eventDisplay_ = new EventDisplay();
   }
   return eventDisplay_;
@@ -279,13 +279,13 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
   // draw the geometry, does not really work yet. If it's fixed, the docu in the header file should be changed.
   if(drawGeometry_) {
     TGeoNode* top_node = gGeoManager->GetTopNode();
-    assert(top_node != NULL);
+    assert(top_node != nullptr);
 
     //Set transparency & color of geometry
     TObjArray* volumes = gGeoManager->GetListOfVolumes();
     for(int i = 0; i < volumes->GetEntriesFast(); i++) {
       TGeoVolume* volume = dynamic_cast<TGeoVolume*>(volumes->At(i));
-      assert(volume != NULL);
+      assert(volume != nullptr);
       volume->SetLineColor(12);
       volume->SetTransparency(50);
     }
@@ -308,7 +308,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
     }
 
 
-    boost::scoped_ptr<Track> refittedTrack(NULL);
+    boost::scoped_ptr<Track> refittedTrack(nullptr);
     if (refit_) {
 
       std::cout << "Refit track:" << std::endl;
@@ -353,9 +353,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       timeval startcputime, endcputime;
 
       try{
-        gettimeofday(&startcputime, NULL);
+        gettimeofday(&startcputime, nullptr);
         fitter->processTrack(refittedTrack.get(), resort_);
-        gettimeofday(&endcputime, NULL);
+        gettimeofday(&endcputime, nullptr);
       }
       catch(genfit::Exception& e){
         std::cerr << e.what();
@@ -415,12 +415,12 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
     KalmanFitterInfo* fi;
     KalmanFitterInfo* prevFi = 0;
-    const MeasuredStateOnPlane* fittedState(NULL);
-    const MeasuredStateOnPlane* prevFittedState(NULL);
+    const MeasuredStateOnPlane* fittedState(nullptr);
+    const MeasuredStateOnPlane* prevFittedState(nullptr);
 
     for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
 
-      fittedState = NULL;
+      fittedState = nullptr;
 
       TrackPoint* tp = track->getPointWithMeasurement(j);
       if (! tp->hasRawMeasurements()) {
@@ -455,7 +455,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       AbsFitterInfo* fitterInfo = tp->getFitterInfo(rep);
 
       fi = dynamic_cast<KalmanFitterInfo*>(fitterInfo);
-      if(fi == NULL) {
+      if(fi == nullptr) {
         std::cerr<<"can only display KalmanFitterInfo"<<std::endl;
         continue;
       }
@@ -470,14 +470,14 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         catch (Exception& e) {
           std::cerr << e.what();
           std::cerr<<"can not get fitted state"<<std::endl;
-          fittedState = NULL;
+          fittedState = nullptr;
           prevFi = fi;
           prevFittedState = fittedState;
           continue;
         }
       }
 
-      if (fittedState == NULL) {
+      if (fittedState == nullptr) {
         if (fi->hasForwardUpdate()) {
           fittedState = fi->getForwardUpdate();
         }
@@ -492,7 +492,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         }
       }
 
-      if (fittedState == NULL) {
+      if (fittedState == nullptr) {
         std::cout << "cannot get any state from fitterInfo, continue.\n";
         prevFi = fi;
         prevFittedState = fittedState;
@@ -506,12 +506,12 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
 
       // determine measurement type
-      bool full_hit =  (dynamic_cast<const FullMeasurement*>(m) != NULL);
-      bool planar_hit = (dynamic_cast<const PlanarMeasurement*>(m) != NULL);
+      bool full_hit =  (dynamic_cast<const FullMeasurement*>(m) != nullptr);
+      bool planar_hit = (dynamic_cast<const PlanarMeasurement*>(m) != nullptr);
       bool planar_pixel_hit = planar_hit && hit_coords_dim == 2;
-      bool space_hit = (dynamic_cast<const SpacepointMeasurement*>(m) != NULL);
+      bool space_hit = (dynamic_cast<const SpacepointMeasurement*>(m) != nullptr);
       bool wire_hit = m && m->isLeftRightMeasurement();
-      bool wirepoint_hit = wire_hit &&  (dynamic_cast<const WirePointMeasurement*>(m) != NULL);
+      bool wirepoint_hit = wire_hit &&  (dynamic_cast<const WirePointMeasurement*>(m) != nullptr);
       if (!full_hit && !planar_hit && !planar_pixel_hit && !space_hit && !wire_hit && !wirepoint_hit) {
         std::cout << "Track " << i << ", Hit " << j << ": Unknown measurement type: skipping hit!" << std::endl;
         continue;
@@ -543,7 +543,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
         if(planar_hit) {
           if(!planar_pixel_hit) {
-            if (dynamic_cast<RKTrackRep*>(rep) != NULL) {
+            if (dynamic_cast<RKTrackRep*>(rep) != nullptr) {
               const TMatrixD& H = mop->getHMatrix()->getMatrix();
               stripDir.Set(H(0,3), H(0,4));
             }
@@ -589,7 +589,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
                   makeLines(&update, fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
               }
             }
-            if (j > 0 && prevFi != NULL) {
+            if (j > 0 && prevFi != nullptr) {
               if(drawTrack_) {
                 makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers_, drawErrors_, 3);
                 if (drawErrors_) { // make sure to draw errors in both directions
@@ -611,8 +611,8 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
               if(drawRefTrack_ && fi->hasReferenceState() && prevFi->hasReferenceState())
                 makeLines(prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers_, false, 3);
             }
-            else if (j > 0 && prevFi == NULL) {
-              std::cout << "previous FitterInfo == NULL \n";
+            else if (j > 0 && prevFi == nullptr) {
+              std::cout << "previous FitterInfo == nullptr \n";
             }
         }
         catch (Exception& e) {
@@ -986,8 +986,8 @@ TEveBox* EventDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, 
 void EventDisplay::makeLines(const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
     const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth, int markerPos)
 {
-  if (prevState == NULL || state == NULL) {
-    std::cerr << "prevState == NULL || state == NULL\n";
+  if (prevState == nullptr || state == nullptr) {
+    std::cerr << "prevState == nullptr || state == nullptr\n";
     return;
   }
 
@@ -1028,7 +1028,7 @@ void EventDisplay::makeLines(const StateOnPlane* prevState, const StateOnPlane* 
     else
       measuredState = dynamic_cast<const MeasuredStateOnPlane*>(state);
 
-    if (measuredState != NULL) {
+    if (measuredState != nullptr) {
 
       // step for evaluate at a distance from the original plane
       TVector3 eval;

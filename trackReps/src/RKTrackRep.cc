@@ -100,9 +100,9 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane& state,
   M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
   getState7(state, state7);
 
-  TMatrixDSym* covPtr(NULL);
+  TMatrixDSym* covPtr(nullptr);
   bool fillExtrapSteps(false);
-  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
     covPtr = &(static_cast<MeasuredStateOnPlane*>(&state)->getCov());
     fillExtrapSteps = true;
   }
@@ -142,7 +142,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
     debugOut << "RKTrackRep::extrapolateToLine()\n";
   }
 
-  checkCache(state, NULL);
+  checkCache(state, nullptr);
 
   static const unsigned int maxIt(1000);
 
@@ -151,7 +151,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
   getState7(state, state7);
 
   bool fillExtrapSteps(false);
-  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
     fillExtrapSteps = true;
   }
   else if (calcJacobianNoise)
@@ -180,7 +180,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, nullptr, true, stopAtBoundary, maxStep);
     tracklength += step;
 
     dir.SetXYZ(state7[3], state7[4], state7[5]);
@@ -242,7 +242,7 @@ double RKTrackRep::extrapToPoint(StateOnPlane& state,
     debugOut << "RKTrackRep::extrapolateToPoint()\n";
   }
 
-  checkCache(state, NULL);
+  checkCache(state, nullptr);
 
   static const unsigned int maxIt(1000);
 
@@ -251,7 +251,7 @@ double RKTrackRep::extrapToPoint(StateOnPlane& state,
   getState7(state, state7);
 
   bool fillExtrapSteps(false);
-  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
     fillExtrapSteps = true;
   }
   else if (calcJacobianNoise)
@@ -259,7 +259,7 @@ double RKTrackRep::extrapToPoint(StateOnPlane& state,
 
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   TVector3 dir(state7[3], state7[4], state7[5]);
-  if (G != NULL) {
+  if (G != nullptr) {
     if(G->GetNrows() != 3) {
       Exception exc("RKTrackRep::extrapolateToLine ==> G is not 3x3",__LINE__,__FILE__);
       exc.setFatal();
@@ -289,11 +289,11 @@ double RKTrackRep::extrapToPoint(StateOnPlane& state,
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, nullptr, true, stopAtBoundary, maxStep);
     tracklength += step;
 
     dir.SetXYZ(state7[3], state7[4], state7[5]);
-    if (G != NULL) {
+    if (G != nullptr) {
       dir = TMatrix(*G) * dir;
     }
     poca.SetXYZ(state7[0], state7[1], state7[2]);
@@ -311,7 +311,7 @@ double RKTrackRep::extrapToPoint(StateOnPlane& state,
     // if lastStep and step have opposite sign, the real normal vector lies somewhere between the last two normal vectors (i.e. the directions)
     // -> try mean value of the two
     if (lastStep*step < 0){
-      if (G != NULL) { // after multiplication with G, dir has not length 1 anymore in general
+      if (G != nullptr) { // after multiplication with G, dir has not length 1 anymore in general
         dir.SetMag(1.);
         lastDir.SetMag(1.);
       }
@@ -359,7 +359,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     debugOut << "RKTrackRep::extrapolateToCylinder()\n";
   }
 
-  checkCache(state, NULL);
+  checkCache(state, nullptr);
 
   static const unsigned int maxIt(1000);
 
@@ -368,7 +368,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
   getState7(state, state7);
 
   bool fillExtrapSteps(false);
-  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
     fillExtrapSteps = true;
   }
   else if (calcJacobianNoise)
@@ -436,7 +436,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     plane->setO(dest);
     plane->setUV((dest-linePoint).Cross(lineDirection), lineDirection);
 
-    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, nullptr, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -484,7 +484,7 @@ double RKTrackRep::extrapolateToCone(StateOnPlane& state,
     debugOut << "RKTrackRep::extrapolateToCone()\n";
   }
 
-  checkCache(state, NULL);
+  checkCache(state, nullptr);
 
   static const unsigned int maxIt(1000);
 
@@ -493,7 +493,7 @@ double RKTrackRep::extrapolateToCone(StateOnPlane& state,
   getState7(state, state7);
 
   bool fillExtrapSteps(false);
-  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
     fillExtrapSteps = true;
   }
   else if (calcJacobianNoise)
@@ -570,7 +570,7 @@ double RKTrackRep::extrapolateToCone(StateOnPlane& state,
     plane->setO(dest);
     plane->setUV((dest-conePoint).Cross(coneDirection), dest-conePoint);
 
-    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, nullptr, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -617,7 +617,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
     debugOut << "RKTrackRep::extrapolateToSphere()\n";
   }
 
-  checkCache(state, NULL);
+  checkCache(state, nullptr);
 
   static const unsigned int maxIt(1000);
 
@@ -626,7 +626,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
   getState7(state, state7);
 
   bool fillExtrapSteps(false);
-  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
     fillExtrapSteps = true;
   }
   else if (calcJacobianNoise)
@@ -682,7 +682,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
 
     plane->setON(dest, dest-point);
 
-    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, nullptr, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -727,7 +727,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
     debugOut << "RKTrackRep::extrapolateBy()\n";
   }
 
-  checkCache(state, NULL);
+  checkCache(state, nullptr);
 
   static const unsigned int maxIt(1000);
 
@@ -736,7 +736,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
   getState7(state, state7);
 
   bool fillExtrapSteps(false);
-  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
     fillExtrapSteps = true;
   }
   else if (calcJacobianNoise)
@@ -769,7 +769,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
 
     plane->setON(dest, dir);
 
-    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, (step-tracklength));
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, nullptr, true, stopAtBoundary, (step-tracklength));
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -858,7 +858,7 @@ TMatrixDSym RKTrackRep::get6DCov(const MeasuredStateOnPlane& state) const {
 
 double RKTrackRep::getCharge(const StateOnPlane& state) const {
 
-  if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<const MeasurementOnPlane*>(&state) != nullptr) {
     Exception exc("RKTrackRep::getCharge - cannot get charge from MeasurementOnPlane",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
@@ -884,7 +884,7 @@ double RKTrackRep::getMomMag(const StateOnPlane& state) const {
 
 double RKTrackRep::getMomVar(const MeasuredStateOnPlane& state) const {
 
-  if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<const MeasurementOnPlane*>(&state) != nullptr) {
     Exception exc("RKTrackRep::getMomVar - cannot get momVar from MeasurementOnPlane",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
@@ -904,7 +904,7 @@ double RKTrackRep::getMomVar(const MeasuredStateOnPlane& state) const {
 
 double RKTrackRep::getSpu(const StateOnPlane& state) const {
 
-  if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<const MeasurementOnPlane*>(&state) != nullptr) {
     Exception exc("RKTrackRep::getSpu - cannot get spu from MeasurementOnPlane",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
@@ -1085,7 +1085,7 @@ void RKTrackRep::setPosMom(StateOnPlane& state, const TVector3& pos, const TVect
     throw exc;
   }
 
-  if (dynamic_cast<MeasurementOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<MeasurementOnPlane*>(&state) != nullptr) {
     Exception exc("RKTrackRep::setPosMom - cannot set pos/mom of a MeasurementOnPlane",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
@@ -1106,7 +1106,7 @@ void RKTrackRep::setPosMom(StateOnPlane& state, const TVector3& pos, const TVect
       setSpu(state, 1.);
   }
 
-  if (state.getPlane() != NULL && state.getPlane()->distance(pos) < MINSTEP) { // pos is on plane -> do not change plane!
+  if (state.getPlane() != nullptr && state.getPlane()->distance(pos) < MINSTEP) { // pos is on plane -> do not change plane!
 
     M1x7 state7;
 
@@ -1245,7 +1245,7 @@ void RKTrackRep::setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state
 
 void RKTrackRep::setChargeSign(StateOnPlane& state, double charge) const {
 
-  if (dynamic_cast<MeasurementOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<MeasurementOnPlane*>(&state) != nullptr) {
     Exception exc("RKTrackRep::setChargeSign - cannot set charge of a MeasurementOnPlane",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
@@ -1342,7 +1342,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   //
   // Derivatives of track parameters
   //
-  if(jacobianT != NULL){
+  if(jacobianT != nullptr){
 
     // jacobianT
     // 1 0 0 0 0 0 0  x
@@ -1496,7 +1496,7 @@ void RKTrackRep::initArrays() const {
 
 void RKTrackRep::getState7(const StateOnPlane& state, M1x7& state7) const {
 
-  if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<const MeasurementOnPlane*>(&state) != nullptr) {
     Exception exc("RKTrackRep::getState7 - cannot get pos or mom from a MeasurementOnPlane",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
@@ -2050,7 +2050,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
     //
     // Project Jacobian of extrapolation onto destination plane
     //
-    if (jacobianT != NULL) {
+    if (jacobianT != nullptr) {
 
       // projected jacobianT
       // x x x x x x 0
@@ -2212,7 +2212,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
     M1x7 state7_temp = state7;
     M1x3 SA = {{0, 0, 0}};
 
-    double q ( RKPropagate(state7_temp, NULL, SA, fieldCurvLimit, true) );
+    double q ( RKPropagate(state7_temp, nullptr, SA, fieldCurvLimit, true) );
     if (debugLvl_ > 0) {
       debugOut << "  maxStepArg = " << fieldCurvLimit << "; q = " << q  << " \n";
     }
@@ -2408,7 +2408,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     for(int i = 0; i < 7*7; ++i) J_MMT_[i] = 0;
     for(int i=0; i<7; ++i) J_MMT_[8*i] = 1.;
 
-    M7x7* noise = NULL;
+    M7x7* noise = nullptr;
     isAtBoundary = false;
 
     // propagation
@@ -2463,7 +2463,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       if (debugLvl_ > 0) {
         debugOut << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6])
             << "; coveredDistance = " << coveredDistance << "\n";
-        if (debugLvl_ > 1 && noise != NULL) {
+        if (debugLvl_ > 1 && noise != nullptr) {
           debugOut << "7D noise: \n";
           RKTools::printDim(noise->begin(), 7, 7);
         }
@@ -2611,13 +2611,13 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     // propagate cov and add noise
     calcForwardJacobianAndNoise(startState7, startPlane, state7, destPlane);
 
-    if (cov != NULL) {
+    if (cov != nullptr) {
       cov->Similarity(fJacobian_);
       *cov += fNoise_;
     }
 
     if (debugLvl_ > 0) {
-      if (cov != NULL) {
+      if (cov != nullptr) {
         debugOut << "final covariance matrix after Extrap: "; cov->Print();
       }
     }
@@ -2635,7 +2635,7 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
     throw exc;
   }
 
-  if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
+  if (dynamic_cast<const MeasurementOnPlane*>(&state) != nullptr) {
     Exception exc("RKTrackRep::checkCache - cannot extrapolate MeasurementOnPlane",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
@@ -2680,7 +2680,7 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
     if (debugLvl_ > 0) {
       debugOut << "RKTrackRep::checkCache: can NOT use cached material and step values.\n";
 
-      if (plane != NULL) {
+      if (plane != nullptr) {
         if (state.getPlane() != lastStartState_.getPlane()) {
           debugOut << "state.getPlane() != lastStartState_.getPlane()\n";
         }
@@ -2688,7 +2688,7 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
           if (! (state.getState() == lastStartState_.getState())) {
             debugOut << "state.getState() != lastStartState_.getState()\n";
           }
-          else if (lastEndState_.getPlane().get() != NULL) {
+          else if (lastEndState_.getPlane().get() != nullptr) {
             debugOut << "distance " << (*plane)->distance(getPos(lastEndState_)) << "\n";
           }
         }
@@ -2710,7 +2710,7 @@ double RKTrackRep::momMag(const M1x7& state7) const {
 
 
 bool RKTrackRep::isSameType(const AbsTrackRep* other) {
-  if (dynamic_cast<const RKTrackRep*>(other) == NULL)
+  if (dynamic_cast<const RKTrackRep*>(other) == nullptr)
     return false;
 
   return true;

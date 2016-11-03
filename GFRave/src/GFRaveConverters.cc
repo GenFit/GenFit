@@ -40,7 +40,7 @@ GFTracksToTracks(const std::vector < genfit::Track* >  & GFTracks,
 
   unsigned int ntracks(GFTracks.size());
 
-  if (GFStates != NULL)
+  if (GFStates != nullptr)
     if (GFTracks.size() != GFStates->size()) {
       Exception exc("GFTracksToTracks ==> GFStates has not the same size as GFTracks!",__LINE__,__FILE__);
       throw exc;
@@ -51,8 +51,8 @@ GFTracksToTracks(const std::vector < genfit::Track* >  & GFTracks,
 
   for (unsigned int i=0; i<ntracks; ++i){
 
-    if (GFTracks[i] == NULL) {
-      Exception exc("GFTracksToTracks ==> genfit::Track is NULL",__LINE__,__FILE__);
+    if (GFTracks[i] == nullptr) {
+      Exception exc("GFTracksToTracks ==> genfit::Track is nullptr",__LINE__,__FILE__);
       throw exc;
     }
 
@@ -64,7 +64,7 @@ GFTracksToTracks(const std::vector < genfit::Track* >  & GFTracks,
       throw exc;
     }
     IdGFTrackStateMap[startID].track_ = GFTracks[i];
-    if (GFStates == NULL)
+    if (GFStates == nullptr)
       IdGFTrackStateMap[startID].state_ = new MeasuredStateOnPlane(GFTracks[i]->getFittedState()); // here clones are made so that the state of the original GFTracks and their TrackReps will not be altered by the vertexing process
     else
       IdGFTrackStateMap[startID].state_ = (*GFStates)[i];
@@ -82,8 +82,8 @@ GFTracksToTracks(const std::vector < genfit::Track* >  & GFTracks,
 rave::Track
 GFTrackToTrack(trackAndState trackAndState, int id, std::string tag){
 
-  if (trackAndState.track_ == NULL) {
-    Exception exc("GFTrackToTrack ==> originaltrack is NULL",__LINE__,__FILE__);
+  if (trackAndState.track_ == nullptr) {
+    Exception exc("GFTrackToTrack ==> originaltrack is nullptr",__LINE__,__FILE__);
     throw exc;
   }
 

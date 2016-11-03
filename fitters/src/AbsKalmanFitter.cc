@@ -61,8 +61,8 @@ void AbsKalmanFitter::getChiSquNdf(const Track* tr, const AbsTrackRep* rep,
     KalmanFittedStateOnPlane* fup = fi->getForwardUpdate();
     KalmanFittedStateOnPlane* bup = fi->getBackwardUpdate();
 
-    if (fup == NULL || bup == NULL) {
-      Exception exc("AbsKalmanFitter::getChiSqu(): fup == NULL || bup == NULL", __LINE__,__FILE__);
+    if (fup == nullptr || bup == nullptr) {
+      Exception exc("AbsKalmanFitter::getChiSqu(): fup == nullptr || bup == nullptr", __LINE__,__FILE__);
       throw exc;
     }
 

@@ -90,7 +90,7 @@ class Track : public TObject {
    * big enough not to bias the fit too much, but not too big in order to avoid
    * numerical problems).
    */
-  Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMeasurement>& factory, AbsTrackRep* rep = NULL);
+  Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMeasurement>& factory, AbsTrackRep* rep = nullptr);
 
   Track(AbsTrackRep* trackRep, const TVectorD& stateSeed);
   Track(AbsTrackRep* trackRep, const TVector3& posSeed, const TVector3& momSeed);
@@ -113,8 +113,8 @@ class Track : public TObject {
   const std::vector< genfit::TrackPoint* > & getPointsWithMeasurement() const  {return trackPointsWithMeasurement_;}
   unsigned int getNumPointsWithMeasurement() const {return trackPointsWithMeasurement_.size();}
 
-  TrackPoint* getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRep* rep = NULL) const;
-  TrackPoint* getPointWithFitterInfo(int id, const AbsTrackRep* rep = NULL) const;
+  TrackPoint* getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRep* rep = nullptr) const;
+  TrackPoint* getPointWithFitterInfo(int id, const AbsTrackRep* rep = nullptr) const;
 
   /**
    * @brief Shortcut to get FittedStates.
@@ -125,7 +125,7 @@ class Track : public TObject {
    * with one or more AbsFitterInfo objects
    * is returned. If no AbsTrackRep is specified, the AbsFitterInfo of the cardinal rep will be used.
    */
-  const MeasuredStateOnPlane& getFittedState(int id = 0, const AbsTrackRep* rep = NULL, bool biased = true) const;
+  const MeasuredStateOnPlane& getFittedState(int id = 0, const AbsTrackRep* rep = nullptr, bool biased = true) const;
 
   AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id);}
   /// Return the track representations as a list of pointers.
@@ -149,14 +149,14 @@ class Track : public TObject {
   int getMcTrackId() const {return mcTrackId_;}
 
   //! Check if track has a FitStatus for given AbsTrackRep. Per default, check for cardinal rep.
-  bool hasFitStatus(const AbsTrackRep* rep = NULL) const;
+  bool hasFitStatus(const AbsTrackRep* rep = nullptr) const;
   //! Get FitStatus for a AbsTrackRep. Per default, return FitStatus for cardinalRep.
-  FitStatus* getFitStatus(const AbsTrackRep* rep = NULL) const {if (rep == NULL) rep = getCardinalRep(); return fitStatuses_.at(rep);}
+  FitStatus* getFitStatus(const AbsTrackRep* rep = nullptr) const {if (rep == nullptr) rep = getCardinalRep(); return fitStatuses_.at(rep);}
 
   //! Check if track has a KalmanFitStatus for given AbsTrackRep. Per default, check for cardinal rep.
-  bool hasKalmanFitStatus(const AbsTrackRep* rep = NULL) const;
-  //! If FitStatus is a KalmanFitStatus, return it. Otherwise return NULL
-  KalmanFitStatus* getKalmanFitStatus(const AbsTrackRep* rep = NULL) const;
+  bool hasKalmanFitStatus(const AbsTrackRep* rep = nullptr) const;
+  //! If FitStatus is a KalmanFitStatus, return it. Otherwise return nullptr
+  KalmanFitStatus* getKalmanFitStatus(const AbsTrackRep* rep = nullptr) const;
 
   void setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep);
 
@@ -226,7 +226,7 @@ class Track : public TObject {
 
   //! Try to set the fitted state as seed. Return if it was successfull.
   //! Adapt the sign of all TrackReps' pdg to the actual fitted charge.
-  bool udpateSeed(int id = 0, AbsTrackRep* rep = NULL, bool biased = true);
+  bool udpateSeed(int id = 0, AbsTrackRep* rep = nullptr, bool biased = true);
 
   //! Flip the ordering of the TrackPoints
   void reverseTrackPoints();
@@ -236,8 +236,8 @@ class Track : public TObject {
     stateSeed_(3) *= -1; stateSeed_(4) *= -1; stateSeed_(5) *= -1;
   }
 
-  //! Switch the pdg signs of specified rep (of all reps if rep == NULL).
-  void switchPDGSigns(AbsTrackRep* rep = NULL);
+  //! Switch the pdg signs of specified rep (of all reps if rep == nullptr).
+  void switchPDGSigns(AbsTrackRep* rep = nullptr);
 
   //! Make track ready to be fitted in reverse direction
   /**
@@ -248,16 +248,16 @@ class Track : public TObject {
   void reverseTrack();
 
 
-  void deleteForwardInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
-  void deleteBackwardInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
-  void deleteReferenceInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
-  void deleteMeasurementInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
-  void deleteFitterInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
+  void deleteForwardInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = nullptr); // delete in range [startId, endId]. If rep == nullptr, delete for ALL reps, otherwise only for rep.
+  void deleteBackwardInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = nullptr); // delete in range [startId, endId]. If rep == nullptr, delete for ALL reps, otherwise only for rep.
+  void deleteReferenceInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = nullptr); // delete in range [startId, endId]. If rep == nullptr, delete for ALL reps, otherwise only for rep.
+  void deleteMeasurementInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = nullptr); // delete in range [startId, endId]. If rep == nullptr, delete for ALL reps, otherwise only for rep.
+  void deleteFitterInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = nullptr); // delete in range [startId, endId]. If rep == nullptr, delete for ALL reps, otherwise only for rep.
 
-  //! get TrackLength between to trackPoints (if NULL, for cardinal rep)
-  double getTrackLen(AbsTrackRep* rep = NULL, int startId = 0, int endId = -1) const;
-  //! get time of flight in ns between to trackPoints (if NULL, for cardinal rep)
-  double getTOF(AbsTrackRep* rep = NULL, int startId = 0, int endId = -1) const;
+  //! get TrackLength between to trackPoints (if nullptr, for cardinal rep)
+  double getTrackLen(AbsTrackRep* rep = nullptr, int startId = 0, int endId = -1) const;
+  //! get time of flight in ns between to trackPoints (if nullptr, for cardinal rep)
+  double getTOF(AbsTrackRep* rep = nullptr, int startId = 0, int endId = -1) const;
 
   //! Construct a new TrackCand containing the hit IDs of the measurements
   /**
@@ -268,9 +268,9 @@ class Track : public TObject {
    */
   TrackCand* constructTrackCand() const;
 
-  //! Helper function: For all KalmanFitterInfos belonging to rep (if NULL, for all reps),
+  //! Helper function: For all KalmanFitterInfos belonging to rep (if nullptr, for all reps),
   //! call the fixWeights() function, so that e.g. the DAF will not alter weights anymore.
-  void fixWeights(AbsTrackRep* rep = NULL, int startId = 0, int endId = -1);
+  void fixWeights(AbsTrackRep* rep = nullptr, int startId = 0, int endId = -1);
 
   /**
    * @brief Delete unneeded information from the Track.

@@ -80,7 +80,7 @@ class TrackPoint : public TObject {
    */
   TrackPoint(const TrackPoint& rhs,
       const std::map<const genfit::AbsTrackRep*, genfit::AbsTrackRep*>& map,
-      const std::vector<const genfit::AbsTrackRep*> * repsToIgnore = NULL);
+      const std::vector<const genfit::AbsTrackRep*> * repsToIgnore = nullptr);
 
   virtual ~TrackPoint();
 
@@ -97,20 +97,20 @@ class TrackPoint : public TObject {
   //! Get list of all fitterInfos
   std::vector< genfit::AbsFitterInfo* > getFitterInfos() const;
   //! Get fitterInfo for rep. Per default, use cardinal rep
-  AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep = NULL) const;
+  AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep = nullptr) const;
   //! Helper to avoid casting
-  KalmanFitterInfo* getKalmanFitterInfo(const AbsTrackRep* rep = NULL) const;
+  KalmanFitterInfo* getKalmanFitterInfo(const AbsTrackRep* rep = nullptr) const;
   bool hasFitterInfo(const AbsTrackRep* rep) const {
     return (fitterInfos_.find(rep) != fitterInfos_.end());
   }
 
   ThinScatterer* getMaterialInfo() const {return thinScatterer_.get();}
-  bool hasThinScatterer() const {return thinScatterer_.get() != NULL;}
+  bool hasThinScatterer() const {return thinScatterer_.get() != nullptr;}
 
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
   //! Takes ownership and sets this as measurement's trackPoint
-  void addRawMeasurement(genfit::AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=NULL); rawMeasurement->setTrackPoint(this); rawMeasurements_.push_back(rawMeasurement);}
+  void addRawMeasurement(genfit::AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=nullptr); rawMeasurement->setTrackPoint(this); rawMeasurements_.push_back(rawMeasurement);}
   void deleteRawMeasurements();
   //! Takes Ownership
   void setFitterInfo(genfit::AbsFitterInfo* fitterInfo);

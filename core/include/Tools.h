@@ -40,10 +40,10 @@ namespace tools {
 /** @brief Invert a matrix, throwing an Exception when inversion fails.
  * Optional calculation of determinant.
  */
-void invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* determinant = NULL);
+void invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* determinant = nullptr);
 /** @brief Same, replacing its argument.
  */
-void invertMatrix(TMatrixDSym& mat, double* determinant = NULL);
+void invertMatrix(TMatrixDSym& mat, double* determinant = nullptr);
 
 /** @brief Solves R^t x = b, replacing b with the solution for x.  R is
  *  assumed to be upper diagonal.

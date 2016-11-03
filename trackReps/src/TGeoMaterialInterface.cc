@@ -156,7 +156,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
     // Always propagate complete way from original start to avoid
     // inconsistent extrapolations.
     state7 = stateOrig;
-    rep->RKPropagate(state7, NULL, SA, stepSign*(s + step), varField);
+    rep->RKPropagate(state7, nullptr, SA, stepSign*(s + step), varField);
 
     // Straight line distance² between extrapolation finish and
     // the end of the previously determined safe segment.

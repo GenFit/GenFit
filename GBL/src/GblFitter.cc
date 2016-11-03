@@ -91,7 +91,7 @@ using namespace genfit;
 GblFitter::~GblFitter() {
   if (m_segmentController) {
     delete m_segmentController;
-    m_segmentController = NULL;
+    m_segmentController = nullptr;
   }
 }
 
@@ -99,7 +99,7 @@ void GblFitter::setTrackSegmentController(GblTrackSegmentController* controler)
 {
   if (m_segmentController) {
     delete m_segmentController;
-    m_segmentController = NULL;
+    m_segmentController = nullptr;
   }
   m_segmentController = controler;      
 }
@@ -234,7 +234,7 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
 void GblFitter::cleanGblInfo(Track* trk, const AbsTrackRep* rep) const {
   
   for (int ip = trk->getNumPoints() - 1; ip >=0; ip--) {
-    trk->getPoint(ip)->setScatterer(NULL); 
+    trk->getPoint(ip)->setScatterer(nullptr); 
     trk->getPoint(ip)->deleteFitterInfo(rep);
     //TODO
     if (!trk->getPoint(ip)->hasRawMeasurements())

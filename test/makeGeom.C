@@ -41,11 +41,11 @@ void makeGeom()
 
 
    TGeoMedium *vacuum = gGeoManager->GetMedium("vacuum");
-   assert(vacuum!=NULL);
+   assert(vacuum!=nullptr);
    TGeoMedium *air = gGeoManager->GetMedium("air");
-   assert(air!=NULL);
+   assert(air!=nullptr);
    TGeoMedium *sil = gGeoManager->GetMedium("silicon");
-   assert(sil!=NULL);
+   assert(sil!=nullptr);
 
    TGeoVolume *top = gGeoManager->MakeBox("TOPPER", air, 1000., 1000., 1000.);
    gGeoManager->SetTopVolume(top); // mandatory !
