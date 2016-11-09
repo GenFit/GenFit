@@ -254,7 +254,6 @@ void TrackPoint::Streamer(TBuffer &R__b)
       track_ = nullptr;
       size_t nTrackReps;
       R__b >> nTrackReps;
-      vFitterInfos_.resize(nTrackReps);
       for (size_t i = 0; i < nTrackReps; ++i)  {
         int id;
         R__b >> id;
@@ -277,10 +276,10 @@ void TrackPoint::Streamer(TBuffer &R__b)
       for (size_t i = 0; i < rawMeasurements_.size(); ++i) {
         rawMeasurements_[i]->setTrackPoint(this);
       }
-      for (size_t i = 0; i < vFitterInfos_.size(); ++i) {
-        // May not have FitterInfos for all reps.
-        if (vFitterInfos_[i])
-          vFitterInfos_[i]->setTrackPoint(this);
+      for (auto& trackRepIDWithFitterInfo : vFitterInfos_) {
+        AbsFitterInfo* fitterInfo = trackRepIDWithFitterInfo.second;
+        if (fitterInfo)
+          fitterInfo->setTrackPoint(this);
       }
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
@@ -318,14 +317,18 @@ void TrackPoint::Streamer(TBuffer &R__b)
 
 void TrackPoint::fixupRepsForReading()
 {
-  for (size_t i = 0; i < vFitterInfos_.size(); ++i) {
-    // The vector is filled such that i corresponds to the id of the TrackRep.
-    
+  for (auto& trackRepIDWithFitterInfo : vFitterInfos_) {
+    // The map is filled such that i corresponds to the id of the TrackRep.
+    const unsigned int id = trackRepIDWithFitterInfo.first;
+    AbsFitterInfo* fitterInfo = trackRepIDWithFitterInfo.second;
+
     // May not have FitterInfos for all reps.
-    if (!vFitterInfos_[i])
+    if (!fitterInfo)
       continue;
-    fitterInfos_[track_->getTrackRep(i)] = vFitterInfos_[i];
-    fitterInfos_[track_->getTrackRep(i)]->setRep(track_->getTrackRep(i));
+    AbsTrackRep* trackRep = track_->getTrackRep(id);
+
+    fitterInfos_[trackRep] = fitterInfo;
+    fitterInfos_[trackRep]->setRep(trackRep);
   }
   vFitterInfos_.clear();
 }
