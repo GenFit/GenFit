@@ -137,12 +137,12 @@ class TrackPoint : public TObject {
   std::map< const AbsTrackRep*, AbsFitterInfo* > fitterInfos_; //! Ownership over FitterInfos
 
   /**
-   * The following vector is read while streaming.  After reading the
+   * The following map is read while streaming.  After reading the
    * TrackPoint, the Track's streamer will call fixupRepsForReading,
-   * and this vector will be translated into the map fitterInfos. The
-   * vector is indexed by the ids of the corresponding TrackReps.
+   * and this map will be translated into the map fitterInfos. The
+   * map is indexed by the ids of the corresponding TrackReps.
    */
-  std::vector< AbsFitterInfo* > vFitterInfos_; //!
+  std::map<unsigned int, AbsFitterInfo*> vFitterInfos_; //!
 
 #ifndef __CINT__
   std::unique_ptr<ThinScatterer> thinScatterer_; // Ownership
