@@ -97,11 +97,10 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 #SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
 
 include(CheckCXXCompilerFlag)
-SET(CPP_STANDARD c++03)
-# ROOT 6 requires C++11 support, enforced via headers
-IF (ROOT_found_version GREATER 59900)
-    SET(CPP_STANDARD c++11)
-ENDIF()
+
+# C++11 support is required by the codebase, and in any case enforced if ROOT 6 is used.
+SET(CPP_STANDARD c++11)
+
 MESSAGE(STATUS "Using C++ standard ${CPP_STANDARD}.")
 check_cxx_compiler_flag(-std=${CPP_STANDARD} HAS_STD_FLAG)
 check_cxx_compiler_flag(--std=${CPP_STANDARD} HAS_STD_FLAG_ALTERNATIVE)
