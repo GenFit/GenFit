@@ -9,7 +9,7 @@ PROJECT(genfit2)
 
 # set project version
 SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
-SET( ${PROJECT_NAME}_VERSION_MINOR 0 )
+SET( ${PROJECT_NAME}_VERSION_MINOR 1 )
 SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 
 # install destinations can be passed via the command line:
@@ -96,28 +96,10 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 #SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
 
-include(CheckCXXCompilerFlag)
-
-# C++11 support is required by the codebase, and in any case enforced if ROOT 6 is used.
-SET(CPP_STANDARD c++11)
-
-MESSAGE(STATUS "Using C++ standard ${CPP_STANDARD}.")
-check_cxx_compiler_flag(-std=${CPP_STANDARD} HAS_STD_FLAG)
-check_cxx_compiler_flag(--std=${CPP_STANDARD} HAS_STD_FLAG_ALTERNATIVE)
-if (HAS_STD_FLAG)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${CPP_STANDARD}")
-elseif (HAS_STD_FLAG_ALTERNATIVE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=${CPP_STANDARD}")
-else()
-  message("Neither -std=${CPP_STANDARD} nor --std=${CPP_STANDARD} seem to work.  Moving on.")
-endif()
-
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wno-long-long -Wshadow -Werror=overloaded-virtual"   )
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -pedantic -Wno-long-long -Wshadow -Werror=overloaded-virtual"   )
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g3")
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -O3 -g3")
-
-
 
 
 # include directories 
