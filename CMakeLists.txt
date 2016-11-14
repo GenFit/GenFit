@@ -97,7 +97,7 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 #SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
 
 SET(CPP_STANDARD c++11)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread -pedantic -Wno-long-long -Wshadow -Werror=overloaded-virtual")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=${CPP_STANDARD} -Wall -pthread -pedantic -Wno-long-long -Wshadow -Werror=overloaded-virtual")
 
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0 -g")
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
