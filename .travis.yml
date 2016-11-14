@@ -5,6 +5,10 @@ notifications:
   email:
     on_success: change
     on_failure: always
+env:
+  matrix:
+    - ROOT_VERSION=root_v6.08.00.Linux-ubuntu14-x86_64-gcc4.8.tar.gz
+    - ROOT_VERSION=root_v5.34.36.Linux-ubuntu14-x86_64-gcc4.8.tar.gz
 compiler: gcc
 addons:
   apt:
@@ -21,8 +25,8 @@ before_install:
   - sudo cp *.a /usr/lib
   - cd -
   # install root
-  - wget https://root.cern.ch/download/root_v6.06.08.Linux-ubuntu14-x86_64-gcc4.8.tar.gz
-  - tar xvzf root_v6.06.08.Linux-ubuntu14-x86_64-gcc4.8.tar.gz
+  - wget https://root.cern.ch/download/${ROOT_VERSION}
+  - tar xvzf ${ROOT_VERSION}
   - source root/bin/thisroot.sh
 install:
   # create dedicated build folder
