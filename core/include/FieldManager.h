@@ -79,6 +79,13 @@ class FieldManager {
     field_=b;
   }
 
+  void destruct() {
+    if (instance_ != nullptr) {
+      delete instance_;
+      instance_ = nullptr;
+    }
+  }
+
   bool isInitialized() { return field_ != nullptr; }
 
   void checkInitialized() {

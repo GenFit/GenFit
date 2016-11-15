@@ -96,10 +96,12 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 #SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -pedantic -Wno-long-long -Wshadow -Werror=overloaded-virtual"   )
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g3")
+SET(CPP_STANDARD c++11)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=${CPP_STANDARD} -Wall -pthread -pedantic -Wno-long-long -Wshadow -Werror=overloaded-virtual")
+
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0 -g")
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
-SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -O3 -g3")
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -O3 -g")
 
 
 # include directories 
@@ -341,6 +343,22 @@ ADD_GENFIT_TEST( unitTests                 test/unitTests/main.cc)
 if(DEFINED RAVE)
   ADD_GENFIT_TEST( vertexingTest           test/vertexingTest/main.cc)
   ADD_GENFIT_TEST( vertexingTestRead       test/vertexingTest/read.cc)
+endif()
+
+
+FIND_PACKAGE(GTest)
+if(GTEST_FOUND)
+	ADD_EXECUTABLE(gtests
+			gtest/TestConstField.cpp
+			gtest/TestMaterialEffects.cpp
+			gtest/TestRKTrackRep.cpp
+			)
+	TARGET_LINK_LIBRARIES(gtests ${GTEST_BOTH_LIBRARIES} ${ROOT_LIBS} ${PROJECT_NAME})  # gtest gtest_main
+	MESSAGE(STATUS  ${GTEST_INCLUDE_DIRS})
+	TARGET_INCLUDE_DIRECTORIES(gtests PUBLIC ${GTEST_INCLUDE_DIRS})
+	INSTALL(TARGETS gtests DESTINATION bin)
+else()
+	MESSAGE(STATUS "Could not find gtest installation, skip building unittests.")
 endif()
 
 # generate and install following configuration files

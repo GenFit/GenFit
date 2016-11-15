@@ -17,6 +17,13 @@ addons:
     packages:
     - clang
 before_install:
+  # install cmake and gtest
+  - sudo apt-get install cmake libgtest-dev
+  - cd /usr/src/gtest
+  - sudo cmake CMakeLists.txt
+  - sudo make
+  - sudo cp *.a /usr/lib
+  - cd -
   # install root
   - wget https://root.cern.ch/download/${ROOT_VERSION}
   - tar xvzf ${ROOT_VERSION}
@@ -32,5 +39,6 @@ script:
   - cd bin
   - root -l -b -q ../../GenFit/test/makeGeom.C
   # run unit tests
+  - ./gtests
   - ./unitTests
 
