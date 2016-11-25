@@ -32,8 +32,6 @@
 #include "AbsHMatrix.h"
 #include "Exception.h"
 
-// Use Cramer inversion for small matrices?
-static const bool useCramer = false;
 
 namespace genfit {
 
@@ -67,32 +65,6 @@ void tools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* deter
     inv(0,0) =             det * mat(1,1);
     inv(0,1) = inv(1,0) = -det * mat(1,0);
     inv(1,1) =             det * mat(0,0);
-    return;
-  }
-
-
-  if (useCramer && mat.GetNrows() <= 6){
-    Bool_t (*inversion)(TMatrixDSym&, Double_t*) = 0;
-    inv.ResizeTo(mat);
-    inv = mat;
-    switch (mat.GetNrows()) {
-    case 3:
-      inversion = TMatrixTSymCramerInv::Inv3x3; break;
-    case 4:
-      inversion = TMatrixTSymCramerInv::Inv4x4; break;
-    case 5:
-      inversion = TMatrixTSymCramerInv::Inv5x5; break;
-    case 6:
-      inversion = TMatrixTSymCramerInv::Inv6x6; break;
-    }
-
-    Bool_t success = inversion(inv, determinant);
-    if (!success){
-      Exception e("Tools::invertMatrix() - cannot invert matrix, determinant = 0",
-          __LINE__,__FILE__);
-      e.setFatal();
-      throw e;
-    }
     return;
   }
 
@@ -149,29 +121,6 @@ void tools::invertMatrix(TMatrixDSym& mat, double* determinant){
     arr[0] = temp[0];
     arr[1] = arr[2] = temp[1];
     arr[3] = temp[2];
-    return;
-  }
-
-  if (useCramer && mat.GetNrows() <= 6){
-    Bool_t (*inversion)(TMatrixDSym&, Double_t*) = 0;
-    switch (mat.GetNrows()) {
-    case 3:
-      inversion = TMatrixTSymCramerInv::Inv3x3; break;
-    case 4:
-      inversion = TMatrixTSymCramerInv::Inv4x4; break;
-    case 5:
-      inversion = TMatrixTSymCramerInv::Inv5x5; break;
-    case 6:
-      inversion = TMatrixTSymCramerInv::Inv6x6; break;
-    }
-
-    Bool_t success = inversion(mat, determinant);
-    if (!success){
-      Exception e("Tools::invertMatrix() - cannot invert matrix, determinant = 0",
-          __LINE__,__FILE__);
-      e.setFatal();
-      throw e;
-    }
     return;
   }
 
