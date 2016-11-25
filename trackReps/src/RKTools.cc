@@ -25,22 +25,10 @@
 
 #include <iostream>
 
-static const int flagSlowMatrix = 1 << 10; // Replace custom matrix multiplications with general equivalents
-static const int debugFlags = 0;// | flagSlowMatrix;
-
 namespace genfit {
 
 
 void RKTools::J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7){
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixD JpM(5, 7, (const double*)&J_pM);
-    TMatrixDSym J5(5, (const double*)&cov5);
-    J5.SimilarityT(JpM);
-    std::copy(J5.GetMatrixArray(), J5.GetMatrixArray() + 7*7, out7.begin());
-    return;
-  }
-
-
   // 5D -> 7D
 
   // J_pM
@@ -122,14 +110,6 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7){
 
 
 void RKTools::J_pMTxcov5xJ_pM(const M5x6& J_pM, const M5x5& cov5, M6x6& out6){
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixD JpM(5, 6, (const double*)&J_pM);
-    TMatrixDSym J5(5, (const double*)&cov5);
-    J5.SimilarityT(JpM);
-    std::copy(J5.GetMatrixArray(), J5.GetMatrixArray() + 6*6, out6.begin());
-    return;
-  }
-
   // 5D -> 6D
 
   // J_pM
@@ -208,15 +188,6 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x6& J_pM, const M5x5& cov5, M6x6& out6){
 
 void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5)
 {
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixD JMp(7, 5, (const double*)&J_Mp);
-    TMatrixD J7(7, 7, (const double*)&cov7);
-    TMatrixD result(JMp, TMatrixD::kTransposeMult,
-                    TMatrixD(J7, TMatrixD::kMult, JMp));
-    std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 5*5, out5.begin());
-    return;
-  }
-
   // 7D -> 5D
 
   // J_Mp
@@ -289,15 +260,6 @@ void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5)
 
 void RKTools::J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5)
 {
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixD JMp(6, 5, (const double*)&J_Mp);
-    TMatrixDSym J7(6, (const double*)&cov6);
-    TMatrixD result(JMp, TMatrixD::kTransposeMult,
-                    TMatrixD(J7, TMatrixD::kMult, JMp));
-    std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 5*5, out5.begin());
-    return;
-  }
-
   // 6D -> 5D
 
   // J_Mp
@@ -372,14 +334,6 @@ void RKTools::J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5)
 
 
 void RKTools::J_MMTxcov7xJ_MM(const M7x7& J_MM, M7x7& cov7){
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixD JMM(7, 7, (const double*)&J_MM);
-    TMatrixDSym J7(7, (const double*)&cov7);
-    J7.SimilarityT(JMM);
-    std::copy(J7.GetMatrixArray(), J7.GetMatrixArray() + 7*7, cov7.begin());
-    return;
-  }
-
   // it is assumed that the last column of J_MM is [0,0,0,0,0,0,1]
 
   double JTC0  = J_MM[0] * cov7[0] + J_MM[7] * cov7[7] + J_MM[14] * cov7[14] + J_MM[21] * cov7[21] + J_MM[28] * cov7[28] + J_MM[35] * cov7[35] + J_MM[42] * cov7[42];
@@ -531,19 +485,6 @@ void RKTools::J_pMTTxJ_MMTTxJ_MpTT(const M7x5& J_pMT, const M7x7& J_MMT, const M
     // input J_pMT is transposed version of actual jacobian J_pM (Master to plane)
     // input J_MpT is transposed version of actual jacobian J_Mp (plane to Master)
 
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixD JpMT(7, 5, (const double*)&J_pMT);
-    TMatrixD J7(7, 7, (const double*)&J_MMT);
-    TMatrixD JMpT(5, 7, (const double*)&J_MpT);
-    TMatrixD result(TMatrixD::kTransposed,
-                    TMatrixD(JMpT, TMatrixD::kMult,
-                             TMatrixD(J7, TMatrixD::kMult, JpMT)));
-
-    std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 5*5, J_pp.begin());
-    return;
-  }
-
-
   // J_pMT
   // 0 0 0 x x
   // 0 0 0 x x
@@ -649,14 +590,6 @@ void RKTools::Np_N_NpT(const M7x7& Np, M7x7& N) {
 
   // calculate:
   // Np * N * Np^T
-
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixDSym n(7,N.begin());
-    TMatrixD np(7,7,Np.begin());
-    n.Similarity(np);
-    std::copy(n.GetMatrixArray(), n.GetMatrixArray() + 7*7, N.begin());
-    return;
-  }
 
   double N00(N[0*7+0]), N11(N[1*7+1]), N22(N[2*7+2]), N33(N[3*7+3]), N44(N[4*7+4]), N55(N[5*7+5]);
 
