@@ -76,13 +76,6 @@ void
 noiseMatrixSqrt(const TMatrixDSym& noise,
 		TMatrixD& noiseSqrt);
 
-/** @brief Transport the state.
- */
-void
-kalmanPrediction(const TVectorD& x,
-		 const TVectorD& delta, const TMatrixD& F,
-		 TVectorD& xNew);
-
 /** @brief Calculates the square root of the covariance matrix after
  *  the Kalman prediction (i.e. extrapolation) with transport matrix F
  *  and the noise square root Q.  Gives the new covariance square

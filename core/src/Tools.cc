@@ -367,16 +367,6 @@ tools::noiseMatrixSqrt(const TMatrixDSym& noise,
   // noiseSqrt * noiseSqrt' = noise
 }
 
-// Transports the state.
-void
-tools::kalmanPrediction(const TVectorD& x,
-			const TVectorD& delta, const TMatrixD& F,
-			TVectorD& xNew)
-{
-  xNew = x;
-  xNew *= F;
-  xNew += delta;
-}
 
 // Transports the square root of the covariance matrix using a
 // square-root formalism
