@@ -290,7 +290,7 @@ class Track : public TObject {
 
   void Print(const Option_t* = "") const;
 
-  bool checkConsistency() const;
+  void checkConsistency() const;
 
  private:
 

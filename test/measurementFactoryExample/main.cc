@@ -158,8 +158,7 @@ int main() {
       continue;
     }
 
-    //check
-    assert(fitTrack.checkConsistency());
+    fitTrack.checkConsistency();
 
 
     if (iEvent < 1000) {
