@@ -76,10 +76,6 @@ namespace RKTools {
   void J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5);
   void J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5);
 
-  void J_MMTxcov7xJ_MM(const M7x7& J_MM, M7x7& cov7);
-
-  void J_MMxJ_MM(M7x7& J_MM, const M7x7& J_MM_old);
-
   void J_pMTTxJ_MMTTxJ_MpTT(const M7x5& J_pMT, const M7x7& J_MMT, const M5x7& J_MpT, M5x5& J_pp);
 
   void Np_N_NpT(const M7x7& Np, M7x7& N);
