@@ -920,10 +920,6 @@ KalmanFitterRefTrack::removeForwardBackwardInfo(Track* tr, const AbsTrackRep* re
 void
 KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, const TrackPoint* tp, double& chi2, double& ndf, int direction)
 {
-  if(squareRootFormalism_) {
-    processTrackPointSqrt(fi, prevFi, tp, chi2, ndf, direction);
-    return;
-  }
 
   if (debugLvl_ > 0) {
     debugOut << " KalmanFitterRefTrack::processTrackPoint " << fi->getTrackPoint() << "\n";

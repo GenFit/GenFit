@@ -47,9 +47,8 @@ class KalmanFitter : public AbsKalmanFitter {
 
  public:
 
-  KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3, bool squareRootFormalism = false)
-    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), currentState_(nullptr),
-      squareRootFormalism_(squareRootFormalism)
+  KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
+    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), currentState_(nullptr)
   {}
 
   ~KalmanFitter() {}
@@ -61,8 +60,6 @@ class KalmanFitter : public AbsKalmanFitter {
   //! Does not alter the FitStatus and does not do multiple iterations.
   void processTrackPartially(Track* tr, const AbsTrackRep* rep, int startId = 0, int endId = -1);
 
-  void useSquareRootFormalism(bool squareRootFormalism = true) {squareRootFormalism_ = squareRootFormalism;}
-
  private:
   bool fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int startId, int endId, int& nFailedHits);
   void processTrackPoint(TrackPoint* tp,
@@ -73,8 +70,6 @@ class KalmanFitter : public AbsKalmanFitter {
 #else
   MeasuredStateOnPlane* currentState_;
 #endif
-
-  bool squareRootFormalism_;
 
  public:
   ClassDef(KalmanFitter,1)

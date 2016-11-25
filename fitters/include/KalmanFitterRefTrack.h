@@ -36,10 +36,8 @@ class TrackPoint;
  */
 class KalmanFitterRefTrack : public AbsKalmanFitter {
  public:
-  KalmanFitterRefTrack(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3,
-		       bool squareRootFormalism = false)
-    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), refitAll_(false), deltaChi2Ref_(1),
-      squareRootFormalism_(squareRootFormalism)
+  KalmanFitterRefTrack(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
+    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), refitAll_(false), deltaChi2Ref_(1)
   {}
 
   virtual ~KalmanFitterRefTrack() {}
@@ -105,8 +103,6 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
 
   // aux variables for removeOutdated
   TVectorD resM_; //!
-
-  bool squareRootFormalism_;
 
  public:
   ClassDef(KalmanFitterRefTrack, 1)
