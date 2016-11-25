@@ -211,19 +211,11 @@ int main() {
   // init fitter
   genfit::AbsKalmanFitter* fitter = 0;
   switch (fitterId) {
-    case genfit::SimpleKalman:
-      fitter = new genfit::KalmanFitter(nIter, dPVal);
-      fitter->setMultipleMeasurementHandling(mmHandling);
-      break;
-
     case genfit::RefKalman:
       fitter = new genfit::KalmanFitterRefTrack(nIter, dPVal);
       fitter->setMultipleMeasurementHandling(mmHandling);
       break;
 
-    case genfit::DafSimple:
-      fitter = new genfit::DAF(false);
-      break;
     case genfit::DafRef:
       fitter = new genfit::DAF();
       break;
