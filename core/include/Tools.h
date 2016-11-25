@@ -67,13 +67,6 @@ void QR(TMatrixD& A);
  */
 void QR(TMatrixD& A, TVectorD& b);
 
-/** @brief This averages the covariance matrices C1, C2 in a
- *  numerically stable way by using matrix square roots.  This code
- *  is in no way optimized so use with care if speed is a concern.
- */
-void safeAverage(const TMatrixDSym& C1, const TMatrixDSym& C2,
-		 TMatrixDSym& result);
-
 /** @brief Calculate a sqrt for the positive semidefinite noise
  *  matrix.  Rows corresponding to zero eigenvalues are omitted.
  *  This gives the transposed of the square root, i.e.
