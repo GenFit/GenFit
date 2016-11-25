@@ -94,13 +94,6 @@ kalmanUpdateSqrt(const TMatrixD& S,
 		 const TVectorD& res, const TMatrixD& R, const AbsHMatrix* H,
 		 TVectorD& update, TMatrixD& SNew);
 
-void
-kalmanPredictionUpdateSqrt(const TMatrixD& S,
-			   const TMatrixD& F, const TMatrixD& Q,
-			   const TVectorD& res, const TMatrixD& R,
-			   const AbsHMatrix* H,
-			   TVectorD& update, TMatrixD& SNew);
-
 } /* End of namespace tools */
 } /* End of namespace genfit */
 /** @} */

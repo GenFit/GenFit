@@ -423,42 +423,4 @@ tools::kalmanUpdateSqrt(const TMatrixD& S,
   update *= K;
 }
 
-
-// Kalman transport + measurement update
-// S : covariance square root (pre-prediction)
-// transport matrix F and noise matrix square root Q
-// res, R, H : residual, measurement covariance square root, H matrix of the measurement
-// The new state is xnew = F*xold + update
-void
-tools::kalmanPredictionUpdateSqrt(const TMatrixD& S,
-				  const TMatrixD& F, const TMatrixD& Q,
-				  const TVectorD& res, const TMatrixD& R,
-				  const AbsHMatrix* H,
-				  TVectorD& update, TMatrixD& SNew)
-{
-  TMatrixD pre(S.GetNrows() + Q.GetNrows() + R.GetNrows(),
-	       S.GetNcols() + R.GetNcols());
-  TMatrixD SFt(S, TMatrixD::kMultTranspose, F);
-  pre.SetSub(                        0,  0,          R);   /*           upper right block is zero               */
-  pre.SetSub(             R.GetNrows(),  0,H->MHt(SFt));   pre.SetSub(R.GetNrows(),             R.GetNcols(),SFt);
-  if (Q.GetNcols() > 0) { // needed to suppress warnings when inserting an empty Q
-    TMatrixD Qt(TMatrixD::kTransposed, Q);
-    pre.SetSub(S.GetNrows()+R.GetNrows(),0,H->MHt(Qt));    pre.SetSub(S.GetNrows()+R.GetNrows(),R.GetNcols(), Qt);
-  }
-
-  tools::QR(pre);
-  const TMatrixD& r = pre;
-
-  TMatrixD a(r.GetSub(0, R.GetNrows()-1, 0, R.GetNcols()-1));
-  TMatrixD K(TMatrixD::kTransposed, r.GetSub(0, R.GetNrows()-1, R.GetNcols(), pre.GetNcols()-1));
-  SNew = r.GetSub(R.GetNrows(), R.GetNrows() + S.GetNrows() - 1,
-		  R.GetNcols(), pre.GetNcols() - 1);
-
-  update.ResizeTo(res);
-  update = res;
-  tools::transposedForwardSubstitution(a, update);
-  update *= K;
-}
-
-
 } /* End of namespace genfit */
