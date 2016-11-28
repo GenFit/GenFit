@@ -1291,7 +1291,6 @@ void Track::checkConsistency() const {
     // Nota bene: The consistency is not set to false when this occurs, because it does not break the consistency of
     // the track. However, when something else fails we keep this as additional error information.
     failures << "Track::checkConsistency(): Warning: covSeed_ is zero" << std::endl;
-    //consistent = false;
   }
 
   // check if correct number of fitStatuses
