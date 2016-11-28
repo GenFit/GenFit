@@ -90,7 +90,7 @@ int main() {
 
 
   //check
-  assert(fitTrack.checkConsistency());
+  fitTrack.checkConsistency();
 
   // do the fit
   fitter->processTrack(&fitTrack);
@@ -99,7 +99,7 @@ int main() {
   fitTrack.getFittedState().Print();
 
   //check
-  assert(fitTrack.checkConsistency());
+  fitTrack.checkConsistency();
 
 
   display->addEvent(&fitTrack);
