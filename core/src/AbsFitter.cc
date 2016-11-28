@@ -33,8 +33,7 @@ void AbsFitter::processTrack(Track* tr, bool resortHits) {
       processTrackWithRep(tr, tr->getTrackRep(i), false);
   }
 
-  // self check
-  assert(tr->checkConsistency());
+  tr->checkConsistency();
 }
 
 } /* End of namespace genfit */

@@ -40,8 +40,12 @@ bool emptyTrackTest()
   TFile *f = TFile::Open(FILENAME, "RECREATE");
   f->cd();
   genfit::Track *t = new genfit::Track();
-  if (!t->checkConsistency())
+  try {
+    t->checkConsistency();
+  } catch (genfit::Exception) {
     return false;
+  }
+
   t->Write("direct");
   f->Close();
   delete t;
@@ -49,7 +53,14 @@ bool emptyTrackTest()
 
   f = TFile::Open(FILENAME, "READ");
   t = (genfit::Track*)f->Get("direct");
-  bool result = t->checkConsistency();
+
+  bool result = false;
+  try {
+    t->checkConsistency();
+    result = true;
+  } catch (genfit::Exception) {
+    result = false;
+  }
   delete t;
   delete f;
   return result;
@@ -190,14 +201,12 @@ int main() {
       continue;
     }
 
-    //check
-    assert(fitTrack->checkConsistency());
+    fitTrack->checkConsistency();
 
     // do the fit
     fitter->processTrack(fitTrack);
 
-    //check
-    assert(fitTrack->checkConsistency());
+    fitTrack->checkConsistency();
 
 
     stateFinal.ResizeTo(fitTrack->getFittedState().getState());
@@ -254,9 +263,11 @@ int main() {
 
   for (Long_t nEntry = 0; nEntry < tResults->GetEntries(); ++nEntry) {
     tResults->GetEntry(nEntry);
-    //fitTrack->Print();
-    if (!fitTrack->checkConsistency()) {
-      std::cout << "stored track inconsistent" << std::endl;
+
+    try {
+      fitTrack->checkConsistency();
+    } catch (genfit::Exception& e) {
+      std::cout << e.getExcString() << std::endl;
       return 1;
     }
 

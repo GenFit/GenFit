@@ -436,7 +436,7 @@ int main() {
         delete secondRep;
       //if (debug) fitTrack->Print("C");
 
-      assert(fitTrack->checkConsistency());
+      fitTrack->checkConsistency();
       //fitTrack->addTrackRep(rep->clone()); // check if everything works fine with more than one rep
 
       // add measurements
@@ -448,7 +448,7 @@ int main() {
         else
           fitTrack->insertPoint(new genfit::TrackPoint(measurements[i], fitTrack));
 
-        assert(fitTrack->checkConsistency());
+        fitTrack->checkConsistency();
         //if (debug) fitTrack->Print("C");
       }
 
@@ -463,8 +463,8 @@ int main() {
         }
       }
 
-      assert(fitTrack->checkConsistency());
-      assert(secondTrack->checkConsistency());
+      fitTrack->checkConsistency();
+      secondTrack->checkConsistency();
 
       //if (debug) fitTrack->Print();
 
@@ -528,8 +528,8 @@ int main() {
         fitTrack->getFitStatus(rep)->Print();
       }
 
-      assert(fitTrack->checkConsistency());
-      assert(secondTrack->checkConsistency());
+      fitTrack->checkConsistency();
+      secondTrack->checkConsistency();
 
 #ifndef VALGRIND
       if (!onlyDisplayFailed && iEvent < 1000) {
@@ -708,7 +708,7 @@ int main() {
 
         for (unsigned int i=0; i<1; ++i) {
           genfit::Track trClone(*fitTrack);
-          assert(trClone.checkConsistency());
+          trClone.checkConsistency();
 
           bool first(false), last(false);
 
@@ -731,10 +731,11 @@ int main() {
 
             trClone.prune(opt);
 
-            if (!trClone.checkConsistency()) {
+            try {
+              trClone.checkConsistency();
+            } catch (genfit::Exception& e) {
               trClone.getFitStatus()->getPruneFlags().Print();
             }
-            //trClone.getFitStatus()->getPruneFlags().Print();
 
             //std::cout<<"get stCloneFirst ";
             genfit::MeasuredStateOnPlane stCloneFirst = trClone.getFittedState();

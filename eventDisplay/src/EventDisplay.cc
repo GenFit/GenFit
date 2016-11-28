@@ -301,11 +301,12 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       continue;
 
     Track* track = events_[id]->at(i);
-    if (! track->checkConsistency()){
-      std::cerr<<"track is not consistent"<<std::endl;
+    try {
+      track->checkConsistency();
+    } catch (genfit::Exception& e) {
+      std::cerr<< e.getExcString() <<std::endl;
       continue;
     }
-
 
     std::unique_ptr<Track> refittedTrack(nullptr);
     if (refit_) {
@@ -355,8 +356,10 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       int microseconds = 1000000*(endcputime.tv_sec - startcputime.tv_sec) + (endcputime.tv_usec - startcputime.tv_usec);
       std::cout << "it took " << double(microseconds) /  1000 << " ms of CPU to fit the track\n";
 
-      if (! refittedTrack->checkConsistency()){
-        std::cerr<<"refittedTrack is not consistent"<<std::endl;
+      try {
+        refittedTrack->checkConsistency();
+      } catch (genfit::Exception& e) {
+        std::cerr<< e.getExcString() <<std::endl;
         continue;
       }
 

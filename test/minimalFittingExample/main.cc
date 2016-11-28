@@ -132,13 +132,13 @@ int main() {
     }
 
     //check
-    assert(fitTrack.checkConsistency());
+    fitTrack.checkConsistency();
 
     // do the fit
     fitter->processTrack(&fitTrack);
 
     //check
-    assert(fitTrack.checkConsistency());
+    fitTrack.checkConsistency();
 
 
     if (iEvent < 1000) {
