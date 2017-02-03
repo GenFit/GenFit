@@ -1732,7 +1732,7 @@ void RKTrackRep::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, 
     debugOut << "  A = "; RKTools::printDim(A, 3,1);
   }*/
 
-  std::fill(J_Mp.begin(), J_Mp.end(), 7*5);
+  std::fill(J_Mp.begin(), J_Mp.end(), 0);
 
   const double AtU = A[0]*U.X() + A[1]*U.Y() + A[2]*U.Z();
   const double AtV = A[0]*V.X() + A[1]*V.Y() + A[2]*V.Z();
