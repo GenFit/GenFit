@@ -277,8 +277,8 @@ void TrackPoint::Streamer(TBuffer &R__b)
       for (size_t i = 0; i < rawMeasurements_.size(); ++i) {
         rawMeasurements_[i]->setTrackPoint(this);
       }
-      for (auto& trackRepIDWithFitterInfo : vFitterInfos_) {
-        AbsFitterInfo* fitterInfo = trackRepIDWithFitterInfo.second;
+      for (auto trackRepIDWithFitterInfo = vFitterInfos_.begin(); trackRepIDWithFitterInfo != vFitterInfos_.end(); ++trackRepIDWithFitterInfo) {
+        AbsFitterInfo* fitterInfo = trackRepIDWithFitterInfo->second;
         if (fitterInfo)
           fitterInfo->setTrackPoint(this);
       }
@@ -318,10 +318,10 @@ void TrackPoint::Streamer(TBuffer &R__b)
 
 void TrackPoint::fixupRepsForReading()
 {
-  for (auto& trackRepIDWithFitterInfo : vFitterInfos_) {
+  for (auto trackRepIDWithFitterInfo = vFitterInfos_.begin(); trackRepIDWithFitterInfo != vFitterInfos_.end(); ++trackRepIDWithFitterInfo) {
     // The map is filled such that i corresponds to the id of the TrackRep.
-    const unsigned int id = trackRepIDWithFitterInfo.first;
-    AbsFitterInfo* fitterInfo = trackRepIDWithFitterInfo.second;
+    const unsigned int id = trackRepIDWithFitterInfo->first;
+    AbsFitterInfo* fitterInfo = trackRepIDWithFitterInfo->second;
 
     // May not have FitterInfos for all reps.
     if (!fitterInfo)
