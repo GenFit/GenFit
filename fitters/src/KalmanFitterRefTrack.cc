@@ -105,8 +105,7 @@ TrackPoint* KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, do
 
 void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits)
 {
-
-  if (tr->getFitStatus(rep) != nullptr && tr->getFitStatus(rep)->isTrackPruned()) {
+  if (tr->hasFitStatus(rep) && tr->getFitStatus(rep)->isTrackPruned()) {
     Exception exc("KalmanFitterRefTrack::processTrack: Cannot process pruned track!", __LINE__,__FILE__);
     throw exc;
   }
