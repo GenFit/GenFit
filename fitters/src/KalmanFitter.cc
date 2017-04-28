@@ -112,7 +112,7 @@ bool KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
 void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
 {
 
-  if (tr->getFitStatus(rep) != nullptr && tr->getFitStatus(rep)->isTrackPruned()) {
+  if (tr->hasFitStatus(rep) and tr->getFitStatus(rep)->isTrackPruned()) {
     Exception exc("KalmanFitter::processTrack: Cannot process pruned track!", __LINE__,__FILE__);
     throw exc;
   }

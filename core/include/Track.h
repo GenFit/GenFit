@@ -196,7 +196,7 @@ class Track : public TObject {
   //! Creates a new TrackPoint containing the measurement, and adds it to the track
   void insertMeasurement(AbsMeasurement* measurement, int id = -1);
 
-  //! Delete all measurement information and the track points of the track. Does not delete fit status or track representations.
+  //! Delete all measurement information and the track points of the track. Does not delete track representations.
   void deleteTrackPointsAndFitStatus();
   /**
    * @brief Merge two tracks.
