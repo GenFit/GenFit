@@ -93,7 +93,7 @@ IF(NOT CMAKE_BUILD_TYPE)
       FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-SET(CPP_STANDARD c++11)
+SET(CPP_STANDARD c++0x)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=${CPP_STANDARD} -Wall -pthread -pedantic -Wno-long-long -Wshadow -Werror=overloaded-virtual")
 
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0 -g")
