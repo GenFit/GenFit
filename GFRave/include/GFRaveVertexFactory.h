@@ -34,6 +34,9 @@
 #include "Track.h"
 #include "MeasuredStateOnPlane.h"
 
+//#include "TrackingTools/GeomPropagators/interface/AnalyticalPropagator.h"
+
+
 #include <vector>
 
 
@@ -89,6 +92,7 @@ class GFRaveVertexFactory {
   rave::VertexFactory* factory_; // Ownership
   rave::MagneticField* magneticField_; // Ownership
   rave::Propagator* propagator_; // Ownership
+  //AnalyticalPropagator* propagator_; // Ownership
 
 };
 

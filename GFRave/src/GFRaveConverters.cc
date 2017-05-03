@@ -98,9 +98,11 @@ GFTrackToTrack(trackAndState trackAndState, int id, std::string tag){
   trackAndState.track_->getFittedState().getPosMomCov(pos, mom, cov);
 
   // state
-  rave::Vector6D ravestate(pos.X(), pos.Y(), pos.Z(),
-                           mom.X(), mom.Y(), mom.Z());
+  //rave::Vector6D ravestate(pos.X(), pos.Y(), pos.Z(),
+  //                         mom.X(), mom.Y(), mom.Z());
 
+  rave::Vector6D ravestate( rave::Point3D(pos.X(), pos.Y(), pos.Z() ),rave::Vector3D( mom.X(), mom.Y(), mom.Z() ), int(trackAndState.track_->getFitStatus()->getCharge()) , nullptr );
+  
   // covariance
   rave::Covariance6D ravecov(cov(0,0), cov(1,0), cov(2,0),
                              cov(1,1), cov(2,1), cov(2,2),
@@ -115,7 +117,7 @@ GFTrackToTrack(trackAndState trackAndState, int id, std::string tag){
   //std::cerr<<"  mom: "; Vector3DToTVector3(ravestate.momentum()).Print();
 
   rave::Track ret(id, ravestate, ravecov,
-      trackAndState.track_->getFitStatus()->getCharge(),
+//      trackAndState.track_->getFitStatus()->getCharge(),
       trackAndState.track_->getFitStatus()->getChi2(),
       trackAndState.track_->getFitStatus()->getNdf(),
       static_cast<void*>(const_cast<Track*>(trackAndState.track_)), tag);
