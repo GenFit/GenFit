@@ -107,11 +107,37 @@ void DetPlane::setO(const TVector3& o)
   o_ = o;
 }
 
+void DetPlane::setO(double X,double Y,double Z)
+{
+  o_.SetXYZ(X,Y,Z);
+}
 
 void DetPlane::setU(const TVector3& u)
 {
   u_ = u;
   sane(); // sets v_ perpendicular to u_
+}
+
+void DetPlane::setU(double X,double Y,double Z)
+{
+  u_.SetXYZ(X,Y,Z);
+  sane(); // sets v_ perpendicular to u_
+}
+
+void DetPlane::setV(const TVector3& v)
+{
+  v_ = v;
+  u_ = getNormal().Cross(v_);
+  u_ *= -1.;
+  sane();
+}
+
+void DetPlane::setV(double X,double Y,double Z)
+{
+  v_.SetXYZ(X,Y,Z);
+  u_ = getNormal().Cross(v_);
+  u_ *= -1.;
+  sane();
 }
 
 void DetPlane::setUV(const TVector3& u,const TVector3& v)
@@ -132,6 +158,10 @@ TVector3 DetPlane::getNormal() const
   return u_.Cross(v_);
 }
 
+void DetPlane::setNormal(double X,double Y,double Z){
+  setNormal( TVector3(X,Y,Z) );
+}
+
 void DetPlane::setNormal(const TVector3& n){
   u_ = n.Orthogonal();
   v_ = n.Cross(u_);
@@ -139,10 +169,35 @@ void DetPlane::setNormal(const TVector3& n){
   v_.SetMag(1.);
 }
 
+void DetPlane::setNormal(const double& theta, const double& phi){
+  setNormal( TVector3(TMath::Sin(theta)*TMath::Cos(phi),TMath::Sin(theta)*TMath::Sin(phi),TMath::Cos(theta)) );
+}
+
 
 TVector2 DetPlane::project(const TVector3& x)const
 {
   return TVector2(u_*x, v_*x);
+}
+
+
+TVector2 DetPlane::LabToPlane(const TVector3& x)const
+{
+  return project(x-o_);
+}
+
+
+TVector3 DetPlane::toLab(const TVector2& x)const
+{
+  TVector3 d(o_);
+  d += x.X()*u_;
+  d += x.Y()*v_;
+  return d;
+}
+
+
+TVector3 DetPlane::dist(const TVector3& x)const
+{
+  return toLab(LabToPlane(x)) - x;
 }
 
 
@@ -222,6 +277,19 @@ double DetPlane::distance(double x, double y, double z) const {
                (y-o_.Y()) * (u_.Z()*v_.X() - u_.X()*v_.Z()) +
                (z-o_.Z()) * (u_.X()*v_.Y() - u_.Y()*v_.X()));
 }
+
+
+TVector2 DetPlane::straightLineToPlane (const TVector3& point, const TVector3& dir) const {
+  TVector3 dirNorm(dir.Unit());
+  TVector3 normal = getNormal();
+  double dirTimesN = dirNorm*normal;
+  if(fabs(dirTimesN)<1.E-6){//straight line is parallel to plane, so return infinity
+    return TVector2(1.E100,1.E100);
+  }
+  double t = 1./dirTimesN * ((o_-point)*normal);
+  return project(point - o_ + t * dirNorm);
+}
+
 
 //! gives u,v coordinates of the intersection point of a straight line with plane
 void DetPlane::straightLineToPlane(const double& posX, const double& posY, const double& posZ,

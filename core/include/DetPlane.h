@@ -89,8 +89,11 @@ class DetPlane : public TObject {
            const TVector3& u,
            const TVector3& v);
   void setO(const TVector3& o);
+  void setO(double, double, double);
   void setU(const TVector3& u);
+  void setU(double, double, double);
   void setV(const TVector3& v);
+  void setV(double, double, double);
   void setUV(const TVector3& u, const TVector3& v);
   void setON(const TVector3& o, const TVector3& n);
 
@@ -102,9 +105,20 @@ class DetPlane : public TObject {
   // Operations ----------------------
   TVector3 getNormal() const;
   void setNormal(const TVector3& n);
+  void setNormal(double, double, double);
+  void setNormal(const double& theta, const double& phi);
 
   //! projecting a direction onto the plane:
   TVector2 project(const TVector3& x) const;
+
+  //! transform from Lab system into plane
+  TVector2 LabToPlane(const TVector3& x) const;
+
+  //! transform from plane coordinates to lab system
+  TVector3 toLab(const TVector2& x) const;
+
+  // get vector from point to plane (normal)
+  TVector3 dist(const TVector3& point) const;
 
   //! gives u,v coordinates of the intersection point of a straight line with plane
   TVector2 straightLineToPlane(const TVector3& point, const TVector3& dir) const;
@@ -124,6 +138,13 @@ class DetPlane : public TObject {
   //! absolute distance from a point to the plane
   double distance(const TVector3& point) const;
   double distance(double, double, double) const;
+
+
+  //! intersect in the active area? C.f. AbsFinitePlane
+  bool isInActive(const TVector3& point, const TVector3& dir) const {
+    if(finitePlane_.get() == nullptr) return true;
+    return this->isInActive( this->straightLineToPlane(point,dir));
+  }
 
   //! intersect in the active area? C.f. AbsFinitePlane
   bool isInActive(const double& posX, const double& posY, const double& posZ,
