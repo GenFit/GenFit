@@ -52,8 +52,10 @@ void MeasurementOnPlane::Print(Option_t*) const
   printOut << "genfit::MeasurementOnPlane, weight = " << weight_ << "\n";
   printOut << " state vector: "; state_.Print();
   printOut << " covariance matrix: "; cov_.Print();
-  if (sharedPlane_ != nullptr)
-    printOut << " defined in plane "; sharedPlane_->Print();
+  if (sharedPlane_ != nullptr) {
+      printOut << " defined in plane ";
+      sharedPlane_->Print();
+  }
   printOut << " hMatrix: "; hMatrix_->Print();
 
 }
