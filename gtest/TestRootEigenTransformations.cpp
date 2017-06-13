@@ -19,14 +19,14 @@ namespace genfit {
         myTVectorD(0) = 0.2;
         myTVectorD(0) = 0.1;
 
-        const auto myEigenVector(rootVectorToEigenVector(myTVectorD));
+        const auto myEigenVector(rootVectorToEigenVector<5>(myTVectorD));
         EXPECT_EQ(myTVectorD(0), myEigenVector(0));
         EXPECT_EQ(myTVectorD(1), myEigenVector(1));
         EXPECT_EQ(myTVectorD(2), myEigenVector(2));
         EXPECT_EQ(myTVectorD(3), myEigenVector(3));
         EXPECT_EQ(myTVectorD(4), myEigenVector(4));
 
-        const auto myRootVector(eigenVectorToRootVector(myEigenVector));
+        const auto myRootVector(eigenVectorToRootVector<5>(myEigenVector));
         EXPECT_EQ(myTVectorD(0), myRootVector(0));
         EXPECT_EQ(myTVectorD(1), myRootVector(1));
         EXPECT_EQ(myTVectorD(2), myRootVector(2));
@@ -42,7 +42,7 @@ namespace genfit {
             }
         }
 
-        const auto myEigenMatrix(rootMatrixSymToEigenMatrix(myTMatrixDSym));
+        const auto myEigenMatrix(rootMatrixSymToEigenMatrix<5>(myTMatrixDSym));
         EXPECT_EQ(myTMatrixDSym(0, 0), myEigenMatrix(0, 0));
         EXPECT_EQ(myTMatrixDSym(0, 1), myEigenMatrix(0, 1));
         EXPECT_EQ(myTMatrixDSym(0, 2), myEigenMatrix(0, 2));
@@ -69,7 +69,7 @@ namespace genfit {
         EXPECT_EQ(myTMatrixDSym(4, 3), myEigenMatrix(4, 3));
         EXPECT_EQ(myTMatrixDSym(4, 4), myEigenMatrix(4, 4));
 
-        const auto myRootMatrix(eigenMatrixToRootMatrixSym(myEigenMatrix));
+        const auto myRootMatrix(eigenMatrixToRootMatrixSym<5>(myEigenMatrix));
         EXPECT_EQ(myTMatrixDSym(0, 0), myRootMatrix(0, 0));
         EXPECT_EQ(myTMatrixDSym(0, 1), myRootMatrix(0, 1));
         EXPECT_EQ(myTMatrixDSym(0, 2), myRootMatrix(0, 2));
