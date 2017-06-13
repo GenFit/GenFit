@@ -453,224 +453,114 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
   double chi2inc = 0;
   double ndfInc = 0;
 
-  if (!squareRootFormalism_) {
-    // update(s)
-    const std::vector<MeasurementOnPlane *>& measurements = getMeasurements(fi, tp, direction);
-    for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
-      const MeasurementOnPlane& mOnPlane = **it;
-      const double weight = mOnPlane.getWeight();
 
+  // update(s)
+  const std::vector<MeasurementOnPlane *>& measurements = getMeasurements(fi, tp, direction);
+  for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
+    const MeasurementOnPlane& mOnPlane = **it;
+    const double weight = mOnPlane.getWeight();
+
+    if (debugLvl_ > 0) {
+      debugOut << "Weight of measurement: " << weight << "\n";
+    }
+
+    if (!canIgnoreWeights() && weight <= 1.01E-10) {
       if (debugLvl_ > 0) {
-        debugOut << "Weight of measurement: " << weight << "\n";
+        debugOut << "Weight of measurement is almost 0, continue ... \n";
       }
+      continue;
+    }
 
-      if (!canIgnoreWeights() && weight <= 1.01E-10) {
-        if (debugLvl_ > 0) {
-          debugOut << "Weight of measurement is almost 0, continue ... \n";
-        }
-        continue;
-      }
+    const TVectorD& measurement(mOnPlane.getState());
+    const AbsHMatrix* H(mOnPlane.getHMatrix());
+    // (weighted) cov
+    const TMatrixDSym& V((!canIgnoreWeights() && weight < 0.99999) ?
+        1./weight * mOnPlane.getCov() :
+        mOnPlane.getCov());
+    if (debugLvl_ > 1) {
+      debugOut << "\033[31m";
+      debugOut << "State prediction: "; stateVector.Print();
+      debugOut << "Cov prediction: "; state->getCov().Print();
+      debugOut << "\033[0m";
+      debugOut << "\033[34m";
+      debugOut << "measurement: "; measurement.Print();
+      debugOut << "measurement covariance V: "; V.Print();
+      //cov.Print();
+      //measurement.Print();
+    }
 
-      const TVectorD& measurement(mOnPlane.getState());
-      const AbsHMatrix* H(mOnPlane.getHMatrix());
-      // (weighted) cov
-      const TMatrixDSym& V((!canIgnoreWeights() && weight < 0.99999) ?
-          1./weight * mOnPlane.getCov() :
-          mOnPlane.getCov());
-      if (debugLvl_ > 1) {
-        debugOut << "\033[31m";
-        debugOut << "State prediction: "; stateVector.Print();
-        debugOut << "Cov prediction: "; state->getCov().Print();
-        debugOut << "\033[0m";
-        debugOut << "\033[34m";
-        debugOut << "measurement: "; measurement.Print();
-        debugOut << "measurement covariance V: "; V.Print();
-        //cov.Print();
-        //measurement.Print();
-      }
+    TVectorD res(measurement - H->Hv(stateVector));
+    if (debugLvl_ > 1) {
+      debugOut << "Residual = (" << res(0);
+      if (res.GetNrows() > 1)
+        debugOut << ", " << res(1);
+      debugOut << ")" << std::endl;
+      debugOut << "\033[0m";
+    }
+    // If hit, do Kalman algebra.
 
-      TVectorD res(measurement - H->Hv(stateVector));
-      if (debugLvl_ > 1) {
-        debugOut << "Residual = (" << res(0);
-        if (res.GetNrows() > 1)
-          debugOut << ", " << res(1);
-        debugOut << ")" << std::endl;
-        debugOut << "\033[0m";
-      }
-      // If hit, do Kalman algebra.
+    {
+      // calculate kalman gain ------------------------------
+      // calculate covsum (V + HCH^T) and invert
+      TMatrixDSym covSumInv(cov);
+      H->HMHt(covSumInv);
+      covSumInv += V;
+      tools::invertMatrix(covSumInv);
 
-      {
-        // calculate kalman gain ------------------------------
-        // calculate covsum (V + HCH^T) and invert
-        TMatrixDSym covSumInv(cov);
-        H->HMHt(covSumInv);
-        covSumInv += V;
-        tools::invertMatrix(covSumInv);
-
-        TMatrixD CHt(H->MHt(cov));
-        TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
-        //TMatrixD(CHt, TMatrixD::kMult, covSumInv).Print();
-
-        if (debugLvl_ > 1) {
-          //debugOut << "STATUS:" << std::endl;
-          //stateVector.Print();
-          debugOut << "\033[32m";
-          debugOut << "Update: "; update.Print();
-          debugOut << "\033[0m";
-          //cov.Print();
-        }
-
-        stateVector += update;
-        covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
-        cov -= covSumInv;
-      }
+      TMatrixD CHt(H->MHt(cov));
+      TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
+      //TMatrixD(CHt, TMatrixD::kMult, covSumInv).Print();
 
       if (debugLvl_ > 1) {
+        //debugOut << "STATUS:" << std::endl;
+        //stateVector.Print();
         debugOut << "\033[32m";
-        debugOut << "updated state: "; stateVector.Print();
-        debugOut << "updated cov: "; cov.Print();
-      }
-
-      TVectorD resNew(measurement - H->Hv(stateVector));
-      if (debugLvl_ > 1) {
-        debugOut << "Residual New = (" << resNew(0);
-
-        if (resNew.GetNrows() > 1)
-          debugOut << ", " << resNew(1);
-        debugOut << ")" << std::endl;
+        debugOut << "Update: "; update.Print();
         debugOut << "\033[0m";
-      }
-
-      // Calculate chi²
-      TMatrixDSym HCHt(cov);
-      H->HMHt(HCHt);
-      HCHt -= V;
-      HCHt *= -1;
-
-      tools::invertMatrix(HCHt);
-
-      chi2inc += HCHt.Similarity(resNew);
-
-      if (!canIgnoreWeights()) {
-        ndfInc += weight * measurement.GetNrows();
-      }
-      else
-        ndfInc += measurement.GetNrows();
-
-      if (debugLvl_ > 0) {
-        debugOut << "chi² increment = " << chi2inc << std::endl;
-      }
-    } // end loop over measurements
-  } else {
-    // The square-root formalism is applied only to the updates, not
-    // the prediction even though the addition of the noise covariance
-    // (which in implicit in the extrapolation) is probably the most
-    // fragile part of the numerical procedure.  This would require
-    // calculating the transport matrices also here, which would be
-    // possible but is not done, as this is not the preferred form of
-    // the Kalman Fitter, anyway.
-
-    TDecompChol decompCov(cov);
-    decompCov.Decompose();
-    TMatrixD S(decompCov.GetU());
-
-    const std::vector<MeasurementOnPlane *>& measurements = getMeasurements(fi, tp, direction);
-    for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
-      const MeasurementOnPlane& mOnPlane = **it;
-      const double weight = mOnPlane.getWeight();
-
-      if (debugLvl_ > 0) {
-        debugOut << "Weight of measurement: " << weight << "\n";
-      }
-
-      if (!canIgnoreWeights() && weight <= 1.01E-10) {
-        if (debugLvl_ > 0) {
-          debugOut << "Weight of measurement is almost 0, continue ... \n";
-        }
-        continue;
-      }
-
-      const TVectorD& measurement(mOnPlane.getState());
-      const AbsHMatrix* H(mOnPlane.getHMatrix());
-      // (weighted) cov
-      const TMatrixDSym& V((!canIgnoreWeights() && weight < 0.99999) ?
-          1./weight * mOnPlane.getCov() :
-          mOnPlane.getCov());
-      if (debugLvl_ > 1) {
-        debugOut << "\033[31m";
-        debugOut << "State prediction: "; stateVector.Print();
-        debugOut << "Cov prediction: "; state->getCov().Print();
-        debugOut << "\033[0m";
-        debugOut << "\033[34m";
-        debugOut << "measurement: "; measurement.Print();
-        debugOut << "measurement covariance V: "; V.Print();
         //cov.Print();
-        //measurement.Print();
       }
 
-      TVectorD res(measurement - H->Hv(stateVector));
-      if (debugLvl_ > 1) {
-        debugOut << "Residual = (" << res(0);
-        if (res.GetNrows() > 1)
-          debugOut << ", " << res(1);
-        debugOut << ")" << std::endl;
-        debugOut << "\033[0m";
-      }
-
-      TDecompChol decompR(V);
-      decompR.Decompose();
-      const TMatrixD& R(decompR.GetU());
-
-      TVectorD update(stateVector.GetNrows());
-      tools::kalmanUpdateSqrt(S, res, R, H,
-          update, S);
       stateVector += update;
+      covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
+      cov -= covSumInv;
+    }
 
-      // Square root is such that
-      //    cov = TMatrixDSym(TMatrixDSym::kAtA, S);
+    if (debugLvl_ > 1) {
+      debugOut << "\033[32m";
+      debugOut << "updated state: "; stateVector.Print();
+      debugOut << "updated cov: "; cov.Print();
+    }
 
-      if (debugLvl_ > 1) {
-        debugOut << "\033[32m";
-        debugOut << "updated state: "; stateVector.Print();
-        debugOut << "updated cov: "; TMatrixDSym(TMatrixDSym::kAtA, S).Print() ;
-      }
+    TVectorD resNew(measurement - H->Hv(stateVector));
+    if (debugLvl_ > 1) {
+      debugOut << "Residual New = (" << resNew(0);
 
-      res -= H->Hv(update);
-      if (debugLvl_ > 1) {
-        debugOut << "Residual New = (" << res(0);
+      if (resNew.GetNrows() > 1)
+        debugOut << ", " << resNew(1);
+      debugOut << ")" << std::endl;
+      debugOut << "\033[0m";
+    }
 
-        if (res.GetNrows() > 1)
-          debugOut << ", " << res(1);
-        debugOut << ")" << std::endl;
-        debugOut << "\033[0m";
-      }
+    // Calculate chi²
+    TMatrixDSym HCHt(cov);
+    H->HMHt(HCHt);
+    HCHt -= V;
+    HCHt *= -1;
 
-      // Calculate chi²
-      //
-      // There's certainly a formula using matrix square roots, but
-      // this is not so important numerically, so we stick with the
-      // simpler formula.
-      TMatrixDSym HCHt(TMatrixDSym::kAtA, H->MHt(S));
-      HCHt -= V;
-      HCHt *= -1;
+    tools::invertMatrix(HCHt);
 
-      tools::invertMatrix(HCHt);
+    chi2inc += HCHt.Similarity(resNew);
 
-      chi2inc += HCHt.Similarity(res);
+    if (!canIgnoreWeights()) {
+      ndfInc += weight * measurement.GetNrows();
+    }
+    else
+      ndfInc += measurement.GetNrows();
 
-      if (!canIgnoreWeights()) {
-        ndfInc += weight * measurement.GetNrows();
-      }
-      else
-        ndfInc += measurement.GetNrows();
-
-      if (debugLvl_ > 0) {
-        debugOut << "chi² increment = " << chi2inc << std::endl;
-      }
-    } // end loop over measurements
-
-    cov = TMatrixDSym(TMatrixDSym::kAtA, S);
-  }
+    if (debugLvl_ > 0) {
+      debugOut << "chi² increment = " << chi2inc << std::endl;
+    }
+  } // end loop over measurements
 
   currentState_->setStateCovPlane(stateVector, cov, plane);
   currentState_->setAuxInfo(state->getAuxInfo());

@@ -32,8 +32,6 @@
 #include "AbsHMatrix.h"
 #include "Exception.h"
 
-// Use Cramer inversion for small matrices?
-static const bool useCramer = false;
 
 namespace genfit {
 
@@ -67,32 +65,6 @@ void tools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* deter
     inv(0,0) =             det * mat(1,1);
     inv(0,1) = inv(1,0) = -det * mat(1,0);
     inv(1,1) =             det * mat(0,0);
-    return;
-  }
-
-
-  if (useCramer && mat.GetNrows() <= 6){
-    Bool_t (*inversion)(TMatrixDSym&, Double_t*) = 0;
-    inv.ResizeTo(mat);
-    inv = mat;
-    switch (mat.GetNrows()) {
-    case 3:
-      inversion = TMatrixTSymCramerInv::Inv3x3; break;
-    case 4:
-      inversion = TMatrixTSymCramerInv::Inv4x4; break;
-    case 5:
-      inversion = TMatrixTSymCramerInv::Inv5x5; break;
-    case 6:
-      inversion = TMatrixTSymCramerInv::Inv6x6; break;
-    }
-
-    Bool_t success = inversion(inv, determinant);
-    if (!success){
-      Exception e("Tools::invertMatrix() - cannot invert matrix, determinant = 0",
-          __LINE__,__FILE__);
-      e.setFatal();
-      throw e;
-    }
     return;
   }
 
@@ -149,29 +121,6 @@ void tools::invertMatrix(TMatrixDSym& mat, double* determinant){
     arr[0] = temp[0];
     arr[1] = arr[2] = temp[1];
     arr[3] = temp[2];
-    return;
-  }
-
-  if (useCramer && mat.GetNrows() <= 6){
-    Bool_t (*inversion)(TMatrixDSym&, Double_t*) = 0;
-    switch (mat.GetNrows()) {
-    case 3:
-      inversion = TMatrixTSymCramerInv::Inv3x3; break;
-    case 4:
-      inversion = TMatrixTSymCramerInv::Inv4x4; break;
-    case 5:
-      inversion = TMatrixTSymCramerInv::Inv5x5; break;
-    case 6:
-      inversion = TMatrixTSymCramerInv::Inv6x6; break;
-    }
-
-    Bool_t success = inversion(mat, determinant);
-    if (!success){
-      Exception e("Tools::invertMatrix() - cannot invert matrix, determinant = 0",
-          __LINE__,__FILE__);
-      e.setFatal();
-      throw e;
-    }
     return;
   }
 
@@ -384,60 +333,6 @@ void tools::QR(TMatrixD& A, TVectorD& b)
       ak[i*nCols + j] = 0.;
 }
 
-// This averages the covariance matrices C1, C2 in a numerically
-// stable way by using matrix square roots.  No optimizations
-// performed, so use with care.
-void tools::safeAverage(const TMatrixDSym& C1, const TMatrixDSym& C2,
-			TMatrixDSym& result)
-{
-  /*
-    The algorithm proceeds as follows:
-    write C1 = S1 S1' (prime for transpose),
-          C2 = S2 S2'
-    Then the inverse of the average can be written as ("." for matrix
-    multiplication)
-         C^-1 = ((S1'^-1, S2'^-1) . (S1'^-1) )
-                (                   (S2'^-1) )
-    Inserting an orthogonal matrix T in the middle:
-         C^-1 = ((S1'^-1, S2'^-1) . T . T' . (S1'^-1) )
-                (                            (S2'^-1) )
-    doesn't change this because T.T' = 1.
-    Now choose T s.t. T'.(S1'^-1, S2'^-1)' is an upper right matrix.  We
-    use Tools::QR for the purpose, as we don't actually need T.
-
-    Then the inverse needed to obtain the covariance matrix can be
-    obtained by inverting the upper right matrix, which is squared to
-    obtained the new covariance matrix.  */
-  TDecompChol dec1(C1);
-  dec1.Decompose();
-  TDecompChol dec2(C2);
-  dec2.Decompose();
-
-  const TMatrixD& S1 = dec1.GetU();
-  const TMatrixD& S2 = dec2.GetU();
-
-  TMatrixD S1inv, S2inv;
-  transposedInvert(S1, S1inv);
-  transposedInvert(S2, S2inv);
-
-  TMatrixD A(2 * S1.GetNrows(), S1.GetNcols());
-  for (int i = 0; i < S1.GetNrows(); ++i) {
-    for (int j = 0; j < S2.GetNcols(); ++j) {
-      A(i, j) = S1inv(i, j);
-      A(i + S1.GetNrows(), j) = S2inv(i, j);
-    }
-  }
-
-  QR(A);
-  A.ResizeTo(S1.GetNrows(), S1.GetNrows());
-
-  TMatrixD inv;
-  transposedInvert(A, inv);
-
-  result.ResizeTo(inv.GetNcols(), inv.GetNcols());
-  result = TMatrixDSym(TMatrixDSym::kAtA, inv);
-}
-
 
 void
 tools::noiseMatrixSqrt(const TMatrixDSym& noise,
@@ -472,16 +367,6 @@ tools::noiseMatrixSqrt(const TMatrixDSym& noise,
   // noiseSqrt * noiseSqrt' = noise
 }
 
-// Transports the state.
-void
-tools::kalmanPrediction(const TVectorD& x,
-			const TVectorD& delta, const TMatrixD& F,
-			TVectorD& xNew)
-{
-  xNew = x;
-  xNew *= F;
-  xNew += delta;
-}
 
 // Transports the square root of the covariance matrix using a
 // square-root formalism
@@ -537,43 +422,5 @@ tools::kalmanUpdateSqrt(const TMatrixD& S,
   tools::transposedForwardSubstitution(a, update);
   update *= K;
 }
-
-
-// Kalman transport + measurement update
-// S : covariance square root (pre-prediction)
-// transport matrix F and noise matrix square root Q
-// res, R, H : residual, measurement covariance square root, H matrix of the measurement
-// The new state is xnew = F*xold + update
-void
-tools::kalmanPredictionUpdateSqrt(const TMatrixD& S,
-				  const TMatrixD& F, const TMatrixD& Q,
-				  const TVectorD& res, const TMatrixD& R,
-				  const AbsHMatrix* H,
-				  TVectorD& update, TMatrixD& SNew)
-{
-  TMatrixD pre(S.GetNrows() + Q.GetNrows() + R.GetNrows(),
-	       S.GetNcols() + R.GetNcols());
-  TMatrixD SFt(S, TMatrixD::kMultTranspose, F);
-  pre.SetSub(                        0,  0,          R);   /*           upper right block is zero               */
-  pre.SetSub(             R.GetNrows(),  0,H->MHt(SFt));   pre.SetSub(R.GetNrows(),             R.GetNcols(),SFt);
-  if (Q.GetNcols() > 0) { // needed to suppress warnings when inserting an empty Q
-    TMatrixD Qt(TMatrixD::kTransposed, Q);
-    pre.SetSub(S.GetNrows()+R.GetNrows(),0,H->MHt(Qt));    pre.SetSub(S.GetNrows()+R.GetNrows(),R.GetNcols(), Qt);
-  }
-
-  tools::QR(pre);
-  const TMatrixD& r = pre;
-
-  TMatrixD a(r.GetSub(0, R.GetNrows()-1, 0, R.GetNcols()-1));
-  TMatrixD K(TMatrixD::kTransposed, r.GetSub(0, R.GetNrows()-1, R.GetNcols(), pre.GetNcols()-1));
-  SNew = r.GetSub(R.GetNrows(), R.GetNrows() + S.GetNrows() - 1,
-		  R.GetNcols(), pre.GetNcols() - 1);
-
-  update.ResizeTo(res);
-  update = res;
-  tools::transposedForwardSubstitution(a, update);
-  update *= K;
-}
-
 
 } /* End of namespace genfit */

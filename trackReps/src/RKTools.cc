@@ -25,22 +25,10 @@
 
 #include <iostream>
 
-static const int flagSlowMatrix = 1 << 10; // Replace custom matrix multiplications with general equivalents
-static const int debugFlags = 0;// | flagSlowMatrix;
-
 namespace genfit {
 
 
 void RKTools::J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7){
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixD JpM(5, 7, (const double*)&J_pM);
-    TMatrixDSym J5(5, (const double*)&cov5);
-    J5.SimilarityT(JpM);
-    std::copy(J5.GetMatrixArray(), J5.GetMatrixArray() + 7*7, out7.begin());
-    return;
-  }
-
-
   // 5D -> 7D
 
   // J_pM
@@ -122,14 +110,6 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7){
 
 
 void RKTools::J_pMTxcov5xJ_pM(const M5x6& J_pM, const M5x5& cov5, M6x6& out6){
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixD JpM(5, 6, (const double*)&J_pM);
-    TMatrixDSym J5(5, (const double*)&cov5);
-    J5.SimilarityT(JpM);
-    std::copy(J5.GetMatrixArray(), J5.GetMatrixArray() + 6*6, out6.begin());
-    return;
-  }
-
   // 5D -> 6D
 
   // J_pM
@@ -208,15 +188,6 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x6& J_pM, const M5x5& cov5, M6x6& out6){
 
 void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5)
 {
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixD JMp(7, 5, (const double*)&J_Mp);
-    TMatrixD J7(7, 7, (const double*)&cov7);
-    TMatrixD result(JMp, TMatrixD::kTransposeMult,
-                    TMatrixD(J7, TMatrixD::kMult, JMp));
-    std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 5*5, out5.begin());
-    return;
-  }
-
   // 7D -> 5D
 
   // J_Mp
@@ -289,15 +260,6 @@ void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5)
 
 void RKTools::J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5)
 {
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixD JMp(6, 5, (const double*)&J_Mp);
-    TMatrixDSym J7(6, (const double*)&cov6);
-    TMatrixD result(JMp, TMatrixD::kTransposeMult,
-                    TMatrixD(J7, TMatrixD::kMult, JMp));
-    std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 5*5, out5.begin());
-    return;
-  }
-
   // 6D -> 5D
 
   // J_Mp
@@ -370,179 +332,12 @@ void RKTools::J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5)
 
 }
 
-
-void RKTools::J_MMTxcov7xJ_MM(const M7x7& J_MM, M7x7& cov7){
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixD JMM(7, 7, (const double*)&J_MM);
-    TMatrixDSym J7(7, (const double*)&cov7);
-    J7.SimilarityT(JMM);
-    std::copy(J7.GetMatrixArray(), J7.GetMatrixArray() + 7*7, cov7.begin());
-    return;
-  }
-
-  // it is assumed that the last column of J_MM is [0,0,0,0,0,0,1]
-
-  double JTC0  = J_MM[0] * cov7[0] + J_MM[7] * cov7[7] + J_MM[14] * cov7[14] + J_MM[21] * cov7[21] + J_MM[28] * cov7[28] + J_MM[35] * cov7[35] + J_MM[42] * cov7[42];
-  double JTC1  = J_MM[0] * cov7[7] + J_MM[7] * cov7[7+1] + J_MM[14] * cov7[14+1] + J_MM[21] * cov7[21+1] + J_MM[28] * cov7[28+1] + J_MM[35] * cov7[35+1] + J_MM[42] * cov7[42+1];
-  double JTC2  = J_MM[0] * cov7[14] + J_MM[7] * cov7[14+1] + J_MM[14] * cov7[14+2] + J_MM[21] * cov7[21+2] + J_MM[28] * cov7[28+2] + J_MM[35] * cov7[35+2] + J_MM[42] * cov7[42+2];
-  double JTC3  = J_MM[0] * cov7[21] + J_MM[7] * cov7[21+1] + J_MM[14] * cov7[21+2] + J_MM[21] * cov7[21+3] + J_MM[28] * cov7[28+3] + J_MM[35] * cov7[35+3] + J_MM[42] * cov7[42+3];
-  double JTC4  = J_MM[0] * cov7[28] + J_MM[7] * cov7[28+1] + J_MM[14] * cov7[28+2] + J_MM[21] * cov7[28+3] + J_MM[28] * cov7[28+4] + J_MM[35] * cov7[35+4] + J_MM[42] * cov7[42+4];
-  double JTC5  = J_MM[0] * cov7[35] + J_MM[7] * cov7[35+1] + J_MM[14] * cov7[35+2] + J_MM[21] * cov7[35+3] + J_MM[28] * cov7[35+4] + J_MM[35] * cov7[35+5] + J_MM[42] * cov7[42+5];
-  double JTC6  = J_MM[0] * cov7[42] + J_MM[7] * cov7[42+1] + J_MM[14] * cov7[42+2] + J_MM[21] * cov7[42+3] + J_MM[28] * cov7[42+4] + J_MM[35] * cov7[42+5] + J_MM[42] * cov7[42+6];
-
-  double JTC7  = J_MM[1] * cov7[0] + J_MM[7+1] * cov7[7] + J_MM[14+1] * cov7[14] + J_MM[21+1] * cov7[21] + J_MM[28+1] * cov7[28] + J_MM[35+1] * cov7[35] + J_MM[42+1] * cov7[42];
-  double JTC8  = J_MM[1] * cov7[7] + J_MM[7+1] * cov7[7+1] + J_MM[14+1] * cov7[14+1] + J_MM[21+1] * cov7[21+1] + J_MM[28+1] * cov7[28+1] + J_MM[35+1] * cov7[35+1] + J_MM[42+1] * cov7[42+1];
-  double JTC9  = J_MM[1] * cov7[14] + J_MM[7+1] * cov7[14+1] + J_MM[14+1] * cov7[14+2] + J_MM[21+1] * cov7[21+2] + J_MM[28+1] * cov7[28+2] + J_MM[35+1] * cov7[35+2] + J_MM[42+1] * cov7[42+2];
-  double JTC10 = J_MM[1] * cov7[21] + J_MM[7+1] * cov7[21+1] + J_MM[14+1] * cov7[21+2] + J_MM[21+1] * cov7[21+3] + J_MM[28+1] * cov7[28+3] + J_MM[35+1] * cov7[35+3] + J_MM[42+1] * cov7[42+3];
-  double JTC11 = J_MM[1] * cov7[28] + J_MM[7+1] * cov7[28+1] + J_MM[14+1] * cov7[28+2] + J_MM[21+1] * cov7[28+3] + J_MM[28+1] * cov7[28+4] + J_MM[35+1] * cov7[35+4] + J_MM[42+1] * cov7[42+4];
-  double JTC12 = J_MM[1] * cov7[35] + J_MM[7+1] * cov7[35+1] + J_MM[14+1] * cov7[35+2] + J_MM[21+1] * cov7[35+3] + J_MM[28+1] * cov7[35+4] + J_MM[35+1] * cov7[35+5] + J_MM[42+1] * cov7[42+5];
-  double JTC13 = J_MM[1] * cov7[42] + J_MM[7+1] * cov7[42+1] + J_MM[14+1] * cov7[42+2] + J_MM[21+1] * cov7[42+3] + J_MM[28+1] * cov7[42+4] + J_MM[35+1] * cov7[42+5] + J_MM[42+1] * cov7[42+6];
-
-  double JTC14 = J_MM[2] * cov7[0] + J_MM[7+2] * cov7[7] + J_MM[14+2] * cov7[14] + J_MM[21+2] * cov7[21] + J_MM[28+2] * cov7[28] + J_MM[35+2] * cov7[35] + J_MM[42+2] * cov7[42];
-  double JTC15 = J_MM[2] * cov7[7] + J_MM[7+2] * cov7[7+1] + J_MM[14+2] * cov7[14+1] + J_MM[21+2] * cov7[21+1] + J_MM[28+2] * cov7[28+1] + J_MM[35+2] * cov7[35+1] + J_MM[42+2] * cov7[42+1];
-  double JTC16 = J_MM[2] * cov7[14] + J_MM[7+2] * cov7[14+1] + J_MM[14+2] * cov7[14+2] + J_MM[21+2] * cov7[21+2] + J_MM[28+2] * cov7[28+2] + J_MM[35+2] * cov7[35+2] + J_MM[42+2] * cov7[42+2];
-  double JTC17 = J_MM[2] * cov7[21] + J_MM[7+2] * cov7[21+1] + J_MM[14+2] * cov7[21+2] + J_MM[21+2] * cov7[21+3] + J_MM[28+2] * cov7[28+3] + J_MM[35+2] * cov7[35+3] + J_MM[42+2] * cov7[42+3];
-  double JTC18 = J_MM[2] * cov7[28] + J_MM[7+2] * cov7[28+1] + J_MM[14+2] * cov7[28+2] + J_MM[21+2] * cov7[28+3] + J_MM[28+2] * cov7[28+4] + J_MM[35+2] * cov7[35+4] + J_MM[42+2] * cov7[42+4];
-  double JTC19 = J_MM[2] * cov7[35] + J_MM[7+2] * cov7[35+1] + J_MM[14+2] * cov7[35+2] + J_MM[21+2] * cov7[35+3] + J_MM[28+2] * cov7[35+4] + J_MM[35+2] * cov7[35+5] + J_MM[42+2] * cov7[42+5];
-  double JTC20 = J_MM[2] * cov7[42] + J_MM[7+2] * cov7[42+1] + J_MM[14+2] * cov7[42+2] + J_MM[21+2] * cov7[42+3] + J_MM[28+2] * cov7[42+4] + J_MM[35+2] * cov7[42+5] + J_MM[42+2] * cov7[42+6];
-
-  double JTC21 = J_MM[3] * cov7[0] + J_MM[7+3] * cov7[7] + J_MM[14+3] * cov7[14] + J_MM[21+3] * cov7[21] + J_MM[28+3] * cov7[28] + J_MM[35+3] * cov7[35] + J_MM[42+3] * cov7[42];
-  double JTC22 = J_MM[3] * cov7[7] + J_MM[7+3] * cov7[7+1] + J_MM[14+3] * cov7[14+1] + J_MM[21+3] * cov7[21+1] + J_MM[28+3] * cov7[28+1] + J_MM[35+3] * cov7[35+1] + J_MM[42+3] * cov7[42+1];
-  double JTC23 = J_MM[3] * cov7[14] + J_MM[7+3] * cov7[14+1] + J_MM[14+3] * cov7[14+2] + J_MM[21+3] * cov7[21+2] + J_MM[28+3] * cov7[28+2] + J_MM[35+3] * cov7[35+2] + J_MM[42+3] * cov7[42+2];
-  double JTC24 = J_MM[3] * cov7[21] + J_MM[7+3] * cov7[21+1] + J_MM[14+3] * cov7[21+2] + J_MM[21+3] * cov7[21+3] + J_MM[28+3] * cov7[28+3] + J_MM[35+3] * cov7[35+3] + J_MM[42+3] * cov7[42+3];
-  double JTC25 = J_MM[3] * cov7[28] + J_MM[7+3] * cov7[28+1] + J_MM[14+3] * cov7[28+2] + J_MM[21+3] * cov7[28+3] + J_MM[28+3] * cov7[28+4] + J_MM[35+3] * cov7[35+4] + J_MM[42+3] * cov7[42+4];
-  double JTC26 = J_MM[3] * cov7[35] + J_MM[7+3] * cov7[35+1] + J_MM[14+3] * cov7[35+2] + J_MM[21+3] * cov7[35+3] + J_MM[28+3] * cov7[35+4] + J_MM[35+3] * cov7[35+5] + J_MM[42+3] * cov7[42+5];
-  double JTC27 = J_MM[3] * cov7[42] + J_MM[7+3] * cov7[42+1] + J_MM[14+3] * cov7[42+2] + J_MM[21+3] * cov7[42+3] + J_MM[28+3] * cov7[42+4] + J_MM[35+3] * cov7[42+5] + J_MM[42+3] * cov7[42+6];
-
-  double JTC28 = J_MM[4] * cov7[0] + J_MM[7+4] * cov7[7] + J_MM[14+4] * cov7[14] + J_MM[21+4] * cov7[21] + J_MM[28+4] * cov7[28] + J_MM[35+4] * cov7[35] + J_MM[42+4] * cov7[42];
-  double JTC29 = J_MM[4] * cov7[7] + J_MM[7+4] * cov7[7+1] + J_MM[14+4] * cov7[14+1] + J_MM[21+4] * cov7[21+1] + J_MM[28+4] * cov7[28+1] + J_MM[35+4] * cov7[35+1] + J_MM[42+4] * cov7[42+1];
-  double JTC30 = J_MM[4] * cov7[14] + J_MM[7+4] * cov7[14+1] + J_MM[14+4] * cov7[14+2] + J_MM[21+4] * cov7[21+2] + J_MM[28+4] * cov7[28+2] + J_MM[35+4] * cov7[35+2] + J_MM[42+4] * cov7[42+2];
-  double JTC31 = J_MM[4] * cov7[21] + J_MM[7+4] * cov7[21+1] + J_MM[14+4] * cov7[21+2] + J_MM[21+4] * cov7[21+3] + J_MM[28+4] * cov7[28+3] + J_MM[35+4] * cov7[35+3] + J_MM[42+4] * cov7[42+3];
-  double JTC32 = J_MM[4] * cov7[28] + J_MM[7+4] * cov7[28+1] + J_MM[14+4] * cov7[28+2] + J_MM[21+4] * cov7[28+3] + J_MM[28+4] * cov7[28+4] + J_MM[35+4] * cov7[35+4] + J_MM[42+4] * cov7[42+4];
-  double JTC33 = J_MM[4] * cov7[35] + J_MM[7+4] * cov7[35+1] + J_MM[14+4] * cov7[35+2] + J_MM[21+4] * cov7[35+3] + J_MM[28+4] * cov7[35+4] + J_MM[35+4] * cov7[35+5] + J_MM[42+4] * cov7[42+5];
-  double JTC34 = J_MM[4] * cov7[42] + J_MM[7+4] * cov7[42+1] + J_MM[14+4] * cov7[42+2] + J_MM[21+4] * cov7[42+3] + J_MM[28+4] * cov7[42+4] + J_MM[35+4] * cov7[42+5] + J_MM[42+4] * cov7[42+6];
-
-  double out7_40 = (J_MM[5] * cov7[0] + J_MM[7+5] * cov7[7] + J_MM[14+5] * cov7[14] + J_MM[21+5] * cov7[21] + J_MM[28+5] * cov7[28] + J_MM[35+5] * cov7[35] + J_MM[42+5] * cov7[42]) * J_MM[5] + (J_MM[5] * cov7[7] + J_MM[7+5] * cov7[7+1] + J_MM[14+5] * cov7[14+1] + J_MM[21+5] * cov7[21+1] + J_MM[28+5] * cov7[28+1] + J_MM[35+5] * cov7[35+1] + J_MM[42+5] * cov7[42+1]) * J_MM[7+5] + (J_MM[5] * cov7[14] + J_MM[7+5] * cov7[14+1] + J_MM[14+5] * cov7[14+2] + J_MM[21+5] * cov7[21+2] + J_MM[28+5] * cov7[28+2] + J_MM[35+5] * cov7[35+2] + J_MM[42+5] * cov7[42+2]) * J_MM[14+5] + (J_MM[5] * cov7[21] + J_MM[7+5] * cov7[21+1] + J_MM[14+5] * cov7[21+2] + J_MM[21+5] * cov7[21+3] + J_MM[28+5] * cov7[28+3] + J_MM[35+5] * cov7[35+3] + J_MM[42+5] * cov7[42+3]) * J_MM[21+5] + (J_MM[5] * cov7[28] + J_MM[7+5] * cov7[28+1] + J_MM[14+5] * cov7[28+2] + J_MM[21+5] * cov7[28+3] + J_MM[28+5] * cov7[28+4] + J_MM[35+5] * cov7[35+4] + J_MM[42+5] * cov7[42+4]) * J_MM[28+5] + (J_MM[5] * cov7[35] + J_MM[7+5] * cov7[35+1] + J_MM[14+5] * cov7[35+2] + J_MM[21+5] * cov7[35+3] + J_MM[28+5] * cov7[35+4] + J_MM[35+5] * cov7[35+5] + J_MM[42+5] * cov7[42+5]) * J_MM[35+5] + (J_MM[5] * cov7[42] + J_MM[7+5] * cov7[42+1] + J_MM[14+5] * cov7[42+2] + J_MM[21+5] * cov7[42+3] + J_MM[28+5] * cov7[42+4] + J_MM[35+5] * cov7[42+5] + J_MM[42+5] * cov7[42+6]) * J_MM[42+5];
-
-  // last row
-  cov7[6]    = JTC6;
-  cov7[7+6]  = JTC13;
-  cov7[14+6] = JTC20;
-  cov7[21+6] = JTC27;
-  cov7[28+6] = JTC34;
-  cov7[35+6] = J_MM[5] * cov7[42] + J_MM[7+5] * cov7[42+1] + J_MM[14+5] * cov7[42+2] + J_MM[21+5] * cov7[42+3] + J_MM[28+5] * cov7[42+4] + J_MM[35+5] * cov7[42+5] + J_MM[42+5] * cov7[42+6];
-  //cov7[42+6] = cov7[42+6];
-
-  // loops are vectorizable by the compiler!
-  for (int i=0; i<6; ++i) cov7[i]    = JTC0  * J_MM[i] + JTC1  * J_MM[7+i] + JTC2  * J_MM[14+i] + JTC3  * J_MM[21+i] + JTC4  * J_MM[28+i] + JTC5  * J_MM[35+i] + JTC6  * J_MM[42+i];
-  for (int i=1; i<6; ++i) cov7[7+i]  = JTC7  * J_MM[i] + JTC8  * J_MM[7+i] + JTC9  * J_MM[14+i] + JTC10 * J_MM[21+i] + JTC11 * J_MM[28+i] + JTC12 * J_MM[35+i] + JTC13 * J_MM[42+i];
-  for (int i=2; i<6; ++i) cov7[14+i] = JTC14 * J_MM[i] + JTC15 * J_MM[7+i] + JTC16 * J_MM[14+i] + JTC17 * J_MM[21+i] + JTC18 * J_MM[28+i] + JTC19 * J_MM[35+i] + JTC20 * J_MM[42+i];
-  for (int i=3; i<6; ++i) cov7[21+i] = JTC21 * J_MM[i] + JTC22 * J_MM[7+i] + JTC23 * J_MM[14+i] + JTC24 * J_MM[21+i] + JTC25 * J_MM[28+i] + JTC26 * J_MM[35+i] + JTC27 * J_MM[42+i];
-  for (int i=4; i<6; ++i) cov7[28+i] = JTC28 * J_MM[i] + JTC29 * J_MM[7+i] + JTC30 * J_MM[14+i] + JTC31 * J_MM[21+i] + JTC32 * J_MM[28+i] + JTC33 * J_MM[35+i] + JTC34 * J_MM[42+i];
-  cov7[35+5] = out7_40;
-
-  // symmetric part
-  cov7[7]  = cov7[1];
-  cov7[14] = cov7[2];  cov7[14+1] = cov7[9];
-  cov7[21] = cov7[3];  cov7[21+1] = cov7[10];  cov7[21+2] = cov7[17];
-  cov7[28] = cov7[4];  cov7[28+1] = cov7[11];  cov7[28+2] = cov7[18];  cov7[28+3] = cov7[25];
-  cov7[35] = cov7[5];  cov7[35+1] = cov7[12];  cov7[35+2] = cov7[19];  cov7[35+3] = cov7[26];  cov7[35+4] = cov7[33];
-  cov7[42] = cov7[6];  cov7[42+1] = cov7[13];  cov7[42+2] = cov7[20];  cov7[42+3] = cov7[27];  cov7[42+4] = cov7[34];  cov7[42+5] = cov7[41];
-
-}
-
-
-void RKTools::J_MMxJ_MM(M7x7& J_MM, const M7x7& J_MM_old){
-
-  // J and J_old are
-  // 1 0 0 0 0 0 0
-  // 0 1 0 0 0 0 0
-  // 0 0 1 0 0 0 0
-  // x x x x x x 0
-  // x x x x x x 0
-  // x x x x x x 0
-  // x x x x x x x
-
-  M7x7 J_MM_temp = J_MM;
-
-  /*J_MM[0] = 1;
-  J_MM[1] = 0;
-  J_MM[2] = 0;
-  J_MM[3] = 0;
-  J_MM[4] = 0;
-  J_MM[5] = 0;
-  J_MM[6] = 0;
-
-  J_MM[1*7+0] = 0;
-  J_MM[1*7+1] = 1;
-  J_MM[1*7+2] = 0;
-  J_MM[1*7+3] = 0;
-  J_MM[1*7+4] = 0;
-  J_MM[1*7+5] = 0;
-  J_MM[1*7+6] = 0;
-
-  J_MM[2*7+0] = 0;
-  J_MM[2*7+1] = 0;
-  J_MM[2*7+2] = 1;
-  J_MM[2*7+3] = 0;
-  J_MM[2*7+4] = 0;
-  J_MM[2*7+5] = 0;
-  J_MM[2*7+6] = 0;*/
-
-  J_MM[21] = J_MM_old[21] + J_MM_old[21+3] * J_MM_temp[21] + J_MM_old[21+4] * J_MM_temp[28] + J_MM_old[21+5] * J_MM_temp[35];
-  J_MM[21+1] = J_MM_old[21+1] + J_MM_old[21+3] * J_MM_temp[21+1] + J_MM_old[21+4] * J_MM_temp[28+1] + J_MM_old[21+5] * J_MM_temp[35+1];
-  J_MM[21+2] = J_MM_old[21+2] + J_MM_old[21+3] * J_MM_temp[21+2] + J_MM_old[21+4] * J_MM_temp[28+2] + J_MM_old[21+5] * J_MM_temp[35+2];
-  J_MM[21+3] = J_MM_old[21+3] * J_MM_temp[21+3] + J_MM_old[21+4] * J_MM_temp[28+3] + J_MM_old[21+5] * J_MM_temp[35+3];
-  J_MM[21+4] = J_MM_old[21+3] * J_MM_temp[21+4] + J_MM_old[21+4] * J_MM_temp[28+4] + J_MM_old[21+5] * J_MM_temp[35+4];
-  J_MM[21+5] = J_MM_old[21+3] * J_MM_temp[21+5] + J_MM_old[21+4] * J_MM_temp[28+5] + J_MM_old[21+5] * J_MM_temp[35+5];
-  //J_MM[21+6] = 0;
-
-  J_MM[28] = J_MM_old[28] + J_MM_old[28+3] * J_MM_temp[21] + J_MM_old[28+4] * J_MM_temp[28] + J_MM_old[28+5] * J_MM_temp[35];
-  J_MM[28+1] = J_MM_old[28+1] + J_MM_old[28+3] * J_MM_temp[21+1] + J_MM_old[28+4] * J_MM_temp[28+1] + J_MM_old[28+5] * J_MM_temp[35+1];
-  J_MM[28+2] = J_MM_old[28+2] + J_MM_old[28+3] * J_MM_temp[21+2] + J_MM_old[28+4] * J_MM_temp[28+2] + J_MM_old[28+5] * J_MM_temp[35+2];
-  J_MM[28+3] = J_MM_old[28+3] * J_MM_temp[21+3] + J_MM_old[28+4] * J_MM_temp[28+3] + J_MM_old[28+5] * J_MM_temp[35+3];
-  J_MM[28+4] = J_MM_old[28+3] * J_MM_temp[21+4] + J_MM_old[28+4] * J_MM_temp[28+4] + J_MM_old[28+5] * J_MM_temp[35+4];
-  J_MM[28+5] = J_MM_old[28+3] * J_MM_temp[21+5] + J_MM_old[28+4] * J_MM_temp[28+5] + J_MM_old[28+5] * J_MM_temp[35+5];
-  //J_MM[28+6] = 0;
-
-  J_MM[35] = J_MM_old[35] + J_MM_old[35+3] * J_MM_temp[21] + J_MM_old[35+4] * J_MM_temp[28] + J_MM_old[35+5] * J_MM_temp[35] ;
-  J_MM[35+1] = J_MM_old[35+1] + J_MM_old[35+3] * J_MM_temp[21+1] + J_MM_old[35+4] * J_MM_temp[28+1] + J_MM_old[35+5] * J_MM_temp[35+1];
-  J_MM[35+2] = J_MM_old[35+2] + J_MM_old[35+3] * J_MM_temp[21+2] + J_MM_old[35+4] * J_MM_temp[28+2] + J_MM_old[35+5] * J_MM_temp[35+2];
-  J_MM[35+3] = J_MM_old[35+3] * J_MM_temp[21+3] + J_MM_old[35+4] * J_MM_temp[28+3] + J_MM_old[35+5] * J_MM_temp[35+3];
-  J_MM[35+4] = J_MM_old[35+3] * J_MM_temp[21+4] + J_MM_old[35+4] * J_MM_temp[28+4] + J_MM_old[35+5] * J_MM_temp[35+4];
-  J_MM[35+5] = J_MM_old[35+3] * J_MM_temp[21+5] + J_MM_old[35+4] * J_MM_temp[28+5] + J_MM_old[35+5] * J_MM_temp[35+5];
-  //J_MM[35+6] = 0;
-
-  J_MM[42] = J_MM_old[42] + J_MM_old[42+3] * J_MM_temp[21] + J_MM_old[42+4] * J_MM_temp[28] + J_MM_old[42+5] * J_MM_temp[35] + J_MM_old[42+6] * J_MM_temp[42];
-  J_MM[42+1] = J_MM_old[42+1] + J_MM_old[42+3] * J_MM_temp[21+1] + J_MM_old[42+4] * J_MM_temp[28+1] + J_MM_old[42+5] * J_MM_temp[35+1] + J_MM_old[42+6] * J_MM_temp[42+1];
-  J_MM[42+2] = J_MM_old[42+2] + J_MM_old[42+3] * J_MM_temp[21+2] + J_MM_old[42+4] * J_MM_temp[28+2] + J_MM_old[42+5] * J_MM_temp[35+2] + J_MM_old[42+6] * J_MM_temp[42+2];
-  J_MM[42+3] = J_MM_old[42+3] * J_MM_temp[21+3] + J_MM_old[42+4] * J_MM_temp[28+3] + J_MM_old[42+5] * J_MM_temp[35+3] + J_MM_old[42+6] * J_MM_temp[42+3];
-  J_MM[42+4] = J_MM_old[42+3] * J_MM_temp[21+4] + J_MM_old[42+4] * J_MM_temp[28+4] + J_MM_old[42+5] * J_MM_temp[35+4] + J_MM_old[42+6] * J_MM_temp[42+4];
-  J_MM[42+5] = J_MM_old[42+3] * J_MM_temp[21+5] + J_MM_old[42+4] * J_MM_temp[28+5] + J_MM_old[42+5] * J_MM_temp[35+5] + J_MM_old[42+6] * J_MM_temp[42+5];
-  J_MM[42+6] = J_MM_old[42+6] * J_MM_temp[42+6];
-
-}
-
-
 void RKTools::J_pMTTxJ_MMTTxJ_MpTT(const M7x5& J_pMT, const M7x7& J_MMT, const M5x7& J_MpT, M5x5& J_pp)
 {
     // calculates  J_pp = J_pM * J_MM * J_Mp
     // input J_MMT is transposed version of actual jacobian J_MM
     // input J_pMT is transposed version of actual jacobian J_pM (Master to plane)
     // input J_MpT is transposed version of actual jacobian J_Mp (plane to Master)
-
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixD JpMT(7, 5, (const double*)&J_pMT);
-    TMatrixD J7(7, 7, (const double*)&J_MMT);
-    TMatrixD JMpT(5, 7, (const double*)&J_MpT);
-    TMatrixD result(TMatrixD::kTransposed,
-                    TMatrixD(JMpT, TMatrixD::kMult,
-                             TMatrixD(J7, TMatrixD::kMult, JpMT)));
-
-    std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 5*5, J_pp.begin());
-    return;
-  }
-
 
   // J_pMT
   // 0 0 0 x x
@@ -649,14 +444,6 @@ void RKTools::Np_N_NpT(const M7x7& Np, M7x7& N) {
 
   // calculate:
   // Np * N * Np^T
-
-  if (debugFlags & flagSlowMatrix) {
-    TMatrixDSym n(7,N.begin());
-    TMatrixD np(7,7,Np.begin());
-    n.Similarity(np);
-    std::copy(n.GetMatrixArray(), n.GetMatrixArray() + 7*7, N.begin());
-    return;
-  }
 
   double N00(N[0*7+0]), N11(N[1*7+1]), N22(N[2*7+2]), N33(N[3*7+3]), N44(N[4*7+4]), N55(N[5*7+5]);
 
