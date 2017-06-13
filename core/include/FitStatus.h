@@ -103,7 +103,9 @@ class FitStatus {
    * will return true.
    */
   bool isFitConverged(bool inAllPoints = true) const {
-    if (inAllPoints) return isFitConvergedFully_; return isFitConvergedPartially_;
+    if (inAllPoints)
+        return isFitConvergedFully_;
+    return isFitConvergedPartially_;
   }
   bool isFitConvergedFully() const {return isFitConvergedFully_;}
   bool isFitConvergedPartially() const {return isFitConvergedPartially_;}
