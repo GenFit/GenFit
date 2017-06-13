@@ -90,19 +90,23 @@ void FitStatus::Print(const Option_t*) const
   printOut << "fitStatus \n";
   if (isFitted_) {
     printOut << " track has been fitted,";
-    if (isFitConvergedFully_)
+    if (isFitConvergedFully_) {
       printOut << " fit has converged fully,";
-    else if (isFitConvergedPartially_)
+    } else if (isFitConvergedPartially_) {
       printOut << " fit has converged partially,";
-    else
+    } else {
       printOut << " fit has NOT converged,";
+    }
     printOut << " " << nFailedPoints_ << " TrackPoints could not be processed,";
-    if (trackHasChanged_) printOut << " track has changed since the fit,";
+    if (trackHasChanged_) {
+      printOut << " track has changed since the fit,";
+    }
     printOut << " fitted charge = " << charge_ << ", ";
     pruneFlags_.Print();
   }
-  else
+  else {
     printOut << " track has NOT been fitted,";
+  }
 }
 
 } /* End of namespace genfit */

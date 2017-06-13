@@ -56,8 +56,6 @@
 
 #include <memory>
 
-ClassImp(genfit::EventDisplay)
-
 namespace genfit {
 
 
