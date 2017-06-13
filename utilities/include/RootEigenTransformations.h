@@ -40,7 +40,6 @@ namespace genfit {
         for (unsigned int row=0; row<dim; ++row) {
             for (unsigned int col=0; col<dim; ++col) {
                 eigenMatrix(row, col) = rootMatrix(row, col);
-                eigenMatrix(col, row) = eigenMatrix(row, col);
             }
         }
 
@@ -54,7 +53,32 @@ namespace genfit {
         for (unsigned int row=0; row<dim; ++row) {
             for (unsigned int col=0; col<dim; ++col) {
                 rootMatrix(row, col) = eigenMatrix(row, col);
-                rootMatrix(col, row) = rootMatrix(row, col);
+            }
+        }
+
+        return rootMatrix;
+    }
+
+    template <unsigned int rows, unsigned int cols>
+    Eigen::Matrix<double, rows, cols> rootMatrixToEigenMatrix(const TMatrixD& rootMatrix) {
+        Eigen::Matrix<double, rows, cols> eigenMatrix;
+
+        for (unsigned int row=0; row<rows; ++row) {
+            for (unsigned int col=0; col<cols; ++col) {
+                eigenMatrix(row, col) = rootMatrix(row, col);
+            }
+        }
+
+        return eigenMatrix;
+    }
+
+    template <unsigned int rows, unsigned int cols>
+    TMatrixD eigenMatrixToRootMatrix(const Eigen::Matrix<double, rows, cols>& eigenMatrix) {
+        TMatrixD rootMatrix(rows, cols);
+
+        for (unsigned int row=0; row<rows; ++row) {
+            for (unsigned int col=0; col<cols; ++col) {
+                rootMatrix(row, col) = eigenMatrix(row, col);
             }
         }
 
