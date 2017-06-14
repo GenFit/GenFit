@@ -207,19 +207,10 @@ class RKTrackRep : public AbsTrackRep {
   void getState7(const StateOnPlane& state, M1x7& state7) const;
   void getState5(StateOnPlane& state, const M1x7& state7) const; // state7 must already lie on plane of state!
 
-  /// TODO: Never used, can be deleted!
-  void transformPM7(const MeasuredStateOnPlane& state,
-                    M7x7& out7x7) const;
-
   void calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
 
   void transformPM6(const MeasuredStateOnPlane& state,
                     M6x6& out6x6) const;
-
-  /// TODO: Never used, can be deleted!
-  void transformM7P(const M7x7& in7x7,
-                    const M1x7& state7,
-                    MeasuredStateOnPlane& state) const; // plane must already be set!
 
   void calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const;
 
