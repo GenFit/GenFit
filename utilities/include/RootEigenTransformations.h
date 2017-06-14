@@ -2,12 +2,14 @@
 
 #include <eigen3/Eigen/Dense>
 
+#include <cassert>
 
 namespace genfit {
 
     template <unsigned int dim>
     Eigen::Matrix<double, dim, 1> rootVectorToEigenVector(const TVectorD& rootVector) {
         const unsigned int rootVectorRows = rootVector.GetNrows();
+        assert(rootVectorRows == dim);
 
         double eigenArray[dim];
         const auto* rootArray = rootVector.GetMatrixArray();
@@ -35,6 +37,8 @@ namespace genfit {
 
     template <unsigned int dim>
     Eigen::Matrix<double, dim, dim> rootMatrixSymToEigenMatrix(const TMatrixDSym& rootMatrix) {
+        assert(rootMatrix.GetNrows() == dim);
+        assert(rootMatrix.GetNcols() == dim);
         Eigen::Matrix<double, dim, dim> eigenMatrix;
 
         for (unsigned int row=0; row<dim; ++row) {
@@ -61,6 +65,8 @@ namespace genfit {
 
     template <unsigned int rows, unsigned int cols>
     Eigen::Matrix<double, rows, cols> rootMatrixToEigenMatrix(const TMatrixD& rootMatrix) {
+        assert(rootMatrix.GetNrows() == rows);
+        assert(rootMatrix.GetNcols() == rows);
         Eigen::Matrix<double, rows, cols> eigenMatrix;
 
         for (unsigned int row=0; row<rows; ++row) {
