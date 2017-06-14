@@ -66,7 +66,7 @@ namespace genfit {
     template <unsigned int rows, unsigned int cols>
     Eigen::Matrix<double, rows, cols> rootMatrixToEigenMatrix(const TMatrixD& rootMatrix) {
         assert(rootMatrix.GetNrows() == rows);
-        assert(rootMatrix.GetNcols() == rows);
+        assert(rootMatrix.GetNcols() == cols);
         Eigen::Matrix<double, rows, cols> eigenMatrix;
 
         for (unsigned int row=0; row<rows; ++row) {
