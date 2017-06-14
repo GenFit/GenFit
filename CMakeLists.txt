@@ -320,6 +320,8 @@ IF(GTEST_FOUND)
 			gtest/TestConstField.cpp
 			gtest/TestMaterialEffects.cpp
 			gtest/TestRKTrackRep.cpp
+			gtest/TestRootEigenTransformations.cpp
+			gtest/TestRKMatrixEigenTransformations.cpp
 			)
 	TARGET_LINK_LIBRARIES(gtests ${GTEST_BOTH_LIBRARIES} ${ROOT_LIBS} ${PROJECT_NAME})  # gtest gtest_main
 	MESSAGE(STATUS  ${GTEST_INCLUDE_DIRS})
