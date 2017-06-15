@@ -143,10 +143,10 @@ public:
   /**
    * Also sets dEdx_ and E_.
    */
-  double momentumLoss(double stepSign, double mom, bool linear);
+  double momentumLoss(double stepSign, double mom, bool linear, const int pdg);
 
   //! Calculate dEdx for a given energy
-  double dEdx(double Energy) const;
+  double dEdx(double Energy, const int pdg) const;
 
 
   //! Uses Bethe Bloch formula to calculate dEdx.
@@ -179,12 +179,12 @@ public:
     * Uses a gaussian approximation (Bethe-Heitler formula with Migdal corrections).
     * For positrons, dEdx is weighed with a correction factor.
   */
-  double dEdxBrems(double mom) const;
+  double dEdxBrems(double mom, const int pdg) const;
 
   //! calculation of energy loss straggeling
   /** Can be called with any pdg, but only calculates straggeling for electrons and positrons.
    */
-  void noiseBrems(M7x7& noise, double momSquare, double betaSquare) const;
+  void noiseBrems(M7x7& noise, double momSquare, double betaSquare, const int pdg) const;
 
 
 
@@ -211,7 +211,6 @@ public:
   double radiationLength_;
   double mEE_; // mean excitation energy
 
-  int pdg_;
   int charge_;
   double mass_;
 
