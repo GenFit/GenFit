@@ -137,7 +137,7 @@ public:
   }
 
   void getMomGammaBeta(double Energy,
-                       double& mom, double& gammaSquare, double& gamma, double& betaSquare) const;
+                       double& mom, double& gammaSquare, double& gamma, double& betaSquare, const int pdg) const;
 
   //! Returns momentum loss
   /**
@@ -210,8 +210,6 @@ public:
   double matA_;
   double radiationLength_;
   double mEE_; // mean excitation energy
-
-  double mass_;
 
   int mscModelCode_; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
 

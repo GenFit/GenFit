@@ -54,7 +54,6 @@ MaterialEffects::MaterialEffects():
   matA_(0),
   radiationLength_(0),
   mEE_(0),
-  mass_(0),
   mscModelCode_(0),
   materialInterface_(nullptr),
   debugLvl_(0)
@@ -137,8 +136,6 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 
   bool doNoise(noise != nullptr);
 
-  mass_ = getParticleMass(pdg);
-
   double momLoss = 0.;
 
   for ( std::vector<RKStep>::const_iterator it = steps.begin() + materialsFXStart; it !=  steps.begin() + materialsFXStop; ++it) { // loop over steps
@@ -173,7 +170,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
       if (doNoise){
         // get values for the "effective" energy of the RK step E_
         double p(0), gammaSquare(0), gamma(0), betaSquare(0);
-        this->getMomGammaBeta(E_, p, gammaSquare, gamma, betaSquare);
+        this->getMomGammaBeta(E_, p, gammaSquare, gamma, betaSquare, pdg);
         double pSquare = p*p;
 
         if (energyLossBetheBloch_ && noiseBetheBloch_)
@@ -243,8 +240,6 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
   if (fabs(sMax) < minStep)
     return;
-
-  mass_ = getParticleMass(pdg);
 
   // make minStep
   state7[0] += limits.getStepSign() * minStep * state7[3];
@@ -341,14 +336,16 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
 
 void MaterialEffects::getMomGammaBeta(double Energy,
-                     double& mom, double& gammaSquare, double& gamma, double& betaSquare) const {
+                     double& mom, double& gammaSquare, double& gamma, double& betaSquare, const int pdg) const {
 
-  if (Energy <= mass_) {
+  const auto mass = getParticleMass(pdg);
+
+  if (Energy <= mass) {
     Exception exc("MaterialEffects::getMomGammaBeta - Energy <= mass",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
   }
-  gamma = Energy/mass_;
+  gamma = Energy/mass;
   gammaSquare = gamma*gamma;
   betaSquare = 1.-1./gammaSquare;
   mom = Energy*sqrt(betaSquare);
@@ -360,7 +357,8 @@ void MaterialEffects::getMomGammaBeta(double Energy,
 
 double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear, const int pdg)
 {
-  double E0 = hypot(mom, mass_);
+  const auto mass = getParticleMass(pdg);
+  double E0 = hypot(mom, mass);
   double step = stepSize_*stepSign; // signed
 
 
@@ -401,16 +399,16 @@ double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear, c
 
   double momLoss(0);
 
-  if (E0 - dE <= mass_) {
+  if (E0 - dE <= mass) {
     // Step would stop particle (E_kin <= 0).
     return momLoss = mom;
   }
-  else momLoss = mom - sqrt(pow(E0 - dE, 2) - mass_*mass_); // momLoss; positive for positive stepSign
+  else momLoss = mom - sqrt(pow(E0 - dE, 2) - mass*mass); // momLoss; positive for positive stepSign
 
   if (debugLvl_ > 0) {
     debugOut << "      MaterialEffects::momentumLoss: mom = " << mom << "; E0 = " << E0
         << "; dEdx = " << dEdx_
-        << "; dE = " << dE << "; mass = " << mass_ << "\n";
+        << "; dE = " << dE << "; mass = " << mass << "\n";
   }
 
   //assert(momLoss * stepSign >= 0);
@@ -422,7 +420,7 @@ double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear, c
 double MaterialEffects::dEdx(double Energy, const int pdg) const {
 
   double mom(0), gammaSquare(0), gamma(0), betaSquare(0);
-  this->getMomGammaBeta(Energy, mom, gammaSquare, gamma, betaSquare);
+  this->getMomGammaBeta(Energy, mom, gammaSquare, gamma, betaSquare, pdg);
 
   double result(0);
 
@@ -439,6 +437,8 @@ double MaterialEffects::dEdx(double Energy, const int pdg) const {
 double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double gammaSquare, const int pdg) const
 {
   static const double betaGammaMin(0.05);
+  const auto mass = getParticleMass(pdg);
+
   if (betaSquare*gammaSquare < betaGammaMin*betaGammaMin) {
     Exception exc("MaterialEffects::dEdxBetheBloch ==> beta*gamma < 0.05, Bethe-Bloch implementation not valid anymore!",__LINE__,__FILE__);
     exc.setFatal();
@@ -447,7 +447,7 @@ double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double g
   auto charge = getParticleCharge(pdg);
   // calc dEdx_, also needed in noiseBetheBloch!
   double result( 0.307075 * matZ_ / matA_ * matDensity_ / betaSquare * charge * charge);
-  double massRatio( me_ / mass_ );
+  double massRatio( me_ / mass );
   double argument( gammaSquare * betaSquare * me_ * 1.E3 * 2. / ((1.E-6 * mEE_) *
       sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio)) );
   result *= log(argument) - betaSquare; // Bethe-Bloch [MeV/cm]
@@ -463,13 +463,14 @@ double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double g
 void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare, const int pdg) const
 {
   const auto charge = getParticleCharge(pdg);
+  const auto mass = getParticleMass(pdg);
 
   // Code ported from GEANT 3 (erland.F)
 
   // ENERGY LOSS FLUCTUATIONS; calculate sigma^2(E);
   double sigma2E ( 0. );
   double zeta  ( 153.4E3 * charge * charge / betaSquare * matZ_ / matA_ * matDensity_ * fabs(stepSize_) ); // eV
-  double Emax  ( 2.E9 * me_ * betaSquare * gammaSquare / (1. + 2.*gamma * me_ / mass_ + (me_ / mass_) * (me_ / mass_)) ); // eV
+  double Emax  ( 2.E9 * me_ * betaSquare * gammaSquare / (1. + 2.*gamma * me_ / mass + (me_ / mass) * (me_ / mass)) ); // eV
   double kappa ( zeta / Emax );
 
   if (kappa > 0.01) { // Vavilov-Gaussian regime
@@ -483,7 +484,7 @@ void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare
     double e2 = 10.*matZ_ * matZ_; // eV
     double e1 = pow((I / pow(e2, f2)), 1. / f1); // eV
 
-    double mbbgg2 = 2.E9 * mass_ * betaSquare * gammaSquare; // eV
+    double mbbgg2 = 2.E9 * mass * betaSquare * gammaSquare; // eV
     double Sigma1 = dEdx_ * 1.0E9 * f1 / e1 * (log(mbbgg2 / e1) - betaSquare) / (log(mbbgg2 / I) - betaSquare) * 0.6; // 1/cm
     double Sigma2 = dEdx_ * 1.0E9 * f2 / e2 * (log(mbbgg2 / e2) - betaSquare) / (log(mbbgg2 / I) - betaSquare) * 0.6; // 1/cm
     double Sigma3 = dEdx_ * 1.0E9 * Emax / (I * (Emax + I) * log((Emax + I) / I)) * 0.4; // 1/cm
@@ -797,7 +798,7 @@ void MaterialEffects::setDebugLvl(unsigned int lvl) {
 
 
 void MaterialEffects::drawdEdx(int pdg) {
-  mass_ = getParticleMass(pdg);
+  const auto mass = getParticleMass(pdg);
 
   stepSize_ = 1;
 
@@ -815,7 +816,7 @@ void MaterialEffects::drawdEdx(int pdg) {
 
   for (int i=0; i<nSteps; ++i) {
     double mom = pow(10., log10(minMom) + i*logStepSize);
-    double E = hypot(mom, mass_);
+    double E = hypot(mom, mass);
 
     energyLossBrems_ = false;
     energyLossBetheBloch_ = true;
