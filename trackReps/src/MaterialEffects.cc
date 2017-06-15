@@ -137,6 +137,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
   bool doNoise(noise != nullptr);
 
   double momLoss = 0.;
+  const Scalar mass = getParticleMass(pdg);
 
   for ( std::vector<RKStep>::const_iterator it = steps.begin() + materialsFXStart; it !=  steps.begin() + materialsFXStop; ++it) { // loop over steps
 
@@ -170,7 +171,8 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
       if (doNoise){
         // get values for the "effective" energy of the RK step E_
         double p(0), gammaSquare(0), gamma(0), betaSquare(0);
-        this->getMomGammaBeta(E_, p, gammaSquare, gamma, betaSquare, pdg);
+        this->getMomGammaBeta(E_, mass,
+                              p, gammaSquare, gamma, betaSquare);
         double pSquare = p*p;
 
         if (energyLossBetheBloch_ && noiseBetheBloch_)
@@ -335,20 +337,18 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 }
 
 
-void MaterialEffects::getMomGammaBeta(double Energy,
-                     double& mom, double& gammaSquare, double& gamma, double& betaSquare, const int pdg) const {
+void MaterialEffects::getMomGammaBeta(const Scalar energy, const Scalar mass,
+                                      Scalar& mom, Scalar& gammaSquare, Scalar& gamma, Scalar& betaSquare) const {
 
-  const auto mass = getParticleMass(pdg);
-
-  if (Energy <= mass) {
+  if (energy <= mass) {
     Exception exc("MaterialEffects::getMomGammaBeta - Energy <= mass",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
   }
-  gamma = Energy/mass;
+  gamma = energy/mass;
   gammaSquare = gamma*gamma;
   betaSquare = 1.-1./gammaSquare;
-  mom = Energy*sqrt(betaSquare);
+  mom = energy*sqrt(betaSquare);
 }
 
 
@@ -358,6 +358,8 @@ void MaterialEffects::getMomGammaBeta(double Energy,
 double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear, const int pdg)
 {
   const auto mass = getParticleMass(pdg);
+  const auto charge = getParticleCharge(pdg);
+
   double E0 = hypot(mom, mass);
   double step = stepSize_*stepSign; // signed
 
@@ -375,20 +377,20 @@ double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear, c
   //dEdx3 = dEdx(x0 + h/2, E2); E2 = E0 + h/2 * dEdx2
   //dEdx4 = dEdx(x0 + h,   E3); E3 = E0 + h   * dEdx3
 
-  double dEdx1 = dEdx(E0, pdg); // dEdx(x0,p0)
+  double dEdx1 = dEdx(E0, mass, charge, pdg); // dEdx(x0,p0)
 
   if (linear) {
     dEdx_ = dEdx1;
   }
   else { // RK4
     double E1 = E0 - dEdx1*step/2.;
-    double dEdx2 = dEdx(E1, pdg); // dEdx(x0 + h/2, E0 + h/2 * dEdx1)
+    double dEdx2 = dEdx(E1, mass, charge, pdg); // dEdx(x0 + h/2, E0 + h/2 * dEdx1)
 
     double E2 = E0 - dEdx2*step/2.;
-    double dEdx3 = dEdx(E2, pdg); // dEdx(x0 + h/2, E0 + h/2 * dEdx2)
+    double dEdx3 = dEdx(E2, mass, charge, pdg); // dEdx(x0 + h/2, E0 + h/2 * dEdx2)
 
     double E3 = E0 - dEdx3*step;
-    double dEdx4 = dEdx(E3, pdg); // dEdx(x0 + h, E0 + h * dEdx3)
+    double dEdx4 = dEdx(E3, mass, charge, pdg); // dEdx(x0 + h, E0 + h * dEdx3)
 
     dEdx_ = (dEdx1 + 2.*dEdx2 + 2.*dEdx3 + dEdx4)/6.;
   }
@@ -417,15 +419,16 @@ double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear, c
 }
 
 
-double MaterialEffects::dEdx(double Energy, const int pdg) const {
+double MaterialEffects::dEdx(const Scalar energy, const Scalar mass, const int charge, const int pdg) const {
 
   double mom(0), gammaSquare(0), gamma(0), betaSquare(0);
-  this->getMomGammaBeta(Energy, mom, gammaSquare, gamma, betaSquare, pdg);
+  this->getMomGammaBeta(energy, mass,
+                        mom, gammaSquare, gamma, betaSquare);
 
   double result(0);
 
   if (energyLossBetheBloch_)
-    result += dEdxBetheBloch(betaSquare, gamma, gammaSquare, pdg);
+    result += dEdxBetheBloch(betaSquare, gamma, gammaSquare, mass, charge);
 
   if (energyLossBrems_)
     result += dEdxBrems(mom, pdg);
@@ -434,17 +437,16 @@ double MaterialEffects::dEdx(double Energy, const int pdg) const {
 }
 
 
-double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double gammaSquare, const int pdg) const
+double MaterialEffects::dEdxBetheBloch(const Scalar betaSquare, const Scalar gamma, const Scalar gammaSquare,
+                                       const Scalar mass, const int charge) const
 {
   static const double betaGammaMin(0.05);
-  const auto mass = getParticleMass(pdg);
 
   if (betaSquare*gammaSquare < betaGammaMin*betaGammaMin) {
     Exception exc("MaterialEffects::dEdxBetheBloch ==> beta*gamma < 0.05, Bethe-Bloch implementation not valid anymore!",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
   }
-  auto charge = getParticleCharge(pdg);
   // calc dEdx_, also needed in noiseBetheBloch!
   double result( 0.307075 * matZ_ / matA_ * matDensity_ / betaSquare * charge * charge);
   double massRatio( me_ / mass );
@@ -799,6 +801,7 @@ void MaterialEffects::setDebugLvl(unsigned int lvl) {
 
 void MaterialEffects::drawdEdx(int pdg) {
   const auto mass = getParticleMass(pdg);
+  const auto charge = getParticleCharge(pdg);
 
   stepSize_ = 1;
 
@@ -822,7 +825,7 @@ void MaterialEffects::drawdEdx(int pdg) {
     energyLossBetheBloch_ = true;
 
     try {
-      hdEdxBethe.Fill(log10(mom), dEdx(E, pdg));
+      hdEdxBethe.Fill(log10(mom), dEdx(E, mass, charge, pdg));
     }
     catch (...) {
 
@@ -834,7 +837,7 @@ void MaterialEffects::drawdEdx(int pdg) {
     energyLossBrems_ = true;
     energyLossBetheBloch_ = false;
     try {
-      hdEdxBrems.Fill(log10(mom), dEdx(E, pdg));
+      hdEdxBrems.Fill(log10(mom), dEdx(E, mass, charge, pdg));
     }
     catch (...) {
 

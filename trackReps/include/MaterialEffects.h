@@ -136,8 +136,8 @@ public:
     return part->Mass(); // GeV
   }
 
-  void getMomGammaBeta(double Energy,
-                       double& mom, double& gammaSquare, double& gamma, double& betaSquare, const int pdg) const;
+  void getMomGammaBeta(const Scalar energy, const Scalar mass,
+                       Scalar& mom, Scalar& gammaSquare, Scalar& gamma, Scalar& betaSquare) const;
 
   //! Returns momentum loss
   /**
@@ -146,11 +146,12 @@ public:
   double momentumLoss(double stepSign, double mom, bool linear, const int pdg);
 
   //! Calculate dEdx for a given energy
-  double dEdx(double Energy, const int pdg) const;
+  double dEdx(const Scalar energy, const Scalar mass, const int charge, const int pdg) const;
 
 
   //! Uses Bethe Bloch formula to calculate dEdx.
-  double dEdxBetheBloch(double betaSquare, double gamma, double gammasquare, const int pdg) const;
+  double dEdxBetheBloch(const Scalar betaSquare, const Scalar gamma, const Scalar gammasquare,
+                        const Scalar mass, const int charge) const;
 
   //! calculation of energy loss straggeling
   /**  For the energy loss straggeling, different formulas are used for different regions:
