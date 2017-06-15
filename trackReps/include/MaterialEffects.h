@@ -120,7 +120,7 @@ public:
    * @param pdg
    * @return charge
    */
-  int getParticleCharge(const int pdg) {
+  int getParticleCharge(const int pdg) const {
     TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg);
     return int(part->Charge() / 3.);  // We only ever use the square
   }
@@ -131,7 +131,7 @@ public:
    * @param pdg
    * @return mass in GeV
    */
-  Scalar getParticleMass(const int pdg) {
+  Scalar getParticleMass(const int pdg) const {
     TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg);
     return part->Mass(); // GeV
   }
@@ -150,7 +150,7 @@ public:
 
 
   //! Uses Bethe Bloch formula to calculate dEdx.
-  double dEdxBetheBloch(double betaSquare, double gamma, double gammasquare) const;
+  double dEdxBetheBloch(double betaSquare, double gamma, double gammasquare, const int pdg) const;
 
   //! calculation of energy loss straggeling
   /**  For the energy loss straggeling, different formulas are used for different regions:
@@ -161,7 +161,7 @@ public:
     *
     *  Needs dEdx_, which is calculated in momentumLoss, so it has to be called afterwards!
     */
-  void noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare) const;
+  void noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare, const int pdg) const;
 
   //! calculation of multiple scattering
   /**  This function first calcuates a MSC variance based on the current material and step length
@@ -172,7 +172,7 @@ public:
    * 
     */
   void noiseCoulomb(M7x7& noise,
-                    const M1x3& direction, double momSquare, double betaSquare) const;
+                    const M1x3& direction, double momSquare, double betaSquare, const int pdg) const;
 
   //! Returns dEdx
   /** Can be called with any pdg, but only calculates dEdx for electrons and positrons (otherwise returns 0).
@@ -211,7 +211,6 @@ public:
   double radiationLength_;
   double mEE_; // mean excitation energy
 
-  int charge_;
   double mass_;
 
   int mscModelCode_; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.

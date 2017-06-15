@@ -54,7 +54,6 @@ MaterialEffects::MaterialEffects():
   matA_(0),
   radiationLength_(0),
   mEE_(0),
-  charge_(0),
   mass_(0),
   mscModelCode_(0),
   materialInterface_(nullptr),
@@ -138,7 +137,6 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 
   bool doNoise(noise != nullptr);
 
-  charge_ = getParticleCharge(pdg);
   mass_ = getParticleMass(pdg);
 
   double momLoss = 0.;
@@ -179,10 +177,10 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
         double pSquare = p*p;
 
         if (energyLossBetheBloch_ && noiseBetheBloch_)
-          this->noiseBetheBloch(*noise, p, betaSquare, gamma, gammaSquare);
+          this->noiseBetheBloch(*noise, p, betaSquare, gamma, gammaSquare, pdg);
 
         if (noiseCoulomb_)
-          this->noiseCoulomb(*noise, *((M1x3*) &it->state7_[3]), pSquare, betaSquare);
+          this->noiseCoulomb(*noise, *((M1x3*) &it->state7_[3]), pSquare, betaSquare, pdg);
 
         if (energyLossBrems_ && noiseBrems_)
           this->noiseBrems(*noise, pSquare, betaSquare, pdg);
@@ -246,7 +244,6 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   if (fabs(sMax) < minStep)
     return;
 
-  charge_ = getParticleCharge(pdg);
   mass_ = getParticleMass(pdg);
 
   // make minStep
@@ -430,7 +427,7 @@ double MaterialEffects::dEdx(double Energy, const int pdg) const {
   double result(0);
 
   if (energyLossBetheBloch_)
-    result += dEdxBetheBloch(betaSquare, gamma, gammaSquare);
+    result += dEdxBetheBloch(betaSquare, gamma, gammaSquare, pdg);
 
   if (energyLossBrems_)
     result += dEdxBrems(mom, pdg);
@@ -439,7 +436,7 @@ double MaterialEffects::dEdx(double Energy, const int pdg) const {
 }
 
 
-double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double gammaSquare) const
+double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double gammaSquare, const int pdg) const
 {
   static const double betaGammaMin(0.05);
   if (betaSquare*gammaSquare < betaGammaMin*betaGammaMin) {
@@ -447,9 +444,9 @@ double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double g
     exc.setFatal();
     throw exc;
   }
-
+  auto charge = getParticleCharge(pdg);
   // calc dEdx_, also needed in noiseBetheBloch!
-  double result( 0.307075 * matZ_ / matA_ * matDensity_ / betaSquare * charge_ * charge_ );
+  double result( 0.307075 * matZ_ / matA_ * matDensity_ / betaSquare * charge * charge);
   double massRatio( me_ / mass_ );
   double argument( gammaSquare * betaSquare * me_ * 1.E3 * 2. / ((1.E-6 * mEE_) *
       sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio)) );
@@ -463,13 +460,15 @@ double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double g
 }
 
 
-void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare) const
+void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare, const int pdg) const
 {
+  const auto charge = getParticleCharge(pdg);
+
   // Code ported from GEANT 3 (erland.F)
 
   // ENERGY LOSS FLUCTUATIONS; calculate sigma^2(E);
   double sigma2E ( 0. );
-  double zeta  ( 153.4E3 * charge_ * charge_ / betaSquare * matZ_ / matA_ * matDensity_ * fabs(stepSize_) ); // eV
+  double zeta  ( 153.4E3 * charge * charge / betaSquare * matZ_ / matA_ * matDensity_ * fabs(stepSize_) ); // eV
   double Emax  ( 2.E9 * me_ * betaSquare * gammaSquare / (1. + 2.*gamma * me_ / mass_ + (me_ / mass_) * (me_ / mass_)) ); // eV
   double kappa ( zeta / Emax );
 
@@ -519,26 +518,26 @@ void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare
   sigma2E *= 1.E-18; // eV -> GeV
 
   // update noise matrix, using linear error propagation from E to q/p
-  noise[6 * 7 + 6] += charge_*charge_/betaSquare / pow(mom, 4) * sigma2E;
+  noise[6 * 7 + 6] += charge*charge/betaSquare / pow(mom, 4) * sigma2E;
 }
 
 
 void MaterialEffects::noiseCoulomb(M7x7& noise,
-                                   const M1x3& direction, double momSquare, double betaSquare) const
+                                   const M1x3& direction, double momSquare, double betaSquare, const int pdg) const
 {
-
+  const auto charge = getParticleCharge(pdg);
   // MULTIPLE SCATTERING; calculate sigma^2
   double sigma2 = 0;
   assert(mscModelCode_ == 0 || mscModelCode_ == 1);
   const double step = fabs(stepSize_);
   const double step2 = step * step;
   if (mscModelCode_ == 0) {// PANDA report PV/01-07 eq(43); linear in step length
-    sigma2 = 225.E-6 * charge_ * charge_ / (betaSquare * momSquare) * step / radiationLength_ * matZ_ / (matZ_ + 1) * log(159.*pow(matZ_, -1. / 3.)) / log(287.*pow(matZ_, -0.5)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/beta_^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
+    sigma2 = 225.E-6 * charge * charge / (betaSquare * momSquare) * step / radiationLength_ * matZ_ / (matZ_ + 1) * log(159.*pow(matZ_, -1. / 3.)) / log(287.*pow(matZ_, -0.5)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/beta_^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
 
   } else if (mscModelCode_ == 1) { //Highland not linear in step length formula taken from PDG book 2011 edition
     double stepOverRadLength = step / radiationLength_;
     double logCor = (1 + 0.038 * log(stepOverRadLength));
-    sigma2 = 0.0136 * 0.0136 * charge_ * charge_ / (betaSquare * momSquare) * stepOverRadLength * logCor * logCor;
+    sigma2 = 0.0136 * 0.0136 * charge * charge / (betaSquare * momSquare) * stepOverRadLength * logCor * logCor;
   }
   //assert(sigma2 >= 0.0);
   sigma2 = (sigma2 > 0.0 ? sigma2 : 0.0);
@@ -780,12 +779,13 @@ void MaterialEffects::noiseBrems(M7x7& noise, double momSquare, double betaSquar
 
   if (abs(pdg) != 11) return; // only for electrons and positrons
 
+  const auto charge = getParticleCharge(pdg);
   double minusXOverLn2  = -1.442695 * fabs(stepSize_) / radiationLength_;
   double sigma2E = 1.44*(pow(3., minusXOverLn2) - pow(4., minusXOverLn2)) * momSquare;
   sigma2E = std::max(sigma2E, 0.0); // must be positive
   
   // update noise matrix, using linear error propagation from E to q/p
-  noise[6 * 7 + 6] += charge_*charge_/betaSquare / pow(momSquare, 2) * sigma2E;
+  noise[6 * 7 + 6] += charge*charge/betaSquare / pow(momSquare, 2) * sigma2E;
 }
 
 
