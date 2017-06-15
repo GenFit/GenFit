@@ -26,11 +26,13 @@
 
 #include "RKTools.h"
 #include "AbsMaterialInterface.h"
+#include "EigenMatrixTypedefs.h"
 
 #include <iostream>
 #include <vector>
 
 #include <TVector3.h>
+#include <TDatabasePDG.h>
 
 
 namespace genfit {
@@ -114,6 +116,28 @@ public:
 
   //! sets charge_, mass_
   void getParticleParameters();
+
+  /***
+   * Getter for the charge of a particle for a given PDG.
+   * NOTE: Only temporary while refactoring.
+   * @param pdg
+   * @return charge
+   */
+  int getParticleCharge(const int pdg) {
+    TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg);
+    return int(part->Charge() / 3.);  // We only ever use the square
+  }
+
+  /***
+   * Getter for the mass of a particle for a given PDG.
+   * NOTE: Only temporary while refactoring.
+   * @param pdg
+   * @return mass in GeV
+   */
+  Scalar getParticleMass(const int pdg) {
+    TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg);
+    return part->Mass(); // GeV
+  }
 
   void getMomGammaBeta(double Energy,
                        double& mom, double& gammaSquare, double& gamma, double& betaSquare) const;
