@@ -86,10 +86,10 @@ public:
 
 
   //! Calculates energy loss in the traveled path, optional calculation of noise matrix
-  double effects(const std::vector<RKStep>& steps,
+  Scalar effects(const std::vector<RKStep>& steps,
                  int materialsFXStart,
                  int materialsFXStop,
-                 const double& mom,
+                 const Scalar& mom,
                  const int& pdg,
                  M7x7* noise = nullptr);
 
@@ -100,8 +100,8 @@ public:
   */
   void stepper(const RKTrackRep* rep,
                M1x7& state7,
-               const double& mom, // momentum
-               double& relMomLoss, // relative momloss for the step will be added
+               const Scalar& mom, // momentum
+               Scalar& relMomLoss, // relative momloss for the step will be added
                const int& pdg,
                MaterialProperties& currentMaterial,
                StepLimits& limits,
@@ -143,14 +143,14 @@ public:
   /**
    * Also sets dEdx_ and E_.
    */
-  double momentumLoss(double stepSign, double mom, bool linear, const int pdg);
+  Scalar momentumLoss(Scalar stepSign, Scalar mom, bool linear, const int pdg);
 
   //! Calculate dEdx for a given energy
-  double dEdx(const Scalar energy, const Scalar mass, const int charge, const int pdg) const;
+  Scalar dEdx(const Scalar energy, const Scalar mass, const int charge, const int pdg) const;
 
 
   //! Uses Bethe Bloch formula to calculate dEdx.
-  double dEdxBetheBloch(const Scalar betaSquare, const Scalar gamma, const Scalar gammasquare,
+  Scalar dEdxBetheBloch(const Scalar betaSquare, const Scalar gamma, const Scalar gammasquare,
                         const Scalar mass, const int charge) const;
 
   //! calculation of energy loss straggeling
@@ -162,7 +162,7 @@ public:
     *
     *  Needs dEdx_, which is calculated in momentumLoss, so it has to be called afterwards!
     */
-  void noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare, const int pdg) const;
+  void noiseBetheBloch(M7x7& noise, Scalar mom, Scalar betaSquare, Scalar gamma, Scalar gammaSquare, const int pdg) const;
 
   //! calculation of multiple scattering
   /**  This function first calcuates a MSC variance based on the current material and step length
@@ -173,19 +173,19 @@ public:
    * 
     */
   void noiseCoulomb(M7x7& noise,
-                    const M1x3& direction, double momSquare, double betaSquare, const int pdg) const;
+                    const M1x3& direction, Scalar momSquare, Scalar betaSquare, const int pdg) const;
 
   //! Returns dEdx
   /** Can be called with any pdg, but only calculates dEdx for electrons and positrons (otherwise returns 0).
     * Uses a gaussian approximation (Bethe-Heitler formula with Migdal corrections).
     * For positrons, dEdx is weighed with a correction factor.
   */
-  double dEdxBrems(double mom, const int pdg) const;
+  Scalar dEdxBrems(Scalar mom, const int pdg) const;
 
   //! calculation of energy loss straggeling
   /** Can be called with any pdg, but only calculates straggeling for electrons and positrons.
    */
-  void noiseBrems(M7x7& noise, double momSquare, double betaSquare, const int pdg) const;
+  void noiseBrems(M7x7& noise, Scalar momSquare, Scalar betaSquare, const int pdg) const;
 
 
 
@@ -199,18 +199,18 @@ public:
 
   bool ignoreBoundariesBetweenEqualMaterials_;
 
-  const double me_; // electron mass (GeV)
+  const Scalar me_; // electron mass (GeV)
 
-  double stepSize_; // stepsize
+  Scalar stepSize_; // stepsize
 
   // cached values for energy loss and noise calculations
-  double dEdx_; // Runkge Kutta dEdx
-  double E_; // Runge Kutta Energy
-  double matDensity_;
-  double matZ_;
-  double matA_;
-  double radiationLength_;
-  double mEE_; // mean excitation energy
+  Scalar dEdx_; // Runkge Kutta dEdx
+  Scalar E_; // Runge Kutta Energy
+  Scalar matDensity_;
+  Scalar matZ_;
+  Scalar matA_;
+  Scalar radiationLength_;
+  Scalar mEE_; // mean excitation energy
 
   int mscModelCode_; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
 
