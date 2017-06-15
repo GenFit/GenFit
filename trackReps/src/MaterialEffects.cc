@@ -140,7 +140,8 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
   bool doNoise(noise != nullptr);
 
   pdg_ = pdg;
-  getParticleParameters();
+  charge_ = getParticleCharge(pdg);
+  mass_ = getParticleMass(pdg);
 
   double momLoss = 0.;
 
@@ -250,8 +251,8 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
 
   pdg_ = pdg;
-  getParticleParameters();
-
+  charge_ = getParticleCharge(pdg);
+  mass_ = getParticleMass(pdg);
 
   // make minStep
   state7[0] += limits.getStepSign() * minStep * state7[3];
@@ -344,14 +345,6 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
 
   relMomLoss += relMomLossPer_cm * limits.getLowestLimitVal();
-}
-
-
-void MaterialEffects::getParticleParameters()
-{
-  TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg_);
-  charge_ = int(part->Charge() / 3.);  // We only ever use the square
-  mass_ = part->Mass(); // GeV
 }
 
 
@@ -810,7 +803,7 @@ void MaterialEffects::setDebugLvl(unsigned int lvl) {
 
 void MaterialEffects::drawdEdx(int pdg) {
   pdg_ = pdg;
-  this->getParticleParameters();
+  mass_ = getParticleMass(pdg);
 
   stepSize_ = 1;
 

@@ -114,9 +114,6 @@ public:
 
  private:
 
-  //! sets charge_, mass_
-  void getParticleParameters();
-
   /***
    * Getter for the charge of a particle for a given PDG.
    * NOTE: Only temporary while refactoring.
