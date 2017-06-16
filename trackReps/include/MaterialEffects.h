@@ -136,9 +136,6 @@ public:
     return part->Mass(); // GeV
   }
 
-  void getMomGammaBeta(const Scalar energy, const Scalar mass,
-                       Scalar& mom, Scalar& gammaSquare, Scalar& gamma, Scalar& betaSquare) const;
-
   //! Returns momentum loss
   /**
    * Also sets dEdx_ and E_.

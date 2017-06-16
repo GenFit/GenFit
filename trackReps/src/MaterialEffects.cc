@@ -169,11 +169,18 @@ Scalar MaterialEffects::effects(const std::vector<RKStep>& steps,
       momLoss += momentumLoss(stepSign, mom - momLoss, false, pdg);
 
       if (doNoise){
-        // get values for the "effective" energy of the RK step E_
-        Scalar p(0), gammaSquare(0), gamma(0), betaSquare(0);
-        this->getMomGammaBeta(E_, mass,
-                              p, gammaSquare, gamma, betaSquare);
-        Scalar pSquare = p*p;
+
+        if (E_ <= mass) {
+          Exception exc("MaterialEffects::effects - Energy <= mass",__LINE__,__FILE__);
+          exc.setFatal();
+          throw exc;
+        }
+
+        const Scalar gamma = E_ / mass;
+        const Scalar gammaSquare = gamma * gamma;
+        const Scalar betaSquare = 1 - 1 / gammaSquare;
+        const Scalar p = E_ * sqrt(betaSquare);
+        const Scalar pSquare = p*p;
 
         if (energyLossBetheBloch_ && noiseBetheBloch_)
           this->noiseBetheBloch(*noise, p, betaSquare, gamma, gammaSquare, pdg);
@@ -337,21 +344,6 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 }
 
 
-void MaterialEffects::getMomGammaBeta(const Scalar energy, const Scalar mass,
-                                      Scalar& mom, Scalar& gammaSquare, Scalar& gamma, Scalar& betaSquare) const {
-
-  if (energy <= mass) {
-    Exception exc("MaterialEffects::getMomGammaBeta - Energy <= mass",__LINE__,__FILE__);
-    exc.setFatal();
-    throw exc;
-  }
-  gamma = energy/mass;
-  gammaSquare = gamma*gamma;
-  betaSquare = 1.-1./gammaSquare;
-  mom = energy*sqrt(betaSquare);
-}
-
-
 
 //---- Energy-loss and Noise calculations -----------------------------------------
 
@@ -421,9 +413,16 @@ Scalar MaterialEffects::momentumLoss(Scalar stepSign, Scalar mom, bool linear, c
 
 Scalar MaterialEffects::dEdx(const Scalar energy, const Scalar mass, const int charge, const int pdg) const {
 
-  Scalar mom(0), gammaSquare(0), gamma(0), betaSquare(0);
-  this->getMomGammaBeta(energy, mass,
-                        mom, gammaSquare, gamma, betaSquare);
+  if (energy <= mass) {
+    Exception exc("MaterialEffects::dEdx - Energy <= mass",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+
+  const Scalar gamma = energy / mass;
+  const Scalar gammaSquare = gamma * gamma;
+  const Scalar betaSquare = 1 - 1 / gammaSquare;
+  const Scalar mom = energy * sqrt(betaSquare);
 
   Scalar result(0);
 
