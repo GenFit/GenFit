@@ -45,7 +45,6 @@ MaterialEffects::MaterialEffects():
   noiseCoulomb_(true),
   energyLossBrems_(true), noiseBrems_(true),
   ignoreBoundariesBetweenEqualMaterials_(true),
-  me_(0.510998910E-3),
   stepSize_(0),
   dEdx_(0),
   E_(0),
