@@ -19,6 +19,8 @@
 
 #include "RKTrackRep.h"
 #include "IO.h"
+#include "RootEigenTransformations.h"
+#include "RKMatrixEigenTransformations.h"
 
 #include <Exception.h>
 #include <FieldManager.h>
@@ -1493,74 +1495,73 @@ void RKTrackRep::initArrays() const {
   lastEndState_.getAuxInfo().ResizeTo(2);
 }
 
+Vector7 RKTrackRep::getState7(const StateOnPlane& state) const {
+
+    if (dynamic_cast<const MeasurementOnPlane*>(&state) != nullptr) {
+        Exception exc("RKTrackRep::getState7 - cannot get pos or mom from a MeasurementOnPlane",__LINE__,__FILE__);
+        exc.setFatal();
+        throw exc;
+    }
+
+    const Vector3 U(TVector3ToEigenVector(state.getPlane()->getU()));
+    const Vector3 V(TVector3ToEigenVector(state.getPlane()->getV()));
+    const Vector3 O(TVector3ToEigenVector(state.getPlane()->getO()));
+    const Vector3 W(TVector3ToEigenVector(state.getPlane()->getNormal()));
+
+    assert(state.getState().GetNrows() == 5);
+    const double* state5 = state.getState().GetMatrixArray();
+    const Scalar qop = state5[0];
+    const Scalar du = state5[1];
+    const Scalar dv = state5[2];
+    const Scalar u = state5[3];
+    const Scalar v = state5[4];
+
+    const Scalar spu = getSpu(state);
+
+    Vector7 state7;
+    state7.block<3, 1>(0, 0) = O + u * U + v * V;
+    state7.block<3, 1>(3, 0) = (spu * (W + du * U + dv * V)).normalized();
+    state7[6] = qop;
+    return state7;
+}
 
 void RKTrackRep::getState7(const StateOnPlane& state, M1x7& state7) const {
-
-  if (dynamic_cast<const MeasurementOnPlane*>(&state) != nullptr) {
-    Exception exc("RKTrackRep::getState7 - cannot get pos or mom from a MeasurementOnPlane",__LINE__,__FILE__);
-    exc.setFatal();
-    throw exc;
-  }
-
-  const TVector3& U(state.getPlane()->getU());
-  const TVector3& V(state.getPlane()->getV());
-  const TVector3& O(state.getPlane()->getO());
-  const TVector3& W(state.getPlane()->getNormal());
-
-  assert(state.getState().GetNrows() == 5);
-  const double* state5 = state.getState().GetMatrixArray();
-
-  double spu = getSpu(state);
-
-  state7[0] = O.X() + state5[3]*U.X() + state5[4]*V.X(); // x
-  state7[1] = O.Y() + state5[3]*U.Y() + state5[4]*V.Y(); // y
-  state7[2] = O.Z() + state5[3]*U.Z() + state5[4]*V.Z(); // z
-
-  state7[3] = spu * (W.X() + state5[1]*U.X() + state5[2]*V.X()); // a_x
-  state7[4] = spu * (W.Y() + state5[1]*U.Y() + state5[2]*V.Y()); // a_y
-  state7[5] = spu * (W.Z() + state5[1]*U.Z() + state5[2]*V.Z()); // a_z
-
-  // normalize dir
-  double norm = 1. / sqrt(state7[3]*state7[3] + state7[4]*state7[4] + state7[5]*state7[5]);
-  for (unsigned int i=3; i<6; ++i) state7[i] *= norm;
-
-  state7[6] = state5[0]; // q/p
+    state7 = eigenMatrixToRKMatrix<1, 7>(getState7(state));
 }
 
 
+void RKTrackRep::getState5(StateOnPlane& state, const Vector7& state7) const {
+
+    // state5: (q/p, u', v'. u, v)
+
+    const Vector3 U(TVector3ToEigenVector(state.getPlane()->getU()));
+    const Vector3 V(TVector3ToEigenVector(state.getPlane()->getV()));
+    const Vector3 O(TVector3ToEigenVector(state.getPlane()->getO()));
+    const Vector3 W(TVector3ToEigenVector(state.getPlane()->getNormal()));
+
+    // force A to be in normal direction and set spu accordingly
+    const Scalar AtW = state7.block<3, 1>(3, 0).dot(W);
+    const Scalar spu = AtW < 0. ? -1 : 1;
+
+    Vector5 state5;
+    const Vector3 r = state7.block<3, 1>(0, 0);
+    const Vector3 a = state7.block<3, 1>(3, 0);
+    const Scalar qop = state7[6];
+
+    state5[0] = qop;  // q/p
+    state5[1] = a.dot(U) / AtW;  // u' = (A * U) / (A * W)
+    state5[2] = a.dot(V) / AtW;  // v' = (A * V) / (A * W)
+    state5[3] = (r - O).dot(U);  // u = (pos - O) * U
+    state5[4] = (r - O).dot(V);  // v = (pos - O) * V
+
+    state.setState(eigenVectorToRootVector<5>(state5));
+    setSpu(state, spu);
+
+}
+
 void RKTrackRep::getState5(StateOnPlane& state, const M1x7& state7) const {
-
-  // state5: (q/p, u', v'. u, v)
-
-  double spu(1.);
-
-  const TVector3& O(state.getPlane()->getO());
-  const TVector3& U(state.getPlane()->getU());
-  const TVector3& V(state.getPlane()->getV());
-  const TVector3& W(state.getPlane()->getNormal());
-
-  // force A to be in normal direction and set spu accordingly
-  double AtW( state7[3]*W.X() + state7[4]*W.Y() + state7[5]*W.Z() );
-  if (AtW < 0.) {
-    //fDir *= -1.;
-    //AtW *= -1.;
-    spu = -1.;
-  }
-
-  double* state5 = state.getState().GetMatrixArray();
-
-  state5[0] = state7[6]; // q/p
-  state5[1] = (state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z()) / AtW; // u' = (A * U) / (A * W)
-  state5[2] = (state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z()) / AtW; // v' = (A * V) / (A * W)
-  state5[3] = ((state7[0]-O.X())*U.X() +
-               (state7[1]-O.Y())*U.Y() +
-               (state7[2]-O.Z())*U.Z()); // u = (pos - O) * U
-  state5[4] = ((state7[0]-O.X())*V.X() +
-               (state7[1]-O.Y())*V.Y() +
-               (state7[2]-O.Z())*V.Z()); // v = (pos - O) * V
-
-  setSpu(state, spu);
-
+    Vector7 state7_tmp(RKMatrixToEigenMatrix<1, 7>(state7));
+    getState5(state, state7_tmp);
 }
 
 void RKTrackRep::calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const {

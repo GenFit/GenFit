@@ -11,6 +11,15 @@ namespace genfit {
     protected:
     };
 
+    TEST_F(RootEigenTransformations, TVectorTransformation) {
+        TVector3 myTVector(0.1, 0.5, 1.1);
+        Vector3 myEVector(TVector3ToEigenVector(myTVector));
+        EXPECT_FLOAT_EQ(myTVector[0], myEVector[0]);
+        EXPECT_FLOAT_EQ(myTVector[1], myEVector[1]);
+        EXPECT_FLOAT_EQ(myTVector[2], myEVector[2]);
+    }
+
+
     TEST_F(RootEigenTransformations, VectorTransformation) {
         TVectorD myTVectorD(5);
         myTVectorD(0) = 0.5;

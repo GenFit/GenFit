@@ -29,6 +29,7 @@
 #include "RKTools.h"
 #include "StepLimits.h"
 #include "Material.h"
+#include "EigenMatrixTypedefs.h"
 
 #include <algorithm>
 
@@ -205,8 +206,22 @@ class RKTrackRep : public AbsTrackRep {
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const;
 
+  /***
+   * Get 7d representation of a state on plane.
+   * @param state - 5d state
+   * @return 7d state
+   */
+  Vector7 getState7(const StateOnPlane& state) const;
   void getState7(const StateOnPlane& state, M1x7& state7) const;
-  void getState5(StateOnPlane& state, const M1x7& state7) const; // state7 must already lie on plane of state!
+
+  /***
+   * Get 5d representation of a 7d state.
+   * The 7d state must already like on plane of state
+   * @param state - plane on which the state is projected
+   * @param state7 - 7d state
+   */
+  void getState5(StateOnPlane& state, const Vector7& state7) const;
+  void getState5(StateOnPlane& state, const M1x7& state7) const;
 
   void calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
 

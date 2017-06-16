@@ -1,10 +1,21 @@
 #pragma once
 
+#include "EigenMatrixTypedefs.h"
+
 #include <Eigen/Dense>
+
+#include <TVector3.h>
+#include <TVectorD.h>
+#include <TMatrixD.h>
+#include <TMatrixDSym.h>
 
 #include <cassert>
 
 namespace genfit {
+
+    Vector3 TVector3ToEigenVector(const TVector3& rootVector) {
+        return {rootVector.X(), rootVector.Y(), rootVector.Z()};
+    };
 
     template <unsigned int dim>
     Eigen::Matrix<double, dim, 1> rootVectorToEigenVector(const TVectorD& rootVector) {
