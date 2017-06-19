@@ -26,6 +26,7 @@
 
 #include "RKTrackRep.h"
 #include "MaterialProperties.h"
+#include "Material.h"
 
 #include <TObject.h>
 #include <TVector3.h>
@@ -48,15 +49,40 @@ class AbsMaterialInterface : public TObject {
   virtual bool initTrack(double posX, double posY, double posZ,
                          double dirX, double dirY, double dirZ) = 0;
 
-  /** @brief Get material parameters in current material
+  /***
+   * Get material parameters in current material.
+   * Depcrecated Interface!
    */
-  virtual void getMaterialParameters(double& density,
+  void getMaterialParameters(double& density,
                                      double& Z,
                                      double& A,
                                      double& radiationLength,
-                                     double& mEE) = 0;
+                                     double& mEE) {
 
-  virtual void getMaterialParameters(MaterialProperties& parameters) = 0;
+    auto material = getMaterialParameters();
+    density = material.density;
+    Z = material.Z;
+    A = material.A;
+    radiationLength = material.radiationLength;
+    mEE = material.mEE;
+  };
+
+  /***
+   * Get material parameters in current material.
+   * Depcrecated Interface!
+   */
+  void getMaterialParameters(MaterialProperties& parameters) {
+    auto material = getMaterialParameters();
+    parameters.setMaterialProperties(
+            material.density, material.Z, material.A, material.radiationLength, material.mEE
+    );
+  };
+
+  /***
+   * Get the material paramaters in the current material.
+   * @return
+   */
+  virtual Material getMaterialParameters() = 0;
 
   /** @brief Make a step until maxStep or the next boundary is reached.
    *

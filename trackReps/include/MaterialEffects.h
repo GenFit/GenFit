@@ -104,7 +104,7 @@ public:
                const Scalar& mom, // momentum
                Scalar& relMomLoss, // relative momloss for the step will be added
                const int& pdg,
-               MaterialProperties& currentMaterial,
+               Material& currentMaterial,
                StepLimits& limits,
                bool varField = true);
 

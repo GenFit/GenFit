@@ -333,7 +333,7 @@ void GblFitter::getScattererFromMatList(double& length,
   for (unsigned int i = 0; i < steps.size(); i++) {
     const MatStep step = steps.at(i);
     // inverse of material radiation length ... (in 1/cm) ... "density of scattering"
-    double rho = 1. / step.materialProperties_.getRadLen();
+    double rho = 1. / step.material_.radiationLength;
     len += fabs(step.stepSize_);
     xmin = xmax;
     xmax = xmin + fabs(step.stepSize_);
@@ -473,7 +473,7 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
     // --------------------------------------------
     
     if (theta1 > scatEpsilon)  
-      point_meas->setScatterer(new ThinScatterer(plane, MaterialProperties(theta1, 0., 0., 0., 0.))); 
+      point_meas->setScatterer(new ThinScatterer(plane, Material(theta1, 0., 0., 0., 0.)));
     
     GblFitterInfo* gblfimeas(new GblFitterInfo(point_meas, rep, reference));
     gblfimeas->setJacobian(jacPointToPoint);
@@ -493,7 +493,7 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
       // --------------------------------------
       TrackPoint* scattp = new TrackPoint(trk);
       scattp->setSortingParameter(point_meas->getSortingParameter() + s2);
-      scattp->setScatterer(new ThinScatterer(reference.getPlane(), MaterialProperties(theta2, 0., 0., 0., 0.)));
+      scattp->setScatterer(new ThinScatterer(reference.getPlane(), Material(theta2, 0., 0., 0., 0.)));
       // Add point to track before next point
       int pointIndex = 0;
       //TODO Deduce this rather than looping over all points
