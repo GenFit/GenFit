@@ -50,8 +50,9 @@ namespace genfit {
  *  At the moment, per default all energy loss and noise options are ON.
  */
 class MaterialEffects {
+    friend class MaterialEffectsTests_Initialization_Test;
 
- private:
+private:
 
   MaterialEffects();
   virtual ~MaterialEffects();
