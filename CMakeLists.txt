@@ -145,6 +145,7 @@ SET(CORE_DICTIONARY_SOURCES
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/DetPlane.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/FitStatus.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/IO.h
+		${CMAKE_CURRENT_SOURCE_DIR}/core/include/Material.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/MaterialProperties.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasuredStateOnPlane.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementFactory.h
