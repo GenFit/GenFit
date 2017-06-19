@@ -28,7 +28,6 @@
 
 namespace genfit {
 
-
 /**
  * @brief Material properties needed e.g. for material effects calculation.
  */

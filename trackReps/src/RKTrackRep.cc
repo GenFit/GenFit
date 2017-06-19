@@ -1070,7 +1070,7 @@ double RKTrackRep::getRadiationLenght() const {
   double radLen(0);
 
   for (unsigned int i = 0; i<RKSteps_.size(); ++i) {
-    radLen += RKSteps_.at(i).matStep_.stepSize_ / RKSteps_.at(i).matStep_.materialProperties_.getRadLen();
+    radLen += RKSteps_.at(i).matStep_.stepSize_ / RKSteps_.at(i).matStep_.material_.radiationLength;
   }
 
   return radLen;
@@ -2264,12 +2264,12 @@ double RKTrackRep::estimateStep(const M1x7& state7,
                                             charge/state7[6], // |p|
                                             relMomLoss,
                                             pdgCode_,
-                                            lastStep->matStep_.materialProperties_,
+                                            lastStep->matStep_.material_,
                                             limits,
                                             true);
   } else { //assume material has not changed
     if  (RKSteps_.size()>1) {
-      lastStep->matStep_.materialProperties_ = (lastStep - 1)->matStep_.materialProperties_;
+      lastStep->matStep_.material_ = (lastStep - 1)->matStep_.material_;
     }
   }
 
@@ -2382,7 +2382,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       debugOut<<"RKSteps \n";
       for (std::vector<RKStep>::iterator it = RKSteps_.begin(); it != RKSteps_.end(); ++it){
         debugOut << "stepSize = " << it->matStep_.stepSize_ << "\t";
-        it->matStep_.materialProperties_.Print();
+        it->matStep_.material_.Print();
       }
       debugOut<<"\n";
     }
@@ -2611,7 +2611,7 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
         continue;
       }
       if (RKSteps_.at(i).matStep_.stepSize_ * firstStep < 0) {
-        if (RKSteps_.at(i-1).matStep_.materialProperties_ == RKSteps_.at(i).matStep_.materialProperties_) {
+        if (RKSteps_.at(i-1).matStep_.material_ == RKSteps_.at(i).matStep_.material_) {
           RKSteps_.at(i-1).matStep_.stepSize_ += RKSteps_.at(i).matStep_.stepSize_;
         }
         RKSteps_.erase(RKSteps_.begin()+i, RKSteps_.end());

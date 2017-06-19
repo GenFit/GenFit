@@ -280,7 +280,7 @@ void getScattererFromMatList(double& length, double& theta, double& s, double& d
   for (unsigned int i = 0; i < steps.size(); i++) {
     const MatStep step = steps.at(i);
     // inverse of material radiation length ... (in 1/cm) ... "density of scattering"
-    double rho = 1. / step.materialProperties_.getRadLen();
+    double rho = 1. / step.material_.radiationLength;
     len += fabs(step.stepSize_);
     xmin = xmax;
     xmax = xmin + fabs(step.stepSize_);
