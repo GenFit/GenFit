@@ -196,8 +196,6 @@ public:
 
   bool ignoreBoundariesBetweenEqualMaterials_;
 
-  static constexpr Scalar me_ = 0.510998910E-3; // electron mass (GeV)
-
   Scalar stepSize_; // stepsize
 
   // cached values for energy loss and noise calculations

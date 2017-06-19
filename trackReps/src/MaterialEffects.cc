@@ -20,6 +20,8 @@
 #include "MaterialEffects.h"
 #include "Exception.h"
 #include "IO.h"
+#include "Units.h"
+#include "Constants.h"
 
 #include <stdexcept>
 #include <string>
@@ -451,10 +453,12 @@ Scalar MaterialEffects::dEdxBetheBloch(const Scalar energy, const Scalar mass, c
 {
     static const Scalar betaGammaMin = 0.05;
     static const Scalar K = 0.307075;  // MeV / mol * cm^2
+    const auto m_e = Constants::electronMass;
 
     const Scalar gamma = energy / mass;
     const Scalar gammaSquare = gamma * gamma;
     const Scalar betaSquare = 1 - 1 / gammaSquare;
+
 
     if (betaSquare*gammaSquare < betaGammaMin*betaGammaMin) {
         Exception exc("MaterialEffects::dEdxBetheBloch ==> beta*gamma < 0.05, Bethe-Bloch implementation not valid anymore!",__LINE__,__FILE__);
@@ -462,10 +466,10 @@ Scalar MaterialEffects::dEdxBetheBloch(const Scalar energy, const Scalar mass, c
         throw exc;
     }
     // calc dEdx_, also needed in noiseBetheBloch!
-    Scalar massRatio = me_ / mass;
+    Scalar massRatio = m_e / mass;
 
     Scalar result = K * matZ_ / matA_ * matDensity_ / betaSquare * charge * charge;
-    Scalar argument = gammaSquare * betaSquare * me_ * 1.E3 * 2. / ((1.E-6 * mEE_) * std::sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio));
+    Scalar argument = gammaSquare * betaSquare * m_e * 1.E3 * 2. / ((1.E-6 * mEE_) * std::sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio));
     result = result * (log(argument) - betaSquare); // Bethe-Bloch [MeV/cm]
     result = result * 1.E-3;  // main GeV/cm, hence 1.e-3
     if (result < 0.) {
@@ -480,13 +484,13 @@ void MaterialEffects::noiseBetheBloch(M7x7& noise, Scalar mom, Scalar betaSquare
 {
   const auto charge = getParticleCharge(pdg);
   const auto mass = getParticleMass(pdg);
-
+  const auto m_e = Constants::electronMass;
   // Code ported from GEANT 3 (erland.F)
 
   // ENERGY LOSS FLUCTUATIONS; calculate sigma^2(E);
   Scalar sigma2E ( 0. );
   Scalar zeta  ( 153.4E3 * charge * charge / betaSquare * matZ_ / matA_ * matDensity_ * fabs(stepSize_) ); // eV
-  Scalar Emax  ( 2.E9 * me_ * betaSquare * gammaSquare / (1. + 2.*gamma * me_ / mass + (me_ / mass) * (me_ / mass)) ); // eV
+  Scalar Emax  ( 2.E9 * m_e * betaSquare * gammaSquare / (1. + 2.*gamma * m_e / mass + (m_e / mass) * (m_e / mass)) ); // eV
   Scalar kappa ( zeta / Emax );
 
   if (kappa > 0.01) { // Vavilov-Gaussian regime
@@ -617,6 +621,8 @@ Scalar MaterialEffects::dEdxBrems(Scalar mom, const int pdg) const
 
   if (abs(pdg) != 11) return 0; // only for electrons and positrons
 
+  const auto m_e = Constants::electronMass;
+
 #if !defined(BETHE)
   static const Scalar C[101] = { 0.0, -0.960613E-01, 0.631029E-01, -0.142819E-01, 0.150437E-02, -0.733286E-04, 0.131404E-05, 0.859343E-01, -0.529023E-01, 0.131899E-01, -0.159201E-02, 0.926958E-04, -0.208439E-05, -0.684096E+01, 0.370364E+01, -0.786752E+00, 0.822670E-01, -0.424710E-02, 0.867980E-04, -0.200856E+01, 0.129573E+01, -0.306533E+00, 0.343682E-01, -0.185931E-02, 0.392432E-04, 0.127538E+01, -0.515705E+00, 0.820644E-01, -0.641997E-02, 0.245913E-03, -0.365789E-05, 0.115792E+00, -0.463143E-01, 0.725442E-02, -0.556266E-03, 0.208049E-04, -0.300895E-06, -0.271082E-01, 0.173949E-01, -0.452531E-02, 0.569405E-03, -0.344856E-04, 0.803964E-06, 0.419855E-02, -0.277188E-02, 0.737658E-03, -0.939463E-04, 0.569748E-05, -0.131737E-06, -0.318752E-03, 0.215144E-03, -0.579787E-04, 0.737972E-05, -0.441485E-06, 0.994726E-08, 0.938233E-05, -0.651642E-05, 0.177303E-05, -0.224680E-06, 0.132080E-07, -0.288593E-09, -0.245667E-03, 0.833406E-04, -0.129217E-04, 0.915099E-06, -0.247179E-07, 0.147696E-03, -0.498793E-04, 0.402375E-05, 0.989281E-07, -0.133378E-07, -0.737702E-02, 0.333057E-02, -0.553141E-03, 0.402464E-04, -0.107977E-05, -0.641533E-02, 0.290113E-02, -0.477641E-03, 0.342008E-04, -0.900582E-06, 0.574303E-05, 0.908521E-04, -0.256900E-04, 0.239921E-05, -0.741271E-07, -0.341260E-04, 0.971711E-05, -0.172031E-06, -0.119455E-06, 0.704166E-08, 0.341740E-05, -0.775867E-06, -0.653231E-07, 0.225605E-07, -0.114860E-08, -0.119391E-06, 0.194885E-07, 0.588959E-08, -0.127589E-08, 0.608247E-10};
   static const Scalar xi = 2.51, beta = 0.99, vl = 0.00004;
@@ -649,11 +655,11 @@ Scalar MaterialEffects::dEdxBrems(Scalar mom, const int pdg) const
       kc = BCUT;
     }
 
-    Scalar E = T + me_; // total electron energy
+    Scalar E = T + m_e; // total electron energy
     if (BCUT > T)
       kc = T;
 
-    Scalar X = log(T / me_);
+    Scalar X = log(T / m_e);
     Scalar Y = log(kc / (E * vl));
 
     Scalar XX;
@@ -718,7 +724,7 @@ Scalar MaterialEffects::dEdxBrems(Scalar mom, const int pdg) const
       // We use exp(beta * log(...) here because pow(..., beta) is
       // REALLY slow and we don't need ultimate numerical precision
       // for this approximation.
-      Scalar FAC = matZ_ * (matZ_ + xi) * E * E / (E + me_);
+      Scalar FAC = matZ_ * (matZ_ + xi) * E * E / (E + m_e);
       if (beta == 1.)  // That is the #ifdef BETHE case
         FAC *= kc * CORR / T;
       else
