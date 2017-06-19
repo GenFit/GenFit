@@ -1,11 +1,10 @@
 #ifndef genfit_Material_h
 #define genfit_Material_h
 
-#include "EigenMatrixTypedefs.h"
-
 #include <TObject.h>
 
 namespace genfit {
+    typedef double Scalar;
 
     struct Material {
         Scalar density;  /// Density in g / cm^3
@@ -18,8 +17,6 @@ namespace genfit {
 
         Material(Scalar density_, Scalar Z_, Scalar A_, Scalar radiationLength_, Scalar mEE_) :
                 density(density_), Z(Z_), A(A_), radiationLength(radiationLength_), mEE(mEE_) {}
-
-        Material(const Material &material) = default;
 
         virtual ~Material() {};
 
