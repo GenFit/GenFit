@@ -50,11 +50,7 @@ MaterialEffects::MaterialEffects():
   stepSize_(0),
   dEdx_(0),
   E_(0),
-  matDensity_(0),
-  matZ_(0),
-  matA_(0),
-  radiationLength_(0),
-  mEE_(0),
+  material_(0, 0, 0, 0, 0),
   mscModelCode_(0),
   materialInterface_(nullptr),
   debugLvl_(0)
@@ -164,15 +160,9 @@ Scalar MaterialEffects::effects(const std::vector<RKStep>& steps,
     stepSize_ = realPath;
 
 
-    const Material& currentMaterial = it->matStep_.material_;
-    matDensity_ = currentMaterial.density;
-    matZ_ = currentMaterial.Z;
-    matA_ = currentMaterial.A;
-    radiationLength_ = currentMaterial.radiationLength;
-    mEE_ = currentMaterial.mEE;
+    material_ = it->matStep_.material_;
 
-
-    if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
+    if (material_.Z > 1.E-3) { // don't calculate energy loss for vacuum
 
       momLoss += momentumLoss(stepSign, mom - momLoss, false, pdg);
 
@@ -268,11 +258,6 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
 
   currentMaterial = materialInterface_->getMaterialParameters();
-  matDensity_ = currentMaterial.density;
-  matZ_ = currentMaterial.Z;
-  matA_ = currentMaterial.A;
-  radiationLength_ = currentMaterial.radiationLength;
-  mEE_ = currentMaterial.mEE;
 
   if (debugLvl_ > 0) {
     debugOut << "     currentMaterial "; currentMaterial.Print();
@@ -282,7 +267,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   Scalar relMomLossPer_cm(0);
   stepSize_ = 1.; // set stepsize for momLoss calculation
 
-  if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
+  if (material_.Z > 1.E-3) { // don't calculate energy loss for vacuum
     relMomLossPer_cm = this->momentumLoss(limits.getStepSign(), mom, true, pdg) / mom;
   }
 
@@ -459,17 +444,20 @@ Scalar MaterialEffects::dEdxBetheBloch(const Scalar energy, const Scalar mass, c
     const Scalar gammaSquare = gamma * gamma;
     const Scalar betaSquare = 1 - 1 / gammaSquare;
 
-
     if (betaSquare*gammaSquare < betaGammaMin*betaGammaMin) {
         Exception exc("MaterialEffects::dEdxBetheBloch ==> beta*gamma < 0.05, Bethe-Bloch implementation not valid anymore!",__LINE__,__FILE__);
         exc.setFatal();
         throw exc;
     }
     // calc dEdx_, also needed in noiseBetheBloch!
+    const auto Z = material_.Z;
+    const auto A = material_.A;
+    const auto density = material_.density;
+    const auto mEE = material_.mEE;
     Scalar massRatio = m_e / mass;
 
-    Scalar result = K * matZ_ / matA_ * matDensity_ / betaSquare * charge * charge;
-    Scalar argument = gammaSquare * betaSquare * m_e * 1.E3 * 2. / ((1.E-6 * mEE_) * std::sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio));
+    Scalar result = K * Z / A * density / betaSquare * charge * charge;
+    Scalar argument = gammaSquare * betaSquare * m_e * 1.E3 * 2. / ((1.E-6 * mEE) * std::sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio));
     result = result * (log(argument) - betaSquare); // Bethe-Bloch [MeV/cm]
     result = result * 1.E-3;  // main GeV/cm, hence 1.e-3
     if (result < 0.) {
@@ -485,11 +473,15 @@ void MaterialEffects::noiseBetheBloch(M7x7& noise, Scalar mom, Scalar betaSquare
   const auto charge = getParticleCharge(pdg);
   const auto mass = getParticleMass(pdg);
   const auto m_e = Constants::electronMass;
-  // Code ported from GEANT 3 (erland.F)
 
+  const auto Z = material_.Z;
+  const auto A = material_.A;
+  const auto density = material_.density;
+
+  // Code ported from GEANT 3 (erland.F)
   // ENERGY LOSS FLUCTUATIONS; calculate sigma^2(E);
   Scalar sigma2E ( 0. );
-  Scalar zeta  ( 153.4E3 * charge * charge / betaSquare * matZ_ / matA_ * matDensity_ * fabs(stepSize_) ); // eV
+  Scalar zeta  ( 153.4E3 * charge * charge / betaSquare * Z / A * density * fabs(stepSize_) ); // eV
   Scalar Emax  ( 2.E9 * m_e * betaSquare * gammaSquare / (1. + 2.*gamma * m_e / mass + (m_e / mass) * (m_e / mass)) ); // eV
   Scalar kappa ( zeta / Emax );
 
@@ -497,11 +489,11 @@ void MaterialEffects::noiseBetheBloch(M7x7& noise, Scalar mom, Scalar betaSquare
     sigma2E += zeta * Emax * (1. - betaSquare / 2.); // eV^2
   } else { // Urban/Landau approximation
     // calculate number of collisions Nc
-    Scalar I = 16. * pow(matZ_, 0.9); // eV
+    Scalar I = 16. * pow(Z, 0.9); // eV
     Scalar f2 = 0.;
-    if (matZ_ > 2.) f2 = 2. / matZ_;
+    if (Z > 2.) f2 = 2. / Z;
     Scalar f1 = 1. - f2;
-    Scalar e2 = 10.*matZ_ * matZ_; // eV
+    Scalar e2 = 10.*Z * Z; // eV
     Scalar e1 = pow((I / pow(e2, f2)), 1. / f1); // eV
 
     Scalar mbbgg2 = 2.E9 * mass * betaSquare * gammaSquare; // eV
@@ -547,16 +539,18 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
                                    const M1x3& direction, Scalar momSquare, Scalar betaSquare, const int pdg) const
 {
   const auto charge = getParticleCharge(pdg);
+  const auto Z = material_.Z;
+  const auto radiationLength = material_.radiationLength;
   // MULTIPLE SCATTERING; calculate sigma^2
   Scalar sigma2 = 0;
   assert(mscModelCode_ == 0 || mscModelCode_ == 1);
   const Scalar step = fabs(stepSize_);
   const Scalar step2 = step * step;
   if (mscModelCode_ == 0) {// PANDA report PV/01-07 eq(43); linear in step length
-    sigma2 = 225.E-6 * charge * charge / (betaSquare * momSquare) * step / radiationLength_ * matZ_ / (matZ_ + 1) * log(159.*pow(matZ_, -1. / 3.)) / log(287.*pow(matZ_, -0.5)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/beta_^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
+    sigma2 = 225.E-6 * charge * charge / (betaSquare * momSquare) * step / radiationLength * Z / (Z + 1) * log(159.*pow(Z, -1. / 3.)) / log(287.*pow(Z, -0.5)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/beta_^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
 
   } else if (mscModelCode_ == 1) { //Highland not linear in step length formula taken from PDG book 2011 edition
-    Scalar stepOverRadLength = step / radiationLength_;
+    Scalar stepOverRadLength = step / radiationLength;
     Scalar logCor = (1 + 0.038 * log(stepOverRadLength));
     sigma2 = 0.0136 * 0.0136 * charge * charge / (betaSquare * momSquare) * stepOverRadLength * logCor * logCor;
   }
@@ -622,6 +616,10 @@ Scalar MaterialEffects::dEdxBrems(Scalar mom, const int pdg) const
   if (abs(pdg) != 11) return 0; // only for electrons and positrons
 
   const auto m_e = Constants::electronMass;
+
+  const auto Z = material_.Z;
+  const auto A = material_.A;
+  const auto density = material_.density;
 
 #if !defined(BETHE)
   static const Scalar C[101] = { 0.0, -0.960613E-01, 0.631029E-01, -0.142819E-01, 0.150437E-02, -0.733286E-04, 0.131404E-05, 0.859343E-01, -0.529023E-01, 0.131899E-01, -0.159201E-02, 0.926958E-04, -0.208439E-05, -0.684096E+01, 0.370364E+01, -0.786752E+00, 0.822670E-01, -0.424710E-02, 0.867980E-04, -0.200856E+01, 0.129573E+01, -0.306533E+00, 0.343682E-01, -0.185931E-02, 0.392432E-04, 0.127538E+01, -0.515705E+00, 0.820644E-01, -0.641997E-02, 0.245913E-03, -0.365789E-05, 0.115792E+00, -0.463143E-01, 0.725442E-02, -0.556266E-03, 0.208049E-04, -0.300895E-06, -0.271082E-01, 0.173949E-01, -0.452531E-02, 0.569405E-03, -0.344856E-04, 0.803964E-06, 0.419855E-02, -0.277188E-02, 0.737658E-03, -0.939463E-04, 0.569748E-05, -0.131737E-06, -0.318752E-03, 0.215144E-03, -0.579787E-04, 0.737972E-05, -0.441485E-06, 0.994726E-08, 0.938233E-05, -0.651642E-05, 0.177303E-05, -0.224680E-06, 0.132080E-07, -0.288593E-09, -0.245667E-03, 0.833406E-04, -0.129217E-04, 0.915099E-06, -0.247179E-07, 0.147696E-03, -0.498793E-04, 0.402375E-05, 0.989281E-07, -0.133378E-07, -0.737702E-02, 0.333057E-02, -0.553141E-03, 0.402464E-04, -0.107977E-05, -0.641533E-02, 0.290113E-02, -0.477641E-03, 0.342008E-04, -0.900582E-06, 0.574303E-05, 0.908521E-04, -0.256900E-04, 0.239921E-05, -0.741271E-07, -0.341260E-04, 0.971711E-05, -0.172031E-06, -0.119455E-06, 0.704166E-08, 0.341740E-05, -0.775867E-06, -0.653231E-07, 0.225605E-07, -0.114860E-08, -0.119391E-06, 0.194885E-07, 0.588959E-08, -0.127589E-08, 0.608247E-10};
@@ -713,18 +711,18 @@ Scalar MaterialEffects::dEdxBrems(Scalar mom, const int pdg) const
       YY *= Y;
     }
 
-    S += matZ_ * SS;
+    S += Z * SS;
 
     if (S > 0.) {
       Scalar CORR = 1.;
 #if !defined(BETHE)
-      CORR = 1. / (1. + 0.805485E-10 * matDensity_ * matZ_ * E * E / (matA_ * kc * kc)); // MIGDAL correction factor
+      CORR = 1. / (1. + 0.805485E-10 * density * Z * E * E / (A * kc * kc)); // MIGDAL correction factor
 #endif
 
       // We use exp(beta * log(...) here because pow(..., beta) is
       // REALLY slow and we don't need ultimate numerical precision
       // for this approximation.
-      Scalar FAC = matZ_ * (matZ_ + xi) * E * E / (E + m_e);
+      Scalar FAC = Z * (Z + xi) * E * E / (E + m_e);
       if (beta == 1.)  // That is the #ifdef BETHE case
         FAC *= kc * CORR / T;
       else
@@ -750,7 +748,7 @@ Scalar MaterialEffects::dEdxBrems(Scalar mom, const int pdg) const
         dedxBrems *= S; // GeV barn
       }
 
-      dedxBrems *= 0.60221367 * matDensity_ / matA_; // energy loss dE/dx [GeV/cm]
+      dedxBrems *= 0.60221367 * density / A; // energy loss dE/dx [GeV/cm]
     }
   }
 
@@ -763,8 +761,8 @@ Scalar MaterialEffects::dEdxBrems(Scalar mom, const int pdg) const
     static const Scalar AA = 7522100., A1 = 0.415, A3 = 0.0021, A5 = 0.00054;
 
     Scalar ETA = 0.;
-    if (matZ_ > 0.) {
-      Scalar X = log(AA * mom / (matZ_ * matZ_));
+    if (Z > 0.) {
+      Scalar X = log(AA * mom / (Z * Z));
       if (X > -8.) {
         if (X >= +9.) ETA = 1.;
         else {
@@ -803,7 +801,10 @@ void MaterialEffects::noiseBrems(M7x7& noise, Scalar momSquare, Scalar betaSquar
   if (abs(pdg) != 11) return; // only for electrons and positrons
 
   const auto charge = getParticleCharge(pdg);
-  Scalar minusXOverLn2  = -1.442695 * fabs(stepSize_) / radiationLength_;
+
+  const auto radiationLength = material_.radiationLength;
+
+  Scalar minusXOverLn2  = -1.442695 * fabs(stepSize_) / radiationLength;
   Scalar sigma2E = 1.44*(pow(3., minusXOverLn2) - pow(4., minusXOverLn2)) * momSquare;
   sigma2E = std::max(sigma2E, 0.0); // must be positive
   
@@ -826,7 +827,7 @@ void MaterialEffects::drawdEdx(int pdg) {
   stepSize_ = 1;
 
   materialInterface_->initTrack(0, 0, 0, 1, 1, 1);
-  materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+  material_ = materialInterface_->getMaterialParameters();
 
 
   Scalar minMom = 0.00001;

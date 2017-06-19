@@ -27,6 +27,7 @@
 #include "RKTools.h"
 #include "AbsMaterialInterface.h"
 #include "EigenMatrixTypedefs.h"
+#include "Material.h"
 
 #include <iostream>
 #include <vector>
@@ -201,11 +202,8 @@ public:
   // cached values for energy loss and noise calculations
   Scalar dEdx_; // Runkge Kutta dEdx
   Scalar E_; // Runge Kutta Energy
-  Scalar matDensity_;
-  Scalar matZ_;
-  Scalar matA_;
-  Scalar radiationLength_;
-  Scalar mEE_; // mean excitation energy
+
+  Material material_;
 
   int mscModelCode_; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
 
