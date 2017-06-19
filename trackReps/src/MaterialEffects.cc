@@ -814,6 +814,7 @@ void MaterialEffects::drawdEdx(int pdg) {
 
   TH1D hdEdxBethe("dEdxBethe", "dEdxBethe; log10(mom)", nSteps, log10(minMom), log10(maxMom));
   TH1D hdEdxBrems("dEdxBrems", "dEdxBrems; log10(mom)", nSteps, log10(minMom), log10(maxMom));
+  TH1D hdEdxBoth("dEdxBoth", "dEdxBoth; log10(mom)", nSteps, log10(minMom), log10(maxMom));
 
   for (int i=0; i<nSteps; ++i) {
     Scalar mom = pow(10., log10(minMom) + i*logStepSize);
@@ -840,6 +841,18 @@ void MaterialEffects::drawdEdx(int pdg) {
     catch (...) {
 
     }
+
+
+    energyLossBrems_ = true;
+    energyLossBetheBloch_ = true;
+
+      try {
+          hdEdxBoth.Fill(log10(mom), dEdx(E, mass, charge, pdg));
+      }
+      catch (...) {
+
+      }
+
   }
 
   energyLossBrems_ = true;
@@ -854,6 +867,7 @@ void MaterialEffects::drawdEdx(int pdg) {
   outfile.cd();
   hdEdxBethe.Write();
   hdEdxBrems.Write();
+  hdEdxBoth.Write();
   outfile.Close();
 }
 
