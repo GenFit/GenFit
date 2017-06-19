@@ -147,8 +147,7 @@ public:
 
 
   //! Uses Bethe Bloch formula to calculate dEdx.
-  Scalar dEdxBetheBloch(const Scalar betaSquare, const Scalar gamma, const Scalar gammasquare,
-                        const Scalar mass, const int charge) const;
+  Scalar dEdxBetheBloch(const Scalar energy, const Scalar mass, const int charge) const;
 
   //! calculation of energy loss straggeling
   /**  For the energy loss straggeling, different formulas are used for different regions:

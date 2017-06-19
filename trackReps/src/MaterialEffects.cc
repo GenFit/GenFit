@@ -412,51 +412,57 @@ Scalar MaterialEffects::momentumLoss(Scalar stepSign, Scalar mom, bool linear, c
 
 Scalar MaterialEffects::dEdx(const Scalar energy, const Scalar mass, const int charge, const int pdg) const {
 
-  if (energy <= mass) {
-    Exception exc("MaterialEffects::dEdx - Energy <= mass",__LINE__,__FILE__);
-    exc.setFatal();
-    throw exc;
-  }
+    if (energy <= mass) {
+      Exception exc("MaterialEffects::dEdx - Energy <= mass",__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    }
 
-  const Scalar gamma = energy / mass;
-  const Scalar gammaSquare = gamma * gamma;
-  const Scalar betaSquare = 1 - 1 / gammaSquare;
-  const Scalar mom = energy * sqrt(betaSquare);
+    Scalar result = 0;
 
-  Scalar result(0);
 
-  if (energyLossBetheBloch_)
-    result += dEdxBetheBloch(betaSquare, gamma, gammaSquare, mass, charge);
+    if (energyLossBetheBloch_ and (abs(pdg) != 11)) {  // Calculated for each particle but electron
+        result += dEdxBetheBloch(energy, mass, charge);
+    }
 
-  if (energyLossBrems_)
-    result += dEdxBrems(mom, pdg);
 
-  return result;
+    if (energyLossBrems_ and (abs(pdg) == 11)) {  // Only calculated for electron (again checked inside function)
+        const Scalar gamma = energy / mass;
+        const Scalar gammaSquare = gamma * gamma;
+        const Scalar betaSquare = 1 - 1 / gammaSquare;
+        const Scalar mom = energy * sqrt(betaSquare);
+        result += dEdxBrems(mom, pdg);
+    }
+    return result;
 }
 
 
-Scalar MaterialEffects::dEdxBetheBloch(const Scalar betaSquare, const Scalar gamma, const Scalar gammaSquare,
-                                       const Scalar mass, const int charge) const
+Scalar MaterialEffects::dEdxBetheBloch(const Scalar energy, const Scalar mass, const int charge) const
 {
-  static const Scalar betaGammaMin(0.05);
+    static const Scalar betaGammaMin = 0.05;
+    static const Scalar K = 0.307075;  // MeV / mol * cm^2
 
-  if (betaSquare*gammaSquare < betaGammaMin*betaGammaMin) {
-    Exception exc("MaterialEffects::dEdxBetheBloch ==> beta*gamma < 0.05, Bethe-Bloch implementation not valid anymore!",__LINE__,__FILE__);
-    exc.setFatal();
-    throw exc;
-  }
-  // calc dEdx_, also needed in noiseBetheBloch!
-  Scalar result( 0.307075 * matZ_ / matA_ * matDensity_ / betaSquare * charge * charge);
-  Scalar massRatio( me_ / mass );
-  Scalar argument( gammaSquare * betaSquare * me_ * 1.E3 * 2. / ((1.E-6 * mEE_) *
-      sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio)) );
-  result *= log(argument) - betaSquare; // Bethe-Bloch [MeV/cm]
-  result *= 1.E-3;  // in GeV/cm, hence 1.e-3
-  if (result < 0.) {
-    result = 0;
-  }
+    const Scalar gamma = energy / mass;
+    const Scalar gammaSquare = gamma * gamma;
+    const Scalar betaSquare = 1 - 1 / gammaSquare;
 
-  return result;
+    if (betaSquare*gammaSquare < betaGammaMin*betaGammaMin) {
+        Exception exc("MaterialEffects::dEdxBetheBloch ==> beta*gamma < 0.05, Bethe-Bloch implementation not valid anymore!",__LINE__,__FILE__);
+        exc.setFatal();
+        throw exc;
+    }
+    // calc dEdx_, also needed in noiseBetheBloch!
+    Scalar massRatio = me_ / mass;
+
+    Scalar result = K * matZ_ / matA_ * matDensity_ / betaSquare * charge * charge;
+    Scalar argument = gammaSquare * betaSquare * me_ * 1.E3 * 2. / ((1.E-6 * mEE_) * std::sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio));
+    result = result * (log(argument) - betaSquare); // Bethe-Bloch [MeV/cm]
+    result = result * 1.E-3;  // main GeV/cm, hence 1.e-3
+    if (result < 0.) {
+        result = 0;
+    }
+
+    return result;
 }
 
 
