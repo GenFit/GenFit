@@ -55,6 +55,8 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
 
   void getMaterialParameters(MaterialProperties& parameters);
 
+  Material getMaterialParameters() override;
+
   /** @brief Make a step (following the curvature) until step length
    * sMax or the next boundary is reached.  After making a step to a
    * boundary, the position has to be beyond the boundary, i.e. the

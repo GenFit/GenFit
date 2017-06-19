@@ -26,6 +26,7 @@
 
 #include "RKTrackRep.h"
 #include "MaterialProperties.h"
+#include "Material.h"
 
 #include <TObject.h>
 #include <TVector3.h>
@@ -57,6 +58,8 @@ class AbsMaterialInterface : public TObject {
                                      double& mEE) = 0;
 
   virtual void getMaterialParameters(MaterialProperties& parameters) = 0;
+
+  virtual Material getMaterialParameters() = 0;
 
   /** @brief Make a step until maxStep or the next boundary is reached.
    *
