@@ -153,9 +153,7 @@ Scalar MaterialEffects::effects(const std::vector<RKStep>& steps,
       it->matStep_.material_.Print();
     }
 
-    Scalar stepSign(1.);
-    if (realPath < 0)
-      stepSign = -1.;
+    const Scalar stepSign = realPath < 0 ? -1 : 1;
     realPath = fabs(realPath);
     stepSize_ = realPath;
 
