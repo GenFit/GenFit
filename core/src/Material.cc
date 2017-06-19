@@ -8,11 +8,11 @@ namespace genfit {
         if (&lhs == &rhs)
             return true;
 
-        return lhs.density != rhs.density or
-            lhs.Z != rhs.Z or
-            lhs.A != rhs.A or
-            lhs.radiationLength != rhs.radiationLength or
-            lhs.mEE != rhs.mEE;
+        return !(lhs.density != rhs.density or
+                 lhs.Z != rhs.Z or
+                 lhs.A != rhs.A or
+                 lhs.radiationLength != rhs.radiationLength or
+                 lhs.mEE != rhs.mEE);
 
     }
 
