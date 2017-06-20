@@ -25,7 +25,6 @@
 #define genfit_AbsMaterialInterface_h
 
 #include "RKTrackRep.h"
-#include "MaterialProperties.h"
 #include "Material.h"
 
 #include <TObject.h>

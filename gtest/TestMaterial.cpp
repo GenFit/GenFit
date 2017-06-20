@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <Material.h>
-#include <MaterialProperties.h>
 
 namespace genfit {
 
