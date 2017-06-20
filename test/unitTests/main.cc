@@ -136,7 +136,9 @@ e_testStatus compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<d
       if ( fabs(absErr) > maxAbsErr ) {
         double relErr = A(i,j)/B(i,j) - 1;
         if ( fabs(relErr) > maxRelErr ) {
-          if (verbose) std::cout << "compareMatrices: A("<<i<<","<<j<<") = " << A(i,j) << "  B("<<i<<","<<j<<") = " << B(i,j) << "     absErr = " << absErr << "    relErr = " << relErr << "\n";
+          if (verbose)  {
+            std::cout << "compareMatrices: A("<<i<<","<<j<<") = " << A(i,j) << "  B("<<i<<","<<j<<") = " << B(i,j) << "     absErr = " << absErr << "    relErr = " << relErr << "\n";
+          }
           retVal = kFailed;
         }
       }
@@ -148,18 +150,24 @@ e_testStatus compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<d
 e_testStatus isCovMatrix(TMatrixTBase<double>& cov) {
 
   if (!(cov.IsSymmetric())) {
-    if (verbose) std::cout << "isCovMatrix: not symmetric\n";
+    if (verbose) {
+      std::cout << "isCovMatrix: not symmetric\n";
+    }
     return kFailed;
   }
 
   for (int i=0; i<cov.GetNrows(); ++i) {
     for (int j=0; j<cov.GetNcols(); ++j) {
        if (std::isnan(cov(i,j))) {
-         if (verbose) std::cout << "isCovMatrix: element isnan\n";
+         if (verbose) {
+           std::cout << "isCovMatrix: element isnan\n";
+         }
          return kFailed;
        }
        if (i==j && cov(i,j) < 0) {
-         if (verbose)   std::cout << "isCovMatrix: negative diagonal element\n";
+         if (verbose) {
+           std::cout << "isCovMatrix: negative diagonal element\n";
+         }
          return kFailed;
        }
     }
@@ -211,7 +219,9 @@ e_testStatus checkSetGetPosMom(bool writeHisto = false) {
 
     // check if plane has changed
     if (state.getPlane() != plane) {
-        if (verbose)  std::cout << "plane has changed unexpectedly! \n";
+        if (verbose) {
+          std::cout << "plane has changed unexpectedly! \n";
+        }
       delete rep;
       return kFailed;
     }
