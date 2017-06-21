@@ -68,6 +68,8 @@ enum e_testStatus {
   kException
 };
 
+constexpr bool verbose = false;
+
 void handler(int sig) {
   void *array[10];
   size_t size;
@@ -134,7 +136,9 @@ e_testStatus compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<d
       if ( fabs(absErr) > maxAbsErr ) {
         double relErr = A(i,j)/B(i,j) - 1;
         if ( fabs(relErr) > maxRelErr ) {
-          std::cout << "compareMatrices: A("<<i<<","<<j<<") = " << A(i,j) << "  B("<<i<<","<<j<<") = " << B(i,j) << "     absErr = " << absErr << "    relErr = " << relErr << "\n";
+          if (verbose)  {
+            std::cout << "compareMatrices: A("<<i<<","<<j<<") = " << A(i,j) << "  B("<<i<<","<<j<<") = " << B(i,j) << "     absErr = " << absErr << "    relErr = " << relErr << "\n";
+          }
           retVal = kFailed;
         }
       }
@@ -146,18 +150,24 @@ e_testStatus compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<d
 e_testStatus isCovMatrix(TMatrixTBase<double>& cov) {
 
   if (!(cov.IsSymmetric())) {
-    std::cout << "isCovMatrix: not symmetric\n";
+    if (verbose) {
+      std::cout << "isCovMatrix: not symmetric\n";
+    }
     return kFailed;
   }
 
   for (int i=0; i<cov.GetNrows(); ++i) {
     for (int j=0; j<cov.GetNcols(); ++j) {
        if (std::isnan(cov(i,j))) {
-         std::cout << "isCovMatrix: element isnan\n";
+         if (verbose) {
+           std::cout << "isCovMatrix: element isnan\n";
+         }
          return kFailed;
        }
        if (i==j && cov(i,j) < 0) {
-         std::cout << "isCovMatrix: negative diagonal element\n";
+         if (verbose) {
+           std::cout << "isCovMatrix: negative diagonal element\n";
+         }
          return kFailed;
        }
     }
@@ -209,7 +219,9 @@ e_testStatus checkSetGetPosMom(bool writeHisto = false) {
 
     // check if plane has changed
     if (state.getPlane() != plane) {
-      std::cout << "plane has changed unexpectedly! \n";
+        if (verbose) {
+          std::cout << "plane has changed unexpectedly! \n";
+        }
       delete rep;
       return kFailed;
     }
@@ -220,13 +232,13 @@ e_testStatus checkSetGetPosMom(bool writeHisto = false) {
   if ((pos - rep->getPos(state)).Mag() > epsilonLen ||
       (mom - rep->getMom(state)).Mag() > epsilonMom) {
 
-    state.Print();
+    if (verbose) {
+      state.Print();
+      std::cout << "pos difference = " << (pos - rep->getPos(state)).Mag() << "\n";
+      std::cout << "mom difference = " << (mom - rep->getMom(state)).Mag() << "\n";
 
-    std::cout << "pos difference = " << (pos - rep->getPos(state)).Mag() << "\n";
-    std::cout << "mom difference = " << (mom - rep->getMom(state)).Mag() << "\n";
-
-    std::cout << std::endl;
-
+      std::cout << std::endl;
+    }
     delete rep;
     return kFailed;
   }
@@ -327,11 +339,12 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
     //std::cout << "MomLoss = " << momLoss1 << "\n";
   }
   catch (genfit::Exception& e) {
-    std::cerr << "Exception in forth Extrapolation. PDG = " << pdg << "; mom: \n";
-    mom.Print();
+    if (verbose) {
+      std::cerr << "Exception in forth Extrapolation. PDG = " << pdg << "; mom: \n";
+      mom.Print();
 
-    std::cerr << e.what();
-
+      std::cerr << e.what();
+    }
     delete rep;
     return kException;
   }
@@ -360,11 +373,12 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
     //std::cout << "deviation = " << deviation << "\n";
   }
   catch (genfit::Exception& e) {
-    std::cerr << "Exception in back Extrapolation. PDG = " << pdg << "; mom:  \n";
-    mom.Print();
-    std::cerr << "mom2:  \n";
-    mom2.Print();
-
+    if (verbose) {
+      std::cerr << "Exception in back Extrapolation. PDG = " << pdg << "; mom:  \n";
+      mom.Print();
+      std::cerr << "mom2:  \n";
+      mom2.Print();
+    }
     std::cerr << e.what();
 
     delete rep;
@@ -376,15 +390,16 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
       (rep->getMom(origState) - rep->getMom(state)).Mag() > epsilonMom ||
       fabs(extrapLen + backExtrapLen) > epsilonLen) {
 
-    origState.Print();
-    state.Print();
+    if (verbose) {
+        origState.Print();
+        state.Print();
 
-    std::cout << "pos difference = " << (rep->getPos(origState) - rep->getPos(state)).Mag() << "\n";
-    std::cout << "mom difference = " << (rep->getMom(origState) - rep->getMom(state)).Mag() << "\n";
-    std::cout << "len difference = " << extrapLen + backExtrapLen << "\n";
+        std::cout << "pos difference = " << (rep->getPos(origState) - rep->getPos(state)).Mag() << "\n";
+        std::cout << "mom difference = " << (rep->getMom(origState) - rep->getMom(state)).Mag() << "\n";
+        std::cout << "len difference = " << extrapLen + backExtrapLen << "\n";
 
-    std::cout << std::endl;
-
+        std::cout << std::endl;
+    }
     delete rep;
     return kFailed;
   }
@@ -515,8 +530,10 @@ e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
 
   // compare
   if (!((origState.getState() - state.getState()).Abs()  < deltaState) ) {
-    std::cout << "(origState.getState() - state.getState()) ";
-    (origState.getState() - state.getState()).Print();
+    if (verbose) {
+      std::cout << "(origState.getState() - state.getState()) ";
+      (origState.getState() - state.getState()).Print();
+    }
 
     retVal = kFailed;
   }
@@ -527,15 +544,16 @@ e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
       !((jac_b * extrapolatedState.getState() + c_b  -  origState.getState()).Abs() < deltaState) ||
       !((jac_fi * extrapolatedState.getState() + c_fi  -  origState.getState()).Abs() < deltaState)   ) {
 
-    std::cout << "(jac_f * origState.getState() + c_f  -  extrapolatedState.getState()) ";
-    (jac_f * origState.getState() + c_f  -  extrapolatedState.getState()).Print();
-    std::cout << "(jac_bi * origState.getState() + c_bi  -  extrapolatedState.getState()) ";
-    (jac_bi * origState.getState() + c_bi  -  extrapolatedState.getState()).Print();
-    std::cout << "(jac_b * extrapolatedState.getState() + c_b  -  origState.getState()) ";
-    (jac_b * extrapolatedState.getState() + c_b  -  origState.getState()).Print();
-    std::cout << "(jac_fi * extrapolatedState.getState() + c_fi  -  origState.getState()) ";
-    (jac_fi * extrapolatedState.getState() + c_fi  -  origState.getState()).Print();
-
+    if (verbose) {
+      std::cout << "(jac_f * origState.getState() + c_f  -  extrapolatedState.getState()) ";
+      (jac_f * origState.getState() + c_f - extrapolatedState.getState()).Print();
+      std::cout << "(jac_bi * origState.getState() + c_bi  -  extrapolatedState.getState()) ";
+      (jac_bi * origState.getState() + c_bi - extrapolatedState.getState()).Print();
+      std::cout << "(jac_b * extrapolatedState.getState() + c_b  -  origState.getState()) ";
+      (jac_b * extrapolatedState.getState() + c_b - origState.getState()).Print();
+      std::cout << "(jac_fi * extrapolatedState.getState() + c_fi  -  origState.getState()) ";
+      (jac_fi * extrapolatedState.getState() + c_fi - origState.getState()).Print();
+    }
     retVal = kFailed;
   }
 
@@ -546,37 +564,49 @@ e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
 
   // compare
   if (compareMatrices(jac_f, jac_bi, deltaJac) == kFailed) {
-    std::cout << "jac_f = "; jac_f.Print();
-    std::cout << "jac_bi = "; jac_bi.Print();
-    std::cout << std::endl;
-
+    if (verbose) {
+      std::cout << "jac_f = ";
+      jac_f.Print();
+      std::cout << "jac_bi = ";
+      jac_bi.Print();
+      std::cout << std::endl;
+    }
     retVal = kFailed;
   }
 
   // compare
   if (compareMatrices(jac_b, jac_fi, deltaJac) == kFailed) {
-    std::cout << "jac_b = "; jac_b.Print();
-    std::cout << "jac_fi = "; jac_fi.Print();
-    std::cout << std::endl;
-
+    if (verbose) {
+      std::cout << "jac_b = ";
+      jac_b.Print();
+      std::cout << "jac_fi = ";
+      jac_fi.Print();
+      std::cout << std::endl;
+    }
     retVal = kFailed;
   }
 
   // compare
   if (compareMatrices(noise_f, noise_bi, deltaNoise) == kFailed) {
-    std::cout << "noise_f = "; noise_f.Print();
-    std::cout << "noise_bi = "; noise_bi.Print();
-    std::cout << std::endl;
-
+    if (verbose) {
+      std::cout << "noise_f = ";
+      noise_f.Print();
+      std::cout << "noise_bi = ";
+      noise_bi.Print();
+      std::cout << std::endl;
+    }
     retVal = kFailed;
   }
 
   // compare
   if (compareMatrices(noise_b, noise_fi, deltaNoise) == kFailed) {
-    std::cout << "noise_b = "; noise_b.Print();
-    std::cout << "noise_fi = "; noise_fi.Print();
-    std::cout << std::endl;
-
+    if (verbose) {
+      std::cout << "noise_b = ";
+      noise_b.Print();
+      std::cout << "noise_fi = ";
+      noise_fi.Print();
+      std::cout << std::endl;
+    }
     retVal = kFailed;
   }
 
@@ -584,10 +614,13 @@ e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
   if (!fx) {
     // compare
     if (compareMatrices(jac_f, jac_f_num, deltaJac) == kFailed) {
-      std::cout << "jac_f = "; jac_f.Print();
-      std::cout << "jac_f_num = "; jac_f_num.Print();
-      std::cout << std::endl;
-
+      if (verbose) {
+        std::cout << "jac_f = ";
+        jac_f.Print();
+        std::cout << "jac_f_num = ";
+        jac_f_num.Print();
+        std::cout << std::endl;
+      }
       retVal = kFailed;
     }
   }
@@ -641,14 +674,14 @@ e_testStatus checkStopAtBoundary(bool writeHisto = false) {
 
   // compare
   if (fabs(rep->getPos(state).Perp() - matRadius) > epsilonLen) {
+      if (verbose) {
+        origState.Print();
+        state.Print();
 
-      origState.Print();
-      state.Print();
+        std::cerr << "radius difference = " << rep->getPos(state).Perp() - matRadius << "\n";
 
-      std::cerr << "radius difference = " << rep->getPos(state).Perp() - matRadius << "\n";
-
-      std::cerr << std::endl;
-
+        std::cerr << std::endl;
+      }
       delete rep;
       return kFailed;
     }
@@ -699,10 +732,10 @@ e_testStatus checkErrorPropagation(bool writeHisto = false) {
 
   // check
   if (isCovMatrix(state.getCov()) == kFailed) {
-
-    origState.Print();
-    state.Print();
-
+    if (verbose) {
+      origState.Print();
+      state.Print();
+    }
     delete rep;
     return kFailed;
   }
@@ -757,13 +790,15 @@ e_testStatus checkExtrapolateToLine(bool writeHisto = false) {
       fabs(state.getPlane()->distance(linePoint+lineDirection)) > epsilonLen ||
       (rep->getMom(state).Unit() * state.getPlane()->getNormal()) > epsilonMom) {
 
-      origState.Print();
-      state.Print();
+      if (verbose) {
+        origState.Print();
+        state.Print();
 
-      std::cout << "distance of linePoint to plane = " << state.getPlane()->distance(linePoint) << "\n";
-      std::cout << "distance of linePoint+lineDirection to plane = " << state.getPlane()->distance(linePoint+lineDirection) << "\n";
-      std::cout << "direction * plane normal = " << rep->getMom(state).Unit() * state.getPlane()->getNormal() << "\n";
-
+        std::cout << "distance of linePoint to plane = " << state.getPlane()->distance(linePoint) << "\n";
+        std::cout << "distance of linePoint+lineDirection to plane = "
+                  << state.getPlane()->distance(linePoint + lineDirection) << "\n";
+        std::cout << "direction * plane normal = " << rep->getMom(state).Unit() * state.getPlane()->getNormal() << "\n";
+      }
       delete rep;
       return kFailed;
     }
@@ -815,13 +850,13 @@ e_testStatus checkExtrapolateToPoint(bool writeHisto = false) {
   // compare
   if (fabs(state.getPlane()->distance(point)) > epsilonLen ||
       fabs((rep->getMom(state).Unit() * state.getPlane()->getNormal())) - 1 > epsilonMom) {
+      if (verbose) {
+        origState.Print();
+        state.Print();
 
-      origState.Print();
-      state.Print();
-
-      std::cout << "distance of point to plane = " << state.getPlane()->distance(point) << "\n";
-      std::cout << "direction * plane normal = " << rep->getMom(state).Unit() * state.getPlane()->getNormal() << "\n";
-
+        std::cout << "distance of point to plane = " << state.getPlane()->distance(point) << "\n";
+        std::cout << "direction * plane normal = " << rep->getMom(state).Unit() * state.getPlane()->getNormal() << "\n";
+      }
       delete rep;
       return kFailed;
     }
@@ -883,13 +918,13 @@ e_testStatus checkExtrapolateToCylinder(bool writeHisto = false) {
   if (fabs(state.getPlane()->getNormal()*radiusVec.Unit())-1 > epsilonLen ||
       fabs(lineDirection*radiusVec) > epsilonLen ||
       fabs(radiusVec.Mag()-radius) > epsilonLen) {
+      if (verbose) {
+        origState.Print();
+        state.Print();
 
-      origState.Print();
-      state.Print();
-
-      std::cout << "lineDirection*radiusVec = " << lineDirection*radiusVec << "\n";
-      std::cout << "radiusVec.Mag()-radius = " << radiusVec.Mag()-radius << "\n";
-
+        std::cout << "lineDirection*radiusVec = " << lineDirection * radiusVec << "\n";
+        std::cout << "radiusVec.Mag()-radius = " << radiusVec.Mag() - radius << "\n";
+      }
       delete rep;
       return kFailed;
     }
@@ -945,13 +980,13 @@ e_testStatus checkExtrapolateToSphere(bool writeHisto = false) {
   // compare
   if (fabs(state.getPlane()->getNormal()*radiusVec.Unit())-1 > epsilonLen ||
       fabs(radiusVec.Mag()-radius) > epsilonLen) {
+      if (verbose) {
+        origState.Print();
+        state.Print();
 
-      origState.Print();
-      state.Print();
-
-      std::cout << "state.getPlane()->getNormal()*radiusVec = " << state.getPlane()->getNormal()*radiusVec << "\n";
-      std::cout << "radiusVec.Mag()-radius = " << radiusVec.Mag()-radius << "\n";
-
+        std::cout << "state.getPlane()->getNormal()*radiusVec = " << state.getPlane()->getNormal() * radiusVec << "\n";
+        std::cout << "radiusVec.Mag()-radius = " << radiusVec.Mag() - radius << "\n";
+      }
       delete rep;
       return kFailed;
     }
@@ -1006,15 +1041,18 @@ e_testStatus checkExtrapolateBy(bool writeHisto = false) {
   // compare
   if (fabs(extrapolatedLen-step) > epsilonLen ||
       (posOrig - posExt).Mag() > fabs(step)) {
+      if (verbose) {
+        origState.Print();
+        state.Print();
 
-      origState.Print();
-      state.Print();
-
-      std::cout << "extrapolatedLen-step = " << extrapolatedLen-step << "\n";
-      std::cout << "started extrapolation from: "; posOrig.Print();
-      std::cout << "extrapolated to "; posExt.Print();
-      std::cout << "difference = " << (posOrig - posExt).Mag() << "; step = " << step << "; delta = " <<  (posOrig - posExt).Mag() - fabs(step) << "\n";
-
+        std::cout << "extrapolatedLen-step = " << extrapolatedLen - step << "\n";
+        std::cout << "started extrapolation from: ";
+        posOrig.Print();
+        std::cout << "extrapolated to ";
+        posExt.Print();
+        std::cout << "difference = " << (posOrig - posExt).Mag() << "; step = " << step << "; delta = "
+                  << (posOrig - posExt).Mag() - fabs(step) << "\n";
+      }
       delete rep;
       return kFailed;
     }
