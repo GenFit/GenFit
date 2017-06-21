@@ -18,6 +18,11 @@ namespace genfit {
     typedef Eigen::Matrix<Precision, 6, 6> Matrix6x6;
     typedef Eigen::Matrix<Precision, 7, 7> Matrix7x7;
 
+    typedef Eigen::Matrix<Precision, 5, 7> Matrix5x7;
+    typedef Eigen::Matrix<Precision, 7, 5> Matrix7x5;
+    typedef Eigen::Matrix<Precision, 5, 6> Matrix5x6;
+    typedef Eigen::Matrix<Precision, 6, 5> Matrix6x5;
+
     typedef Eigen::Matrix<Precision, Eigen::Dynamic, 1> VectorDynamic;
     typedef Eigen::Matrix<Precision, Eigen::Dynamic, Eigen::Dynamic> MatrixDynamic;
 

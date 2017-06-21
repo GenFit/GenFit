@@ -1608,66 +1608,46 @@ void RKTrackRep::calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, 
   }*/
 }
 
+Matrix6x6Sym RKTrackRep::transformPM6(const MeasuredStateOnPlane& state) const {
+
+  // get vectors and aux variables
+  const Vector3 U = TVector3ToEigenVector(state.getPlane()->getU());
+  const Vector3 V = TVector3ToEigenVector(state.getPlane()->getV());
+  const Vector3 W = TVector3ToEigenVector(state.getPlane()->getNormal());
+
+  const TVectorD& state5(state.getState());
+  const Scalar spu = getSpu(state);
+
+  const Vector3 pTilde = spu * (W + state5(1) * U + state5(2) * V);
+
+  const Scalar pTildeMag = pTilde.norm();
+  const Scalar pTildeMag2 = pTildeMag * pTildeMag;
+
+  const Scalar utpTildeOverpTildeMag2 = U.dot(pTilde) / pTildeMag2;
+  const Scalar vtpTildeOverpTildeMag2 = V.dot(pTilde) / pTildeMag2;
+
+  //J_pM matrix is d(x,y,z,px,py,pz) / d(q/p,u',v',u,v)
+
+  const Scalar qop = state5(0);
+  const Scalar p = getCharge(state)/qop; // momentum
+
+  Matrix5x6 J_pM_5x6(Matrix5x6::Zero());
+
+  J_pM_5x6.block<1, 3>(0, 3) = -1. * p / (pTildeMag * qop) * pTilde;  // d(px,py,pz)/d(q/p)
+  const Scalar fact = p * spu / pTildeMag;
+  J_pM_5x6.block<1, 3>(1, 3) = fact * (U - pTilde * utpTildeOverpTildeMag2);  // d(px,py,pz)/d(u')
+  J_pM_5x6.block<1, 3>(2, 3) = fact * (V - pTilde * vtpTildeOverpTildeMag2);  // d(px,py,pz)/d(v')
+  J_pM_5x6.block<1, 3>(3, 0) = U;  // d(x,y,z)/d(u)
+  J_pM_5x6.block<1, 3>(4, 0) = V;  // d(x,y,z)/d(v)
+
+  // cov6x6 = J_pM^T * cov5x5 * J_pM
+  return J_pM_5x6.transpose() * rootMatrixToEigenMatrix<5, 5>(state.getCov()) * J_pM_5x6;
+}
+
 
 void RKTrackRep::transformPM6(const MeasuredStateOnPlane& state,
                               M6x6& out6x6) const {
-
-  // get vectors and aux variables
-  const TVector3& U(state.getPlane()->getU());
-  const TVector3& V(state.getPlane()->getV());
-  const TVector3& W(state.getPlane()->getNormal());
-
-  const TVectorD& state5(state.getState());
-  double spu(getSpu(state));
-
-  M1x3 pTilde;
-  pTilde[0] = spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()); // a_x
-  pTilde[1] = spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
-  pTilde[2] = spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
-
-  const double pTildeMag = sqrt(pTilde[0]*pTilde[0] + pTilde[1]*pTilde[1] + pTilde[2]*pTilde[2]);
-  const double pTildeMag2 = pTildeMag*pTildeMag;
-
-  const double utpTildeOverpTildeMag2 = (U.X()*pTilde[0] + U.Y()*pTilde[1] + U.Z()*pTilde[2]) / pTildeMag2;
-  const double vtpTildeOverpTildeMag2 = (V.X()*pTilde[0] + V.Y()*pTilde[1] + V.Z()*pTilde[2]) / pTildeMag2;
-
-  //J_pM matrix is d(x,y,z,px,py,pz) / d(q/p,u',v',u,v)       (out is 6x6)
-
-  const double qop = state5(0);
-  const double p = getCharge(state)/qop; // momentum
-
-  M5x6 J_pM_5x6;
-  std::fill(J_pM_5x6.begin(), J_pM_5x6.end(), 0);
-
-  // d(px,py,pz)/d(q/p)
-  double fact = -1. * p / (pTildeMag * qop);
-  J_pM_5x6[3] = fact * pTilde[0]; // [0][3]
-  J_pM_5x6[4] = fact * pTilde[1]; // [0][4]
-  J_pM_5x6[5] = fact * pTilde[2]; // [0][5]
-  // d(px,py,pz)/d(u')
-  fact = p * spu / pTildeMag;
-  J_pM_5x6[9]  = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 ); // [1][3]
-  J_pM_5x6[10] = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 ); // [1][4]
-  J_pM_5x6[11] = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 ); // [1][5]
-  // d(px,py,pz)/d(v')
-  J_pM_5x6[15] = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
-  J_pM_5x6[16] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
-  J_pM_5x6[17] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
-  // d(x,y,z)/d(u)
-  J_pM_5x6[18] = U.X(); // [3][0]
-  J_pM_5x6[19] = U.Y(); // [3][1]
-  J_pM_5x6[20] = U.Z(); // [3][2]
-  // d(x,y,z)/d(v)
-  J_pM_5x6[24] = V.X(); // [4][0]
-  J_pM_5x6[25] = V.Y(); // [4][1]
-  J_pM_5x6[26] = V.Z(); // [4][2]
-
-
-  // do the transformation
-  // out = J_pM^T * in5x5 * J_pM
-  const M5x5& in5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
-  RKTools::J_pMTxcov5xJ_pM(J_pM_5x6, in5x5_, out6x6);
-
+  out6x6 = eigenMatrixToRKMatrix<6, 6>(transformPM6(state));
 }
 
 void RKTrackRep::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const {
@@ -1715,55 +1695,42 @@ void RKTrackRep::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, 
 }
 
 
+void RKTrackRep::transformM6P(const Matrix6x6Sym& cov, const Vector7& state7, MeasuredStateOnPlane& state) const {
+
+    // get vectors and aux variables
+    const Vector3 U = TVector3ToEigenVector(state.getPlane()->getU());
+    const Vector3 V = TVector3ToEigenVector(state.getPlane()->getV());
+    const Vector3 W = TVector3ToEigenVector(state.getPlane()->getNormal());
+
+    const Scalar AtU = state7.block<3, 1>(3, 0).dot(U);
+    const Scalar AtV = state7.block<3, 1>(3, 0).dot(V);
+    const Scalar AtW = state7.block<3, 1>(3 ,0).dot(W);
+
+    // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,px,py,pz)
+
+    const Scalar qop = state7[6];
+    const Scalar p = getCharge(state)/qop; // momentum
+
+    Matrix6x5 J_Mp_6x5(Matrix6x5::Zero());
+
+    J_Mp_6x5.block<3, 1>(0, 3) = U;  //d(u)/d(x,y,z)
+    J_Mp_6x5.block<3, 1>(0, 4) = V;  //d(v)/d(x,y,z)
+    J_Mp_6x5.block<3, 1>(3, 0) = (-1.) * qop / p * state7.block<3, 1>(3, 0);  // d(q/p)/d(px,py,pz)
+
+    // d(u')/d(px,py,pz)
+    const Scalar fact = 1./(p*AtW*AtW);
+    J_Mp_6x5.block<3, 1>(3, 1) = fact * (AtW * U - AtU * W);
+    J_Mp_6x5.block<3, 1>(3, 2) = fact * (AtW * V - AtV * W);
+
+    // cov5x5 = J_Mp^T * cov6x6 * J_Mp
+    state.setCov(eigenMatrixToRootMatrixSym<5>(J_Mp_6x5.transpose() * cov * J_Mp_6x5));
+}
+
+
 void RKTrackRep::transformM6P(const M6x6& in6x6,
                               const M1x7& state7,
                               MeasuredStateOnPlane& state) const { // plane and charge must already be set!
-
-  // get vectors and aux variables
-  const TVector3& U(state.getPlane()->getU());
-  const TVector3& V(state.getPlane()->getV());
-  const TVector3& W(state.getPlane()->getNormal());
-
-  const double AtU = state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z();
-  const double AtV = state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z();
-  const double AtW = state7[3]*W.X() + state7[4]*W.Y() + state7[5]*W.Z();
-
-  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,px,py,pz)       (in is 6x6)
-
-  const double qop = state7[6];
-  const double p = getCharge(state)/qop; // momentum
-
-  M6x5 J_Mp_6x5;
-  std::fill(J_Mp_6x5.begin(), J_Mp_6x5.end(), 0);
-
-  //d(u)/d(x,y,z)
-  J_Mp_6x5[3]  = U.X(); // [0][3]
-  J_Mp_6x5[8]  = U.Y(); // [1][3]
-  J_Mp_6x5[13] = U.Z(); // [2][3]
-  //d(v)/d(x,y,z)
-  J_Mp_6x5[4]  = V.X(); // [0][4]
-  J_Mp_6x5[9]  = V.Y(); // [1][4]
-  J_Mp_6x5[14] = V.Z(); // [2][4]
-  // d(q/p)/d(px,py,pz)
-  double fact = (-1.) * qop / p;
-  J_Mp_6x5[15] = fact * state7[3]; // [3][0]
-  J_Mp_6x5[20] = fact * state7[4]; // [4][0]
-  J_Mp_6x5[25] = fact * state7[5]; // [5][0]
-  // d(u')/d(px,py,pz)
-  fact = 1./(p*AtW*AtW);
-  J_Mp_6x5[16] = fact * (U.X()*AtW - W.X()*AtU); // [3][1]
-  J_Mp_6x5[21] = fact * (U.Y()*AtW - W.Y()*AtU); // [4][1]
-  J_Mp_6x5[26] = fact * (U.Z()*AtW - W.Z()*AtU); // [5][1]
-  // d(v')/d(px,py,pz)
-  J_Mp_6x5[17] = fact * (V.X()*AtW - W.X()*AtV); // [3][2]
-  J_Mp_6x5[22] = fact * (V.Y()*AtW - W.Y()*AtV); // [4][2]
-  J_Mp_6x5[27] = fact * (V.Z()*AtW - W.Z()*AtV); // [5][2]
-
-  // do the transformation
-  // out5x5 = J_Mp^T * in * J_Mp
-  M5x5& out5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
-  RKTools::J_MpTxcov6xJ_Mp(J_Mp_6x5, in6x6, out5x5_);
-
+    transformM6P(RKMatrixToEigenMatrix<6, 6>(in6x6), RKMatrixToEigenMatrix<1, 7>(state7), state);
 }
 
 
