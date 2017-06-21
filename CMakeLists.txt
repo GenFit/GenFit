@@ -325,6 +325,7 @@ IF(GTEST_FOUND)
 			gtest/TestRootEigenTransformations.cpp
 			gtest/TestRKMatrixEigenTransformations.cpp
 			gtest/TestMaterial.cpp
+			gtest/TestUnits.cpp
 			)
 	TARGET_LINK_LIBRARIES(gtests ${GTEST_BOTH_LIBRARIES} ${ROOT_LIBS} ${PROJECT_NAME})  # gtest gtest_main
 	MESSAGE(STATUS  ${GTEST_INCLUDE_DIRS})
