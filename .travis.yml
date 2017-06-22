@@ -32,7 +32,7 @@ install:
   # create dedicated build folder
   - cd .. && mkdir build && cd build
   - cmake ../GenFit
-  - make VERBOSE=1
+  - make
   - make tests
 script:
   # generate test geometry
