@@ -18,7 +18,7 @@ addons:
     - clang
 before_install:
   # install cmake and gtest
-  - sudo apt-get install cmake libgtest-dev libeigen3-dev libglu1-mesa
+  - sudo apt-get install cmake libgtest-dev libglu1-mesa
   - cd /usr/src/gtest
   - sudo cmake CMakeLists.txt
   - sudo make
@@ -29,6 +29,10 @@ before_install:
   - tar xzf ${ROOT_VERSION}
   - source root/bin/thisroot.sh
 install:
+  # Install Eigen from source
+  - wget https://bitbucket.org/eigen/eigen/get/3.3.4.tar.gz -O /tmp/eigen.tar.gz
+  - mkdir eigen3-src && tar -xzf /tmp/eigen.tar.gz -C eigen3-src --strip 1
+  - cd eigen3-src && mkdir build && cd build && cmake .. && sudo make install && cd ../..
   # create dedicated build folder
   - cd .. && mkdir build && cd build
   - cmake ../GenFit
