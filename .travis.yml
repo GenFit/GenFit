@@ -18,7 +18,7 @@ addons:
     - clang
 before_install:
   # install cmake and gtest
-  - sudo apt-get install cmake libgtest-dev libeigen3-dev
+  - sudo apt-get install cmake libgtest-dev libeigen3-dev libglu1-mesa
   - cd /usr/src/gtest
   - sudo cmake CMakeLists.txt
   - sudo make
