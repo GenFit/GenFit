@@ -30,6 +30,7 @@ INCLUDE(macros)
 INCLUDE(genfit)
 
 FIND_PACKAGE(ROOT REQUIRED COMPONENTS Geom)
+FIND_PACKAGE(Eigen3 REQUIRED NO_MODULE)
 
 # either, the environment variable RAVEPATH has to be specified, and RAVE's pkgConfig will be used to determine everything we need
 # or, RAVE_LDFLAGS, RAVE_INCLUDE_DIRS and RAVE_CFLAGS have to be set via the command-line
@@ -103,10 +104,11 @@ SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -O3 -g")
 
 
 INCLUDE_DIRECTORIES(
-	BEFORE 
-	${ROOT_INCLUDE_DIRS}
-	${GF_INC_DIRS})
-
+		BEFORE
+		${ROOT_INCLUDE_DIRS}
+		SYSTEM ${EIGEN3_INCLUDE_DIR}
+		${GF_INC_DIRS}
+)
 
 FIND_PACKAGE(Doxygen)
 IF(DOXYGEN_FOUND)
