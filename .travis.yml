@@ -26,7 +26,7 @@ before_install:
   - cd -
   # install root
   - wget https://root.cern.ch/download/${ROOT_VERSION}
-  - tar xvzf ${ROOT_VERSION}
+  - tar xzf ${ROOT_VERSION}
   - source root/bin/thisroot.sh
 install:
   # create dedicated build folder
