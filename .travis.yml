@@ -7,7 +7,7 @@ notifications:
     on_failure: always
 env:
   matrix:
-    - ROOT_VERSION=root_v6.08.00.Linux-ubuntu14-x86_64-gcc4.8.tar.gz
+    - ROOT_VERSION=root_v6.10.00.Linux-ubuntu14-x86_64-gcc4.8.tar.gz
 compiler: gcc-4.8
 addons:
   apt:
