@@ -112,8 +112,6 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
  private:
 
-
-#ifndef __CINT__
   //! Reference state. Used by KalmanFitterRefTrack.
   std::unique_ptr<ReferenceStateOnPlane> referenceState_; // Ownership
   std::unique_ptr<MeasuredStateOnPlane> forwardPrediction_; // Ownership
@@ -122,16 +120,6 @@ class KalmanFitterInfo : public AbsFitterInfo {
   std::unique_ptr<KalmanFittedStateOnPlane> backwardUpdate_; // Ownership
   mutable std::unique_ptr<MeasuredStateOnPlane> fittedStateUnbiased_; //!  cache
   mutable std::unique_ptr<MeasuredStateOnPlane> fittedStateBiased_; //!  cache
-#else
-  class ReferenceStateOnPlane* referenceState_;
-  class MeasuredStateOnPlane* forwardPrediction_;
-  class KalmanFittedStateOnPlane* forwardUpdate_;
-  class MeasuredStateOnPlane* backwardPrediction_;
-  class KalmanFittedStateOnPlane* backwardUpdate_;
-  class MeasuredStateOnPlane* fittedStateUnbiased_; //!  cache
-  class MeasuredStateOnPlane* fittedStateBiased_; //!  cache
-#endif
-
 
  //> TODO ! ptr implement: to the special ownership version
   /* class owned_pointer_vector : private std::vector<MeasuredStateOnPlane*> {
