@@ -93,11 +93,7 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
 
  protected:
 
-#ifndef __CINT__
   std::unique_ptr<const AbsHMatrix> hMatrix_; // Ownership
-#else
-  const AbsHMatrix* hMatrix_; //! Ownership. Projection matrix
-#endif
   double weight_;
 
  public:

@@ -32,11 +32,7 @@
 
 namespace genfit {
 
-#ifndef __CINT__
-typedef std::shared_ptr< const genfit::MaterialProperties > SharedMaterialPropertiesPtr;
-#else
-class SharedMaterialPropertiesPrt;
-#endif
+    typedef std::shared_ptr< const genfit::MaterialProperties > SharedMaterialPropertiesPtr;
 
 } /* End of namespace genfit */
 /** @} */

@@ -263,14 +263,9 @@ namespace genfit {
     TVectorD measurement_;
     TMatrixDSym measCov_;
     TMatrixD hMatrix_;
-    
-    #ifndef __CINT__
+
     mutable std::unique_ptr<MeasuredStateOnPlane> fittedStateBwd_; //!  cache
     mutable std::unique_ptr<MeasuredStateOnPlane> fittedStateFwd_; //!  cache
-    #else
-    class MeasuredStateOnPlane* fittedStateBwd_; //!  cache
-    class MeasuredStateOnPlane* fittedStateFwd_; //!  cache    
-    #endif
     
   public:
     
