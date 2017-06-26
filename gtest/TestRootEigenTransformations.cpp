@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <TVectorD.h>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 #include <RootEigenTransformations.h>
 
