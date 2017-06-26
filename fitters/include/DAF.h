@@ -116,11 +116,8 @@ class DAF : public AbsKalmanFitter {
 			// parameter, i.e. we're living in 3D space,
 			// where time may be used in the fit.  Zeroth
 			// entry is not used.
-#ifndef __CINT__
+
   std::unique_ptr<AbsKalmanFitter> kalman_;
-#else
-  AbsKalmanFitter* kalman_;
-#endif
 
  public:
 

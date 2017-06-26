@@ -185,12 +185,7 @@ class DetPlane : public TObject {
   TVector3 u_;
   TVector3 v_;
 
-#ifndef __CINT__
   std::unique_ptr<AbsFinitePlane> finitePlane_; // Ownership
-#else
-  class AbsFinitePlane* finitePlane_; //! Shut ROOT up, this class has a custom streamer.
-#endif
-
 
  public:
   ClassDef(DetPlane,1)

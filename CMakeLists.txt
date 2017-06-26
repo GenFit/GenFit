@@ -9,7 +9,7 @@ PROJECT(genfit2)
 
 # set project version
 SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
-SET( ${PROJECT_NAME}_VERSION_MINOR 1 )
+SET( ${PROJECT_NAME}_VERSION_MINOR 2 )
 SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 
 # install destinations can be passed via the command line:
@@ -30,6 +30,10 @@ INCLUDE(macros)
 INCLUDE(genfit)
 
 FIND_PACKAGE(ROOT REQUIRED COMPONENTS Geom)
+IF(${ROOT_found_version} LESS 60000)
+	MESSAGE(FATAL_ERROR "GenFit requires a ROOT version > 6.00.00")
+ENDIF()
+
 FIND_PACKAGE(Eigen3 REQUIRED NO_MODULE)
 
 # either, the environment variable RAVEPATH has to be specified, and RAVE's pkgConfig will be used to determine everything we need

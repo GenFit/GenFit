@@ -68,11 +68,7 @@ class KalmanFitter : public AbsKalmanFitter {
   void processTrackPoint(TrackPoint* tp,
       const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
 
-#ifndef __CINT__
   std::unique_ptr<MeasuredStateOnPlane> currentState_;
-#else
-  MeasuredStateOnPlane* currentState_;
-#endif
 
   bool squareRootFormalism_;
 
