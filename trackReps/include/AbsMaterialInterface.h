@@ -25,7 +25,7 @@
 #define genfit_AbsMaterialInterface_h
 
 #include "RKTrackRep.h"
-#include "MaterialProperties.h"
+#include "Material.h"
 
 #include <TObject.h>
 #include <TVector3.h>
@@ -48,15 +48,11 @@ class AbsMaterialInterface : public TObject {
   virtual bool initTrack(double posX, double posY, double posZ,
                          double dirX, double dirY, double dirZ) = 0;
 
-  /** @brief Get material parameters in current material
+  /***
+   * Get the material paramaters in the current material.
+   * @return
    */
-  virtual void getMaterialParameters(double& density,
-                                     double& Z,
-                                     double& A,
-                                     double& radiationLength,
-                                     double& mEE) = 0;
-
-  virtual void getMaterialParameters(MaterialProperties& parameters) = 0;
+  virtual Material getMaterialParameters() = 0;
 
   /** @brief Make a step until maxStep or the next boundary is reached.
    *

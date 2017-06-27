@@ -58,34 +58,10 @@ TGeoMaterialInterface::initTrack(double posX, double posY, double posZ,
 }
 
 
-void
-TGeoMaterialInterface::getMaterialParameters(double& density,
-                                               double& Z,
-                                               double& A,
-                                               double& radiationLength,
-                                               double& mEE){
+Material TGeoMaterialInterface::getMaterialParameters() {
 
   TGeoMaterial* mat = gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial();
-
-  density         = mat->GetDensity();
-  Z               = mat->GetZ();
-  A               = mat->GetA();
-  radiationLength = mat->GetRadLen();
-  mEE             = MeanExcEnergy_get(mat);
-
-}
-
-
-void
-TGeoMaterialInterface::getMaterialParameters(MaterialProperties& parameters) {
-
-  TGeoMaterial* mat = gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial();
-
-  parameters.setMaterialProperties(mat->GetDensity(),
-      mat->GetZ(),
-      mat->GetA(),
-      mat->GetRadLen(),
-      MeanExcEnergy_get(mat));
+  return Material(mat->GetDensity(), mat->GetZ(), mat->GetA(), mat->GetRadLen(), MeanExcEnergy_get(mat));
 
 }
 

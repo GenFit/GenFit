@@ -9,7 +9,7 @@ PROJECT(genfit2)
 
 # set project version
 SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
-SET( ${PROJECT_NAME}_VERSION_MINOR 1 )
+SET( ${PROJECT_NAME}_VERSION_MINOR 2 )
 SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 
 # install destinations can be passed via the command line:
@@ -30,6 +30,10 @@ INCLUDE(macros)
 INCLUDE(genfit)
 
 FIND_PACKAGE(ROOT REQUIRED COMPONENTS Geom)
+IF(${ROOT_found_version} LESS 60000)
+	MESSAGE(FATAL_ERROR "GenFit requires a ROOT version > 6.00.00")
+ENDIF()
+
 FIND_PACKAGE(Eigen3 REQUIRED NO_MODULE)
 
 # either, the environment variable RAVEPATH has to be specified, and RAVE's pkgConfig will be used to determine everything we need
@@ -147,7 +151,7 @@ SET(CORE_DICTIONARY_SOURCES
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/DetPlane.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/FitStatus.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/IO.h
-		${CMAKE_CURRENT_SOURCE_DIR}/core/include/MaterialProperties.h
+		${CMAKE_CURRENT_SOURCE_DIR}/core/include/Material.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasuredStateOnPlane.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementFactory.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementOnPlane.h
@@ -325,6 +329,7 @@ IF(GTEST_FOUND)
 			gtest/TestRootEigenTransformations.cpp
 			gtest/TestRKMatrixEigenTransformations.cpp
 			gtest/TestUnits.cpp
+			gtest/TestMaterial.cpp
 			)
 	TARGET_LINK_LIBRARIES(gtests ${GTEST_BOTH_LIBRARIES} ${ROOT_LIBS} ${PROJECT_NAME})  # gtest gtest_main
 	MESSAGE(STATUS  ${GTEST_INCLUDE_DIRS})

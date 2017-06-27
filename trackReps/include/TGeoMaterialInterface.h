@@ -45,15 +45,7 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
   bool initTrack(double posX, double posY, double posZ,
                  double dirX, double dirY, double dirZ);
 
-  /** @brief Get material parameters in current material
-   */
-  void getMaterialParameters(double& density,
-                             double& Z,
-                             double& A,
-                             double& radiationLength,
-                             double& mEE);
-
-  void getMaterialParameters(MaterialProperties& parameters);
+  Material getMaterialParameters() override;
 
   /** @brief Make a step (following the curvature) until step length
    * sMax or the next boundary is reached.  After making a step to a
