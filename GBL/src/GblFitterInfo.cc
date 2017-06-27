@@ -128,10 +128,10 @@ namespace genfit {
         //thePoint.addScatterer(getKinks(), kinkPrec);
         //TODO: if state at scatterer is updated, the direction of track might not be perpendicular anymore
         // plane does not change at pure scatterer
-        TMatrixDSym kinkCov = getCovariance(trackPoint_->getMaterialInfo()->getMaterial().getDensity(), sop.getDir(), sop.getPlane());
+        TMatrixDSym kinkCov = getCovariance(trackPoint_->getMaterialInfo()->getMaterial().density, sop.getDir(), sop.getPlane());
         thePoint.addScatterer(getKinks(), kinkCov.Invert());
       } else {
-        TMatrixDSym kinkCov = getCovariance(trackPoint_->getMaterialInfo()->getMaterial().getDensity(), sop.getDir(), sop.getPlane());
+        TMatrixDSym kinkCov = getCovariance(trackPoint_->getMaterialInfo()->getMaterial().density, sop.getDir(), sop.getPlane());
         thePoint.addScatterer(getKinks(), kinkCov.Invert());
       }      
     }

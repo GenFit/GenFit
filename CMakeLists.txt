@@ -151,7 +151,7 @@ SET(CORE_DICTIONARY_SOURCES
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/DetPlane.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/FitStatus.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/IO.h
-		${CMAKE_CURRENT_SOURCE_DIR}/core/include/MaterialProperties.h
+		${CMAKE_CURRENT_SOURCE_DIR}/core/include/Material.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasuredStateOnPlane.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementFactory.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementOnPlane.h
@@ -328,6 +328,7 @@ IF(GTEST_FOUND)
 			gtest/TestRKTrackRep.cpp
 			gtest/TestRootEigenTransformations.cpp
 			gtest/TestRKMatrixEigenTransformations.cpp
+			gtest/TestMaterial.cpp
 			)
 	TARGET_LINK_LIBRARIES(gtests ${GTEST_BOTH_LIBRARIES} ${ROOT_LIBS} ${PROJECT_NAME})  # gtest gtest_main
 	MESSAGE(STATUS  ${GTEST_INCLUDE_DIRS})

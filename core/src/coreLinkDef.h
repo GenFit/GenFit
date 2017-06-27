@@ -12,7 +12,7 @@
 #pragma link C++ class genfit::AbsHMatrix+;
 #pragma link C++ class genfit::RectangularFinitePlane+;
 #pragma link C++ class genfit::FitStatus+;
-#pragma link C++ class genfit::MaterialProperties+;
+#pragma link C++ class genfit::Material+;
 #pragma link C++ class genfit::PruneFlags+;
 #pragma link C++ class genfit::TrackCand+;
 #pragma link C++ class genfit::TrackCandHit+;
