@@ -328,6 +328,7 @@ IF(GTEST_FOUND)
 			gtest/TestRKTrackRep.cpp
 			gtest/TestRootEigenTransformations.cpp
 			gtest/TestRKMatrixEigenTransformations.cpp
+			gtest/TestUnits.cpp
 			gtest/TestMaterial.cpp
 			)
 	TARGET_LINK_LIBRARIES(gtests ${GTEST_BOTH_LIBRARIES} ${ROOT_LIBS} ${PROJECT_NAME})  # gtest gtest_main
