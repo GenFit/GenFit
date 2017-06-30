@@ -194,7 +194,12 @@ class RKTrackRep : public AbsTrackRep {
                      double S,
                      bool varField = true,
                      bool calcOnlyLastRowOfJ = false) const;
-
+  double RKPropagate(Vector7& state7,
+                     Matrix7x7* jacobian,
+                     Vector3& SA,
+                     double S,
+                     bool varField = true,
+                     bool calcOnlyLastRowOfJ = false) const;
   virtual bool isSameType(const AbsTrackRep* other);
   virtual bool isSame(const AbsTrackRep* other);
 
