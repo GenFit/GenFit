@@ -34,6 +34,7 @@
 
 #define FILENAME "/tmp/streamerTest.root"
 
+constexpr bool verbose = false;
 
 bool emptyTrackTest()
 {
@@ -278,20 +279,23 @@ int main() {
         // track ok
       }
       else {
-        std::cout << "stored track not equal, small differences can occur if some info has been pruned." << std::endl;
-        pState->Print();
-        fitTrack->getFittedState().getState().Print();
-        pMatrix->Print();
-        fitTrack->getFittedState().getCov().Print();
-        plane->Print();
-        fitTrack->getFittedState().getPlane()->Print();
-
+        if (verbose) {
+          std::cout << "stored track not equal, small differences can occur if some info has been pruned." << std::endl;
+          pState->Print();
+          fitTrack->getFittedState().getState().Print();
+          pMatrix->Print();
+          fitTrack->getFittedState().getCov().Print();
+          plane->Print();
+          fitTrack->getFittedState().getPlane()->Print();
+          }
         ++fail;
         //return 1;
       }
     }
     catch (genfit::Exception& e) {
-      std::cerr << e.what();
+        if (verbose) {
+            std::cerr << e.what();
+        }
       return 1;
     }
   }
