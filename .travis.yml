@@ -46,5 +46,5 @@ script:
   # run unit tests, must be executed in the build folder
   # so ROOT can find its .pcm files
   - ./bin/gtests
-  - ./bin/unitTests
   - ./bin/streamerTest
+  - ./bin/unitTests
