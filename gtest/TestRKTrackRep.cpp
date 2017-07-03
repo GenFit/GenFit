@@ -290,7 +290,64 @@ namespace genfit {
 
     /// White-Box-Test
     TEST_F (RKTrackRepTests, calcJ_pM_5x7) {
-        // TODO: Implement
+        RKTrackRep myRKTrackRep;
+
+        // Code snippet from RKTrackRep to initialize test properly
+        DetPlane myStartPlane(TVector3(0, 0, 0), TVector3(1, 1, 0));
+        M1x3 pTilde = {{0.9, 1.1, 0.1}};
+        const TVector3& normal = myStartPlane.getNormal();
+        double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
+        double spu = pTildeW > 0 ? 1 : -1;
+        for (unsigned int i=0; i<3; ++i) {
+            pTilde[i] *= spu/pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
+        }
+        // Code snippet end.
+        Vector7 myStartState;
+        myStartState << 0, 0, 0, pTilde[0], pTilde[1], pTilde[2], 1;
+        const auto J_pMe = myRKTrackRep.calcJ_pM_5x7(
+                myStartState,
+                myStartPlane
+        );
+
+        EXPECT_FLOAT_EQ(0, J_pMe(0, 0));
+        EXPECT_FLOAT_EQ(0, J_pMe(0, 1));
+        EXPECT_FLOAT_EQ(0, J_pMe(0, 2));
+        EXPECT_FLOAT_EQ(0, J_pMe(0, 3));
+        EXPECT_FLOAT_EQ(0, J_pMe(0, 4));
+        EXPECT_FLOAT_EQ(0, J_pMe(0, 5));
+        EXPECT_FLOAT_EQ(1, J_pMe(0, 6));
+
+        EXPECT_FLOAT_EQ(0, J_pMe(1, 0));
+        EXPECT_FLOAT_EQ(0, J_pMe(1, 1));
+        EXPECT_FLOAT_EQ(0, J_pMe(1, 2));
+        EXPECT_FLOAT_EQ(0.7640964, J_pMe(1, 3));
+        EXPECT_FLOAT_EQ(-0.62579853, J_pMe(1, 4));
+        EXPECT_FLOAT_EQ(0.0069149, J_pMe(1, 5));
+        EXPECT_FLOAT_EQ(0, J_pMe(1, 6));
+
+        EXPECT_FLOAT_EQ(0, J_pMe(2, 0));
+        EXPECT_FLOAT_EQ(0, J_pMe(2, 1));
+        EXPECT_FLOAT_EQ(0, J_pMe(2, 2));
+        EXPECT_FLOAT_EQ(0.044006158, J_pMe(2, 3));
+        EXPECT_FLOAT_EQ(0.0537853, J_pMe(2, 4));
+        EXPECT_FLOAT_EQ(-0.987694, J_pMe(2, 5));
+        EXPECT_FLOAT_EQ(0, J_pMe(2, 6));
+
+        EXPECT_FLOAT_EQ(0.707107, J_pMe(3, 0));
+        EXPECT_FLOAT_EQ(-0.707107, J_pMe(3, 1));
+        EXPECT_FLOAT_EQ(0, J_pMe(3, 2));
+        EXPECT_FLOAT_EQ(0, J_pMe(3, 3));
+        EXPECT_FLOAT_EQ(0, J_pMe(3, 4));
+        EXPECT_FLOAT_EQ(0, J_pMe(3, 5));
+        EXPECT_FLOAT_EQ(0, J_pMe(3, 6));
+
+        EXPECT_FLOAT_EQ(0, J_pMe(4, 0));
+        EXPECT_FLOAT_EQ(0, J_pMe(4, 1));
+        EXPECT_FLOAT_EQ(-1, J_pMe(4, 2));
+        EXPECT_FLOAT_EQ(0, J_pMe(4, 3));
+        EXPECT_FLOAT_EQ(0, J_pMe(4, 4));
+        EXPECT_FLOAT_EQ(0, J_pMe(4, 5));
+        EXPECT_FLOAT_EQ(0, J_pMe(4, 6));
     }
 
     /// White-Box-Test
@@ -300,7 +357,65 @@ namespace genfit {
 
     /// White-Box-Test
     TEST_F (RKTrackRepTests, calcJ_Mp_7x5) {
-        // TODO: Implement
+        RKTrackRep myRKTrackRep;
+
+        // Code snippet from RKTrackRep to initialize test properly
+        DetPlane myDestPlane(TVector3(0, 0, 0), TVector3(1, 1, 0));
+        M1x3 pTilde = {{0.9, 1.1, 0.1}};
+        const TVector3& normal = myDestPlane.getNormal();
+        double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
+        double spu = pTildeW > 0 ? 1 : -1;
+        for (unsigned int i=0; i<3; ++i) {
+            pTilde[i] *= spu/pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
+        }
+        // Code snippet end.
+        Vector7 myDestState;
+        myDestState << 0, 0, 0, pTilde[0], pTilde[1], pTilde[2], 1;
+        const auto J_Mpe = myRKTrackRep.calcJ_Mp_7x5(
+                myDestState, myDestPlane
+        );
+
+        EXPECT_FLOAT_EQ(0, J_Mpe(0, 0));
+        EXPECT_FLOAT_EQ(0, J_Mpe(0, 1));
+        EXPECT_FLOAT_EQ(0, J_Mpe(0, 2));
+        EXPECT_FLOAT_EQ(0.707107, J_Mpe(0, 3));
+        EXPECT_FLOAT_EQ(0, J_Mpe(0, 4));
+
+        EXPECT_FLOAT_EQ(0, J_Mpe(1, 0));
+        EXPECT_FLOAT_EQ(0, J_Mpe(1, 1));
+        EXPECT_FLOAT_EQ(0, J_Mpe(1, 2));
+        EXPECT_FLOAT_EQ(-0.707107, J_Mpe(1, 3));
+        EXPECT_FLOAT_EQ(0, J_Mpe(1, 4));
+
+        EXPECT_FLOAT_EQ(0, J_Mpe(2, 0));
+        EXPECT_FLOAT_EQ(0, J_Mpe(2, 1));
+        EXPECT_FLOAT_EQ(0, J_Mpe(2, 2));
+        EXPECT_FLOAT_EQ(0, J_Mpe(2, 3));
+        EXPECT_FLOAT_EQ(-1, J_Mpe(2, 4));
+
+        EXPECT_FLOAT_EQ(0, J_Mpe(3, 0));
+        EXPECT_FLOAT_EQ(0.77781749, J_Mpe(3, 1));
+        EXPECT_FLOAT_EQ(0.05, J_Mpe(3, 2));
+        EXPECT_FLOAT_EQ(0, J_Mpe(3, 3));
+        EXPECT_FLOAT_EQ(0, J_Mpe(3, 4));
+
+        EXPECT_FLOAT_EQ(0, J_Mpe(4, 0));
+        EXPECT_FLOAT_EQ(-0.636396, J_Mpe(4, 1));
+        EXPECT_FLOAT_EQ(0.05, J_Mpe(4, 2));
+        EXPECT_FLOAT_EQ(0, J_Mpe(4, 3));
+        EXPECT_FLOAT_EQ(0, J_Mpe(4, 4));
+
+        EXPECT_FLOAT_EQ(0, J_Mpe(5, 0));
+        EXPECT_FLOAT_EQ(0, J_Mpe(5, 1));
+        EXPECT_FLOAT_EQ(-1, J_Mpe(5, 2));
+        EXPECT_FLOAT_EQ(0, J_Mpe(5, 3));
+        EXPECT_FLOAT_EQ(0, J_Mpe(5, 4));
+
+        EXPECT_FLOAT_EQ(1, J_Mpe(6, 0));
+        EXPECT_FLOAT_EQ(0, J_Mpe(6, 1));
+        EXPECT_FLOAT_EQ(0, J_Mpe(6, 2));
+        EXPECT_FLOAT_EQ(0, J_Mpe(6, 3));
+        EXPECT_FLOAT_EQ(0, J_Mpe(6, 4));
     }
 
     /// White-Box-Test

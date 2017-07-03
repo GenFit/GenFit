@@ -75,6 +75,8 @@ class RKTrackRep : public AbsTrackRep {
     friend class RKTrackRepTests_calcForwardJacobianAndNoise_Test;
     friend class RKTrackRepTests_getState7_Test;
     friend class RKTrackRepTests_getState5_Test;
+    friend class RKTrackRepTests_calcJ_Mp_7x5_Test;
+    friend class RKTrackRepTests_calcJ_pM_5x7_Test;
 
  public:
 
@@ -223,9 +225,9 @@ class RKTrackRep : public AbsTrackRep {
   void getState5(StateOnPlane& state, const Vector7& state7) const;
   void getState5(StateOnPlane& state, const M1x7& state7) const;
 
-  void calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
+  Matrix5x7 calcJ_pM_5x7(const Vector7& state7, const DetPlane& plane) const;
 
-  void calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const;
+  Matrix7x5 calcJ_Mp_7x5(const Vector7& state7, const DetPlane& plane) const;
 
   void calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
 				   const M1x7& destState7, const DetPlane& destPlane) const;

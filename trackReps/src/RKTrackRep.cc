@@ -958,10 +958,10 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
   for (unsigned int i=0; i<3; ++i) {
     pTilde[i] *= spu/pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
   }
-  M5x7 J_pM;
-  calcJ_pM_5x7(J_pM, startPlane.getU(), startPlane.getV(), pTilde, spu);
-  M7x5 J_Mp;
-  calcJ_Mp_7x5(J_Mp, destPlane.getU(), destPlane.getV(), destPlane.getNormal(), *((M1x3*) &destState7[3]));
+
+  M5x7 J_pM(eigenMatrixToRKMatrix<5, 7>(calcJ_pM_5x7(RKMatrixToEigenMatrix<1, 7>(startState7), startPlane)));
+  M7x5 J_Mp(eigenMatrixToRKMatrix<7, 5>(calcJ_Mp_7x5(RKMatrixToEigenMatrix<1, 7>(destState7), destPlane)));
+
   jac.Transpose(jac); // Because the helper function wants transposed input.
   RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, *(M7x7 *)jac.GetMatrixArray(),
 				J_pM, *(M5x5 *)fJacobian_.GetMatrixArray());
@@ -1564,49 +1564,36 @@ void RKTrackRep::getState5(StateOnPlane& state, const M1x7& state7) const {
     getState5(state, state7_tmp);
 }
 
-void RKTrackRep::calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const {
-  /*if (debugLvl_ > 1) {
-    debugOut << "RKTrackRep::calcJ_pM_5x7 \n";
-    debugOut << "  U = "; U.Print();
-    debugOut << "  V = "; V.Print();
-    debugOut << "  pTilde = "; RKTools::printDim(pTilde, 3,1);
-    debugOut << "  spu = " << spu << "\n";
-  }*/
+Matrix5x7 RKTrackRep::calcJ_pM_5x7(const Vector7& state7, const DetPlane& plane) const {
+    Matrix5x7 J_pM(Matrix5x7::Zero());
 
-  std::fill(J_pM.begin(), J_pM.end(), 0);
+    const Vector3 normal(TVector3ToEigenVector(plane.getNormal()));
+    const Vector3 U(TVector3ToEigenVector(plane.getU()));
+    const Vector3 V(TVector3ToEigenVector(plane.getV()));
 
-  const double pTildeMag = sqrt(pTilde[0]*pTilde[0] + pTilde[1]*pTilde[1] + pTilde[2]*pTilde[2]);
-  const double pTildeMag2 = pTildeMag*pTildeMag;
+    Vector3 pTilde(state7.block<3, 1>(3, 0));
 
-  const double utpTildeOverpTildeMag2 = (U.X()*pTilde[0] + U.Y()*pTilde[1] + U.Z()*pTilde[2]) / pTildeMag2;
-  const double vtpTildeOverpTildeMag2 = (V.X()*pTilde[0] + V.Y()*pTilde[1] + V.Z()*pTilde[2]) / pTildeMag2;
+    const Scalar pTildeW = pTilde.dot(normal);
+    const Scalar spu = pTildeW > 0 ? 1 : -1;
+    pTilde *= spu / pTildeW;  // | pTilde * W | has to be 1 (definition of pTilde)
 
-  //J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)   (out is 7x7)
+    const Scalar pTildeMag = pTilde.norm();
+    const Scalar pTildeMag2 = pTildeMag * pTildeMag;
 
-   // d(x,y,z)/d(u)
-  J_pM[21] = U.X(); // [3][0]
-  J_pM[22] = U.Y(); // [3][1]
-  J_pM[23] = U.Z(); // [3][2]
-  // d(x,y,z)/d(v)
-  J_pM[28] = V.X(); // [4][0]
-  J_pM[29] = V.Y(); // [4][1]
-  J_pM[30] = V.Z(); // [4][2]
-  // d(q/p)/d(q/p)
-  J_pM[6] = 1.; // not needed for array matrix multiplication
-  // d(ax,ay,az)/d(u')
-  double fact = spu / pTildeMag;
-  J_pM[10] = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 ); // [1][3]
-  J_pM[11] = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 ); // [1][4]
-  J_pM[12] = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 ); // [1][5]
-  // d(ax,ay,az)/d(v')
-  J_pM[17] = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
-  J_pM[18] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
-  J_pM[19] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
+    const Scalar utpTildeOverpTildeMag2 = U.dot(pTilde) / pTildeMag2;
+    const Scalar vtpTildeOverpTildeMag2 = V.dot(pTilde) / pTildeMag2;
 
-  /*if (debugLvl_ > 1) {
-    debugOut << "  J_pM_5x7_ = "; RKTools::printDim(J_pM_5x7_, 5,7);
-  }*/
+    // J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)
+    const Scalar fact = spu / pTildeMag;
+
+    J_pM.block<1, 3>(3, 0) = U;  // d(x,y,z)/d(u)
+    J_pM.block<1, 3>(4, 0) = V;  // d(x,y,z)/d(v)
+    J_pM(0, 6) = 1.;             // d(q/p)/d(q/p)
+    J_pM.block<1, 3>(1, 3) = fact * (U - pTilde * utpTildeOverpTildeMag2);  // d(ax,ay,az)/d(u')
+    J_pM.block<1, 3>(2, 3) = fact * (V - pTilde * vtpTildeOverpTildeMag2);  // d(ax,ay,az)/d(v')
+    return J_pM;
 }
+
 
 Matrix6x6Sym RKTrackRep::transformPM6(const MeasuredStateOnPlane& state) const {
 
@@ -1650,48 +1637,28 @@ void RKTrackRep::transformPM6(const MeasuredStateOnPlane& state,
   out6x6 = eigenMatrixToRKMatrix<6, 6>(transformPM6(state));
 }
 
-void RKTrackRep::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const {
+Matrix7x5 RKTrackRep::calcJ_Mp_7x5(const Vector7& state7, const DetPlane& plane) const {
+    Matrix7x5 J_Mp(Matrix7x5::Zero());
 
-  /*if (debugLvl_ > 1) {
-    debugOut << "RKTrackRep::calcJ_Mp_7x5 \n";
-    debugOut << "  U = "; U.Print();
-    debugOut << "  V = "; V.Print();
-    debugOut << "  W = "; W.Print();
-    debugOut << "  A = "; RKTools::printDim(A, 3,1);
-  }*/
+    const Vector3& A = state7.block<3, 1>(3, 0);
 
-  std::fill(J_Mp.begin(), J_Mp.end(), 0);
+    const Vector3 U(TVector3ToEigenVector(plane.getU()));
+    const Vector3 V(TVector3ToEigenVector(plane.getV()));
+    const Vector3 W(TVector3ToEigenVector(plane.getNormal()));
 
-  const double AtU = A[0]*U.X() + A[1]*U.Y() + A[2]*U.Z();
-  const double AtV = A[0]*V.X() + A[1]*V.Y() + A[2]*V.Z();
-  const double AtW = A[0]*W.X() + A[1]*W.Y() + A[2]*W.Z();
+    const Scalar AtU = A.dot(U);
+    const Scalar AtV = A.dot(V);
+    const Scalar AtW = A.dot(W);
 
-  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)   (in is 7x7)
+    // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)
+    const Scalar fact = 1. / (AtW*AtW);
 
-  // d(u')/d(ax,ay,az)
-  double fact = 1./(AtW*AtW);
-  J_Mp[16] = fact * (U.X()*AtW - W.X()*AtU); // [3][1]
-  J_Mp[21] = fact * (U.Y()*AtW - W.Y()*AtU); // [4][1]
-  J_Mp[26] = fact * (U.Z()*AtW - W.Z()*AtU); // [5][1]
-  // d(v')/d(ax,ay,az)
-  J_Mp[17] = fact * (V.X()*AtW - W.X()*AtV); // [3][2]
-  J_Mp[22] = fact * (V.Y()*AtW - W.Y()*AtV); // [4][2]
-  J_Mp[27] = fact * (V.Z()*AtW - W.Z()*AtV); // [5][2]
-  // d(q/p)/d(q/p)
-  J_Mp[30] = 1.; // [6][0]  - not needed for array matrix multiplication
-  //d(u)/d(x,y,z)
-  J_Mp[3]  = U.X(); // [0][3]
-  J_Mp[8]  = U.Y(); // [1][3]
-  J_Mp[13] = U.Z(); // [2][3]
-  //d(v)/d(x,y,z)
-  J_Mp[4]  = V.X(); // [0][4]
-  J_Mp[9]  = V.Y(); // [1][4]
-  J_Mp[14] = V.Z(); // [2][4]
-
-  /*if (debugLvl_ > 1) {
-    debugOut << "  J_Mp_7x5_ = "; RKTools::printDim(J_Mp, 7,5);
-  }*/
-
+    J_Mp.block<3, 1>(3, 1) = fact * (AtW * U - AtU * W);  // d(u')/d(ax,ay,az)
+    J_Mp.block<3, 1>(3, 2) = fact * (AtW * V - AtV * W);  // d(v')/d(ax,ay,az)
+    J_Mp(6, 0) = 1.;                                      // d(q/p)/d(q/p)
+    J_Mp.block<3, 1>(0, 3) = U;                           //d(u)/d(x,y,z)
+    J_Mp.block<3, 1>(0, 4) = V;                           //d(v)/d(x,y,z)
+    return J_Mp;
 }
 
 
