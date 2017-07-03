@@ -950,15 +950,6 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
     jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_[i].jac7_.begin()));
   }
 
-  // Project into 5x5 space.
-  M1x3 pTilde = {{startState7[3], startState7[4], startState7[5]}};
-  const TVector3& normal = startPlane.getNormal();
-  double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
-  double spu = pTildeW > 0 ? 1 : -1;
-  for (unsigned int i=0; i<3; ++i) {
-    pTilde[i] *= spu/pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
-  }
-
   M5x7 J_pM(eigenMatrixToRKMatrix<5, 7>(calcJ_pM_5x7(RKMatrixToEigenMatrix<1, 7>(startState7), startPlane)));
   M7x5 J_Mp(eigenMatrixToRKMatrix<7, 5>(calcJ_Mp_7x5(RKMatrixToEigenMatrix<1, 7>(destState7), destPlane)));
 
