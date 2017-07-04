@@ -91,6 +91,13 @@ public:
                  const int& pdg,
                  M7x7* noise = nullptr);
 
+  double effects(const std::vector<RKStep>& steps,
+                 int materialsFXStart,
+                 int materialsFXStop,
+                 const double& mom,
+                 const int& pdg,
+                 Matrix7x7Sym* noise = nullptr);
+
   /**  @brief Returns maximum length so that a specified momentum loss will not be exceeded.
    *
    * The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded,
@@ -98,6 +105,15 @@ public:
   */
   void stepper(const RKTrackRep* rep,
                M1x7& state7,
+               const double& mom, // momentum
+               double& relMomLoss, // relative momloss for the step will be added
+               const int& pdg,
+               Material& currentMaterial,
+               StepLimits& limits,
+               bool varField = true);
+
+  void stepper(const RKTrackRep* rep,
+               Vector7& state7,
                const double& mom, // momentum
                double& relMomLoss, // relative momloss for the step will be added
                const int& pdg,

@@ -20,6 +20,7 @@
 #include "MaterialEffects.h"
 #include "Exception.h"
 #include "IO.h"
+#include "RKMatrixEigenTransformations.h"
 
 #include <stdexcept>
 #include <string>
@@ -106,6 +107,23 @@ void MaterialEffects::setMscModel(const std::string& modelName)
     errorOut << exc.what();
     throw exc;
   }
+}
+
+double MaterialEffects::effects(const std::vector<RKStep>& steps,
+                                int materialsFXStart,
+                                int materialsFXStop,
+                                const double& mom,
+                                const int& pdg,
+                                Matrix7x7Sym* noise) {
+    if (noise) {
+        M7x7 noise_rk(eigenMatrixToRKMatrix<7, 7>(*noise));
+        const auto return_value = effects(steps, materialsFXStart, materialsFXStop, mom, pdg, &noise_rk);
+        *noise = RKMatrixToEigenMatrix<7, 7>(noise_rk);
+        return return_value;
+    } else {
+        M7x7* noise_rk = nullptr;
+        return effects(steps, materialsFXStart, materialsFXStop, mom, pdg, noise_rk);
+    }
 }
 
 
@@ -209,6 +227,19 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
   return momLoss;
 }
 
+
+void MaterialEffects::stepper(const RKTrackRep* rep,
+                              Vector7& state7,
+                              const double& mom, // momentum
+                              double& relMomLoss, // relative momloss for the step will be added
+                              const int& pdg,
+                              Material& currentMaterial,
+                              StepLimits& limits,
+                              bool varField) {
+    M1x7 state7_rk(eigenMatrixToRKMatrix<1, 7>(state7));
+    stepper(rep, state7_rk, mom, relMomLoss, pdg, currentMaterial, limits, varField);
+    state7 = RKMatrixToEigenMatrix<1, 7>(state7_rk);
+}
 
 void MaterialEffects::stepper(const RKTrackRep* rep,
                               M1x7& state7,
