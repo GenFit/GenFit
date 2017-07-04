@@ -229,8 +229,10 @@ class RKTrackRep : public AbsTrackRep {
 
   Matrix7x5 calcJ_Mp_7x5(const Vector7& state7, const DetPlane& plane) const;
 
+  void calcForwardJacobianAndNoise(const Vector7& startState7, const DetPlane& startPlane,
+                                   const Vector7& destState7, const DetPlane& destPlane) const;
   void calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
-				   const M1x7& destState7, const DetPlane& destPlane) const;
+                				   const M1x7& destState7, const DetPlane& destPlane) const;
 
   /***
    * Transform state6 covariance to state7 covariance.

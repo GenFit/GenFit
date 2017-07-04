@@ -930,6 +930,14 @@ double RKTrackRep::getTime(const StateOnPlane& state) const {
 }
 
 
+void RKTrackRep::calcForwardJacobianAndNoise(const Vector7& startState7, const DetPlane& startPlane,
+                                 const Vector7& destState7, const DetPlane& destPlane) const {
+    calcForwardJacobianAndNoise(
+            eigenMatrixToRKMatrix<1, 7>(startState7), startPlane,
+            eigenMatrixToRKMatrix<1, 7>(destState7), destPlane
+    );
+}
+
 void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
 					     const M1x7& destState7, const DetPlane& destPlane) const {
 
