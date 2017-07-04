@@ -165,44 +165,6 @@ bool tools::transposedForwardSubstitution(const TMatrixD& R, TVectorD& b)
 }
 
 
-// Same, but for one column of the matrix b.  Used by transposedInvert below
-// assumes b(i,j) == (i == j)
-bool tools::transposedForwardSubstitution(const TMatrixD& R, TMatrixD& b, int nCol)
-{
-  size_t n = R.GetNrows();
-  double *const bk = b.GetMatrixArray() + nCol;
-  const double *const Rk = R.GetMatrixArray();
-  for (unsigned int i = nCol; i < n; ++i) {
-    double sum = (i == (size_t)nCol);
-    for (unsigned int j = 0; j < i; ++j) {
-      sum -= bk[j*n]*Rk[j*n + i];  // already replaced previous elements in b.
-    }
-    if (Rk[i*n+i] == 0)
-      return false;
-    bk[i*n] = sum / Rk[i*n + i];
-  }
-  return true;
-}
-
-
-// inv will be the inverse of the transposed of the upper-right matrix R
-bool tools::transposedInvert(const TMatrixD& R, TMatrixD& inv)
-{
-  bool result = true;
-
-  inv.ResizeTo(R);
-  double *const invk = inv.GetMatrixArray();
-  int nRows = inv.GetNrows();
-  for (int i = 0; i < nRows; ++i)
-    for (int j = 0; j < nRows; ++j)
-      invk[i*nRows + j] = (i == j);
-
-  for (int i = 0; i < inv.GetNcols(); ++i)
-    result = result && transposedForwardSubstitution(R, inv, i);
-
-  return result;
-}
-
 // This replaces A with an upper right matrix connected to A by a
 // orthogonal transformation.  I.e., it computes the R from a QR
 // decomposition of A replacing A.
@@ -256,83 +218,6 @@ void tools::QR(TMatrixD& A)
     for (int j = 0; j < nCols; ++j)
       ak[i*nCols + j] = 0.;
 }
-
-// This replaces A with an upper right matrix connected to A by a
-// orthogonal transformation.  I.e., it computes the R from a QR
-// decomposition of A replacing A.  Simultaneously it transforms b by
-// the inverse orthogonal transformation.
-// 
-// The purpose is this: the least-squared problem
-//   ||Ax - b|| = min
-// is equivalent to
-//   ||QRx - b|| = ||Rx - Q'b|| = min
-// where Q' denotes the transposed (i.e. inverse).
-void tools::QR(TMatrixD& A, TVectorD& b)
-{
-  int nCols = A.GetNcols();
-  int nRows = A.GetNrows();
-  assert(nRows >= nCols);
-  assert(b.GetNrows() == nRows);
-  // This uses Businger and Golub's algorithm from Handbook for
-  // Automatic Computation, Vol. 2, Chapter 8, but without pivoting.
-  // I.e., we stop at the middle of page 112.  We don't explicitly
-  // calculate the orthogonal matrix, but Q'b which is not done
-  // explicitly in Businger et al.
-  // Also in Numer. Math. 7, 269-276 (1965)
-
-  double *const ak = A.GetMatrixArray();
-  double *const bk = b.GetMatrixArray();
-  // No variable-length arrays in C++, alloca does the exact same thing ...
-  //double * u = (double *)alloca(sizeof(double)*nRows);
-  double u[500];
-
-  // Main loop over matrix columns.
-  for (int k = 0; k < nCols; ++k) {
-    double akk = ak[k*nCols + k];
-
-    double sum = akk*akk;
-    // Put together a housholder transformation.
-    for (int i = k + 1; i < nRows; ++i) {
-      sum += ak[i*nCols + k]*ak[i*nCols + k];
-      u[i] = ak[i*nCols + k];
-    }
-    double sigma = sqrt(sum);
-    double beta = 1/(sum + sigma*fabs(akk));
-    // The algorithm uses only the uk[i] for i >= k.
-    u[k] = copysign(sigma + fabs(akk), akk);
-
-    // Calculate b (again taking into account zero entries).  This
-    // encodes how the (sub)vector changes by the householder transformation.
-    double yb = 0;
-    for (int j = k; j < nRows; ++j)
-      yb += u[j]*bk[j];
-    yb *= beta;
-    // ... and apply the changes.
-    for (int j = k; j < nRows; ++j)
-      bk[j] -= u[j]*yb;
-
-    // Calculate y (again taking into account zero entries).  This
-    // encodes how the (sub)matrix changes by the householder transformation.
-    for (int i = k; i < nCols; ++i) {
-      double y = 0;
-      for (int j = k; j < nRows; ++j)
-	y += u[j]*ak[j*nCols + i];
-      y *= beta;
-      // ... and apply the changes.
-      for (int j = k; j < nRows; ++j)
-	ak[j*nCols + i] -= u[j]*y;
-    }
-  }
-
-  // Zero below diagonal
-  for (int i = 1; i < nCols; ++i)
-    for (int j = 0; j < i; ++j)
-      ak[i*nCols + j] = 0.;
-  for (int i = nCols; i < nRows; ++i)
-    for (int j = 0; j < nCols; ++j)
-      ak[i*nCols + j] = 0.;
-}
-
 
 void
 tools::noiseMatrixSqrt(const TMatrixDSym& noise,

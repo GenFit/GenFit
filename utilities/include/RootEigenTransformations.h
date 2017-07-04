@@ -13,7 +13,7 @@
 
 namespace genfit {
 
-    Vector3 TVector3ToEigenVector(const TVector3& rootVector) {
+    inline Vector3 TVector3ToEigenVector(const TVector3& rootVector) {
         return {rootVector.X(), rootVector.Y(), rootVector.Z()};
     };
 

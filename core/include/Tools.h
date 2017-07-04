@@ -49,10 +49,6 @@ void invertMatrix(TMatrixDSym& mat, double* determinant = nullptr);
  *  assumed to be upper diagonal.
  */
 bool transposedForwardSubstitution(const TMatrixD& R, TVectorD& b);
-/** @brief Same, for a column of the matrix b.  */
-bool transposedForwardSubstitution(const TMatrixD& R, TMatrixD& b, int nCol);
-/** @brief Inverts the transpose of the upper right matrix R into inv.  */
-bool transposedInvert(const TMatrixD& R, TMatrixD& inv);
 
 /** @brief Replaces A with an upper right matrix connected to A by
  *  an orthongonal transformation.  I.e., it computes R from a QR
@@ -60,12 +56,6 @@ bool transposedInvert(const TMatrixD& R, TMatrixD& inv);
  */
 void QR(TMatrixD& A);
 
-/** @brief Replaces A with an upper right matrix connected to A by
- *  an orthongonal transformation.  I.e., it computes R from a QR
- *  decomposition of A = QR, replacing A.  Also replaces b by Q'b
- *  where Q' is the transposed of Q.
- */
-void QR(TMatrixD& A, TVectorD& b);
 
 /** @brief Calculate a sqrt for the positive semidefinite noise
  *  matrix.  Rows corresponding to zero eigenvalues are omitted.

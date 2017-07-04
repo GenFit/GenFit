@@ -22,6 +22,8 @@
 #include "Exception.h"
 #include "Tools.h"
 #include "IO.h"
+#include "RootEigenTransformations.h"
+#include "EigenMatrixTypedefs.h"
 
 #include <cassert>
 
@@ -73,128 +75,107 @@ void MeasuredStateOnPlane::blowUpCov(double blowUpFac, bool resetOffDiagonals, d
 }
 
 
-MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, const MeasuredStateOnPlane& backwardState) {
-  // check if both states are defined in the same plane
-  if (forwardState.getPlane() != backwardState.getPlane()) {
-    Exception e("KalmanFitterInfo::calcAverageState: forwardState and backwardState are not defined in the same plane.", __LINE__,__FILE__);
-    throw e;
-  }
+MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane &forwardState, const MeasuredStateOnPlane &backwardState) {
+    // check if both states are defined in the same plane
+    if (forwardState.getPlane() != backwardState.getPlane()) {
+        Exception e(
+                "KalmanFitterInfo::calcAverageState: forwardState and backwardState are not defined in the same plane.",
+                __LINE__, __FILE__);
+        throw e;
+    }
 
-  // This code is called a lot, so some effort has gone into reducing
-  // the number of temporary objects being constructed.
+//#define TEXTBOOK
+#ifdef TEXTBOOK
+    // For ease of understanding, here's a very explicit implementation
+    // that uses the textbook algorithm:
+    const Vector5 fState(rootVectorToEigenVector<5>(forwardState.getState()));
+    const Vector5 bState(rootVectorToEigenVector<5>(backwardState.getState()));
+    const Matrix5x5Sym fCovInv(rootMatrixSymToEigenMatrix<5>(forwardState.getCov()).inverse());
+    const Matrix5x5Sym bCovInv(rootMatrixSymToEigenMatrix<5>(backwardState.getCov()).inverse());
+    const Matrix5x5Sym smoothedCov((fCovInv + bCovInv).inverse());
 
-#if 0
-  // For ease of understanding, here's a very explicit implementation
-  // that uses the textbook algorithm:
-  TMatrixDSym fCovInv, bCovInv, smoothed_cov;
-  tools::invertMatrix(forwardState.getCov(), fCovInv);
-  tools::invertMatrix(backwardState.getCov(), bCovInv);
+    return MeasuredStateOnPlane(
+            eigenVectorToRootVector<5>(smoothedCov*(fCovInv * fState + bCovInv * bState)),
+            eigenMatrixToRootMatrixSym<5>(smoothedCov),
+            forwardState.getPlane(),
+            forwardState.getRep(),
+            forwardState.getAuxInfo()
+    );
+#else
 
-  tools::invertMatrix(fCovInv + bCovInv, smoothed_cov);  // one temporary TMatrixDSym
+    // This is a numerically stable implementation of the averaging
+    // process.  We write S1, S2 for the upper diagonal square roots
+    // (Cholesky decompositions) of the covariance matrices, such that
+    // C1 = S1' S1 (transposition indicated by ').
+    //
+    // Then we can write
+    //  (C1^-1 + C2^-1)^-1 = (S1inv' S1inv + S2inv' S2inv)^-1
+    //                     = ( (S1inv', S2inv') . ( S1inv ) )^-1
+    //                       (                    ( S2inv ) )
+    //                     = ( (R', 0) . Q . Q' . ( R ) )^-1
+    //                       (                    ( 0 ) )
+    // where Q is an orthogonal matrix chosen such that R is upper diagonal.
+    // Since Q'.Q = 1, this reduces to
+    //                     = ( R'.R )^-1
+    //                     = R^-1 . (R')^-1.
+    // This gives the covariance matrix of the average and its Cholesky
+    // decomposition.
+    //
+    // In order to get the averaged state (writing x1 and x2 for the
+    // states) we proceed from
+    //  C1^-1.x1 + C2^-1.x2 = (S1inv', S2inv') . ( S1inv.x1 )
+    //                                           ( S2inv.x2 )
+    // which by the above can be written as
+    //                      =  (R', 0) . Q . ( S1inv.x1 )
+    //                                       ( S2inv.x2 )
+    // with the same (R, Q) as above.
+    //
+    // The average is then after obvious simplification
+    //   average = R^-1 . Q . (S1inv.x1)
+    //                        (S2inv.x2)
+    //
+    // This is what's implemented below, where we make use of the
+    // tridiagonal shapes of the various matrices when multiplying or
+    // inverting.
+    //
+    // This turns out not only more numerically stable, but because the
+    // matrix operations are simpler, it is also faster than the
+    // straightoforward implementation.
+    //
+    // This is an application of the technique of Golub, G.,
+    // Num. Math. 7, 206 (1965) to the least-squares problem underlying
+    // averaging.
+    Eigen::LLT<Eigen::MatrixXd> lltFwState(rootMatrixSymToEigenMatrix<5>(forwardState.getCov()));
+    if (lltFwState.info() == Eigen::NumericalIssue) {
+        throw Exception("KalmanFitterInfo::calcAverageState: ill-conditioned covariance matrix of forward state.",
+                        __LINE__, __FILE__);
+    }
+    Eigen::LLT<Eigen::MatrixXd> lltBwState(rootMatrixSymToEigenMatrix<5>(backwardState.getCov()));
+    if (lltFwState.info() == Eigen::NumericalIssue) {
+        throw Exception("KalmanFitterInfo::calcAverageState: ill-conditioned covariance matrix of backward state.",
+                        __LINE__, __FILE__);
+    }
+    const Matrix5x5 S1inv(lltFwState.matrixU().transpose().solve(Matrix5x5::Identity()));
+    const Matrix5x5 S2inv(lltBwState.matrixU().transpose().solve(Matrix5x5::Identity()));
+    Eigen::Matrix<Scalar, 10, 5> A;
+    A.block<5, 5>(0, 0) = S1inv;
+    A.block<5, 5>(5, 0) = S2inv;
+    Eigen::Matrix<Scalar, 10, 1> b;
+    b.block<5, 1>(0, 0) = S1inv * rootVectorToEigenVector<5>(forwardState.getState());
+    b.block<5, 1>(5, 0) = S2inv * rootVectorToEigenVector<5>(backwardState.getState());
 
-  MeasuredStateOnPlane retVal(forwardState);
-  retVal.setState(smoothed_cov*(fCovInv*forwardState.getState() + bCovInv*backwardState.getState())); // four temporary TVectorD's
-  retVal.setCov(smoothed_cov);
-  return retVal;
+    Eigen::ColPivHouseholderQR<decltype(A)> QRdecomp(A);
+    const Matrix5x5 R = QRdecomp.matrixR().block<5, 5>(0, 0);
+    const Vector5 result = QRdecomp.solve(b).block<5, 1>(0, 0);
+
+    Matrix5x5 inv(R.triangularView<Eigen::Lower>().solve(Matrix5x5::Identity()));
+
+    return MeasuredStateOnPlane(eigenVectorToRootVector<5>(result),
+                                eigenMatrixToRootMatrixSym<5>(inv.transpose() * inv),
+                                forwardState.getPlane(),
+                                forwardState.getRep(),
+                                forwardState.getAuxInfo());
 #endif
-
-  // This is a numerically stable implementation of the averaging
-  // process.  We write S1, S2 for the upper diagonal square roots
-  // (Cholesky decompositions) of the covariance matrices, such that
-  // C1 = S1' S1 (transposition indicated by ').
-  //
-  // Then we can write
-  //  (C1^-1 + C2^-1)^-1 = (S1inv' S1inv + S2inv' S2inv)^-1
-  //                     = ( (S1inv', S2inv') . ( S1inv ) )^-1
-  //                       (                    ( S2inv ) )
-  //                     = ( (R', 0) . Q . Q' . ( R ) )^-1
-  //                       (                    ( 0 ) )
-  // where Q is an orthogonal matrix chosen such that R is upper diagonal.
-  // Since Q'.Q = 1, this reduces to
-  //                     = ( R'.R )^-1
-  //                     = R^-1 . (R')^-1.
-  // This gives the covariance matrix of the average and its Cholesky
-  // decomposition.
-  //
-  // In order to get the averaged state (writing x1 and x2 for the
-  // states) we proceed from
-  //  C1^-1.x1 + C2^-1.x2 = (S1inv', S2inv') . ( S1inv.x1 )
-  //                                           ( S2inv.x2 )
-  // which by the above can be written as
-  //                      =  (R', 0) . Q . ( S1inv.x1 )
-  //                                       ( S2inv.x2 )
-  // with the same (R, Q) as above.
-  //
-  // The average is then after obvious simplification
-  //   average = R^-1 . Q . (S1inv.x1)
-  //                        (S2inv.x2)
-  //
-  // This is what's implemented below, where we make use of the
-  // tridiagonal shapes of the various matrices when multiplying or
-  // inverting.
-  //
-  // This turns out not only more numerically stable, but because the
-  // matrix operations are simpler, it is also faster than the
-  // straightoforward implementation.
-  //
-  // This is an application of the technique of Golub, G.,
-  // Num. Math. 7, 206 (1965) to the least-squares problem underlying
-  // averaging.
-  TDecompChol d1(forwardState.getCov());
-  bool success = d1.Decompose();
-  TDecompChol d2(backwardState.getCov());
-  success &= d2.Decompose();
-
-  if (!success) {
-    Exception e("KalmanFitterInfo::calcAverageState: ill-conditioned covariance matrix.", __LINE__,__FILE__);
-    throw e;
-  }
-
-  int nRows = d1.GetU().GetNrows();
-  assert(nRows == d2.GetU().GetNrows());
-  TMatrixD S1inv, S2inv;
-  tools::transposedInvert(d1.GetU(), S1inv);
-  tools::transposedInvert(d2.GetU(), S2inv);
-
-  TMatrixD A(2*nRows, nRows);
-  TVectorD b(2 * nRows);
-  double *const bk = b.GetMatrixArray();
-  double *const Ak = A.GetMatrixArray();
-  const double* S1invk = S1inv.GetMatrixArray();
-  const double* S2invk = S2inv.GetMatrixArray();
-  // S1inv and S2inv are lower triangular.
-  for (int i = 0; i < nRows; ++i) {
-    double sum1 = 0;
-    double sum2 = 0;
-    for (int j = 0; j <= i; ++j) {
-      Ak[i*nRows + j] = S1invk[i*nRows + j];
-      Ak[(i + nRows)*nRows + j] = S2invk[i*nRows + j];
-      sum1 += S1invk[i*nRows + j]*forwardState.getState().GetMatrixArray()[j];
-      sum2 += S2invk[i*nRows + j]*backwardState.getState().GetMatrixArray()[j];
-    }
-    bk[i] = sum1;
-    bk[i + nRows] = sum2;
-  }
-
-  tools::QR(A, b);
-  A.ResizeTo(nRows, nRows);
-
-  TMatrixD inv;
-  tools::transposedInvert(A, inv);
-  b.ResizeTo(nRows);
-  for (int i = 0; i < nRows; ++i) {
-    double sum = 0;
-    for (int j = i; j < nRows; ++j) {
-      sum += inv.GetMatrixArray()[j*nRows+i] * b[j];
-    }
-    b.GetMatrixArray()[i] = sum;
-  }
-  return MeasuredStateOnPlane(b,
-			      TMatrixDSym(TMatrixDSym::kAtA, inv),
-			      forwardState.getPlane(),
-			      forwardState.getRep(),
-			      forwardState.getAuxInfo());
 }
-
 
 } /* End of namespace genfit */
