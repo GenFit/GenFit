@@ -8,6 +8,7 @@ namespace genfit {
     typedef Precision Scalar;
 
     typedef Eigen::Matrix<Precision, 3, 1> Vector3;
+    typedef Eigen::Matrix<Precision, 4, 1> Vector4;
     typedef Eigen::Matrix<Precision, 5, 1> Vector5;
     typedef Eigen::Matrix<Precision, 6, 1> Vector6;
     typedef Eigen::Matrix<Precision, 7, 1> Vector7;

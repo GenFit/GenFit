@@ -1971,12 +1971,28 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
 }
 
-
 double RKTrackRep::estimateStep(const M1x7& state7,
                                 const M1x4& SU,
                                 const DetPlane& plane,
                                 const double& charge,
                                 double& relMomLoss,
+                                StepLimits& limits) const {
+    return estimateStep(
+            RKMatrixToEigenMatrix<1, 7>(state7),
+            RKMatrixToEigenMatrix<1, 4>(SU),
+            plane,
+            charge,
+            relMomLoss,
+            limits
+    );
+}
+
+
+double RKTrackRep::estimateStep(const Vector7& state7,
+                                const Vector4& SU,
+                                const DetPlane& plane,
+                                const Scalar& charge,
+                                Scalar& relMomLoss,
                                 StepLimits& limits) const {
 
   if (useCache_) {
@@ -2003,27 +2019,20 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
   limits.setLimit(stp_sMax, 25.); // max. step allowed [cm]
 
+  const auto& R = state7.block<3, 1>(0, 0);
+  const auto& A = state7.block<3, 1>(3, 0);
+
   if (debugLvl_ > 0) {
     debugOut << " RKTrackRep::estimateStep \n";
-    debugOut << "  position:  "; TVector3(state7[0], state7[1], state7[2]).Print();
-    debugOut << "  direction: "; TVector3(state7[3], state7[4], state7[5]).Print();
+    debugOut << "  position:  " << R << std::endl;
+    debugOut << "  direction: " << A << std::endl;
   }
 
   // calculate SL distance to surface
-  double Dist ( SU[3] - (state7[0]*SU[0] +
-                         state7[1]*SU[1] +
-                         state7[2]*SU[2])  );  // Distance between start coordinates and surface
-  double An ( state7[3]*SU[0] +
-              state7[4]*SU[1] +
-              state7[5]*SU[2]   );              // An = dir * N;  component of dir normal to surface
+  Scalar Dist = SU[3] - R.dot(SU.block<3, 1>(0, 0));  // Distance between start coordinates and surface
+  Scalar An = A.dot(SU.block<3, 1>(0, 0));            // An = dir * N;  component of dir normal to surface
 
-  double SLDist; // signed
-  if (fabs(An) > 1.E-10)
-    SLDist = Dist/An;
-  else {
-    SLDist = Dist*1.E10;
-    if (An<0) SLDist *= -1.;
-  }
+  const Scalar SLDist = fabs(An) > 1.E-10 ? Dist/An : fabs(Dist * 1.E10); // signed
 
   limits.setLimit(stp_plane, SLDist);
   limits.setStepSign(SLDist);
@@ -2042,10 +2051,10 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   // Limit according to curvature and magnetic field inhomogenities
   // and improve stepsize estimation to reach plane
   //
-  double fieldCurvLimit( limits.getLowestLimitSignedVal() ); // signed
-  std::pair<double, double> distVsStep (9.E99, 9.E99); // first: smallest straight line distances to plane; second: RK steps
+  Scalar fieldCurvLimit( limits.getLowestLimitSignedVal() ); // signed
+  std::pair<Scalar, Scalar> distVsStep (9.E99, 9.E99); // first: smallest straight line distances to plane; second: RK steps
 
-  static const unsigned int maxNumIt = 10;
+  static constexpr unsigned int maxNumIt = 10;
   unsigned int counter(0);
 
   while (fabs(fieldCurvLimit) > MINSTEP) {
@@ -2058,23 +2067,21 @@ double RKTrackRep::estimateStep(const M1x7& state7,
       break;
     }
 
-    M1x7 state7_temp = state7;
-    M1x3 SA = {{0, 0, 0}};
+    Vector7 state7_temp(state7);
+    Vector3 SA(Vector3::Zero());
 
-    double q ( RKPropagate(state7_temp, nullptr, SA, fieldCurvLimit, true) );
+    const auto& R_temp = state7_temp.block<3, 1>(0, 0);
+    const auto& A_temp = state7_temp.block<3, 1>(3, 0);
+
+    const Scalar q = RKPropagate(state7_temp, nullptr, SA, fieldCurvLimit, true);
     if (debugLvl_ > 0) {
       debugOut << "  maxStepArg = " << fieldCurvLimit << "; q = " << q  << " \n";
     }
 
     // remember steps and resulting SL distances to plane for stepsize improvement
     // calculate distance to surface
-    Dist = SU[3] - (state7_temp[0] * SU[0] +
-                    state7_temp[1] * SU[1] +
-                    state7_temp[2] * SU[2]); // Distance between position and surface
-
-    An = state7_temp[3] * SU[0] +
-         state7_temp[4] * SU[1] +
-         state7_temp[5] * SU[2];    // An = dir * N;  component of dir normal to surface
+    Dist = SU[3] - R_temp.dot(SU.block<3, 1>(0, 0));  // Distance between position and surface
+    An = A_temp.dot(SU.block<3, 1>(0, 0));            // An = dir * N;  component of dir normal to surface
 
     if (fabs(Dist/An) < fabs(distVsStep.first)) {
       distVsStep.first = Dist/An;
@@ -2155,12 +2162,11 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   static const RKStep defaultRKStep;
   RKSteps_.push_back( defaultRKStep );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
-  lastStep->state7_ = state7;
+  lastStep->state7_ = eigenMatrixToRKMatrix<1, 7>(state7);
   ++RKStepsFXStop_;
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
-    M1x7 state7_temp = {{ state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] }};
-
+    Vector7 state7_temp(state7);
     MaterialEffects::getInstance()->stepper(this,
                                             state7_temp,
                                             charge/state7[6], // |p|

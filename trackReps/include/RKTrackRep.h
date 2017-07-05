@@ -288,6 +288,13 @@ class RKTrackRep : public AbsTrackRep {
                       double& relMomLoss,
                       StepLimits& limits) const;
 
+  double estimateStep(const Vector7& state7,
+                      const Vector4& SU,
+                      const DetPlane& plane,
+                      const Scalar& charge,
+                      Scalar& relMomLoss,
+                      StepLimits& limits) const;
+
   TVector3 pocaOnLine(const TVector3& linePoint,
                      const TVector3& lineDirection,
                      const TVector3& point) const;
