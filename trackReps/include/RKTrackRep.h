@@ -53,13 +53,10 @@ struct RKStep {
  * @brief Helper for RKTrackRep
  */
 struct ExtrapStep {
-  M7x7 jac7_; // 5D jacobian of transport
-  M7x7 noise7_; // 5D noise matrix
+  Matrix7x7 jac7_; // 5D jacobian of transport
+  Matrix7x7Sym noise7_; // 5D noise matrix
 
-  ExtrapStep() {
-    std::fill(jac7_.begin(), jac7_.end(), 0);
-    std::fill(noise7_.begin(), noise7_.end(), 0);
-  }
+  ExtrapStep() : jac7_(Matrix7x7::Zero()), noise7_(Matrix7x7Sym::Zero()) {}
 };
 
 

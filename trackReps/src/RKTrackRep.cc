@@ -951,21 +951,18 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
   }
 
   // The Jacobians returned from RKutta are transposed.
-  TMatrixD jac(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_.back().jac7_.begin()));
-  TMatrixDSym noise(7, ExtrapSteps_.back().noise7_.begin());
+  Matrix7x7 jac(ExtrapSteps_.back().jac7_.transpose());
+  Matrix7x7Sym noise(ExtrapSteps_.back().noise7_);
   for (int i = ExtrapSteps_.size() - 2; i >= 0; --i) {
-    noise += TMatrixDSym(7, ExtrapSteps_[i].noise7_.begin()).Similarity(jac);
-    jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_[i].jac7_.begin()));
+    noise += jac * ExtrapSteps_[i].noise7_ * jac.transpose();
+    jac *= ExtrapSteps_[i].jac7_.transpose();
   }
 
-  M5x7 J_pM(eigenMatrixToRKMatrix<5, 7>(calcJ_pM_5x7(RKMatrixToEigenMatrix<1, 7>(startState7), startPlane)));
-  M7x5 J_Mp(eigenMatrixToRKMatrix<7, 5>(calcJ_Mp_7x5(RKMatrixToEigenMatrix<1, 7>(destState7), destPlane)));
+  Matrix5x7 J_pM(calcJ_pM_5x7(RKMatrixToEigenMatrix<1, 7>(startState7), startPlane));
+  Matrix7x5 J_Mp(calcJ_Mp_7x5(RKMatrixToEigenMatrix<1, 7>(destState7), destPlane));
 
-  jac.Transpose(jac); // Because the helper function wants transposed input.
-  RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, *(M7x7 *)jac.GetMatrixArray(),
-				J_pM, *(M5x5 *)fJacobian_.GetMatrixArray());
-  RKTools::J_MpTxcov7xJ_Mp(J_Mp, *(M7x7 *)noise.GetMatrixArray(),
-			   *(M5x5 *)fNoise_.GetMatrixArray());
+  fJacobian_ = eigenMatrixToRootMatrix<5, 5>(J_Mp.transpose() * jac * J_pM.transpose());
+  fNoise_ = eigenMatrixToRootMatrixSym<5>(J_Mp.transpose() * noise * J_Mp);
 
   if (debugLvl_ > 0) {
     debugOut << "total jacobian : "; fJacobian_.Print();
@@ -2403,7 +2400,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       std::vector<ExtrapStep>::iterator lastStep = ExtrapSteps_.end() - 1;
 
       // Store Jacobian of this step for final calculation.
-      lastStep->jac7_ = J_MMT_;
+      lastStep->jac7_ = RKMatrixToEigenMatrix<7, 7>(J_MMT_);
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane
@@ -2416,13 +2413,13 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       }
 
       // Store this step's noise for final calculation.
-      lastStep->noise7_ = noiseArray_;
+      lastStep->noise7_ = RKMatrixToEigenMatrix<7, 7>(noiseArray_);
 
       if (debugLvl_ > 2) {
         debugOut<<"ExtrapSteps \n";
         for (std::vector<ExtrapStep>::iterator it = ExtrapSteps_.begin(); it != ExtrapSteps_.end(); ++it){
-          debugOut << "7D Jacobian: "; RKTools::printDim((it->jac7_.begin()), 5,5);
-          debugOut << "7D noise:    "; RKTools::printDim((it->noise7_.begin()), 5,5);
+          debugOut << "7D Jacobian: " << std::endl << it->jac7_ << std::endl;
+          debugOut << "7D noise:    " << std::endl << it->noise7_ << std::endl;
         }
         debugOut<<"\n";
       }
