@@ -70,10 +70,6 @@ typedef RKMatrix<5, 7> M5x7;
  */
 namespace RKTools {
 
-  void J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5);
-
-  void J_pMTTxJ_MMTTxJ_MpTT(const M7x5& J_pMT, const M7x7& J_MMT, const M5x7& J_MpT, M5x5& J_pp);
-
   void Np_N_NpT(const M7x7& Np, M7x7& N);
 
   void printDim(const double* mat, unsigned int dimX, unsigned int dimY);
