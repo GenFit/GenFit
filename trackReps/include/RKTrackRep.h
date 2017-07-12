@@ -236,20 +236,20 @@ class RKTrackRep : public AbsTrackRep {
 
   /***
    * Transform state6 covariance to state7 covariance.
+   * ! plane and charge must already be set!
    * @param cov
    * @param state7
    * @param state
    */
-  void transformM6P(const Matrix6x6Sym& cov, const Vector7& state7, MeasuredStateOnPlane& state) const;  // plane and charge must already be set!
-  Matrix6x6Sym transformPM6(const MeasuredStateOnPlane& state) const;
+  void transformM6P(const Matrix6x6Sym& cov, const Vector7& state7, MeasuredStateOnPlane& state) const;
 
   /***
    * Transform state5 covariance to state6 covariance.
    * @param state
    * @param out6x6
    */
-  void transformPM6(const MeasuredStateOnPlane& state, M6x6& out6x6) const;
-  void transformM6P(const M6x6& in6x6, const M1x7& state7, MeasuredStateOnPlane& state) const;
+  Matrix6x6Sym transformPM6(const MeasuredStateOnPlane& state) const;
+
 
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successful and the plane is reached, the function returns true.

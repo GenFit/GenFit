@@ -845,16 +845,12 @@ void RKTrackRep::getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& m
 
 void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const {
   getPosMom(state, pos, mom);
-  cov.ResizeTo(6,6);
-  transformPM6(state, *((M6x6*) cov.GetMatrixArray()));
+  cov = get6DCov(state);
 }
 
 
 TMatrixDSym RKTrackRep::get6DCov(const MeasuredStateOnPlane& state) const {
-  TMatrixDSym cov(6);
-  transformPM6(state, *((M6x6*) cov.GetMatrixArray()));
-
-  return cov;
+  return eigenMatrixToRootMatrixSym<6>(transformPM6(state));
 }
 
 
@@ -1205,14 +1201,7 @@ void RKTrackRep::setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, 
   }
 
   setPosMom(state, pos, mom); // charge does not change!
-
-  M1x7 state7;
-  getState7(state, state7);
-
-  const M6x6& cov6x6_( *((M6x6*) cov6x6.GetMatrixArray()) );
-
-  transformM6P(cov6x6_, state7, state);
-
+  transformM6P(rootMatrixSymToEigenMatrix<6>(cov6x6), getState7(state), state);
 }
 
 void RKTrackRep::setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const {
@@ -1230,14 +1219,7 @@ void RKTrackRep::setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state
   TVector3 pos(state6(0), state6(1), state6(2));
   TVector3 mom(state6(3), state6(4), state6(5));
   setPosMom(state, pos, mom); // charge does not change!
-
-  M1x7 state7;
-  getState7(state, state7);
-
-  const M6x6& cov6x6_( *((M6x6*) cov6x6.GetMatrixArray()) );
-
-  transformM6P(cov6x6_, state7, state);
-
+  transformM6P(rootMatrixSymToEigenMatrix<6>(cov6x6), getState7(state), state);
 }
 
 
@@ -1594,11 +1576,6 @@ Matrix6x6Sym RKTrackRep::transformPM6(const MeasuredStateOnPlane& state) const {
 }
 
 
-void RKTrackRep::transformPM6(const MeasuredStateOnPlane& state,
-                              M6x6& out6x6) const {
-  out6x6 = eigenMatrixToRKMatrix<6, 6>(transformPM6(state));
-}
-
 Matrix7x5 RKTrackRep::calcJ_Mp_7x5(const Vector7& state7, const DetPlane& plane) const {
     Matrix7x5 J_Mp(Matrix7x5::Zero());
 
@@ -1653,13 +1630,6 @@ void RKTrackRep::transformM6P(const Matrix6x6Sym& cov, const Vector7& state7, Me
 
     // cov5x5 = J_Mp^T * cov6x6 * J_Mp
     state.setCov(eigenMatrixToRootMatrixSym<5>(J_Mp_6x5.transpose() * cov * J_Mp_6x5));
-}
-
-
-void RKTrackRep::transformM6P(const M6x6& in6x6,
-                              const M1x7& state7,
-                              MeasuredStateOnPlane& state) const { // plane and charge must already be set!
-    transformM6P(RKMatrixToEigenMatrix<6, 6>(in6x6), RKMatrixToEigenMatrix<1, 7>(state7), state);
 }
 
 
