@@ -50,8 +50,8 @@ RKTrackRep::RKTrackRep() :
   lastEndState_(this),
   RKStepsFXStart_(0),
   RKStepsFXStop_(0),
-  fJacobian_(5,5),
-  fNoise_(5),
+  fJacobian_(Matrix5x5::Zero()),
+  fNoise_(Matrix5x5Sym::Zero()),
   useCache_(false),
   cachePos_(0)
 {
@@ -65,8 +65,8 @@ RKTrackRep::RKTrackRep(int pdgCode, char propDir) :
   lastEndState_(this),
   RKStepsFXStart_(0),
   RKStepsFXStop_(0),
-  fJacobian_(5,5),
-  fNoise_(5),
+  fJacobian_(Matrix5x5::Zero()),
+  fNoise_(Matrix5x5Sym::Zero()),
   useCache_(false),
   cachePos_(0)
 {
@@ -961,12 +961,12 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
   Matrix5x7 J_pM(calcJ_pM_5x7(RKMatrixToEigenMatrix<1, 7>(startState7), startPlane));
   Matrix7x5 J_Mp(calcJ_Mp_7x5(RKMatrixToEigenMatrix<1, 7>(destState7), destPlane));
 
-  fJacobian_ = eigenMatrixToRootMatrix<5, 5>(J_Mp.transpose() * jac * J_pM.transpose());
-  fNoise_ = eigenMatrixToRootMatrixSym<5>(J_Mp.transpose() * noise * J_Mp);
+  fJacobian_ = J_Mp.transpose() * jac * J_pM.transpose();
+  fNoise_ = J_Mp.transpose() * noise * J_Mp;
 
   if (debugLvl_ > 0) {
-    debugOut << "total jacobian : "; fJacobian_.Print();
-    debugOut << "total noise : "; fNoise_.Print();
+    debugOut << "total jacobian : " << std::endl << fJacobian_ << std::endl;
+    debugOut << "total noise : " << std::endl << fNoise_ << std::endl;
   }
 
 }
@@ -975,10 +975,10 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
 void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
 
   jacobian.ResizeTo(5,5);
-  jacobian = fJacobian_;
+  jacobian = eigenMatrixToRootMatrix<5, 5>(fJacobian_);
 
   noise.ResizeTo(5,5);
-  noise = fNoise_;
+  noise = eigenMatrixToRootMatrixSym<5>(fNoise_);
 
   // lastEndState_ = jacobian * lastStartState_  + deltaState
   deltaState.ResizeTo(5);
@@ -1008,7 +1008,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
   }
 
   jacobian.ResizeTo(5,5);
-  jacobian = fJacobian_;
+  jacobian = eigenMatrixToRootMatrix<5, 5>(fJacobian_);
   if (!useInvertFast) {
     bool status = TDecompLU::InvertLU(jacobian, 0.0);
     if(status == 0){
@@ -1027,7 +1027,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
   }
 
   noise.ResizeTo(5,5);
-  noise = fNoise_;
+  noise = eigenMatrixToRootMatrixSym<5>(fNoise_);
   noise.Similarity(jacobian);
 
   // lastStartState_ = jacobian * lastEndState_  + deltaState
@@ -1448,8 +1448,8 @@ void RKTrackRep::initArrays() const {
     noiseProjection_[i*8] = 1;
   std::fill(J_MMT_.begin(), J_MMT_.end(), 0);
 
-  fJacobian_.UnitMatrix();
-  fNoise_.Zero();
+  fJacobian_ = Matrix5x5::Identity();
+  fNoise_ = Matrix5x5::Zero();
   limits_.reset();
 
   RKSteps_.reserve(100);
@@ -2464,8 +2464,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     calcForwardJacobianAndNoise(startState7, startPlane, state7, destPlane);
 
     if (cov != nullptr) {
-      cov->Similarity(fJacobian_);
-      *cov += fNoise_;
+      cov->Similarity(eigenMatrixToRootMatrix<5, 5>(fJacobian_));
+      *cov += eigenMatrixToRootMatrixSym<5>(fNoise_);
     }
 
     if (debugLvl_ > 0) {

@@ -328,8 +328,8 @@ class RKTrackRep : public AbsTrackRep {
   mutable int RKStepsFXStop_; //!
   mutable std::vector<ExtrapStep> ExtrapSteps_; //! steps made in Extrap during last extrapolation
 
-  mutable TMatrixD fJacobian_; //!
-  mutable TMatrixDSym fNoise_; //!
+  mutable Matrix5x5 fJacobian_; //!
+  mutable Matrix5x5Sym fNoise_; //!
 
   mutable bool useCache_; //! use cached RKSteps_ for extrapolation
   mutable unsigned int cachePos_; //!
@@ -343,7 +343,7 @@ class RKTrackRep : public AbsTrackRep {
 
  public:
 
-  ClassDef(RKTrackRep, 1)
+  ClassDef(RKTrackRep, 2)
 
 };
 
