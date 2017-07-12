@@ -1442,10 +1442,9 @@ double RKTrackRep::RKPropagate(Vector7& state7,
 
 
 void RKTrackRep::initArrays() const {
-  std::fill(noiseArray_.begin(), noiseArray_.end(), 0);
-  std::fill(noiseProjection_.begin(), noiseProjection_.end(), 0);
-  for (unsigned int i=0; i<7; ++i) // initialize as diagonal matrix
-    noiseProjection_[i*8] = 1;
+  noiseArray_ = Matrix7x7Sym::Zero();
+  noiseProjection_ = Matrix7x7Sym::Identity();
+
   std::fill(J_MMT_.begin(), J_MMT_.end(), 0);
 
   fJacobian_ = Matrix5x5::Identity();
@@ -2260,7 +2259,6 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     for(int i = 0; i < 7*7; ++i) J_MMT_[i] = 0;
     for(int i=0; i<7; ++i) J_MMT_[8*i] = 1.;
 
-    M7x7* noise = nullptr;
     isAtBoundary = false;
 
     // propagation
@@ -2269,10 +2267,12 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     limits_.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
     M1x7 J_MMT_unprojected_lastRow = {{0, 0, 0, 0, 0, 0, 1}};
-
-    if( ! RKutta(SU, destPlane, charge, mass, state7, &J_MMT_, &J_MMT_unprojected_lastRow,
-		 coveredDistance, flightTime, checkJacProj, noiseProjection_,
-		 limits_, onlyOneStep, !fillExtrapSteps) ) {
+    M7x7 noiseProjection_rk = eigenMatrixToRKMatrix<7, 7>(noiseProjection_);
+    bool success = RKutta(SU, destPlane, charge, mass, state7, &J_MMT_, &J_MMT_unprojected_lastRow,
+                          coveredDistance, flightTime, checkJacProj, noiseProjection_rk,
+                          limits_, onlyOneStep, !fillExtrapSteps);
+    noiseProjection_ = RKMatrixToEigenMatrix<7, 7>(noiseProjection_rk);
+    if(not success) {
       Exception exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
@@ -2295,10 +2295,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
 
     // call MatFX
-    if(fillExtrapSteps) {
-      noise = &noiseArray_;
-      for(int i = 0; i < 7*7; ++i) noiseArray_[i] = 0; // set noiseArray_ to 0
-    }
+    Matrix7x7Sym* noise = fillExtrapSteps ? &(noiseArray_ = Matrix7x7Sym::Zero()) : nullptr;
 
     unsigned int nPoints(RKStepsFXStop_ - RKStepsFXStart_);
     if (/*!fNoMaterial &&*/ nPoints>0){
@@ -2316,8 +2313,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         debugOut << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6])
             << "; coveredDistance = " << coveredDistance << "\n";
         if (debugLvl_ > 1 && noise != nullptr) {
-          debugOut << "7D noise: \n";
-          RKTools::printDim(noise->begin(), 7, 7);
+          debugOut << "7D noise: " << std::endl << *noise << std::endl;
         }
       }
 
@@ -2404,16 +2400,15 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane
-        RKTools::Np_N_NpT(noiseProjection_, noiseArray_);
+        noiseArray_ = noiseProjection_ * noiseArray_ * noiseProjection_.transpose();
 
         if (debugLvl_ > 1) {
-          debugOut << "7D noise projected onto plane: \n";
-          RKTools::printDim(noiseArray_.begin(), 7, 7);
+          debugOut << "7D noise projected onto plane: " << std::endl << noiseArray_ << std::endl;
         }
       }
 
       // Store this step's noise for final calculation.
-      lastStep->noise7_ = RKMatrixToEigenMatrix<7, 7>(noiseArray_);
+      lastStep->noise7_ = noiseArray_;
 
       if (debugLvl_ > 2) {
         debugOut<<"ExtrapSteps \n";
