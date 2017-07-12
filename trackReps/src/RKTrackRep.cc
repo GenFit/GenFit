@@ -1444,8 +1444,7 @@ double RKTrackRep::RKPropagate(Vector7& state7,
 void RKTrackRep::initArrays() const {
   noiseArray_ = Matrix7x7Sym::Zero();
   noiseProjection_ = Matrix7x7Sym::Identity();
-
-  std::fill(J_MMT_.begin(), J_MMT_.end(), 0);
+  J_MMT_ = Matrix7x7::Zero();
 
   fJacobian_ = Matrix5x5::Identity();
   fNoise_ = Matrix5x5::Zero();
@@ -2256,8 +2255,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     }
 
     // initialize jacobianT with unit matrix
-    for(int i = 0; i < 7*7; ++i) J_MMT_[i] = 0;
-    for(int i=0; i<7; ++i) J_MMT_[8*i] = 1.;
+    J_MMT_ = Matrix7x7::Identity();
 
     isAtBoundary = false;
 
@@ -2268,10 +2266,12 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
     M1x7 J_MMT_unprojected_lastRow = {{0, 0, 0, 0, 0, 0, 1}};
     M7x7 noiseProjection_rk = eigenMatrixToRKMatrix<7, 7>(noiseProjection_);
-    bool success = RKutta(SU, destPlane, charge, mass, state7, &J_MMT_, &J_MMT_unprojected_lastRow,
+    M7x7 J_MMT_rk = eigenMatrixToRKMatrix<7, 7>(J_MMT_);
+    bool success = RKutta(SU, destPlane, charge, mass, state7, &J_MMT_rk, &J_MMT_unprojected_lastRow,
                           coveredDistance, flightTime, checkJacProj, noiseProjection_rk,
                           limits_, onlyOneStep, !fillExtrapSteps);
     noiseProjection_ = RKMatrixToEigenMatrix<7, 7>(noiseProjection_rk);
+    J_MMT_ = RKMatrixToEigenMatrix<7, 7>(J_MMT_rk);
     if(not success) {
       Exception exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
@@ -2341,7 +2341,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
           M1x3 state7_correction_projected = {{0, 0, 0}};
           for (unsigned int i=0; i<3; ++i) {
-            state7_correction_projected[i] = 0.5 * dqop * J_MMT_[6*7 + i];
+            state7_correction_projected[i] = 0.5 * dqop * J_MMT_(6, i);
             //debugOut << "J_MMT_[6*7 + i] " << J_MMT_[6*7 + i] << "\n";
             //debugOut << "state7_correction_projected[i] " << state7_correction_projected[i] << "\n";
           }
@@ -2378,7 +2378,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         state7[6] = qop;
 
         for (unsigned int i=0; i<6; ++i) {
-          state7[i] += 0.5 * dqop * J_MMT_[6*7 + i];
+          state7[i] += 0.5 * dqop * J_MMT_(6, i);
         }
         // normalize direction, just to make sure
         double norm( 1. / sqrt(state7[3]*state7[3] + state7[4]*state7[4] + state7[5]*state7[5]) );
@@ -2396,7 +2396,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       std::vector<ExtrapStep>::iterator lastStep = ExtrapSteps_.end() - 1;
 
       // Store Jacobian of this step for final calculation.
-      lastStep->jac7_ = RKMatrixToEigenMatrix<7, 7>(J_MMT_);
+      lastStep->jac7_ = J_MMT_;
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane

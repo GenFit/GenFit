@@ -339,7 +339,7 @@ class RKTrackRep : public AbsTrackRep {
   mutable StepLimits limits_; //!
   mutable Matrix7x7Sym noiseArray_; //! noise matrix of the last extrapolation
   mutable Matrix7x7Sym noiseProjection_; //!
-  mutable M7x7 J_MMT_; //!
+  mutable Matrix7x7 J_MMT_; //!
 
  public:
 
