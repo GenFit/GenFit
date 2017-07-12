@@ -51,7 +51,6 @@ struct RKMatrix {
     return *this;
   }
 
-  void print();
 };
 
 typedef RKMatrix<1, 3> M1x3;
@@ -64,23 +63,6 @@ typedef RKMatrix<6, 5> M6x5;
 typedef RKMatrix<7, 5> M7x5;
 typedef RKMatrix<5, 6> M5x6;
 typedef RKMatrix<5, 7> M5x7;
-
-/**
- * @brief Array matrix multiplications used in RKTrackRep
- */
-namespace RKTools {
-
-  void Np_N_NpT(const M7x7& Np, M7x7& N);
-
-  void printDim(const double* mat, unsigned int dimX, unsigned int dimY);
-
-}
-
-template<size_t nRows, size_t nCols>
-inline void
-RKMatrix<nRows, nCols>::print() {
-  RKTools::printDim(this->vals, nRows, nCols);
-}
 
 } /* End of namespace genfit */
 /** @} */
