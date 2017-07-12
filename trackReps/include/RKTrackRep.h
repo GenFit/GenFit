@@ -40,12 +40,10 @@ namespace genfit {
  */
 struct RKStep {
   MatStep matStep_; // material properties and stepsize
-  M1x7 state7_; // 7D state vector
+  Vector7 state7_; // 7D state vector
   StepLimits limits_;
 
-  RKStep() {
-    std::fill(state7_.begin(), state7_.end(), 0);
-  }
+  RKStep() : state7_(Vector7::Zero()) {}
 };
 
 

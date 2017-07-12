@@ -2159,7 +2159,7 @@ double RKTrackRep::estimateStep(const Vector7& state7,
   static const RKStep defaultRKStep;
   RKSteps_.push_back( defaultRKStep );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
-  lastStep->state7_ = eigenMatrixToRKMatrix<1, 7>(state7);
+  lastStep->state7_ = state7;
   ++RKStepsFXStop_;
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
