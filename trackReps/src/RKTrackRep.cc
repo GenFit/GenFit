@@ -802,16 +802,14 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
 
 
 TVector3 RKTrackRep::getPos(const StateOnPlane& state) const {
-  M1x7 state7;
-  getState7(state, state7);
+  const Vector7 state7(getState7(state));
 
   return TVector3(state7[0], state7[1], state7[2]);
 }
 
 
 TVector3 RKTrackRep::getMom(const StateOnPlane& state) const {
-  M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
-  getState7(state, state7);
+  const Vector7 state7(getState7(state));
 
   TVector3 mom(state7[3], state7[4], state7[5]);
   mom.SetMag(getCharge(state)/state7[6]);
@@ -820,8 +818,7 @@ TVector3 RKTrackRep::getMom(const StateOnPlane& state) const {
 
 
 void RKTrackRep::getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const {
-  M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
-  getState7(state, state7);
+  const Vector7 state7(getState7(state));
 
   pos.SetXYZ(state7[0], state7[1], state7[2]);
   mom.SetXYZ(state7[3], state7[4], state7[5]);
@@ -913,15 +910,7 @@ double RKTrackRep::getTime(const StateOnPlane& state) const {
 
 
 void RKTrackRep::calcForwardJacobianAndNoise(const Vector7& startState7, const DetPlane& startPlane,
-                                 const Vector7& destState7, const DetPlane& destPlane) const {
-    calcForwardJacobianAndNoise(
-            eigenMatrixToRKMatrix<1, 7>(startState7), startPlane,
-            eigenMatrixToRKMatrix<1, 7>(destState7), destPlane
-    );
-}
-
-void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
-					     const M1x7& destState7, const DetPlane& destPlane) const {
+                                             const Vector7& destState7, const DetPlane& destPlane) const {
 
   if (debugLvl_ > 0) {
     debugOut << "RKTrackRep::calcForwardJacobianAndNoise " << std::endl;
@@ -940,8 +929,8 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
     jac *= ExtrapSteps_[i].jac7_.transpose();
   }
 
-  Matrix5x7 J_pM(calcJ_pM_5x7(RKMatrixToEigenMatrix<1, 7>(startState7), startPlane));
-  Matrix7x5 J_Mp(calcJ_Mp_7x5(RKMatrixToEigenMatrix<1, 7>(destState7), destPlane));
+  Matrix5x7 J_pM(calcJ_pM_5x7(startState7, startPlane));
+  Matrix7x5 J_Mp(calcJ_Mp_7x5(destState7, destPlane));
 
   fJacobian_ = J_Mp.transpose() * jac * J_pM.transpose();
   fNoise_ = J_Mp.transpose() * noise * J_Mp;
@@ -1088,7 +1077,7 @@ void RKTrackRep::setPosMom(StateOnPlane& state, const TVector3& pos, const TVect
 
   if (state.getPlane() != nullptr && state.getPlane()->distance(pos) < MINSTEP) { // pos is on plane -> do not change plane!
 
-    M1x7 state7;
+    Vector7 state7;
 
     state7[0] = pos.X();
     state7[1] = pos.Y();
@@ -1455,10 +1444,6 @@ Vector7 RKTrackRep::getState7(const StateOnPlane& state) const {
     return state7;
 }
 
-void RKTrackRep::getState7(const StateOnPlane& state, M1x7& state7) const {
-    state7 = eigenMatrixToRKMatrix<1, 7>(getState7(state));
-}
-
 
 void RKTrackRep::getState5(StateOnPlane& state, const Vector7& state7) const {
 
@@ -1489,10 +1474,6 @@ void RKTrackRep::getState5(StateOnPlane& state, const Vector7& state7) const {
 
 }
 
-void RKTrackRep::getState5(StateOnPlane& state, const M1x7& state7) const {
-    Vector7 state7_tmp(RKMatrixToEigenMatrix<1, 7>(state7));
-    getState5(state, state7_tmp);
-}
 
 Matrix5x7 RKTrackRep::calcJ_pM_5x7(const Vector7& state7, const DetPlane& plane) const {
     Matrix5x7 J_pM(Matrix5x7::Zero());

@@ -214,7 +214,6 @@ class RKTrackRep : public AbsTrackRep {
    * @return 7d state
    */
   Vector7 getState7(const StateOnPlane& state) const;
-  void getState7(const StateOnPlane& state, M1x7& state7) const;
 
   /***
    * Get 5d representation of a 7d state.
@@ -223,7 +222,6 @@ class RKTrackRep : public AbsTrackRep {
    * @param state7 - 7d state
    */
   void getState5(StateOnPlane& state, const Vector7& state7) const;
-  void getState5(StateOnPlane& state, const M1x7& state7) const;
 
   Matrix5x7 calcJ_pM_5x7(const Vector7& state7, const DetPlane& plane) const;
 
@@ -231,8 +229,6 @@ class RKTrackRep : public AbsTrackRep {
 
   void calcForwardJacobianAndNoise(const Vector7& startState7, const DetPlane& startPlane,
                                    const Vector7& destState7, const DetPlane& destPlane) const;
-  void calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
-                				   const M1x7& destState7, const DetPlane& destPlane) const;
 
   /***
    * Transform state6 covariance to state7 covariance.

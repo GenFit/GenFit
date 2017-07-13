@@ -218,17 +218,10 @@ namespace genfit {
     /// White-Box-Test
     TEST_F (RKTrackRepTests, getState7) {
         RKTrackRep myRKTrackRep;
-        genfit::M1x7 myState7;
-        myState7.vals[0] = 0;
-        myState7.vals[1] = 0;
-        myState7.vals[2] = 0;
-        myState7.vals[3] = 0;
-        myState7.vals[4] = 0;
-        myState7.vals[5] = 0;
-        myState7.vals[6] = 0;
+        genfit::Vector7 myState7(genfit::Vector7::Zero());
 
         genfit::MeasurementOnPlane myMeasurementOnPlane;
-        EXPECT_THROW(myRKTrackRep.getState7(myMeasurementOnPlane, myState7), genfit::Exception);
+        EXPECT_THROW(myState7 = myRKTrackRep.getState7(myMeasurementOnPlane), genfit::Exception);
         EXPECT_EQ(0, myState7[0]);
         EXPECT_EQ(0, myState7[1]);
         EXPECT_EQ(0, myState7[2]);
@@ -245,7 +238,7 @@ namespace genfit {
         myState5[4] = 0.1;
         genfit::SharedPlanePtr mySharedPlanePtr(new genfit::DetPlane(TVector3(0, 0, 1), TVector3(0, 0, 1), nullptr));
         genfit::StateOnPlane myStateOnPlane(myState5, mySharedPlanePtr, &myRKTrackRep);
-        EXPECT_NO_THROW(myRKTrackRep.getState7(myStateOnPlane, myState7));
+        EXPECT_NO_THROW(myState7 = myRKTrackRep.getState7(myStateOnPlane));
         EXPECT_FLOAT_EQ(-0.1, myState7[0]);
         EXPECT_FLOAT_EQ(-0.1, myState7[1]);
         EXPECT_FLOAT_EQ(1, myState7[2]);
@@ -259,7 +252,7 @@ namespace genfit {
     /// White-Box-Test
     TEST_F (RKTrackRepTests, getState5) {
         RKTrackRep myRKTrackRep;
-        genfit::M1x7 myState7;
+        genfit::Vector7 myState7;
         // state7 must already lie on plane of state
         // We take the values from the getState7 test, because we know them.
         myState7[0] = -0.1;
@@ -428,8 +421,8 @@ namespace genfit {
         genfit::RKTrackRep myRKTrackRep;
         genfit::DetPlane myStartPlane(startPlaneO, startPlaneN);
         genfit::DetPlane myDestPlane(destPlaneO, destPlaneN);
-        genfit::M1x7 myStartState;
-        genfit::M1x7 myDestState;
+        genfit::Vector7 myStartState;
+        genfit::Vector7 myDestState;
 
         EXPECT_EQ(0, myRKTrackRep.ExtrapSteps_.size());
         EXPECT_THROW(myRKTrackRep.calcForwardJacobianAndNoise(myStartState, myStartPlane, myDestState, myDestPlane),
