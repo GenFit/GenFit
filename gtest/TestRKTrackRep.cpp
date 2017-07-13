@@ -287,7 +287,7 @@ namespace genfit {
 
         // Code snippet from RKTrackRep to initialize test properly
         DetPlane myStartPlane(TVector3(0, 0, 0), TVector3(1, 1, 0));
-        M1x3 pTilde = {{0.9, 1.1, 0.1}};
+        Vector3 pTilde = {0.9, 1.1, 0.1};
         const TVector3& normal = myStartPlane.getNormal();
         double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
         double spu = pTildeW > 0 ? 1 : -1;
@@ -354,7 +354,7 @@ namespace genfit {
 
         // Code snippet from RKTrackRep to initialize test properly
         DetPlane myDestPlane(TVector3(0, 0, 0), TVector3(1, 1, 0));
-        M1x3 pTilde = {{0.9, 1.1, 0.1}};
+        Vector3 pTilde = {0.9, 1.1, 0.1};
         const TVector3& normal = myDestPlane.getNormal();
         double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
         double spu = pTildeW > 0 ? 1 : -1;
@@ -448,16 +448,4 @@ namespace genfit {
     TEST_F (RKTrackRepTests, Extrap) {
         // TODO: Implement
     }
-
-    /// White-Box-Test
-    TEST_F (RKTrackRepTests, momMag) {
-        genfit::RKTrackRep myRKTrackRep;
-        genfit::M1x7 myState7 = {0, 0, 0, 0, 0, 0, 0};
-        EXPECT_EQ(std::numeric_limits<double>::infinity(), myRKTrackRep.momMag(myState7));
-        myState7 = {0, 0, 0, 0, 0, 0, 1};
-        EXPECT_EQ(1.0, myRKTrackRep.momMag(myState7));
-        myState7 = {0, 0, 0, 0, 0, 0, -1};
-        EXPECT_EQ(1.0, myRKTrackRep.momMag(myState7));
-    }
-
 }

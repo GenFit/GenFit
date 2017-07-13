@@ -26,7 +26,6 @@
 
 #include "AbsTrackRep.h"
 #include "StateOnPlane.h"
-#include "RKTools.h"
 #include "StepLimits.h"
 #include "Material.h"
 #include "EigenMatrixTypedefs.h"
@@ -300,9 +299,6 @@ class RKTrackRep : public AbsTrackRep {
                 double maxStep = 1.E99) const;
 
   void checkCache(const StateOnPlane& state, const SharedPlanePtr* plane) const;
-
-  double momMag(const M1x7& state7) const;
-
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
   mutable StateOnPlane lastEndState_; //! state where the last extrapolation has ended

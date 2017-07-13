@@ -2436,12 +2436,6 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
 }
 
 
-double RKTrackRep::momMag(const M1x7& state7) const {
-  // FIXME given this interface this function cannot work for charge =/= +-1
-  return fabs(1/state7[6]);
-}
-
-
 bool RKTrackRep::isSameType(const AbsTrackRep* other) {
   if (dynamic_cast<const RKTrackRep*>(other) == nullptr)
     return false;
