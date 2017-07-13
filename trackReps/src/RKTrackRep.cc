@@ -1716,7 +1716,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
   unsigned int counter(0);
 
   // Step estimation (signed)
-  S = estimateStep(state7, SU, plane, charge, relMomLoss, limits);
+  S = estimateStep(RKMatrixToEigenMatrix<1, 7>(state7), RKMatrixToEigenMatrix<1, 4>(SU), plane, charge, relMomLoss, limits);
 
   //
   // Main loop of Runge-Kutta method
@@ -1777,7 +1777,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
     limits.removeLimit(stp_momLoss);
     limits.removeLimit(stp_boundary);
     limits.removeLimit(stp_plane);
-    S = estimateStep(state7, SU, plane, charge, relMomLoss, limits);
+    S = estimateStep(RKMatrixToEigenMatrix<1, 7>(state7), RKMatrixToEigenMatrix<1, 4>(SU), plane, charge, relMomLoss, limits);
 
     if (limits.getLowestLimit().first == stp_plane &&
         fabs(S) < MINSTEP) {
@@ -1934,22 +1934,6 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
   return(true);
 
-}
-
-double RKTrackRep::estimateStep(const M1x7& state7,
-                                const M1x4& SU,
-                                const DetPlane& plane,
-                                const double& charge,
-                                double& relMomLoss,
-                                StepLimits& limits) const {
-    return estimateStep(
-            RKMatrixToEigenMatrix<1, 7>(state7),
-            RKMatrixToEigenMatrix<1, 4>(SU),
-            plane,
-            charge,
-            relMomLoss,
-            limits
-    );
 }
 
 

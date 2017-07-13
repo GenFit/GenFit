@@ -276,13 +276,6 @@ class RKTrackRep : public AbsTrackRep {
               bool onlyOneStep = false,
               bool calcOnlyLastRowOfJ = false) const;
 
-  double estimateStep(const M1x7& state7,
-                      const M1x4& SU,
-                      const DetPlane& plane,
-                      const double& charge,
-                      double& relMomLoss,
-                      StepLimits& limits) const;
-
   double estimateStep(const Vector7& state7,
                       const Vector4& SU,
                       const DetPlane& plane,
