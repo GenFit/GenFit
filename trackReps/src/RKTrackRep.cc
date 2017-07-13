@@ -2113,7 +2113,6 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
   unsigned int numIt(0);
 
   double coveredDistance(0.);
-  double dqop(0.);
 
   const TVector3 W(destPlane.getNormal());
   Vector4 SU;
@@ -2210,43 +2209,20 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
           debugOut << "correct state7 with dx/dqop, dy/dqop ...\n";
         }
 
-        dqop = charge/(fabs(charge/state7[6])-momLoss) - state7[6];
-
         // Correct coveredDistance and flightTime and momLoss if checkJacProj == true
         // The idea is to calculate the state correction (based on the mometum loss) twice:
         // Once with the unprojected Jacobian (which preserves coveredDistance),
         // and once with the projected Jacobian (which is constrained to the plane and does NOT preserve coveredDistance).
         // The difference of these two corrections can then be used to calculate a correction factor.
         if (checkJacProj && fabs(coveredDistance) > MINSTEP) {
-          M1x3 state7_correction_unprojected = {{0, 0, 0}};
-          for (unsigned int i=0; i<3; ++i) {
-            state7_correction_unprojected[i] = 0.5 * dqop * J_MMT_unprojected_lastRow[i];
-            //debugOut << "J_MMT_unprojected_lastRow[i] " << J_MMT_unprojected_lastRow[i] << "\n";
-            //debugOut << "state7_correction_unprojected[i] " << state7_correction_unprojected[i] << "\n";
-          }
+          const Scalar dqop = charge/(fabs(charge/state7[6])-momLoss) - state7[6];
+          const Vector3 state7_correction_unprojected(0.5 * dqop * J_MMT_unprojected_lastRow.block<3, 1>(0, 0));
+          const Vector3 state7_correction_projected(0.5 * dqop * J_MMT_.block<1, 3>(6, 0).transpose());
+          const Vector3 delta_state(state7_correction_unprojected - state7_correction_projected);
+          const Scalar Dist = (delta_state.block<3, 1>(0, 0).dot(state7.block<3, 1>(3, 0))) > 0
+                              ? -1 * delta_state.norm() : delta_state.norm();  // sign: delta * a
 
-          M1x3 state7_correction_projected = {{0, 0, 0}};
-          for (unsigned int i=0; i<3; ++i) {
-            state7_correction_projected[i] = 0.5 * dqop * J_MMT_(6, i);
-            //debugOut << "J_MMT_[6*7 + i] " << J_MMT_[6*7 + i] << "\n";
-            //debugOut << "state7_correction_projected[i] " << state7_correction_projected[i] << "\n";
-          }
-
-          // delta distance
-          M1x3 delta_state = {{0, 0, 0}};
-          for (unsigned int i=0; i<3; ++i) {
-            delta_state[i] = state7_correction_unprojected[i] - state7_correction_projected[i];
-          }
-
-          double Dist( sqrt(delta_state[0]*delta_state[0]
-              + delta_state[1]*delta_state[1]
-              + delta_state[2]*delta_state[2] )  );
-
-          // sign: delta * a
-          if (delta_state[0]*state7[3] + delta_state[1]*state7[4] + delta_state[2]*state7[5] > 0)
-            Dist *= -1.;
-
-          double correctionFactor( 1. + Dist / coveredDistance );
+          const Scalar correctionFactor = 1. + Dist / coveredDistance;
           flightTime *= correctionFactor;
           momLoss *= correctionFactor;
           coveredDistance = coveredDistance + Dist;
@@ -2259,18 +2235,11 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         }
 
         // correct state7 with dx/dqop, dy/dqop ... Greatly improves extrapolation accuracy!
-        double qop( charge/(fabs(charge/state7[6])-momLoss) );
-        dqop = qop - state7[6];
+        const Scalar qop = charge/(fabs(charge/state7[6])-momLoss);
+        const Scalar dqop = qop - state7[6];
         state7[6] = qop;
-
-        for (unsigned int i=0; i<6; ++i) {
-          state7[i] += 0.5 * dqop * J_MMT_(6, i);
-        }
-        // normalize direction, just to make sure
-        double norm( 1. / sqrt(state7[3]*state7[3] + state7[4]*state7[4] + state7[5]*state7[5]) );
-        for (unsigned int i=3; i<6; ++i)
-          state7[i] *= norm;
-
+        state7.block<6, 1>(0, 0) += 0.5 * dqop * J_MMT_.block<1, 6>(6, 0).transpose();
+        state7.block<3, 1>(3, 0).normalize();  // normalize direction, just to make sure
       }
     } // finished MatFX
 
