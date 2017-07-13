@@ -109,30 +109,13 @@ void MaterialEffects::setMscModel(const std::string& modelName)
   }
 }
 
-double MaterialEffects::effects(const std::vector<RKStep>& steps,
-                                int materialsFXStart,
-                                int materialsFXStop,
-                                const double& mom,
-                                const int& pdg,
-                                Matrix7x7Sym* noise) {
-    if (noise) {
-        M7x7 noise_rk(eigenMatrixToRKMatrix<7, 7>(*noise));
-        const auto return_value = effects(steps, materialsFXStart, materialsFXStop, mom, pdg, &noise_rk);
-        *noise = RKMatrixToEigenMatrix<7, 7>(noise_rk);
-        return return_value;
-    } else {
-        M7x7* noise_rk = nullptr;
-        return effects(steps, materialsFXStart, materialsFXStop, mom, pdg, noise_rk);
-    }
-}
-
 
 double MaterialEffects::effects(const std::vector<RKStep>& steps,
                                 int materialsFXStart,
                                 int materialsFXStop,
                                 const double& mom,
                                 const int& pdg,
-                                M7x7* noise)
+                                Matrix7x7Sym* noise)
 {
 
   if (debugLvl_ > 0) {
@@ -208,7 +191,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
           this->noiseBetheBloch(*noise, p, betaSquare, gamma, gammaSquare);
 
         if (noiseCoulomb_)
-          this->noiseCoulomb(*noise, *((M1x3*) &it->state7_[3]), pSquare, betaSquare);
+          this->noiseCoulomb(*noise, it->state7_.block<3, 1>(3, 0), pSquare, betaSquare);
 
         if (energyLossBrems_ && noiseBrems_)
           this->noiseBrems(*noise, pSquare, betaSquare);
@@ -503,7 +486,7 @@ double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double g
 }
 
 
-void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare) const
+void MaterialEffects::noiseBetheBloch(Matrix7x7Sym& noise, double mom, double betaSquare, double gamma, double gammaSquare) const
 {
   // Code ported from GEANT 3 (erland.F)
 
@@ -559,12 +542,12 @@ void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare
   sigma2E *= 1.E-18; // eV -> GeV
 
   // update noise matrix, using linear error propagation from E to q/p
-  noise[6 * 7 + 6] += charge_*charge_/betaSquare / pow(mom, 4) * sigma2E;
+  noise(6, 6) += charge_*charge_/betaSquare / pow(mom, 4) * sigma2E;
 }
 
 
-void MaterialEffects::noiseCoulomb(M7x7& noise,
-                                   const M1x3& direction, double momSquare, double betaSquare) const
+void MaterialEffects::noiseCoulomb(Matrix7x7Sym& noise,
+                                   const Vector3& direction, double momSquare, double betaSquare) const
 {
 
   // MULTIPLE SCATTERING; calculate sigma^2
@@ -584,53 +567,49 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
   sigma2 = (sigma2 > 0.0 ? sigma2 : 0.0);
   //XXX debugOut << "MaterialEffects::noiseCoulomb the MSC variance is " << sigma2 << std::endl;
 
-  M7x7 noiseAfter; // will hold the new MSC noise to cause by the current stepSize_ length
-  std::fill(noiseAfter.begin(), noiseAfter.end(), 0);
-
-  const M1x3& a = direction; // as an abbreviation
+  Matrix7x7Sym noiseAfter(Matrix7x7Sym::Zero()); // will hold the new MSC noise to cause by the current stepSize_ length
+  const Vector3& a = direction; // as an abbreviation
   // This calculates the MSC angular spread in the 7D global
   // coordinate system.  See PDG 2010, Sec. 27.3 for formulae.
-  noiseAfter[0 * 7 + 0] =  sigma2 * step2 / 3.0 * (1 - a[0]*a[0]);
-  noiseAfter[1 * 7 + 0] = -sigma2 * step2 / 3.0 * a[0]*a[1];
-  noiseAfter[2 * 7 + 0] = -sigma2 * step2 / 3.0 * a[0]*a[2];
-  noiseAfter[3 * 7 + 0] =  sigma2 * step * 0.5 * (1 - a[0]*a[0]);
-  noiseAfter[4 * 7 + 0] = -sigma2 * step * 0.5 * a[0]*a[1];
-  noiseAfter[5 * 7 + 0] = -sigma2 * step * 0.5 * a[0]*a[1];
-  noiseAfter[0 * 7 + 1] = noiseAfter[1 * 7 + 0];
-  noiseAfter[1 * 7 + 1] =  sigma2 * step2 / 3.0 * (1 - a[1]*a[1]);
-  noiseAfter[2 * 7 + 1] = -sigma2 * step2 / 3.0 * a[1]*a[2];
-  noiseAfter[3 * 7 + 1] = noiseAfter[4 * 7 + 0]; // Cov(x,a_y) = Cov(y,a_x)
-  noiseAfter[4 * 7 + 1] =  sigma2 * step * 0.5 * (1 - a[1] * a[1]);
-  noiseAfter[5 * 7 + 1] = -sigma2 * step * 0.5 * a[1]*a[2];
-  noiseAfter[0 * 7 + 2] = noiseAfter[2 * 7 + 0];
-  noiseAfter[1 * 7 + 2] = noiseAfter[2 * 7 + 1];
-  noiseAfter[2 * 7 + 2] =  sigma2 * step2 / 3.0 * (1 - a[2]*a[2]);
-  noiseAfter[3 * 7 + 2] = noiseAfter[5 * 7 + 0]; // Cov(z,a_x) = Cov(x,a_z)
-  noiseAfter[4 * 7 + 2] = noiseAfter[5 * 7 + 1]; // Cov(y,a_z) = Cov(z,a_y)
-  noiseAfter[5 * 7 + 2] =  sigma2 * step * 0.5 * (1 - a[2]*a[2]);
-  noiseAfter[0 * 7 + 3] = noiseAfter[3 * 7 + 0];
-  noiseAfter[1 * 7 + 3] = noiseAfter[3 * 7 + 1];
-  noiseAfter[2 * 7 + 3] = noiseAfter[3 * 7 + 2];
-  noiseAfter[3 * 7 + 3] =  sigma2 * (1 - a[0]*a[0]);
-  noiseAfter[4 * 7 + 3] = -sigma2 * a[0]*a[1];
-  noiseAfter[5 * 7 + 3] = -sigma2 * a[0]*a[2];
-  noiseAfter[0 * 7 + 4] = noiseAfter[4 * 7 + 0];
-  noiseAfter[1 * 7 + 4] = noiseAfter[4 * 7 + 1];
-  noiseAfter[2 * 7 + 4] = noiseAfter[4 * 7 + 2];
-  noiseAfter[3 * 7 + 4] = noiseAfter[4 * 7 + 3];
-  noiseAfter[4 * 7 + 4] =  sigma2 * (1 - a[1]*a[1]);
-  noiseAfter[5 * 7 + 4] = -sigma2 * a[1]*a[2];
-  noiseAfter[0 * 7 + 5] = noiseAfter[5 * 7 + 0];
-  noiseAfter[1 * 7 + 5] = noiseAfter[5 * 7 + 1];
-  noiseAfter[2 * 7 + 5] = noiseAfter[5 * 7 + 2];
-  noiseAfter[3 * 7 + 5] = noiseAfter[5 * 7 + 3];
-  noiseAfter[4 * 7 + 5] = noiseAfter[5 * 7 + 4];
-  noiseAfter[5 * 7 + 5] = sigma2 * (1 - a[2]*a[2]);
-//    debugOut << "new noise\n";
-//    RKTools::printDim(noiseAfter, 7,7);
-  for (unsigned int i = 0; i < 7 * 7; ++i) {
-    noise[i] += noiseAfter[i];
-  }
+  noiseAfter(0, 0) =  sigma2 * step2 / 3.0 * (1 - a[0]*a[0]);
+  noiseAfter(1, 0) = -sigma2 * step2 / 3.0 * a[0]*a[1];
+  noiseAfter(2, 0) = -sigma2 * step2 / 3.0 * a[0]*a[2];
+  noiseAfter(3, 0) =  sigma2 * step * 0.5 * (1 - a[0]*a[0]);
+  noiseAfter(4, 0) = -sigma2 * step * 0.5 * a[0]*a[1];
+  noiseAfter(5, 0) = -sigma2 * step * 0.5 * a[0]*a[1];
+  noiseAfter(0, 1) = noiseAfter(1, 0);
+  noiseAfter(1, 1) =  sigma2 * step2 / 3.0 * (1 - a[1]*a[1]);
+  noiseAfter(2, 1) = -sigma2 * step2 / 3.0 * a[1]*a[2];
+  noiseAfter(3, 1) = noiseAfter(4, 0); // Cov(x,a_y) = Cov(y,a_x)
+  noiseAfter(4, 1) =  sigma2 * step * 0.5 * (1 - a[1] * a[1]);
+  noiseAfter(5, 1) = -sigma2 * step * 0.5 * a[1]*a[2];
+  noiseAfter(0, 2) = noiseAfter(2, 0);
+  noiseAfter(1, 2) = noiseAfter(2, 1);
+  noiseAfter(2, 2) =  sigma2 * step2 / 3.0 * (1 - a[2]*a[2]);
+  noiseAfter(3, 2) = noiseAfter(5, 0); // Cov(z,a_x) = Cov(x,a_z)
+  noiseAfter(4, 2) = noiseAfter(5, 1); // Cov(y,a_z) = Cov(z,a_y)
+  noiseAfter(5, 2) =  sigma2 * step * 0.5 * (1 - a[2]*a[2]);
+  noiseAfter(0, 3) = noiseAfter(3, 0);
+  noiseAfter(1, 3) = noiseAfter(3, 1);
+  noiseAfter(2, 3) = noiseAfter(3, 2);
+  noiseAfter(3, 3) =  sigma2 * (1 - a[0]*a[0]);
+  noiseAfter(4, 3) = -sigma2 * a[0]*a[1];
+  noiseAfter(5, 3) = -sigma2 * a[0]*a[2];
+  noiseAfter(0, 4) = noiseAfter(4, 0);
+  noiseAfter(1, 4) = noiseAfter(4, 1);
+  noiseAfter(2, 4) = noiseAfter(4, 2);
+  noiseAfter(3, 4) = noiseAfter(4, 3);
+  noiseAfter(4, 4) =  sigma2 * (1 - a[1]*a[1]);
+  noiseAfter(5, 4) = -sigma2 * a[1]*a[2];
+  noiseAfter(0, 5) = noiseAfter(5, 0);
+  noiseAfter(1, 5) = noiseAfter(5, 1);
+  noiseAfter(2, 5) = noiseAfter(5, 2);
+  noiseAfter(3, 5) = noiseAfter(5, 3);
+  noiseAfter(4, 5) = noiseAfter(5, 4);
+  noiseAfter(5, 5) = sigma2 * (1 - a[2]*a[2]);
+
+  noise += noiseAfter;
+
 }
 
 
@@ -811,7 +790,7 @@ double MaterialEffects::dEdxBrems(double mom) const
 }
 
 
-void MaterialEffects::noiseBrems(M7x7& noise, double momSquare, double betaSquare) const
+void MaterialEffects::noiseBrems(Matrix7x7Sym& noise, double momSquare, double betaSquare) const
 {
   // Code ported from GEANT 3 (erland.F) and simplified
   // E \approx p is assumed.
@@ -825,7 +804,7 @@ void MaterialEffects::noiseBrems(M7x7& noise, double momSquare, double betaSquar
   sigma2E = std::max(sigma2E, 0.0); // must be positive
   
   // update noise matrix, using linear error propagation from E to q/p
-  noise[6 * 7 + 6] += charge_*charge_/betaSquare / pow(momSquare, 2) * sigma2E;
+  noise(6, 6) += charge_*charge_/betaSquare / pow(momSquare, 2) * sigma2E;
 }
 
 

@@ -24,7 +24,6 @@
 #ifndef genfit_MaterialEffects_h
 #define genfit_MaterialEffects_h
 
-#include "RKTools.h"
 #include "AbsMaterialInterface.h"
 
 #include <iostream>
@@ -89,13 +88,6 @@ public:
                  int materialsFXStop,
                  const double& mom,
                  const int& pdg,
-                 M7x7* noise = nullptr);
-
-  double effects(const std::vector<RKStep>& steps,
-                 int materialsFXStart,
-                 int materialsFXStop,
-                 const double& mom,
-                 const int& pdg,
                  Matrix7x7Sym* noise = nullptr);
 
   /**  @brief Returns maximum length so that a specified momentum loss will not be exceeded.
@@ -147,7 +139,7 @@ public:
     *
     *  Needs dEdx_, which is calculated in momentumLoss, so it has to be called afterwards!
     */
-  void noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare) const;
+  void noiseBetheBloch(Matrix7x7Sym& noise, double mom, double betaSquare, double gamma, double gammaSquare) const;
 
   //! calculation of multiple scattering
   /**  This function first calcuates a MSC variance based on the current material and step length
@@ -157,8 +149,8 @@ public:
    * taking even the (co)variances of the position coordinates into account.
    * 
     */
-  void noiseCoulomb(M7x7& noise,
-                    const M1x3& direction, double momSquare, double betaSquare) const;
+  void noiseCoulomb(Matrix7x7Sym& noise,
+                    const Vector3& direction, double momSquare, double betaSquare) const;
 
   //! Returns dEdx
   /** Can be called with any pdg, but only calculates dEdx for electrons and positrons (otherwise returns 0).
@@ -170,7 +162,7 @@ public:
   //! calculation of energy loss straggeling
   /** Can be called with any pdg, but only calculates straggeling for electrons and positrons.
    */
-  void noiseBrems(M7x7& noise, double momSquare, double betaSquare) const;
+  void noiseBrems(Matrix7x7Sym& noise, double momSquare, double betaSquare) const;
 
 
 
