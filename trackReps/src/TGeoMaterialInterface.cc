@@ -68,17 +68,17 @@ Material TGeoMaterialInterface::getMaterialParameters() {
 
 double
 TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
-                                          const M1x7& stateOrig,
-                                          double sMax, // signed
-                                          bool varField)
+                                        const Vector7& stateOrig,
+                                        double sMax, // signed
+                                        bool varField)
 {
   const double delta(1.E-2); // cm, distance limit beneath which straight-line steps are taken.
   const double epsilon(1.E-1); // cm, allowed upper bound on arch
   // deviation from straight line
 
-  M1x3 SA;
-  M1x7 state7, oldState7;
-  oldState7 = stateOrig;
+  Vector3 SA;
+  Vector7 state7;
+  Vector7 oldState7(stateOrig);
 
   int stepSign(sMax < 0 ? -1 : 1);
 

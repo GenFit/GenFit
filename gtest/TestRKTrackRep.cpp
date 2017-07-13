@@ -157,16 +157,16 @@ namespace genfit {
 
     /// Black-Box-Test
     TEST_F (RKTrackRepTests, RKPropagate01) {
-        genfit::M1x7 myState7;
-        myState7.vals[0] = 0;
-        myState7.vals[1] = 0;
-        myState7.vals[2] = 0;
-        myState7.vals[3] = 0;
-        myState7.vals[4] = 0;
-        myState7.vals[5] = 1;
-        myState7.vals[6] = 1;
-        genfit::M7x7* myJacobian = nullptr;
-        genfit::M1x3 mySA;
+        genfit::Vector7 myState7;
+        myState7[0] = 0;
+        myState7[1] = 0;
+        myState7[2] = 0;
+        myState7[3] = 0;
+        myState7[4] = 0;
+        myState7[5] = 1;
+        myState7[6] = 1;
+        genfit::Matrix7x7* myJacobian = nullptr;
+        genfit::Vector3 mySA;
         double myS = 0.5;
         const bool varField = false;
         const bool calcOnlyLastRowOfJ = false;
@@ -187,16 +187,16 @@ namespace genfit {
 
     /// Black-Box-Test
     TEST_F (RKTrackRepTests, RKPropagate02) {
-        genfit::M1x7 myState7;
-        myState7.vals[0] = 1;
-        myState7.vals[1] = 1;
-        myState7.vals[2] = 1;
-        myState7.vals[3] = 1;
-        myState7.vals[4] = 1;
-        myState7.vals[5] = 1;
-        myState7.vals[6] = 1;
-        genfit::M7x7* myJacobian = nullptr;
-        genfit::M1x3 mySA;
+        genfit::Vector7 myState7;
+        myState7[0] = 1;
+        myState7[1] = 1;
+        myState7[2] = 1;
+        myState7[3] = 1;
+        myState7[4] = 1;
+        myState7[5] = 1;
+        myState7[6] = 1;
+        genfit::Matrix7x7* myJacobian = nullptr;
+        genfit::Vector3 mySA;
         double myS = 0.1;
         const bool varField = false;
         const bool calcOnlyLastRowOfJ = false;

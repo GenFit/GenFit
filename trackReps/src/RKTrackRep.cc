@@ -1222,27 +1222,6 @@ void RKTrackRep::setTime(StateOnPlane& state, double time) const {
   (state.getAuxInfo())(1) = time;
 }
 
-double RKTrackRep::RKPropagate(M1x7& state7,
-                               M7x7* jacobianT,
-                               M1x3& SA,
-                               double S,
-                               bool varField,
-                               bool calcOnlyLastRowOfJ) const {
-    Vector7 state7_e(RKMatrixToEigenMatrix<1, 7>(state7).transpose());
-    Vector3 SA_e(RKMatrixToEigenMatrix<1, 3>(SA).transpose());
-    Matrix7x7* jacobianT_e = nullptr;
-    if (jacobianT) {
-        jacobianT_e = new Matrix7x7(RKMatrixToEigenMatrix<7, 7>(*jacobianT));
-    }
-    const auto return_value = RKPropagate(state7_e, jacobianT_e, SA_e, S, varField, calcOnlyLastRowOfJ);
-    state7 = eigenMatrixToRKMatrix<1, 7>(state7_e);
-    SA = eigenMatrixToRKMatrix<1, 3>(SA_e);
-    if (jacobianT) {
-        *jacobianT = eigenMatrixToRKMatrix<7, 7>(*jacobianT_e);
-        delete jacobianT_e;
-    }
-    return return_value;
-}
 
 double RKTrackRep::RKPropagate(Vector7& state7,
                         Matrix7x7* jacobianT,

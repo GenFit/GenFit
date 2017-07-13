@@ -104,15 +104,6 @@ public:
    * or the next material boundary is reached. The material crossed are stored together with their stepsizes.
   */
   void stepper(const RKTrackRep* rep,
-               M1x7& state7,
-               const double& mom, // momentum
-               double& relMomLoss, // relative momloss for the step will be added
-               const int& pdg,
-               Material& currentMaterial,
-               StepLimits& limits,
-               bool varField = true);
-
-  void stepper(const RKTrackRep* rep,
                Vector7& state7,
                const double& mom, // momentum
                double& relMomLoss, // relative momloss for the step will be added

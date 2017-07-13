@@ -54,7 +54,7 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
    * step made is returned.
    */
   double findNextBoundary(const RKTrackRep* rep,
-                          const M1x7& state7,
+                          const Vector7& state7,
                           double sMax,
                           bool varField = true);
 

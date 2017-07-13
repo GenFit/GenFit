@@ -61,7 +61,7 @@ class AbsMaterialInterface : public TObject {
    * The actual step made is returned.
    */
   virtual double findNextBoundary(const RKTrackRep* rep,
-                                  const M1x7& state7,
+                                  const Vector7& state7,
                                   double sMax,
                                   bool varField = true) = 0;
 

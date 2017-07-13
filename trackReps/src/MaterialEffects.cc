@@ -235,19 +235,6 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
                               const int& pdg,
                               Material& currentMaterial,
                               StepLimits& limits,
-                              bool varField) {
-    M1x7 state7_rk(eigenMatrixToRKMatrix<1, 7>(state7));
-    stepper(rep, state7_rk, mom, relMomLoss, pdg, currentMaterial, limits, varField);
-    state7 = RKMatrixToEigenMatrix<1, 7>(state7_rk);
-}
-
-void MaterialEffects::stepper(const RKTrackRep* rep,
-                              M1x7& state7,
-                              const double& mom, // momentum
-                              double& relMomLoss, // relative momloss for the step will be added
-                              const int& pdg,
-                              Material& currentMaterial,
-                              StepLimits& limits,
                               bool varField)
 {
 
@@ -332,7 +319,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   sMax = limits.getLowestLimitSignedVal();
 
   stepSize_ = limits.getStepSign() * minStep;
-  M1x3 SA;
+  Vector3 SA(Vector3::Zero());
   double boundaryStep(sMax);
 
   for (unsigned int i=0; i<100; ++i) {
