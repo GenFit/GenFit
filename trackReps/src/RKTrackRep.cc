@@ -98,9 +98,7 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane& state,
 
   checkCache(state, &plane);
 
-  // to 7D
-  M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
-  getState7(state, state7);
+  Vector7 state7(getState7(state));
 
   TMatrixDSym* covPtr(nullptr);
   bool fillExtrapSteps(false);
@@ -148,9 +146,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
 
   static const unsigned int maxIt(1000);
 
-  // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  Vector7 state7(getState7(state));
 
   bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
@@ -248,9 +244,7 @@ double RKTrackRep::extrapToPoint(StateOnPlane& state,
 
   static const unsigned int maxIt(1000);
 
-  // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  Vector7 state7(getState7(state));
 
   bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
@@ -365,9 +359,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
 
   static const unsigned int maxIt(1000);
 
-  // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  Vector7 state7(getState7(state));
 
   bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
@@ -490,9 +482,7 @@ double RKTrackRep::extrapolateToCone(StateOnPlane& state,
 
   static const unsigned int maxIt(1000);
 
-  // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  Vector7 state7(getState7(state));
 
   bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
@@ -623,9 +613,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
 
   static const unsigned int maxIt(1000);
 
-  // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  Vector7 state7(getState7(state));
 
   bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
@@ -733,9 +721,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
 
   static const unsigned int maxIt(1000);
 
-  // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  Vector7 state7(getState7(state));
 
   bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != nullptr) {
@@ -1663,35 +1649,36 @@ void RKTrackRep::transformM6P(const Matrix6x6Sym& cov, const Vector7& state7, Me
 //
 // Authors: R.Brun, M.Hansroul, V.Perevoztchikov (Geant3)
 //
-bool RKTrackRep::RKutta(const M1x4& SU,
+bool RKTrackRep::RKutta(const Vector4& SU,
                         const DetPlane& plane,
                         double charge,
                         double mass,
-                        M1x7& state7,
-                        M7x7* jacobianT,
-                        M1x7* J_MMT_unprojected_lastRow,
+                        Vector7& state7,
+                        Matrix7x7* jacobianT,
+                        Vector7* J_MMT_unprojected_lastRow,
                         double& coveredDistance,
                         double& flightTime,
                         bool& checkJacProj,
-                        M7x7& noiseProjection,
+                        Matrix7x7Sym& noiseProjection,
                         StepLimits& limits,
                         bool onlyOneStep,
                         bool calcOnlyLastRowOfJ) const {
 
   // limits, check-values, etc. Can be tuned!
-  static const double Wmax           ( 3000. );           // max. way allowed [cm]
-  static const double AngleMax       ( 6.3 );           // max. total angle change of momentum. Prevents extrapolating a curler round and round if no active plane is found.
-  static const double Pmin           ( 4.E-3 );           // minimum momentum for propagation [GeV]
+  static const Scalar Wmax           ( 3000. );           // max. way allowed [cm]
+  static const Scalar AngleMax       ( 6.3 );           // max. total angle change of momentum. Prevents extrapolating a curler round and round if no active plane is found.
+  static const Scalar Pmin           ( 4.E-3 );           // minimum momentum for propagation [GeV]
   static const unsigned int maxNumIt ( 1000 );    // maximum number of iterations in main loop
   // Aux parameters
-  M1x3&   R          ( *((M1x3*) &state7[0]) );  // Start coordinates  [cm]  (x,  y,  z)
-  M1x3&   A          ( *((M1x3*) &state7[3]) );  // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
-  M1x3    SA         = {{0.,0.,0.}};             // Start directions derivatives dA/S
-  double  Way        ( 0. );                     // Sum of absolute values of all extrapolation steps [cm]
-  double  momentum   ( fabs(charge/state7[6]) ); // momentum [GeV]
-  double  relMomLoss ( 0 );                      // relative momentum loss in RKutta
-  double  deltaAngle ( 0. );                     // total angle by which the momentum has changed during extrapolation
-  double  An(0), S(0), Sl(0), CBA(0);
+  const Vector3& R = state7.block<3, 1>(0, 0);  // Start coordinates  [cm]  (x,  y,  z)
+  const Vector3& A = state7.block<3, 1>(3, 0);  // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
+  Vector3 SA(Vector3::Zero());  // Start directions derivatives dA/S
+
+  Scalar Way        ( 0. );                     // Sum of absolute values of all extrapolation steps [cm]
+  Scalar momentum   ( fabs(charge/state7[6]) ); // momentum [GeV]
+  Scalar relMomLoss ( 0 );                      // relative momentum loss in RKutta
+  Scalar deltaAngle ( 0. );                     // total angle by which the momentum has changed during extrapolation
+  Scalar An(0), S(0), Sl(0);
 
 
   if (debugLvl_ > 0) {
@@ -1716,7 +1703,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
   unsigned int counter(0);
 
   // Step estimation (signed)
-  S = estimateStep(RKMatrixToEigenMatrix<1, 7>(state7), RKMatrixToEigenMatrix<1, 4>(SU), plane, charge, relMomLoss, limits);
+  S = estimateStep(state7, SU, plane, charge, relMomLoss, limits);
 
   //
   // Main loop of Runge-Kutta method
@@ -1733,7 +1720,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       debugOut << "------ RKutta main loop nr. " << counter-1 << " ------\n";
     }
 
-    M1x3 ABefore = {{ A[0], A[1], A[2] }};
+    Vector3 ABefore(A);
     RKPropagate(state7, jacobianT, SA, S, true, calcOnlyLastRowOfJ); // the actual Runge Kutta propagation
 
     // update paths
@@ -1777,7 +1764,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
     limits.removeLimit(stp_momLoss);
     limits.removeLimit(stp_boundary);
     limits.removeLimit(stp_plane);
-    S = estimateStep(RKMatrixToEigenMatrix<1, 7>(state7), RKMatrixToEigenMatrix<1, 4>(SU), plane, charge, relMomLoss, limits);
+    S = estimateStep(state7, SU, plane, charge, relMomLoss, limits);
 
     if (limits.getLowestLimit().first == stp_plane &&
         fabs(S) < MINSTEP) {
@@ -1797,7 +1784,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
     }
 
     // check if total angle is bigger than AngleMax. Can happen if a curler should be fitted and it does not hit the active area of the next plane.
-    double arg = ABefore[0]*A[0] + ABefore[1]*A[1] + ABefore[2]*A[2];
+    Scalar arg = ABefore.dot(A);
     arg = arg > 1 ? 1 : arg;
     arg = arg < -1 ? -1 : arg;
     deltaAngle += acos(arg);
@@ -1835,21 +1822,16 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       Sl = 1./Sl;        // Sl = inverted last Stepsize Sl
 
       // normalize SA
-      SA[0]*=Sl;  SA[1]*=Sl;  SA[2]*=Sl; // SA/Sl = delta A / delta way; local derivative of A with respect to the length of the way
-
+      // SA/Sl = delta A / delta way; local derivative of A with respect to the length of the way
+      SA *= Sl;
       // calculate A
-      A[0] += SA[0]*S;    // S  = distance to surface
-      A[1] += SA[1]*S;    // A = A + S * SA*Sl
-      A[2] += SA[2]*S;
-
-      // normalize A
-      CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);  // 1/|A|
-      A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
-
-      R[0] += S*(A[0]-0.5*S*SA[0]);    // R = R + S*(A - 0.5*S*SA); approximation for final point on surface
-      R[1] += S*(A[1]-0.5*S*SA[1]);
-      R[2] += S*(A[2]-0.5*S*SA[2]);
-
+      // S  = distance to surface
+      // A = A + S * SA*Sl
+      // normalize A -> 1/|A|
+      state7.block<3, 1>(3, 0) += S * SA;
+      state7.block<3, 1>(3, 0).normalize();
+      // R = R + S*(A - 0.5*S*SA); approximation for final point on surface
+      state7.block<3, 1>(0, 0) += S * (A - 0.5 * S * SA);
 
       coveredDistance += S;
       Way  += fabs(S);
@@ -1887,21 +1869,13 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       }
       An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
       An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
-      double norm;
-      int i=0;
-      if (calcOnlyLastRowOfJ)
-        i = 42;
 
-      double* jacPtr = jacobianT->begin();
+      *J_MMT_unprojected_lastRow = (*jacobianT).block<1, 7>(6, 0).transpose();
 
-      for(unsigned int j=42; j<49; j+=7) {
-        (*J_MMT_unprojected_lastRow)[j-42] = jacPtr[j];
-      }
-
-      for(; i<49; i+=7) {
-        norm = (jacPtr[i]*SU[0] + jacPtr[i+1]*SU[1] + jacPtr[i+2]*SU[2]) * An;  // dR_normal / A_normal
-        jacPtr[i]   -= norm*A [0];   jacPtr[i+1] -= norm*A [1];   jacPtr[i+2] -= norm*A [2];
-        jacPtr[i+3] -= norm*SA[0];   jacPtr[i+4] -= norm*SA[1];   jacPtr[i+5] -= norm*SA[2];
+      for (int row = calcOnlyLastRowOfJ ? 7 : 0; row < 7; ++row) {
+        const Scalar norm = (*jacobianT).block<1, 3>(row, 0).transpose().dot(SU.block<3, 1>(0, 0)) * An;  // dR_normal / A_normal
+        (*jacobianT).block<1, 3>(row, 0).transpose() -= norm * A;
+        (*jacobianT).block<1, 3>(row, 3).transpose() -= norm * SA;
       }
       checkJacProj = true;
 
@@ -1914,8 +1888,8 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       if (!calcOnlyLastRowOfJ) {
         for (int iRow = 0; iRow < 3; ++iRow) {
           for (int iCol = 0; iCol < 3; ++iCol) {
-            noiseProjection[iRow*7 + iCol]       = (iRow == iCol) - An * SU[iCol] * A[iRow];
-            noiseProjection[(iRow + 3)*7 + iCol] =                - An * SU[iCol] * SA[iRow];
+            noiseProjection(iRow, iCol)       = (iRow == iCol) - An * SU[iCol] * A[iRow];
+            noiseProjection((iRow + 3), iCol) =                - An * SU[iCol] * SA[iRow];
           }
         }
 
@@ -2166,7 +2140,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
                           double charge,
                           double mass,
                           bool& isAtBoundary,
-                          M1x7& state7,
+                          Vector7& state7,
                           double& flightTime,
                           bool fillExtrapSteps,
                           TMatrixDSym* cov, // 5D
@@ -2182,7 +2156,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
   double dqop(0.);
 
   const TVector3 W(destPlane.getNormal());
-  M1x4 SU = {{W.X(), W.Y(), W.Z(), destPlane.distance(0., 0., 0.)}};
+  Vector4 SU;
+  SU << W.X(), W.Y(), W.Z(), destPlane.distance(0., 0., 0.);
 
   // make SU vector point away from origin
   if (W*destPlane.getO() < 0) {
@@ -2192,7 +2167,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
   }
 
 
-  M1x7 startState7 = state7;
+  Vector7 startState7(state7);
 
   while(true){
 
@@ -2218,14 +2193,11 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     limits_.reset();
     limits_.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
-    M1x7 J_MMT_unprojected_lastRow = {{0, 0, 0, 0, 0, 0, 1}};
-    M7x7 noiseProjection_rk = eigenMatrixToRKMatrix<7, 7>(noiseProjection_);
-    M7x7 J_MMT_rk = eigenMatrixToRKMatrix<7, 7>(J_MMT_);
-    bool success = RKutta(SU, destPlane, charge, mass, state7, &J_MMT_rk, &J_MMT_unprojected_lastRow,
-                          coveredDistance, flightTime, checkJacProj, noiseProjection_rk,
+    Vector7 J_MMT_unprojected_lastRow;
+    J_MMT_unprojected_lastRow << 0, 0, 0, 0, 0, 0, 1;
+    bool success = RKutta(SU, destPlane, charge, mass, state7, &J_MMT_, &J_MMT_unprojected_lastRow,
+                          coveredDistance, flightTime, checkJacProj, noiseProjection_,
                           limits_, onlyOneStep, !fillExtrapSteps);
-    noiseProjection_ = RKMatrixToEigenMatrix<7, 7>(noiseProjection_rk);
-    J_MMT_ = RKMatrixToEigenMatrix<7, 7>(J_MMT_rk);
     if(not success) {
       Exception exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
