@@ -31,7 +31,6 @@
 #include <WirePointMeasurement.h>
 
 #include <MaterialEffects.h>
-#include <RKTools.h>
 #include <RKTrackRep.h>
 #include <StepLimits.h>
 #include <TGeoMaterialInterface.h>

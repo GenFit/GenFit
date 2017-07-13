@@ -20,7 +20,6 @@
 #include "RKTrackRep.h"
 #include "IO.h"
 #include "RootEigenTransformations.h"
-#include "RKMatrixEigenTransformations.h"
 
 #include <Exception.h>
 #include <FieldManager.h>

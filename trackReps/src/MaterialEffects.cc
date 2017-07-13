@@ -20,7 +20,6 @@
 #include "MaterialEffects.h"
 #include "Exception.h"
 #include "IO.h"
-#include "RKMatrixEigenTransformations.h"
 
 #include <stdexcept>
 #include <string>
