@@ -1831,7 +1831,7 @@ bool RKTrackRep::RKutta(const Vector4& SU,
 
       *J_MMT_unprojected_lastRow = (*jacobianT).block<1, 7>(6, 0).transpose();
 
-      for (int row = calcOnlyLastRowOfJ ? 7 : 0; row < 7; ++row) {
+      for (int row = calcOnlyLastRowOfJ ? 6 : 0; row < 7; ++row) {
         const Scalar norm = (*jacobianT).block<1, 3>(row, 0).transpose().dot(SU.block<3, 1>(0, 0)) * An;  // dR_normal / A_normal
         (*jacobianT).block<1, 3>(row, 0).transpose() -= norm * A;
         (*jacobianT).block<1, 3>(row, 3).transpose() -= norm * SA;
