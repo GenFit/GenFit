@@ -1630,8 +1630,8 @@ bool RKTrackRep::RKutta(const Vector4& SU,
   static const Scalar Pmin           ( 4.E-3 );           // minimum momentum for propagation [GeV]
   static const unsigned int maxNumIt ( 1000 );    // maximum number of iterations in main loop
   // Aux parameters
-  const Vector3& R = state7.block<3, 1>(0, 0);  // Start coordinates  [cm]  (x,  y,  z)
-  const Vector3& A = state7.block<3, 1>(3, 0);  // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
+  Vector3 R = state7.block<3, 1>(0, 0);  // Start coordinates  [cm]  (x,  y,  z)
+  Vector3 A = state7.block<3, 1>(3, 0);  // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
   Vector3 SA(Vector3::Zero());  // Start directions derivatives dA/S
 
   Scalar Way        ( 0. );                     // Sum of absolute values of all extrapolation steps [cm]
@@ -1790,9 +1790,10 @@ bool RKTrackRep::RKutta(const Vector4& SU,
       // normalize A -> 1/|A|
       state7.block<3, 1>(3, 0) += S * SA;
       state7.block<3, 1>(3, 0).normalize();
+      A = state7.block<3, 1>(3, 0);
       // R = R + S*(A - 0.5*S*SA); approximation for final point on surface
       state7.block<3, 1>(0, 0) += S * (A - 0.5 * S * SA);
-
+      R = state7.block<3, 1>(0, 0);
       coveredDistance += S;
       Way  += fabs(S);
 
