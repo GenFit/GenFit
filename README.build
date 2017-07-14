@@ -22,6 +22,11 @@ To build the doxygen:
 To build the examples/tests (also see README in test/):
   make tests
 
+The ROOT dicitionary requires to know the include paths of the libraries during runtime. To run GenFit, one has to
+define the ROOT_INCLUDE_PATH environment variable. The reason is, that we use the from Eigen recommended include pattern
+e.g. Eigen/Dense and not eigen3/Eigen/Dense. Because of this, the ROOT dictionaries can not find the headers. Run
+  export ROOT_INCLUDE_PATH=/path/to/eigen3
+to make the Eigen headers visible.
 
 
 To build GFRave and the vertexing examples, you need an installation of Rave (https://rave.hepforge.org/), and the environment variable RAVEPATH set.
