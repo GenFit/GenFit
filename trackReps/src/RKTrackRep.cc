@@ -827,6 +827,7 @@ void RKTrackRep::getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& m
 
 void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const {
   getPosMom(state, pos, mom);
+  cov.ResizeTo(6, 6);
   cov = get6DCov(state);
 }
 
