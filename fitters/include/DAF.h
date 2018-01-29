@@ -81,7 +81,7 @@ class DAF : public AbsKalmanFitter {
   //! Set the probability cut for the weight calculation for the hits for a specific measurement dimensionality.
   void addProbCut(const double prob_cut, const int measDim);
 
-  const std::vector<double>& getBetas() {return betas_;}
+  const std::vector<double>& getBetas() const {return betas_;}
 
   /** @brief Configure the annealing scheme.
    *

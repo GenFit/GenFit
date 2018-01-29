@@ -347,7 +347,7 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(unsigned int iMeasurement, bool
 }
 
 
-double KalmanFitterInfo::getSmoothedChi2(unsigned int iMeasurement) {
+double KalmanFitterInfo::getSmoothedChi2(unsigned int iMeasurement) const {
   const MeasurementOnPlane& res = getResidual(iMeasurement, true, false);
 
   TMatrixDSym Rinv;
