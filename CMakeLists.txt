@@ -36,7 +36,7 @@ IF(${ROOT_found_version} LESS 60000)
 	MESSAGE(FATAL_ERROR "GenFit requires a ROOT version > 6.00.00")
 ENDIF()
 
-FIND_PACKAGE(Eigen3 REQUIRED NO_MODULE)
+FIND_PACKAGE(Eigen3 REQUIRED)
 
 # either, the environment variable RAVEPATH has to be specified, and RAVE's pkgConfig will be used to determine everything we need
 # or, RAVE_LDFLAGS, RAVE_INCLUDE_DIRS and RAVE_CFLAGS have to be set via the command-line
