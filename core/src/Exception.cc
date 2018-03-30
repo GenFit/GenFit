@@ -34,7 +34,7 @@ Exception::Exception(std::string excString, int line, std::string  file) :
   errorMessage_ = ErrMsgStream.str();
 }
 
-Exception::~Exception() throw() {
+Exception::~Exception() noexcept {
 }
 
 void Exception::setNumbers(std::string _numbersLabel,
@@ -49,7 +49,7 @@ void Exception::setMatrices(std::string _matricesLabel,
   matrices_ = _matrices;
 }
 
-const char* Exception::what() const throw(){
+const char* Exception::what() const noexcept{
   return errorMessage_.c_str();
 }
 
