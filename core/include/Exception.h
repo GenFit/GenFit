@@ -55,7 +55,7 @@ class Exception : public std::exception {
    * @param file sourcefile in which the exception is created. Can be set through __FILE__ macro.
    */
   Exception(std::string excString, int line, std::string  file);
-  virtual ~Exception() throw();
+  virtual ~Exception() noexcept;
 
   //! Set fatal flag.
   void setFatal (bool b=true){fatal_=b;}
@@ -70,7 +70,7 @@ class Exception : public std::exception {
   void info();
 
   //! Standard error message handling for exceptions. use like "std::cerr << e.what();"
-  virtual const char* what() const throw();
+  virtual const char* what() const noexcept;
 
   std::string getExcString(){return excString_;}
 
