@@ -505,6 +505,20 @@ void Track::deletePoint(int id) {
 void Track::insertMeasurement(AbsMeasurement* measurement, int id) {
   insertPoint(new TrackPoint(measurement, this), id);
 }
+  
+void Track::deleteFittedState(const genfit::AbsTrackRep* rep) {
+  if(hasFitStatus(rep)) {
+    delete fitStatuses_.at(rep);
+    fitStatuses_.erase(rep);
+  }
+
+  // delete FitterInfos related to the deleted TrackRep
+  for (const auto& trackPoint : trackPoints_) {
+    if(trackPoint->hasFitterInfo(rep)) {
+      trackPoint->deleteFitterInfo(rep);
+    }
+  }
+}
 
 
 void Track::mergeTrack(const Track* other, int id) {
