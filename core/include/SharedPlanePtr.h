@@ -39,7 +39,7 @@ namespace genfit {
  */
     typedef std::shared_ptr< genfit::DetPlane > SharedPlanePtr;
 
-		/**
+    /**
      * Class allowing to create a SharedPlanePtr from a DetPlane.
      */
     class SharedPlanePtrCreator {
