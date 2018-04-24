@@ -16,6 +16,7 @@
 #pragma link C++ class genfit::PruneFlags+;
 #pragma link C++ class genfit::TrackCand+;
 #pragma link C++ class genfit::TrackCandHit+;
+#pragma link C++ class genfit::SharedPlanePtrCreator-;
 
 // These inherit from classes with custom streamers, or reference shared_ptrs in their interfaces.
 #pragma link C++ class genfit::AbsTrackRep+;
