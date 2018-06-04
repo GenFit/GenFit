@@ -1114,7 +1114,9 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   }
 
   // check
-  assert(fi->checkConsistency());
+  if (not fi->checkConsistency()) {
+    throw genfit::Exception("Consistency check failed ", __LINE__, __FILE__);
+  }
 
 }
 
@@ -1322,6 +1324,8 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
   }
 
   // check
-  assert(fi->checkConsistency());
+  if (not fi->checkConsistency()) {
+    throw genfit::Exception("Consistency check failed ", __LINE__, __FILE__);
+  }
 
 }
