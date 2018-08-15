@@ -259,6 +259,15 @@ class Track : public TObject {
   //! get time of flight in ns between to trackPoints (if nullptr, for cardinal rep)
   double getTOF(AbsTrackRep* rep = nullptr, int startId = 0, int endId = -1) const;
 
+  /**
+   * Delete the fit status and all the FitStates of the TrackPoints
+   * for the given hypothesis.
+   * This is equal to resetting the track for the rep, so another fit
+   * can start from scratch.
+   * Useful if you have changed some seeds.
+   */
+  void deleteFittedState(const genfit::AbsTrackRep* rep); 
+
   //! Construct a new TrackCand containing the hit IDs of the measurements
   /**
    * The idea is hat you can get a TrackCand for storing the hit IDs after a track has been fitted.

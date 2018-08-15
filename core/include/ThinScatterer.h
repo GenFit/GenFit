@@ -56,7 +56,7 @@ class ThinScatterer : public TObject {
 
 
  public:
-  ClassDef(ThinScatterer, 1)
+  ClassDef(ThinScatterer, 2)
 
 };
 

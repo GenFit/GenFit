@@ -39,6 +39,21 @@ namespace genfit {
  */
     typedef std::shared_ptr< genfit::DetPlane > SharedPlanePtr;
 
+    /**
+     * Class allowing to create a SharedPlanePtr from a DetPlane from Python.
+     */
+    class SharedPlanePtrCreator {
+    public:
+      /**
+       * Function which allows to create a shared plane pointer from a DetPlane.
+       * @param plane : A DetPlane.
+       * @return SharedPlanePtr : A shared plane pointer to the provided plane.
+       */
+      static SharedPlanePtr getPlanePtr(DetPlane *plane) {
+          return SharedPlanePtr(plane);
+      }
+    };
+
 } /* End of namespace genfit */
 /** @} */
 

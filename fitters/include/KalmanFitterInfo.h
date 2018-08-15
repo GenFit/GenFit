@@ -74,7 +74,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   const MeasuredStateOnPlane& getFittedState(bool biased = true) const;
   //! Get unbiased (default) or biased residual from ith measurement.
   MeasurementOnPlane getResidual(unsigned int iMeasurement = 0, bool biased = false, bool onlyMeasurementErrors = true) const; // calculate residual, track and measurement errors are added if onlyMeasurementErrors is false
-  double getSmoothedChi2(unsigned int iMeasurement = 0);
+  double getSmoothedChi2(unsigned int iMeasurement = 0) const;
 
   bool hasMeasurements() const {return getNumMeasurements() > 0;}
   bool hasReferenceState() const {return (referenceState_.get() != nullptr);}
