@@ -56,18 +56,18 @@ class WirePointMeasurement : public WireMeasurement {
 
   virtual ~WirePointMeasurement() {;}
 
-  virtual AbsMeasurement* clone() const {return new WirePointMeasurement(*this);}
+  virtual AbsMeasurement* clone() const override {return new WirePointMeasurement(*this);}
 
-  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
+  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const override;
 
-  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const;
+  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const override;
 
-  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
+  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const override;
 
 
  public:
 
-  ClassDef(WirePointMeasurement,1)
+  ClassDefOverride(WirePointMeasurement,1)
 
 };
 

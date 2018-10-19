@@ -57,9 +57,9 @@ class WireMeasurement : public AbsMeasurement {
 
   virtual ~WireMeasurement() {;}
 
-  virtual AbsMeasurement* clone() const {return new WireMeasurement(*this);}
+  virtual AbsMeasurement* clone() const override {return new WireMeasurement(*this);}
 
-  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
+  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const override;
 
   /**  Hits with a small drift distance get a higher weight, whereas hits with
     * big drift distances become weighted down.
@@ -71,9 +71,9 @@ class WireMeasurement : public AbsMeasurement {
     * trajectory, whereas the wire position for hits with large drift radii is further away
     * from the trajectory and will therefore bias the fit if not weighted down.
     */
-  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const;
+  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const override;
 
-  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
+  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const override;
 
   /** Set maximum drift distance. This is used to calculate the start weights of the two
    * measurementsOnPlane.
@@ -87,8 +87,8 @@ class WireMeasurement : public AbsMeasurement {
    */
   void setLeftRightResolution(int lr);
 
-  virtual bool isLeftRightMeasurement() const {return true;}
-  virtual int getLeftRightResolution() const {return leftRight_;}
+  virtual bool isLeftRightMeasurement() const override {return true;}
+  virtual int getLeftRightResolution() const override {return leftRight_;}
 
   double getMaxDistance(){return maxDistance_;}
 
@@ -99,7 +99,7 @@ class WireMeasurement : public AbsMeasurement {
 
  public:
 
-  ClassDef(WireMeasurement, 2)
+  ClassDefOverride(WireMeasurement, 2)
 
 };
 

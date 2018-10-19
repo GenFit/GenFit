@@ -49,15 +49,15 @@ class PlanarMeasurement : public AbsMeasurement {
 
   virtual ~PlanarMeasurement() {;}
 
-  virtual AbsMeasurement* clone() const {return new PlanarMeasurement(*this);}
+  virtual AbsMeasurement* clone() const override {return new PlanarMeasurement(*this);}
 
   int getPlaneId() const {return planeId_;}
 
-  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
+  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const override;
 
-  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const;
+  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const override;
 
-  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
+  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const override;
 
   virtual void setPlane(const SharedPlanePtr& physicalPlane, int planeId = -1) {physicalPlane_ = physicalPlane; planeId_ = planeId;}
 
@@ -76,7 +76,7 @@ class PlanarMeasurement : public AbsMeasurement {
 
  public:
 
-  ClassDef(PlanarMeasurement,1)
+  ClassDefOverride(PlanarMeasurement,1)
 
 };
 

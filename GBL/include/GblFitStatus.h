@@ -46,7 +46,7 @@ namespace genfit {
     
     virtual ~GblFitStatus() {};
     
-    virtual FitStatus* clone() const {return new GblFitStatus(*this);}
+    virtual FitStatus* clone() const override {return new GblFitStatus(*this);}
     
     void setCurvature(bool useCurvature) {curvatureFlag_ = useCurvature;}
     bool hasCurvature() { return curvatureFlag_; }
@@ -62,7 +62,7 @@ namespace genfit {
     void setIsFittedWithReferenceTrack(bool fittedWithReferenceTrack = true) {fittedWithReferenceTrack_ = fittedWithReferenceTrack;}
     void setTrackLen(double trackLen) {trackLen_ = trackLen;}
     
-    virtual void Print(const Option_t* = "") const {;}
+    virtual void Print(const Option_t* = "") const override {;}
     
   protected:
     
@@ -76,7 +76,7 @@ namespace genfit {
     
   public:
     
-    ClassDef(GblFitStatus, 1)
+    ClassDefOverride(GblFitStatus, 1)
     
   };
   

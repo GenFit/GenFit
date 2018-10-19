@@ -55,7 +55,7 @@ class KalmanFitter : public AbsKalmanFitter {
   ~KalmanFitter() {}
 
   //! Hit resorting currently NOT supported.
-  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
+  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false) override;
 
   //! process only a part of the track. Can also be used to process the track only in backward direction.
   //! Does not alter the FitStatus and does not do multiple iterations.
@@ -73,7 +73,7 @@ class KalmanFitter : public AbsKalmanFitter {
   bool squareRootFormalism_;
 
  public:
-  ClassDef(KalmanFitter,1)
+  ClassDefOverride(KalmanFitter,1)
 
 };
 

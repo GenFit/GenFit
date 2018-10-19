@@ -152,7 +152,7 @@ namespace genfit {
      * Hit resorting currently supported (use only if necessary /wire chamber/ ... will 
      * extrapolate along whole track to sort the hits).
      */
-    void processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits = false);
+    void processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits = false) override;
     
     /**
      * @brief Propagate seed, populate track with scatterers

@@ -50,7 +50,7 @@ class MeasuredStateOnPlane : public StateOnPlane {
   void swap(MeasuredStateOnPlane& other); // nothrow
 
   virtual ~MeasuredStateOnPlane() {}
-  virtual MeasuredStateOnPlane* clone() const {return new MeasuredStateOnPlane(*this);}
+  virtual MeasuredStateOnPlane* clone() const override {return new MeasuredStateOnPlane(*this);}
 
 
   const TMatrixDSym& getCov() const {return cov_;}
@@ -74,14 +74,14 @@ class MeasuredStateOnPlane : public StateOnPlane {
   void setPosMomCov(const TVectorD& state6, const TMatrixDSym& cov6x6) {getRep()->setPosMomCov(*this, state6, cov6x6);}
 
 
-  virtual void Print(Option_t* option = "") const;
+  virtual void Print(Option_t* option = "") const override;
 
  protected:
 
   TMatrixDSym cov_;
 
  public:
-  ClassDef(MeasuredStateOnPlane,1)
+  ClassDefOverride(MeasuredStateOnPlane,1)
 
 };
 

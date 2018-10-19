@@ -117,7 +117,7 @@ namespace genfit {
      * Performs fit on a Track.
      * Hit resorting currently NOT supported.
      */
-    void processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits = false);
+    void processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits = false) override;
     
     
   public:
