@@ -43,7 +43,7 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
       direction.  Returns true if the volume changed.
    */
   bool initTrack(double posX, double posY, double posZ,
-                 double dirX, double dirY, double dirZ);
+                 double dirX, double dirY, double dirZ) override;
 
   Material getMaterialParameters() override;
 
@@ -56,9 +56,9 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
   double findNextBoundary(const RKTrackRep* rep,
                           const M1x7& state7,
                           double sMax,
-                          bool varField = true);
+                          bool varField = true) override;
 
-  // ClassDef(TGeoMaterialInterface, 1);
+  // ClassDefOverride(TGeoMaterialInterface, 1);
 
  private:
 };

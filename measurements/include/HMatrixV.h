@@ -40,22 +40,22 @@ class HMatrixV : public AbsHMatrix {
 
   HMatrixV() {;}
 
-  const TMatrixD& getMatrix() const;
+  const TMatrixD& getMatrix() const override;
 
-  TVectorD Hv(const TVectorD& v) const;
+  TVectorD Hv(const TVectorD& v) const override;
 
-  TMatrixD MHt(const TMatrixDSym& M) const;
-  TMatrixD MHt(const TMatrixD& M) const;
+  TMatrixD MHt(const TMatrixDSym& M) const override;
+  TMatrixD MHt(const TMatrixD& M) const override;
 
-  void HMHt(TMatrixDSym& M) const;
+  void HMHt(TMatrixDSym& M) const override;
 
-  virtual HMatrixV* clone() const {return new HMatrixV(*this);}
+  virtual HMatrixV* clone() const override {return new HMatrixV(*this);}
 
-  virtual bool isEqual(const AbsHMatrix& other) const {return (dynamic_cast<const HMatrixV*>(&other) != nullptr);}
+  virtual bool isEqual(const AbsHMatrix& other) const override {return (dynamic_cast<const HMatrixV*>(&other) != nullptr);}
 
-  virtual void Print(const Option_t* = "") const;
+  virtual void Print(const Option_t* = "") const override;
 
-  ClassDef(HMatrixV,1)
+  ClassDefOverride(HMatrixV,1)
 
 };
 

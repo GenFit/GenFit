@@ -49,7 +49,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   KalmanFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep);
   virtual ~KalmanFitterInfo();
 
-  virtual KalmanFitterInfo* clone() const;
+  virtual KalmanFitterInfo* clone() const override;
 
   ReferenceStateOnPlane* getReferenceState() const {return referenceState_.get();}
   MeasuredStateOnPlane* getForwardPrediction() const {return forwardPrediction_.get();}
@@ -71,18 +71,18 @@ class KalmanFitterInfo : public AbsFitterInfo {
   //! Are the weights fixed?
   bool areWeightsFixed() const {return fixWeights_;}
   //! Get unbiased or biased (default) smoothed state.
-  const MeasuredStateOnPlane& getFittedState(bool biased = true) const;
+  const MeasuredStateOnPlane& getFittedState(bool biased = true) const override;
   //! Get unbiased (default) or biased residual from ith measurement.
-  MeasurementOnPlane getResidual(unsigned int iMeasurement = 0, bool biased = false, bool onlyMeasurementErrors = true) const; // calculate residual, track and measurement errors are added if onlyMeasurementErrors is false
+  MeasurementOnPlane getResidual(unsigned int iMeasurement = 0, bool biased = false, bool onlyMeasurementErrors = true) const override; // calculate residual, track and measurement errors are added if onlyMeasurementErrors is false
   double getSmoothedChi2(unsigned int iMeasurement = 0) const;
 
-  bool hasMeasurements() const {return getNumMeasurements() > 0;}
-  bool hasReferenceState() const {return (referenceState_.get() != nullptr);}
-  bool hasForwardPrediction() const {return (forwardPrediction_.get()  != nullptr);}
-  bool hasBackwardPrediction() const {return (backwardPrediction_.get() != nullptr);}
-  bool hasForwardUpdate() const {return (forwardUpdate_.get() != nullptr);}
-  bool hasBackwardUpdate() const {return (backwardUpdate_.get() != nullptr);}
-  bool hasUpdate(int direction) const {if (direction < 0) return hasBackwardUpdate(); return hasForwardUpdate();}
+  bool hasMeasurements() const override {return getNumMeasurements() > 0;}
+  bool hasReferenceState() const override {return (referenceState_.get() != nullptr);}
+  bool hasForwardPrediction() const override {return (forwardPrediction_.get()  != nullptr);}
+  bool hasBackwardPrediction() const override {return (backwardPrediction_.get() != nullptr);}
+  bool hasForwardUpdate() const override {return (forwardUpdate_.get() != nullptr);}
+  bool hasBackwardUpdate() const override {return (backwardUpdate_.get() != nullptr);}
+  bool hasUpdate(int direction) const override {if (direction < 0) return hasBackwardUpdate(); return hasForwardUpdate();}
   bool hasPredictionsAndUpdates() const {return (hasForwardPrediction() && hasBackwardPrediction() && hasForwardUpdate() && hasBackwardUpdate());}
 
   void setReferenceState(ReferenceStateOnPlane* referenceState);
@@ -98,17 +98,17 @@ class KalmanFitterInfo : public AbsFitterInfo {
   //! Set weights of measurements.
   void setWeights(const std::vector<double>&);
   void fixWeights(bool arg = true) {fixWeights_ = arg;}
-  void setRep(const AbsTrackRep* rep);
+  void setRep(const AbsTrackRep* rep) override;
 
-  void deleteForwardInfo();
-  void deleteBackwardInfo();
+  void deleteForwardInfo() override;
+  void deleteBackwardInfo() override;
   void deletePredictions();
-  void deleteReferenceInfo() {setReferenceState(nullptr);}
-  void deleteMeasurementInfo();
+  void deleteReferenceInfo() override {setReferenceState(nullptr);}
+  void deleteMeasurementInfo() override;
 
-  virtual void Print(const Option_t* = "") const;
+  virtual void Print(const Option_t* = "") const override;
 
-  virtual bool checkConsistency(const genfit::PruneFlags* = nullptr) const;
+  virtual bool checkConsistency(const genfit::PruneFlags* = nullptr) const override;
 
  private:
 
@@ -139,7 +139,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
  public:
 
-  ClassDef(KalmanFitterInfo,1)
+  ClassDefOverride(KalmanFitterInfo,1)
 
 };
 

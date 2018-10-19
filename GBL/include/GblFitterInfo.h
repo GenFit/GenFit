@@ -153,7 +153,7 @@ namespace genfit {
      *                  If false, for backward
      * @return const genfit::MeasuredStateOnPlane&
      */
-    const MeasuredStateOnPlane& getFittedState(bool afterKink = true) const;
+    const MeasuredStateOnPlane& getFittedState(bool afterKink = true) const override;
 
     /**
      * @brief Get the residual
@@ -169,7 +169,7 @@ namespace genfit {
      *                              If false, diagonalized residual error incl. correlation from track fit is returned.
      * @return genfit::MeasurementOnPlane
      */
-    MeasurementOnPlane getResidual(unsigned int = 0, bool = false, bool onlyMeasurementErrors = true) const;
+    MeasurementOnPlane getResidual(unsigned int = 0, bool = false, bool onlyMeasurementErrors = true) const override;
     
     /**
      * @brief Get kink (residual) with diagonalized covariance (2D)
@@ -223,26 +223,26 @@ namespace genfit {
     void recalculateJacobian(GblFitterInfo* prevFitterInfo);
     
     virtual ~GblFitterInfo() {;}
-    virtual GblFitterInfo* clone() const;
-    bool hasMeasurements() const {return trackPoint_->hasRawMeasurements();}
-    bool hasReferenceState() const {return (refPrediction_(0) != 0.);}
-    bool hasForwardPrediction() const {return hasReferenceState();}
-    bool hasBackwardPrediction() const {return hasReferenceState();}
-    bool hasForwardUpdate() const {return hasForwardPrediction();}
-    bool hasBackwardUpdate() const {return hasBackwardPrediction();}
-    bool hasUpdate(int direction) const {if (direction < 0) return hasBackwardPrediction(); return hasForwardPrediction();}
+    virtual GblFitterInfo* clone() const override;
+    bool hasMeasurements() const override {return trackPoint_->hasRawMeasurements();}
+    bool hasReferenceState() const override {return (refPrediction_(0) != 0.);}
+    bool hasForwardPrediction() const override {return hasReferenceState();}
+    bool hasBackwardPrediction() const override {return hasReferenceState();}
+    bool hasForwardUpdate() const override {return hasForwardPrediction();}
+    bool hasBackwardUpdate() const override {return hasBackwardPrediction();}
+    bool hasUpdate(int direction) const override {if (direction < 0) return hasBackwardPrediction(); return hasForwardPrediction();}
     bool hasPredictionsAndUpdates() const {return (hasForwardPrediction() && hasBackwardPrediction() && hasForwardUpdate() && hasBackwardUpdate());}
 
-    void deleteForwardInfo() {;}
-    void deleteBackwardInfo() {;}
+    void deleteForwardInfo() override {;}
+    void deleteBackwardInfo() override {;}
     void deletePredictions() {
       deleteBackwardInfo();
       deleteForwardInfo();
     }
-    void deleteReferenceInfo() {;} // Empty because we really do not want to delete reference without a new one
-    void deleteMeasurementInfo() {;} // We do not keep the measurements
-    virtual void Print(const Option_t* = "") const;
-    virtual bool checkConsistency(const genfit::PruneFlags* = nullptr) const;
+    void deleteReferenceInfo() override {;} // Empty because we really do not want to delete reference without a new one
+    void deleteMeasurementInfo() override {;} // We do not keep the measurements
+    virtual void Print(const Option_t* = "") const override;
+    virtual bool checkConsistency(const genfit::PruneFlags* = nullptr) const override;
        
   private:
     TMatrixD jacobian_;
@@ -269,7 +269,7 @@ namespace genfit {
     
   public:
     
-    ClassDef(GblFitterInfo, 1)
+    ClassDefOverride(GblFitterInfo, 1)
     
   };
   

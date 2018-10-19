@@ -68,7 +68,7 @@ class DAF : public AbsKalmanFitter {
   ~DAF() {};
 
   //! Process a track using the DAF.
-  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
+  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false) override;
 
   /** @brief Set the probability cut for the weight calculation for the hits.
    *
@@ -90,16 +90,16 @@ class DAF : public AbsKalmanFitter {
    */
   void setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps);
 
-  void setMaxIterations(unsigned int n) {maxIterations_ = n; betas_.resize(maxIterations_,betas_.back());}
+  void setMaxIterations(unsigned int n) override {maxIterations_ = n; betas_.resize(maxIterations_,betas_.back());}
 
   //! If all weights change less than delta between two iterations, the fit is regarded as converged.
   void setConvergenceDeltaWeight(double delta) {deltaWeight_ = delta;}
 
   AbsKalmanFitter* getKalman() const {return kalman_.get();}
 
-  virtual void setMaxFailedHits(int val) {getKalman()->setMaxFailedHits(val);}
+  virtual void setMaxFailedHits(int val) override {getKalman()->setMaxFailedHits(val);}
 
-  virtual void setDebugLvl(unsigned int lvl = 1) {AbsFitter::setDebugLvl(lvl); if (lvl > 1) getKalman()->setDebugLvl(lvl-1);}
+  virtual void setDebugLvl(unsigned int lvl = 1) override {AbsFitter::setDebugLvl(lvl); if (lvl > 1) getKalman()->setDebugLvl(lvl-1);}
 
  private:
 
@@ -121,7 +121,7 @@ class DAF : public AbsKalmanFitter {
 
  public:
 
-  ClassDef(DAF,2)
+  ClassDefOverride(DAF,2)
 
 };
 
