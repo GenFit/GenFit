@@ -72,7 +72,7 @@ GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFv
 
   try{
     RaveToGFVertices(GFvertices,
-                     factory_->create(GFTracksToTracks(GFTracks, NULL, IdGFTrackStateMap_, 0),
+                     factory_->create(GFTracksToTracks(GFTracks, nullptr, IdGFTrackStateMap_, 0),
                                       use_beamspot),
                      IdGFTrackStateMap_);
   }

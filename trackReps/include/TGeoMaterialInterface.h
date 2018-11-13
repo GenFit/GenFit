@@ -43,17 +43,9 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
       direction.  Returns true if the volume changed.
    */
   bool initTrack(double posX, double posY, double posZ,
-                 double dirX, double dirY, double dirZ);
+                 double dirX, double dirY, double dirZ) override;
 
-  /** @brief Get material parameters in current material
-   */
-  void getMaterialParameters(double& density,
-                             double& Z,
-                             double& A,
-                             double& radiationLength,
-                             double& mEE);
-
-  void getMaterialParameters(MaterialProperties& parameters);
+  Material getMaterialParameters() override;
 
   /** @brief Make a step (following the curvature) until step length
    * sMax or the next boundary is reached.  After making a step to a
@@ -64,9 +56,9 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
   double findNextBoundary(const RKTrackRep* rep,
                           const M1x7& state7,
                           double sMax,
-                          bool varField = true);
+                          bool varField = true) override;
 
-  // ClassDef(TGeoMaterialInterface, 1);
+  // ClassDefOverride(TGeoMaterialInterface, 1);
 
  private:
 };

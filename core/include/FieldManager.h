@@ -79,7 +79,14 @@ class FieldManager {
     field_=b;
   }
 
-  bool isInitialized() { return field_ != NULL; }
+  void destruct() {
+    if (instance_ != nullptr) {
+      delete instance_;
+      instance_ = nullptr;
+    }
+  }
+
+  bool isInitialized() { return field_ != nullptr; }
 
   void checkInitialized() {
     if(! isInitialized()){
@@ -91,7 +98,7 @@ class FieldManager {
   }
 
   static void checkInstanciated() {
-    if(instance_==NULL){
+    if(instance_==nullptr){
       errorOut << "FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!" << std::endl;
       std::string msg("FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!");
       std::runtime_error err(msg);
@@ -110,7 +117,7 @@ class FieldManager {
 
   //! Get singleton instance.
   static FieldManager* getInstance(){
-    if(instance_ == NULL) {
+    if(instance_ == nullptr) {
       instance_ = new FieldManager();
     }
     return instance_;

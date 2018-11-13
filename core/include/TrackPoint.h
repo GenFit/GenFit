@@ -33,10 +33,6 @@
 #include <vector>
 #include <memory>
 
-#ifndef __CINT__
-#include <boost/scoped_ptr.hpp>
-#endif
-
 
 namespace genfit {
 
@@ -80,7 +76,7 @@ class TrackPoint : public TObject {
    */
   TrackPoint(const TrackPoint& rhs,
       const std::map<const genfit::AbsTrackRep*, genfit::AbsTrackRep*>& map,
-      const std::vector<const genfit::AbsTrackRep*> * repsToIgnore = NULL);
+      const std::vector<const genfit::AbsTrackRep*> * repsToIgnore = nullptr);
 
   virtual ~TrackPoint();
 
@@ -97,20 +93,20 @@ class TrackPoint : public TObject {
   //! Get list of all fitterInfos
   std::vector< genfit::AbsFitterInfo* > getFitterInfos() const;
   //! Get fitterInfo for rep. Per default, use cardinal rep
-  AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep = NULL) const;
+  AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep = nullptr) const;
   //! Helper to avoid casting
-  KalmanFitterInfo* getKalmanFitterInfo(const AbsTrackRep* rep = NULL) const;
+  KalmanFitterInfo* getKalmanFitterInfo(const AbsTrackRep* rep = nullptr) const;
   bool hasFitterInfo(const AbsTrackRep* rep) const {
     return (fitterInfos_.find(rep) != fitterInfos_.end());
   }
 
   ThinScatterer* getMaterialInfo() const {return thinScatterer_.get();}
-  bool hasThinScatterer() const {return thinScatterer_.get() != NULL;}
+  bool hasThinScatterer() const {return thinScatterer_.get() != nullptr;}
 
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
   //! Takes ownership and sets this as measurement's trackPoint
-  void addRawMeasurement(genfit::AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=NULL); rawMeasurement->setTrackPoint(this); rawMeasurements_.push_back(rawMeasurement);}
+  void addRawMeasurement(genfit::AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=nullptr); rawMeasurement->setTrackPoint(this); rawMeasurements_.push_back(rawMeasurement);}
   void deleteRawMeasurements();
   //! Takes Ownership
   void setFitterInfo(genfit::AbsFitterInfo* fitterInfo);
@@ -141,18 +137,14 @@ class TrackPoint : public TObject {
   std::map< const AbsTrackRep*, AbsFitterInfo* > fitterInfos_; //! Ownership over FitterInfos
 
   /**
-   * The following vector is read while streaming.  After reading the
+   * The following map is read while streaming.  After reading the
    * TrackPoint, the Track's streamer will call fixupRepsForReading,
-   * and this vector will be translated into the map fitterInfos. The
-   * vector is indexed by the ids of the corresponding TrackReps.
+   * and this map will be translated into the map fitterInfos. The
+   * map is indexed by the ids of the corresponding TrackReps.
    */
-  std::vector< AbsFitterInfo* > vFitterInfos_; //!
+  std::map<unsigned int, AbsFitterInfo*> vFitterInfos_; //!
 
-#ifndef __CINT__
-  boost::scoped_ptr<ThinScatterer> thinScatterer_; // Ownership
-#else
-  class ThinScatterer* thinScatterer_;
-#endif
+  std::unique_ptr<ThinScatterer> thinScatterer_; // Ownership
 
  public:
 

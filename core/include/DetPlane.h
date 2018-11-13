@@ -36,9 +36,7 @@
 #include <TObject.h>
 #include <TVector3.h>
 
-#ifndef __CINT__
-#include <boost/scoped_ptr.hpp>
-#endif
+#include <memory>
 
 
 namespace genfit {
@@ -64,16 +62,16 @@ class DetPlane : public TObject {
 
 
   // Constructors/Destructors ---------
-  DetPlane(AbsFinitePlane* finite = NULL);
+  DetPlane(AbsFinitePlane* finite = nullptr);
 
   DetPlane(const TVector3& o,
              const TVector3& u,
              const TVector3& v,
-             AbsFinitePlane* finite = NULL);
+             AbsFinitePlane* finite = nullptr);
 
   DetPlane(const TVector3& o,
              const TVector3& n,
-             AbsFinitePlane* finite = NULL);
+             AbsFinitePlane* finite = nullptr);
 
   virtual ~DetPlane();
 
@@ -144,14 +142,14 @@ class DetPlane : public TObject {
 
   //! intersect in the active area? C.f. AbsFinitePlane
   bool isInActive(const TVector3& point, const TVector3& dir) const {
-    if(finitePlane_.get() == NULL) return true;
+    if(finitePlane_.get() == nullptr) return true;
     return this->isInActive( this->straightLineToPlane(point,dir));
   }
 
   //! intersect in the active area? C.f. AbsFinitePlane
   bool isInActive(const double& posX, const double& posY, const double& posZ,
                   const double& dirX, const double& dirY, const double& dirZ) const {
-    if(finitePlane_.get() == NULL) return true;
+    if(finitePlane_.get() == nullptr) return true;
     double u, v;
     this->straightLineToPlane(posX, posY, posZ, dirX, dirY, dirZ, u, v);
     return this->isInActive(u, v);
@@ -159,7 +157,7 @@ class DetPlane : public TObject {
 
   //! isInActive methods refer to finite plane. C.f. AbsFinitePlane
   bool isInActive(double u, double v) const{
-    if(finitePlane_.get() == NULL) return true;
+    if(finitePlane_.get() == nullptr) return true;
     return finitePlane_->isInActive(u,v);
   }
 
@@ -169,7 +167,7 @@ class DetPlane : public TObject {
   }
 
   bool isFinite() const {
-    return (finitePlane_.get() != NULL);
+    return (finitePlane_.get() != nullptr);
   }
 
   //! rotate u and v around normal. Angle is in rad. More for debugging than for actual use.
@@ -187,12 +185,7 @@ class DetPlane : public TObject {
   TVector3 u_;
   TVector3 v_;
 
-#ifndef __CINT__
-  boost::scoped_ptr<AbsFinitePlane> finitePlane_; // Ownership
-#else
-  class AbsFinitePlane* finitePlane_; //! Shut ROOT up, this class has a custom streamer.
-#endif
-
+  std::unique_ptr<AbsFinitePlane> finitePlane_; // Ownership
 
  public:
   ClassDef(DetPlane,1)

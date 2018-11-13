@@ -43,7 +43,7 @@ class WireTrackCandHit : public TrackCandHit {
 
   virtual ~WireTrackCandHit() {;}
 
-  virtual WireTrackCandHit* clone() const {return new WireTrackCandHit(*this);}
+  virtual WireTrackCandHit* clone() const override {return new WireTrackCandHit(*this);}
 
   // Accessors
   int getLeftRightResolution() const {return leftRight_;}
@@ -61,7 +61,7 @@ class WireTrackCandHit : public TrackCandHit {
     else leftRight_ = 1;
   }
 
-  virtual void Print(Option_t* option = "") const;
+  virtual void Print(Option_t* option = "") const override;
 
 
  protected:
@@ -79,7 +79,7 @@ class WireTrackCandHit : public TrackCandHit {
 
  public:
 
-  ClassDef(WireTrackCandHit, 2)
+  ClassDefOverride(WireTrackCandHit, 2)
 
 };
 

@@ -224,7 +224,7 @@ void DetPlane::Print(const Option_t* option) const
      <<"v("<<v_.X()<<", "<<v_.Y()<<", "<<v_.Z()<<") "
      <<"n("<<getNormal().X()<<", "<<getNormal().Y()<<", "<<getNormal().Z()<<") "
        <<std::endl;
-  if(finitePlane_ != NULL) {
+  if(finitePlane_ != nullptr) {
     finitePlane_->Print(option);
   }
 

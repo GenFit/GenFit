@@ -27,6 +27,7 @@
 
 #include <vector>
 #include <map>
+#include <memory>
 
 
 namespace genfit {
@@ -59,15 +60,15 @@ class DAF : public AbsKalmanFitter {
    *
    * @param useRefKalman If false, use KalmanFitter as fitter.
    */
-  DAF(bool useRefKalman = true, double deltaWeight = 1e-3, double deltaPval = 1e-3);
+  DAF(bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3);
   /**
    * @brief Create DAF. Use the provided AbsKalmanFitter as fitter.
    */
-  DAF(AbsKalmanFitter* kalman, double deltaWeight = 1e-3, double deltaPval = 1e-3);
+  DAF(AbsKalmanFitter* kalman, double deltaPval = 1e-3, double deltaWeight = 1e-3);
   ~DAF() {};
 
   //! Process a track using the DAF.
-  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
+  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false) override;
 
   /** @brief Set the probability cut for the weight calculation for the hits.
    *
@@ -80,15 +81,7 @@ class DAF : public AbsKalmanFitter {
   //! Set the probability cut for the weight calculation for the hits for a specific measurement dimensionality.
   void addProbCut(const double prob_cut, const int measDim);
 
-  /** @brief Configure the annealing scheme.
-   *
-   * In the current implementation you need to provide at least one temperature
-   * and not more then ten temperatures.
-   * Also sets #minIterations_ and #maxIterations_.
-   */
-  void setBetas(double b1,double b2=-1, double b3=-1., double b4=-1., double b5=-1., double b6=-1., double b7=-1., double b8=-1., double b9=-1., double b10=-1.);
-
-  const std::vector<double>& getBetas() {return betas_;}
+  const std::vector<double>& getBetas() const {return betas_;}
 
   /** @brief Configure the annealing scheme.
    *
@@ -97,16 +90,16 @@ class DAF : public AbsKalmanFitter {
    */
   void setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps);
 
-  void setMaxIterations(unsigned int n) {maxIterations_ = n; betas_.resize(maxIterations_,betas_.back());}
+  void setMaxIterations(unsigned int n) override {maxIterations_ = n; betas_.resize(maxIterations_,betas_.back());}
 
   //! If all weights change less than delta between two iterations, the fit is regarded as converged.
   void setConvergenceDeltaWeight(double delta) {deltaWeight_ = delta;}
 
   AbsKalmanFitter* getKalman() const {return kalman_.get();}
 
-  virtual void setMaxFailedHits(int val) {getKalman()->setMaxFailedHits(val);}
+  virtual void setMaxFailedHits(int val) override {getKalman()->setMaxFailedHits(val);}
 
-  virtual void setDebugLvl(unsigned int lvl = 1) {AbsFitter::setDebugLvl(lvl); if (lvl > 1) getKalman()->setDebugLvl(lvl-1);}
+  virtual void setDebugLvl(unsigned int lvl = 1) override {AbsFitter::setDebugLvl(lvl); if (lvl > 1) getKalman()->setDebugLvl(lvl-1);}
 
  private:
 
@@ -123,15 +116,12 @@ class DAF : public AbsKalmanFitter {
 			// parameter, i.e. we're living in 3D space,
 			// where time may be used in the fit.  Zeroth
 			// entry is not used.
-#ifndef __CINT__
-  boost::scoped_ptr<AbsKalmanFitter> kalman_;
-#else
-  AbsKalmanFitter* kalman_;
-#endif
+
+  std::unique_ptr<AbsKalmanFitter> kalman_;
 
  public:
 
-  ClassDef(DAF,2)
+  ClassDefOverride(DAF,2)
 
 };
 

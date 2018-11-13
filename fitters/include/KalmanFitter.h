@@ -25,9 +25,7 @@
 
 #include "AbsKalmanFitter.h"
 
-#ifndef __CINT__
-#include <boost/scoped_ptr.hpp>
-#endif
+#include <memory>
 
 
 namespace genfit {
@@ -50,14 +48,14 @@ class KalmanFitter : public AbsKalmanFitter {
  public:
 
   KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3, bool squareRootFormalism = false)
-    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), currentState_(NULL),
+    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), currentState_(nullptr),
       squareRootFormalism_(squareRootFormalism)
   {}
 
   ~KalmanFitter() {}
 
   //! Hit resorting currently NOT supported.
-  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
+  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false) override;
 
   //! process only a part of the track. Can also be used to process the track only in backward direction.
   //! Does not alter the FitStatus and does not do multiple iterations.
@@ -70,16 +68,12 @@ class KalmanFitter : public AbsKalmanFitter {
   void processTrackPoint(TrackPoint* tp,
       const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
 
-#ifndef __CINT__
-  boost::scoped_ptr<MeasuredStateOnPlane> currentState_;
-#else
-  MeasuredStateOnPlane* currentState_;
-#endif
+  std::unique_ptr<MeasuredStateOnPlane> currentState_;
 
   bool squareRootFormalism_;
 
  public:
-  ClassDef(KalmanFitter,1)
+  ClassDefOverride(KalmanFitter,1)
 
 };
 

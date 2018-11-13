@@ -59,7 +59,7 @@ class GFRaveTrackParameters : public TObject
     // Accessors
     double getWeight() const {return weight_;}
 
-    bool hasTrack() const {return originalTrack_.GetObject() != NULL;}
+    bool hasTrack() const {return originalTrack_.GetObject() != nullptr;}
     const Track* getTrack() const {return  static_cast<Track*>(originalTrack_.GetObject());}
 
     UInt_t GetUniqueID() const {return originalTrack_.GetUniqueID();}

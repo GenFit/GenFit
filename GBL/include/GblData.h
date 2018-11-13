@@ -54,6 +54,7 @@ namespace gbl {
  */
 class GblData {
 public:
+        GblData() : theLabel(0), theValue(0.), thePrecision(-1.), theDownWeight(0.), thePrediction(0.) {};
 	GblData(unsigned int aLabel, double aMeas, double aPrec);
 	virtual ~GblData();
 	void addDerivatives(unsigned int iRow,
@@ -92,6 +93,8 @@ private:
 	std::vector<double> theDerivatives; ///< List of derivatives for fit
 	std::vector<int> globalLabels; ///< Labels for global derivatives
 	std::vector<double> globalDerivatives; ///< Global derivatives
+
+        ClassDef(GblData, 1)
 };
 }
 #endif /* GBLDATA_H_ */

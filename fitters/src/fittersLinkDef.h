@@ -1,15 +1,11 @@
-#ifdef __CINT__
-
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
 
-#ifdef __CLING__
 #pragma link C++ nestedclass;
 #pragma link C++ nestedtypedef;
 
 #pragma link C++ namespace genfit;
-#endif
 
 // these need no special tratment
 #pragma link C++ class genfit::AbsKalmanFitter+;
@@ -24,5 +20,3 @@
 #pragma link C++ class genfit::KalmanFitter-;
 #pragma link C++ class genfit::KalmanFitterInfo-;
 #pragma link C++ class genfit::DAF-;
-
-#endif

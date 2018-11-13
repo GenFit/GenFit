@@ -30,6 +30,7 @@
 #include <TMatrixD.h>
 
 #include <cmath>
+#include <memory>
 
 
 namespace genfit {
@@ -46,8 +47,8 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
 
  public:
 
-  MeasurementOnPlane(const AbsTrackRep* rep = NULL) :
-    MeasuredStateOnPlane(rep), hMatrix_(NULL), weight_(0) {}
+  MeasurementOnPlane(const AbsTrackRep* rep = nullptr) :
+    MeasuredStateOnPlane(rep), hMatrix_(nullptr), weight_(0) {}
   MeasurementOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, const AbsHMatrix* hMatrix, double weight = 1.) :
     MeasuredStateOnPlane(state, cov, plane, rep), hMatrix_(hMatrix), weight_(weight) {}
 
@@ -67,7 +68,7 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
   void setHMatrix(const AbsHMatrix* hMatrix) {hMatrix_.reset(hMatrix);}
   void setWeight(double weight) {weight_ = fmax(weight, 1.E-10);}
 
-  void Print(Option_t* option = "") const ;
+  void Print(Option_t* option = "") const override ;
 
  private:
   TVector3 getPos() const;
@@ -92,15 +93,11 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
 
  protected:
 
-#ifndef __CINT__
-  boost::scoped_ptr<const AbsHMatrix> hMatrix_; // Ownership
-#else
-  const AbsHMatrix* hMatrix_; //! Ownership. Projection matrix
-#endif
+  std::unique_ptr<const AbsHMatrix> hMatrix_; // Ownership
   double weight_;
 
  public:
-  ClassDef(MeasurementOnPlane,1)
+  ClassDefOverride(MeasurementOnPlane,1)
 
 };
 

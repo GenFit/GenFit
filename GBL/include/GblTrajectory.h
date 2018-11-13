@@ -81,6 +81,7 @@ public:
 	void printTrajectory(unsigned int level = 0);
 	void printPoints(unsigned int level = 0);
 	void printData();
+        std::vector<GblData> getData() {return theData;}
 
 private:
 	unsigned int numAllPoints; ///< Number of all points on trajectory

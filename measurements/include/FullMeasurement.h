@@ -43,24 +43,24 @@ class FullMeasurement : public AbsMeasurement {
 
  public:
   FullMeasurement(int nDim = 5);
-  FullMeasurement(const MeasuredStateOnPlane&, int detId = -1, int hitId = -1, TrackPoint* trackPoint = NULL);
+  FullMeasurement(const MeasuredStateOnPlane&, int detId = -1, int hitId = -1, TrackPoint* trackPoint = nullptr);
 
   virtual ~FullMeasurement() {;}
 
-  virtual AbsMeasurement* clone() const {return new FullMeasurement(*this);}
+  virtual AbsMeasurement* clone() const override {return new FullMeasurement(*this);}
 
-  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
+  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const override;
 
-  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const;
+  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const override;
 
-  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
+  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const override;
 
  protected:
   SharedPlanePtr plane_;   //! This is persistent, but '!' makes ROOT shut up.
 
  public:
 
-  ClassDef(FullMeasurement,1)
+  ClassDefOverride(FullMeasurement,1)
 
 };
 

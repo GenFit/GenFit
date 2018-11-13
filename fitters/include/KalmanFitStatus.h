@@ -43,7 +43,7 @@ class KalmanFitStatus : public FitStatus {
 
   virtual ~KalmanFitStatus() {};
 
-  virtual FitStatus* clone() const {return new KalmanFitStatus(*this);}
+  virtual FitStatus* clone() const override {return new KalmanFitStatus(*this);}
 
   unsigned int getNumIterations() const {return numIterations_;}
   bool isFittedWithDaf() const {return fittedWithDaf_;}
@@ -66,7 +66,7 @@ class KalmanFitStatus : public FitStatus {
   void setForwardNdf(double fNdf) {fNdf_ = fNdf;}
   void setBackwardNdf(double bNdf) {FitStatus::setNdf(bNdf);}
 
-  virtual void Print(const Option_t* = "") const;
+  virtual void Print(const Option_t* = "") const override;
 
  protected:
 
@@ -82,7 +82,7 @@ class KalmanFitStatus : public FitStatus {
 
  public:
 
-  ClassDef(KalmanFitStatus, 1)
+  ClassDefOverride(KalmanFitStatus, 1)
 
 };
 

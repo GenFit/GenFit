@@ -64,7 +64,7 @@ DAF::DAF(AbsKalmanFitter* kalman, double deltaPval, double deltaWeight)
   kalman_->setMultipleMeasurementHandling(weightedAverage); // DAF makes no sense otherwise
   kalman_->setMaxIterations(1);
 
-  if (dynamic_cast<KalmanFitterRefTrack*>(kalman_.get()) != NULL) {
+  if (dynamic_cast<KalmanFitterRefTrack*>(kalman_.get()) != nullptr) {
     static_cast<KalmanFitterRefTrack*>(kalman_.get())->setRefitAll();
   }
 
@@ -131,7 +131,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
     try{
       converged = calcWeights(tr, rep, betas_.at(iBeta));
       if (!converged && iBeta >= minIterations_-1 &&
-          status->getBackwardPVal() != 0 && abs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
+          status->getBackwardPVal() != 0 && fabs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
         if (debugLvl_ > 0) {
           debugOut << "converged by Pval = " << status->getBackwardPVal() << " even though weights changed at iBeta = " << iBeta << std::endl;
         }
@@ -191,43 +191,6 @@ void DAF::addProbCut(const double prob_cut, const int measDim){
   chi2Cuts_[measDim] = ROOT::Math::chisquared_quantile_c( prob_cut, measDim);
 }
 
-
-void DAF::setBetas(double b1,double b2,double b3,double b4,double b5,double b6,double b7,double b8,double b9,double b10){
-  betas_.clear();
-  assert(b1>0);betas_.push_back(b1);
-  if(b2>0){
-    assert(b2<=b1);betas_.push_back(b2);
-    if(b3>=0.) {
-      assert(b3<=b2);betas_.push_back(b3);
-      if(b4>=0.) {
-        assert(b4<=b3);betas_.push_back(b4);
-        if(b5>=0.) {
-          assert(b5<=b4);betas_.push_back(b5);
-          if(b6>=0.) {
-            assert(b6<=b5);betas_.push_back(b6);
-            if(b7>=0.) {
-              assert(b7<=b6);betas_.push_back(b7);
-              if(b8>=0.) {
-                assert(b8<=b7);betas_.push_back(b8);
-                if(b9>=0.) {
-                  assert(b9<=b8);betas_.push_back(b9);
-                  if(b10>=0.) {
-                    assert(b10<=b9);betas_.push_back(b10);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  minIterations_ = betas_.size();
-  maxIterations_ = betas_.size() + 4;
-  betas_.resize(maxIterations_,betas_.back()); //make sure main loop has a maximum of maxIterations_ and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
-}
-
-
 void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) {
   // The betas are calculated as a geometric series that takes nSteps
   // steps to go from bStart to bFinal.
@@ -267,7 +230,7 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
       continue;
     }
     AbsFitterInfo* fi = (*tp)->getFitterInfo(rep);
-    if (dynamic_cast<KalmanFitterInfo*>(fi) == NULL){
+    if (dynamic_cast<KalmanFitterInfo*>(fi) == nullptr){
       Exception exc("DAF::getWeights ==> can only use KalmanFitterInfos",__LINE__,__FILE__);
       throw exc;
     }

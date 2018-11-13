@@ -87,7 +87,7 @@ class ReferenceStateOnPlane : public StateOnPlane {
   void resetForward();
   void resetBackward();
 
-  virtual void Print(Option_t* option = "") const;
+  virtual void Print(Option_t* option = "") const override;
 
  protected:
 
@@ -103,7 +103,7 @@ class ReferenceStateOnPlane : public StateOnPlane {
 
  public:
 
-  ClassDef(ReferenceStateOnPlane,1)
+  ClassDefOverride(ReferenceStateOnPlane,1)
 
 };
 

@@ -128,10 +128,10 @@ namespace genfit {
         //thePoint.addScatterer(getKinks(), kinkPrec);
         //TODO: if state at scatterer is updated, the direction of track might not be perpendicular anymore
         // plane does not change at pure scatterer
-        TMatrixDSym kinkCov = getCovariance(trackPoint_->getMaterialInfo()->getMaterial().getDensity(), sop.getDir(), sop.getPlane());
+        TMatrixDSym kinkCov = getCovariance(trackPoint_->getMaterialInfo()->getMaterial().density, sop.getDir(), sop.getPlane());
         thePoint.addScatterer(getKinks(), kinkCov.Invert());
       } else {
-        TMatrixDSym kinkCov = getCovariance(trackPoint_->getMaterialInfo()->getMaterial().getDensity(), sop.getDir(), sop.getPlane());
+        TMatrixDSym kinkCov = getCovariance(trackPoint_->getMaterialInfo()->getMaterial().density, sop.getDir(), sop.getPlane());
         thePoint.addScatterer(getKinks(), kinkCov.Invert());
       }      
     }
@@ -168,7 +168,7 @@ namespace genfit {
     }
     
     // Derivatives      
-    ICalibrationParametersDerivatives* globals = NULL;
+    ICalibrationParametersDerivatives* globals = nullptr;
     if (hasMeasurements() && (globals = dynamic_cast<ICalibrationParametersDerivatives*>(trackPoint_->getRawMeasurement(0)) )) {    
       std::pair<std::vector<int>, TMatrixD> labelsAndMatrix = globals->globalDerivatives(&sop);
       std::vector<int> labels = labelsAndMatrix.first;

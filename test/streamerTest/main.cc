@@ -34,14 +34,19 @@
 
 #define FILENAME "/tmp/streamerTest.root"
 
+constexpr bool verbose = false;
 
 bool emptyTrackTest()
 {
   TFile *f = TFile::Open(FILENAME, "RECREATE");
   f->cd();
   genfit::Track *t = new genfit::Track();
-  if (!t->checkConsistency())
+  try {
+    t->checkConsistency();
+  } catch (genfit::Exception) {
     return false;
+  }
+
   t->Write("direct");
   f->Close();
   delete t;
@@ -49,7 +54,14 @@ bool emptyTrackTest()
 
   f = TFile::Open(FILENAME, "READ");
   t = (genfit::Track*)f->Get("direct");
-  bool result = t->checkConsistency();
+
+  bool result = false;
+  try {
+    t->checkConsistency();
+    result = true;
+  } catch (genfit::Exception) {
+    result = false;
+  }
   delete t;
   delete f;
   return result;
@@ -176,7 +188,7 @@ int main() {
         genfit::TrackPoint* tp = new genfit::TrackPoint(measurements, fitTrack);
         // test scatterers
         genfit::ThinScatterer* sc = new genfit::ThinScatterer(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(1,1,1), TVector3(1,1,1))),
-                                                              genfit::MaterialProperties(1,2,3,4,5));
+                                                              genfit::Material(1,2,3,4,5));
         tp->setScatterer(sc);
 
         fitTrack->insertPoint(tp);
@@ -190,14 +202,12 @@ int main() {
       continue;
     }
 
-    //check
-    assert(fitTrack->checkConsistency());
+    fitTrack->checkConsistency();
 
     // do the fit
     fitter->processTrack(fitTrack);
 
-    //check
-    assert(fitTrack->checkConsistency());
+    fitTrack->checkConsistency();
 
 
     stateFinal.ResizeTo(fitTrack->getFittedState().getState());
@@ -254,9 +264,11 @@ int main() {
 
   for (Long_t nEntry = 0; nEntry < tResults->GetEntries(); ++nEntry) {
     tResults->GetEntry(nEntry);
-    //fitTrack->Print();
-    if (!fitTrack->checkConsistency()) {
-      std::cout << "stored track inconsistent" << std::endl;
+
+    try {
+      fitTrack->checkConsistency();
+    } catch (genfit::Exception& e) {
+      std::cout << e.getExcString() << std::endl;
       return 1;
     }
 
@@ -267,20 +279,23 @@ int main() {
         // track ok
       }
       else {
-        std::cout << "stored track not equal, small differences can occur if some info has been pruned." << std::endl;
-        pState->Print();
-        fitTrack->getFittedState().getState().Print();
-        pMatrix->Print();
-        fitTrack->getFittedState().getCov().Print();
-        plane->Print();
-        fitTrack->getFittedState().getPlane()->Print();
-
+        if (verbose) {
+          std::cout << "stored track not equal, small differences can occur if some info has been pruned." << std::endl;
+          pState->Print();
+          fitTrack->getFittedState().getState().Print();
+          pMatrix->Print();
+          fitTrack->getFittedState().getCov().Print();
+          plane->Print();
+          fitTrack->getFittedState().getPlane()->Print();
+          }
         ++fail;
         //return 1;
       }
     }
     catch (genfit::Exception& e) {
-      std::cerr << e.what();
+        if (verbose) {
+            std::cerr << e.what();
+        }
       return 1;
     }
   }

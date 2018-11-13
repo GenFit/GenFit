@@ -23,13 +23,13 @@
 
 namespace genfit {
 
-FieldManager* FieldManager::instance_ = NULL;
-AbsBField* FieldManager::field_ = NULL;
+FieldManager* FieldManager::instance_ = nullptr;
+AbsBField* FieldManager::field_ = nullptr;
 
 #ifdef CACHE
 bool FieldManager::useCache_ = false;
 unsigned int FieldManager::n_buckets_ = 8;
-fieldCache* FieldManager::cache_ = NULL;
+fieldCache* FieldManager::cache_ = nullptr;
 #endif
 
 //#define DEBUG

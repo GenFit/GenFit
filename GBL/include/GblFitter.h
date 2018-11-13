@@ -71,7 +71,7 @@ namespace genfit {
     /**
      * Default (and only) constructor
      */
-    GblFitter() : AbsFitter(), m_gblInternalIterations(""), m_enableScatterers(true), m_enableIntermediateScatterer(true), m_externalIterations(1), m_recalcJacobians(0), scatEpsilon(1.e-8), m_segmentController(NULL) {;}
+    GblFitter() : AbsFitter(), m_gblInternalIterations(""), m_enableScatterers(true), m_enableIntermediateScatterer(true), m_externalIterations(1), m_recalcJacobians(0), scatEpsilon(1.e-8), m_segmentController(nullptr) {;}
     
     /**
      * Destructor
@@ -152,7 +152,7 @@ namespace genfit {
      * Hit resorting currently supported (use only if necessary /wire chamber/ ... will 
      * extrapolate along whole track to sort the hits).
      */
-    void processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits = false);
+    void processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits = false) override;
     
     /**
      * @brief Propagate seed, populate track with scatterers

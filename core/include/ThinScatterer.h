@@ -25,7 +25,7 @@
 #define genfit_ThinScatterer_h
 
 #include "SharedPlanePtr.h"
-#include "MaterialProperties.h"
+#include "Material.h"
 
 #include <TObject.h>
 
@@ -41,22 +41,22 @@ class ThinScatterer : public TObject {
 
   ThinScatterer() :
     TObject(), sharedPlane_(), material_() {;}
-  ThinScatterer(const SharedPlanePtr& sharedPlane, const MaterialProperties& material) :
+  ThinScatterer(const SharedPlanePtr& sharedPlane, const Material& material) :
     TObject(), sharedPlane_(sharedPlane), material_(material) {;}
 
   SharedPlanePtr getPlane() const {return sharedPlane_;}
-  const MaterialProperties& getMaterial() const {return material_;}
+  const Material& getMaterial() const {return material_;}
 
   void Print(const Option_t* = "") const;
 
  private:
 
   SharedPlanePtr sharedPlane_; //! Material boundary.  '!' shuts up ROOT.
-  MaterialProperties material_; // Material properties
+  Material material_; // Material properties
 
 
  public:
-  ClassDef(ThinScatterer, 1)
+  ClassDef(ThinScatterer, 2)
 
 };
 

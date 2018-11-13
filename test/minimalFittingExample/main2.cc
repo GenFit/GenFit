@@ -71,26 +71,26 @@ int main() {
   TVectorD hitCoords(2);
   hitCoords[0] = 0;
   hitCoords[1] = 0;
-  genfit::PlanarMeasurement* measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, detId, ++hitId, NULL);
+  genfit::PlanarMeasurement* measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, detId, ++hitId, nullptr);
   measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(0,0,0), TVector3(1,0,0), TVector3(0,1,0))), ++planeId);
   fitTrack.insertPoint(new genfit::TrackPoint(measurement, &fitTrack));
 
   hitCoords[0] = -0.15;
   hitCoords[1] = 0;
-  measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, detId, ++hitId, NULL);
+  measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, detId, ++hitId, nullptr);
   measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(0,0,10), TVector3(1,0,0), TVector3(0,1,0))), ++planeId);
   fitTrack.insertPoint(new genfit::TrackPoint(measurement, &fitTrack));
 
   hitCoords[0] = -0.4;
   hitCoords[1] = 0;
-  measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, detId, ++hitId, NULL);
+  measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, detId, ++hitId, nullptr);
   measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(0,0,20), TVector3(1,0,0), TVector3(0,1,0))), ++planeId);
   fitTrack.insertPoint(new genfit::TrackPoint(measurement, &fitTrack));
 
 
 
   //check
-  assert(fitTrack.checkConsistency());
+  fitTrack.checkConsistency();
 
   // do the fit
   fitter->processTrack(&fitTrack);
@@ -99,7 +99,7 @@ int main() {
   fitTrack.getFittedState().Print();
 
   //check
-  assert(fitTrack.checkConsistency());
+  fitTrack.checkConsistency();
 
 
   display->addEvent(&fitTrack);

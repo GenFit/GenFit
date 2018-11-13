@@ -77,7 +77,6 @@
 #include <TVectorDfwd.h>
 #include <TMatrixT.h>
 #include <TVector3.h>
-//#include "boost/algorithm/string.hpp"
 
 //#define DEBUG
 
@@ -91,7 +90,7 @@ using namespace genfit;
 GblFitter::~GblFitter() {
   if (m_segmentController) {
     delete m_segmentController;
-    m_segmentController = NULL;
+    m_segmentController = nullptr;
   }
 }
 
@@ -99,7 +98,7 @@ void GblFitter::setTrackSegmentController(GblTrackSegmentController* controler)
 {
   if (m_segmentController) {
     delete m_segmentController;
-    m_segmentController = NULL;
+    m_segmentController = nullptr;
   }
   m_segmentController = controler;      
 }
@@ -153,8 +152,7 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
   int fitRes = 0;
   std::vector<std::string> gblIterations;
   gblIterations.push_back(m_gblInternalIterations);
-  //boost::split(gblIterations, m_gblInternalIterations, boost::is_any_of(","), boost::token_compress_off);
-  
+
   // Iterations and updates of fitter infos and fit status
   // ------------------------------------------------------------------- 
   for (unsigned int iIter = 0; iIter < m_externalIterations; iIter++) {
@@ -234,7 +232,7 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
 void GblFitter::cleanGblInfo(Track* trk, const AbsTrackRep* rep) const {
   
   for (int ip = trk->getNumPoints() - 1; ip >=0; ip--) {
-    trk->getPoint(ip)->setScatterer(NULL); 
+    trk->getPoint(ip)->setScatterer(nullptr); 
     trk->getPoint(ip)->deleteFitterInfo(rep);
     //TODO
     if (!trk->getPoint(ip)->hasRawMeasurements())
@@ -335,7 +333,7 @@ void GblFitter::getScattererFromMatList(double& length,
   for (unsigned int i = 0; i < steps.size(); i++) {
     const MatStep step = steps.at(i);
     // inverse of material radiation length ... (in 1/cm) ... "density of scattering"
-    double rho = 1. / step.materialProperties_.getRadLen();
+    double rho = 1. / step.material_.radiationLength;
     len += fabs(step.stepSize_);
     xmin = xmax;
     xmax = xmin + fabs(step.stepSize_);
@@ -475,7 +473,7 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
     // --------------------------------------------
     
     if (theta1 > scatEpsilon)  
-      point_meas->setScatterer(new ThinScatterer(plane, MaterialProperties(theta1, 0., 0., 0., 0.))); 
+      point_meas->setScatterer(new ThinScatterer(plane, Material(theta1, 0., 0., 0., 0.)));
     
     GblFitterInfo* gblfimeas(new GblFitterInfo(point_meas, rep, reference));
     gblfimeas->setJacobian(jacPointToPoint);
@@ -495,7 +493,7 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
       // --------------------------------------
       TrackPoint* scattp = new TrackPoint(trk);
       scattp->setSortingParameter(point_meas->getSortingParameter() + s2);
-      scattp->setScatterer(new ThinScatterer(reference.getPlane(), MaterialProperties(theta2, 0., 0., 0., 0.)));
+      scattp->setScatterer(new ThinScatterer(reference.getPlane(), Material(theta2, 0., 0., 0., 0.)));
       // Add point to track before next point
       int pointIndex = 0;
       //TODO Deduce this rather than looping over all points

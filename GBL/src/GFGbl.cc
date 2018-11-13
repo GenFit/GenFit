@@ -280,7 +280,7 @@ void getScattererFromMatList(double& length, double& theta, double& s, double& d
   for (unsigned int i = 0; i < steps.size(); i++) {
     const MatStep step = steps.at(i);
     // inverse of material radiation length ... (in 1/cm) ... "density of scattering"
-    double rho = 1. / step.materialProperties_.getRadLen();
+    double rho = 1. / step.material_.radiationLength;
     len += fabs(step.stepSize_);
     xmin = xmax;
     xmax = xmin + fabs(step.stepSize_);
@@ -523,7 +523,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
       // Covariance matrix of measurement
       TMatrixDSym raw_cov = raw_meas->getRawHitCov();
       // Projection matrix from repository state to measurement coords
-      boost::scoped_ptr<const AbsHMatrix> HitHMatrix(raw_meas->constructHMatrix(rep));
+      std::unique_ptr<const AbsHMatrix> HitHMatrix(raw_meas->constructHMatrix(rep));
       // Residual between measured position and reference track position
       TVectorD residual = -1. * (raw_coor - HitHMatrix->Hv(state));
 

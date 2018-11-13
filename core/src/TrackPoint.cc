@@ -24,24 +24,25 @@
 #include "KalmanFitterInfo.h"
 #include "IO.h"
 
+#include <algorithm>
 #include <TBuffer.h>
 
 namespace genfit {
 
 TrackPoint::TrackPoint() :
-  sortingParameter_(0), track_(NULL), thinScatterer_(NULL)
+  sortingParameter_(0), track_(nullptr), thinScatterer_(nullptr)
 {
   ;
 }
 
 TrackPoint::TrackPoint(Track* track) :
-  sortingParameter_(0), track_(track), thinScatterer_(NULL)
+  sortingParameter_(0), track_(track), thinScatterer_(nullptr)
 {
   ;
 }
 
 TrackPoint::TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track) :
-  sortingParameter_(0), track_(track), thinScatterer_(NULL)
+  sortingParameter_(0), track_(track), thinScatterer_(nullptr)
 {
   rawMeasurements_.reserve(rawMeasurements.size());
 
@@ -51,7 +52,7 @@ TrackPoint::TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurem
 }
 
 TrackPoint::TrackPoint(AbsMeasurement* rawMeasurement, Track* track) :
-  sortingParameter_(0), track_(track), thinScatterer_(NULL)
+  sortingParameter_(0), track_(track), thinScatterer_(nullptr)
 {
   addRawMeasurement(rawMeasurement);
 }
@@ -59,7 +60,7 @@ TrackPoint::TrackPoint(AbsMeasurement* rawMeasurement, Track* track) :
 
 TrackPoint::TrackPoint(const TrackPoint& rhs) :
   TObject(rhs),
-  sortingParameter_(rhs.sortingParameter_), track_(rhs.track_), thinScatterer_(NULL)
+  sortingParameter_(rhs.sortingParameter_), track_(rhs.track_), thinScatterer_(nullptr)
 {
   // clone rawMeasurements
   for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it != rhs.rawMeasurements_.end(); ++it) {
@@ -74,14 +75,14 @@ TrackPoint::TrackPoint(const TrackPoint& rhs) :
     setFitterInfo(fi);
   }
 
-  if (rhs.thinScatterer_ != NULL)
+  if (rhs.thinScatterer_ != nullptr)
     thinScatterer_.reset(new ThinScatterer(*(rhs.thinScatterer_)));
 }
 
 TrackPoint::TrackPoint(const TrackPoint& rhs,
     const std::map<const AbsTrackRep*, AbsTrackRep*>& map,
     const std::vector<const genfit::AbsTrackRep*> * repsToIgnore) :
-  sortingParameter_(rhs.sortingParameter_), track_(rhs.track_), thinScatterer_(NULL)
+  sortingParameter_(rhs.sortingParameter_), track_(rhs.track_), thinScatterer_(nullptr)
 {
   // clone rawMeasurements
   for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
@@ -91,7 +92,7 @@ TrackPoint::TrackPoint(const TrackPoint& rhs,
 
   // copy fitterInfos
   for (std::map<const AbsTrackRep*, AbsFitterInfo* >::const_iterator it = rhs.fitterInfos_.begin(); it != rhs.fitterInfos_.end();  ++it ) {
-    if (repsToIgnore != NULL) {
+    if (repsToIgnore != nullptr) {
       if (std::find(repsToIgnore->begin(), repsToIgnore->end(), it->first) != repsToIgnore->end())
         continue;
     }
@@ -101,7 +102,7 @@ TrackPoint::TrackPoint(const TrackPoint& rhs,
     setFitterInfo(fi);
   }
 
-  if (rhs.thinScatterer_ != NULL)
+  if (rhs.thinScatterer_ != nullptr)
     thinScatterer_.reset(new ThinScatterer(*(rhs.thinScatterer_)));
 }
 
@@ -171,7 +172,7 @@ AbsFitterInfo* TrackPoint::getFitterInfo(const AbsTrackRep* rep) const {
     rep = track_->getCardinalRep();
   std::map<const AbsTrackRep*, AbsFitterInfo*>::const_iterator it = fitterInfos_.find(rep);
   if (it == fitterInfos_.end())
-    return NULL;
+    return nullptr;
   return fitterInfos_.at(rep);
 }
 
@@ -191,7 +192,7 @@ void TrackPoint::deleteRawMeasurements() {
 
 
 void TrackPoint::setFitterInfo(genfit::AbsFitterInfo* fitterInfo) {
-  assert (fitterInfo != NULL);
+  assert (fitterInfo != nullptr);
   if (hasFitterInfo(fitterInfo->getRep()))
     delete fitterInfos_[fitterInfo->getRep()];
 
@@ -251,10 +252,9 @@ void TrackPoint::Streamer(TBuffer &R__b)
           R__stl.push_back(R__t);
         }
       }
-      track_ = NULL;
+      track_ = nullptr;
       size_t nTrackReps;
       R__b >> nTrackReps;
-      vFitterInfos_.resize(nTrackReps);
       for (size_t i = 0; i < nTrackReps; ++i)  {
         int id;
         R__b >> id;
@@ -277,10 +277,10 @@ void TrackPoint::Streamer(TBuffer &R__b)
       for (size_t i = 0; i < rawMeasurements_.size(); ++i) {
         rawMeasurements_[i]->setTrackPoint(this);
       }
-      for (size_t i = 0; i < vFitterInfos_.size(); ++i) {
-        // May not have FitterInfos for all reps.
-        if (vFitterInfos_[i])
-          vFitterInfos_[i]->setTrackPoint(this);
+      for (auto& trackRepIDWithFitterInfo : vFitterInfos_) {
+        AbsFitterInfo* fitterInfo = trackRepIDWithFitterInfo.second;
+        if (fitterInfo)
+          fitterInfo->setTrackPoint(this);
       }
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
@@ -318,14 +318,18 @@ void TrackPoint::Streamer(TBuffer &R__b)
 
 void TrackPoint::fixupRepsForReading()
 {
-  for (size_t i = 0; i < vFitterInfos_.size(); ++i) {
-    // The vector is filled such that i corresponds to the id of the TrackRep.
-    
+  for (auto& trackRepIDWithFitterInfo : vFitterInfos_) {
+    // The map is filled such that i corresponds to the id of the TrackRep.
+    const unsigned int id = trackRepIDWithFitterInfo.first;
+    AbsFitterInfo* fitterInfo = trackRepIDWithFitterInfo.second;
+
     // May not have FitterInfos for all reps.
-    if (!vFitterInfos_[i])
+    if (!fitterInfo)
       continue;
-    fitterInfos_[track_->getTrackRep(i)] = vFitterInfos_[i];
-    fitterInfos_[track_->getTrackRep(i)]->setRep(track_->getTrackRep(i));
+    AbsTrackRep* trackRep = track_->getTrackRep(id);
+
+    fitterInfos_[trackRep] = fitterInfo;
+    fitterInfos_[trackRep]->setRep(trackRep);
   }
   vFitterInfos_.clear();
 }

@@ -29,6 +29,7 @@
 
 #include <TMatrixDSym.h>
 
+#include <cassert>
 
 namespace genfit {
 
@@ -39,7 +40,7 @@ class MeasuredStateOnPlane : public StateOnPlane {
 
  public:
 
-  MeasuredStateOnPlane(const AbsTrackRep* rep = NULL);
+  MeasuredStateOnPlane(const AbsTrackRep* rep = nullptr);
   MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const genfit::SharedPlanePtr& plane, const AbsTrackRep* rep);
   MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const genfit::SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
   MeasuredStateOnPlane(const MeasuredStateOnPlane& o);
@@ -49,7 +50,7 @@ class MeasuredStateOnPlane : public StateOnPlane {
   void swap(MeasuredStateOnPlane& other); // nothrow
 
   virtual ~MeasuredStateOnPlane() {}
-  virtual MeasuredStateOnPlane* clone() const {return new MeasuredStateOnPlane(*this);}
+  virtual MeasuredStateOnPlane* clone() const override {return new MeasuredStateOnPlane(*this);}
 
 
   const TMatrixDSym& getCov() const {return cov_;}
@@ -73,14 +74,14 @@ class MeasuredStateOnPlane : public StateOnPlane {
   void setPosMomCov(const TVectorD& state6, const TMatrixDSym& cov6x6) {getRep()->setPosMomCov(*this, state6, cov6x6);}
 
 
-  virtual void Print(Option_t* option = "") const;
+  virtual void Print(Option_t* option = "") const override;
 
  protected:
 
   TMatrixDSym cov_;
 
  public:
-  ClassDef(MeasuredStateOnPlane,1)
+  ClassDefOverride(MeasuredStateOnPlane,1)
 
 };
 
@@ -100,7 +101,7 @@ inline void MeasuredStateOnPlane::swap(MeasuredStateOnPlane& other) {
 inline MeasuredStateOnPlane::MeasuredStateOnPlane(const AbsTrackRep* rep) :
   StateOnPlane(rep), cov_(0,0)
 {
-  if (rep != NULL) {
+  if (rep != nullptr) {
     cov_.ResizeTo(rep->getDim(), rep->getDim());
   }
 }
@@ -108,14 +109,14 @@ inline MeasuredStateOnPlane::MeasuredStateOnPlane(const AbsTrackRep* rep) :
 inline MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep) :
   StateOnPlane(state, plane, rep), cov_(cov)
 {
-  assert(rep != NULL);
+  assert(rep != nullptr);
   //assert(cov_.GetNcols() == (signed)rep->getDim());
 }
 
 inline MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo) :
   StateOnPlane(state, plane, rep, auxInfo), cov_(cov)
 {
-  assert(rep != NULL);
+  assert(rep != nullptr);
   //assert(cov_.GetNcols() == (signed)rep->getDim());
 }
 

@@ -52,7 +52,7 @@ class SpacepointMeasurement : public AbsMeasurement {
 
   virtual ~SpacepointMeasurement() {;}
 
-  virtual AbsMeasurement* clone() const {return new SpacepointMeasurement(*this);}
+  virtual AbsMeasurement* clone() const override {return new SpacepointMeasurement(*this);}
 
   /**
    * @brief Contruct the virtual detector plane
@@ -64,11 +64,11 @@ class SpacepointMeasurement : public AbsMeasurement {
    *  E.g. if the covariance is very oblate, the plane will be almost defined by the covariance shape.
    *  If the covariance is very prolate, the behaviour will be very similar to the ProlateSpacepointHit.
    */
-  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
+  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const override;
 
-  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const;
+  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const override;
 
-  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
+  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const override;
 
   /// false: project 3D cov onto DetPlane. true: cut 3D cov with DetPlane
   bool getWeightedPlaneConstruction() const     { return weightedPlaneContruction_; }
@@ -87,7 +87,7 @@ class SpacepointMeasurement : public AbsMeasurement {
   TMatrixDSym G_; //! inverse of 3x3 cov
   bool cutCov_; // false: project 3D cov onto DetPlane. true: cut 3D cov with DetPlane (default)
 
-  ClassDef(SpacepointMeasurement,3)
+  ClassDefOverride(SpacepointMeasurement,3)
 };
 
 } /* End of namespace genfit */

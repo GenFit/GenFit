@@ -30,7 +30,7 @@ namespace genfit {
 void StateOnPlane::Print(Option_t*) const {
   printOut << "genfit::StateOnPlane ";
   printOut << " state vector: "; state_.Print();
-  if (sharedPlane_ != NULL) {
+  if (sharedPlane_ != nullptr) {
     printOut << " defined in plane "; sharedPlane_->Print();
     TVector3 pos(0,0,0), mom(0,0,0);
     getRep()->getPosMom(*this, pos, mom);
@@ -54,7 +54,7 @@ void StateOnPlane::Streamer(TBuffer &R__b)
       state_.Streamer(R__b);
       auxInfo_.Streamer(R__b);
       sharedPlane_.reset();  // needs to be set by owner;
-      rep_ = NULL;  // needs to be set by owner
+      rep_ = nullptr;  // needs to be set by owner
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);

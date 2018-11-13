@@ -50,7 +50,7 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
    */
   TrackPoint* fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
 
-  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
+  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false) override;
 
   /** @brief Prepare the track
    *
@@ -109,7 +109,7 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
   bool squareRootFormalism_;
 
  public:
-  ClassDef(KalmanFitterRefTrack, 1)
+  ClassDefOverride(KalmanFitterRefTrack, 1)
 
 };
 

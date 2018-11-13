@@ -112,7 +112,7 @@ bool KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
 void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
 {
 
-  if (tr->getFitStatus(rep) != NULL && tr->getFitStatus(rep)->isTrackPruned()) {
+  if (tr->hasFitStatus(rep) and tr->getFitStatus(rep)->isTrackPruned()) {
     Exception exc("KalmanFitter::processTrack: Cannot process pruned track!", __LINE__,__FILE__);
     throw exc;
   }
@@ -120,7 +120,7 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
   TrackPoint* trackPoint = tr->getPointWithMeasurement(0);
 
   if (trackPoint->hasFitterInfo(rep) &&
-      dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(rep)) != NULL &&
+      dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(rep)) != nullptr &&
       static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(rep))->hasUpdate(-1)) {
     MeasuredStateOnPlane* update = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(rep))->getUpdate(-1);
     currentState_.reset(new MeasuredStateOnPlane(*update));
@@ -129,7 +129,7 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
   }
   if (rep != tr->getCardinalRep() &&
       trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
-      dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
+      dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != nullptr &&
       static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
     if (debugLvl_ > 0)
       debugOut << "take smoothed state of cardinal rep fit as seed \n";
@@ -286,7 +286,7 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
   status->setIsFitted();
   double charge(0);
   TrackPoint* tp = tr->getPointWithMeasurementAndFitterInfo(0, rep);
-  if (tp != NULL) {
+  if (tp != nullptr) {
     if (static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep))->hasBackwardUpdate())
       charge = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep))->getBackwardUpdate()->getCharge();
   }
@@ -303,7 +303,7 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
 void
 KalmanFitter::processTrackPartially(Track* tr, const AbsTrackRep* rep, int startId, int endId) {
 
-  if (tr->getFitStatus(rep) != NULL && tr->getFitStatus(rep)->isTrackPruned()) {
+  if (tr->getFitStatus(rep) != nullptr && tr->getFitStatus(rep)->isTrackPruned()) {
     Exception exc("KalmanFitter::processTrack: Cannot process pruned track!", __LINE__,__FILE__);
     throw exc;
   }
@@ -319,7 +319,7 @@ KalmanFitter::processTrackPartially(Track* tr, const AbsTrackRep* rep, int start
 
 
   TrackPoint* trackPoint = tr->getPointWithMeasurement(startId);
-  TrackPoint* prevTrackPoint(NULL);
+  TrackPoint* prevTrackPoint(nullptr);
 
 
   if (direction == 1 && startId > 0)
@@ -328,9 +328,9 @@ KalmanFitter::processTrackPartially(Track* tr, const AbsTrackRep* rep, int start
     prevTrackPoint = tr->getPointWithMeasurement(startId + 1);
 
 
-  if (prevTrackPoint != NULL &&
+  if (prevTrackPoint != nullptr &&
       prevTrackPoint->hasFitterInfo(rep) &&
-      dynamic_cast<KalmanFitterInfo*>(prevTrackPoint->getFitterInfo(rep)) != NULL &&
+      dynamic_cast<KalmanFitterInfo*>(prevTrackPoint->getFitterInfo(rep)) != nullptr &&
       static_cast<KalmanFitterInfo*>(prevTrackPoint->getFitterInfo(rep))->hasUpdate(direction)) {
     currentState_.reset(new MeasuredStateOnPlane(*(static_cast<KalmanFitterInfo*>(prevTrackPoint->getFitterInfo(rep))->getUpdate(direction))));
     if (debugLvl_ > 0)
@@ -338,7 +338,7 @@ KalmanFitter::processTrackPartially(Track* tr, const AbsTrackRep* rep, int start
   }
   else if (rep != tr->getCardinalRep() &&
       trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
-      dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
+      dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != nullptr &&
       static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
     if (debugLvl_ > 0)
       debugOut << "take smoothed state of cardinal rep fit as seed \n";

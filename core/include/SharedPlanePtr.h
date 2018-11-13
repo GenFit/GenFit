@@ -26,9 +26,7 @@
 
 #include "DetPlane.h"
 
-#ifndef __CINT__
-#include <boost/shared_ptr.hpp>
-#endif
+#include <memory>
 
 
 namespace genfit {
@@ -39,11 +37,22 @@ namespace genfit {
  * Ownership can be shared, e.g between multiple StateOnPlane objects.
  * The DetPlane will automatically be deleted, if no owner remains.
  */
-#ifndef __CINT__
-typedef boost::shared_ptr< genfit::DetPlane > SharedPlanePtr;
-#else
-class SharedPlanePtr;
-#endif
+    typedef std::shared_ptr< genfit::DetPlane > SharedPlanePtr;
+
+    /**
+     * Class allowing to create a SharedPlanePtr from a DetPlane from Python.
+     */
+    class SharedPlanePtrCreator {
+    public:
+      /**
+       * Function which allows to create a shared plane pointer from a DetPlane.
+       * @param plane : A DetPlane.
+       * @return SharedPlanePtr : A shared plane pointer to the provided plane.
+       */
+      static SharedPlanePtr getPlanePtr(DetPlane *plane) {
+          return SharedPlanePtr(plane);
+      }
+    };
 
 } /* End of namespace genfit */
 /** @} */

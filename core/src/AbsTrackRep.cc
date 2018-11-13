@@ -92,7 +92,7 @@ void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane& state, TVectorD& sta
 
 double AbsTrackRep::getPDGCharge() const {
   TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(pdgCode_);
-  assert(particle != NULL);
+  assert(particle != nullptr);
   return particle->Charge()/(3.);
 }
 
@@ -182,7 +182,7 @@ void AbsTrackRep::calcJacobianNumerically(const genfit::StateOnPlane& origState,
 
 bool AbsTrackRep::switchPDGSign() {
   TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(-pdgCode_);
-  if(particle != NULL) {
+  if(particle != nullptr) {
     pdgCode_ *= -1;
     return true;
   }

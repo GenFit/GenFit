@@ -62,13 +62,13 @@ namespace genfit {
    * Ownership over MeasuredStateOnPlane will be taken.
    */
   std::vector < rave::Track > GFTracksToTracks(const std::vector < genfit::Track* > & GFTracks,
-                                               std::vector < genfit::MeasuredStateOnPlane* > * GFStates, // = NULL
+                                               std::vector < genfit::MeasuredStateOnPlane* > * GFStates, // = nullptr
                                                std::map<int, genfit::trackAndState>& IdGFTrackStateMap,
                                                int startID = 0);
 
   rave::Track GFTrackToTrack(trackAndState, int id = -1, std::string tag="");
   //rave::Track MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, const rave::Track& orig);
-  //rave::Track MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, int id = -1, Track* originaltrack = NULL, std::string tag="");
+  //rave::Track MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, int id = -1, Track* originaltrack = nullptr, std::string tag="");
 
   // RAVE to GENFIT
   /** set state and cov of a MeasuredStateOnPlane according to rave track
