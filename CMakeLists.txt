@@ -47,7 +47,7 @@ IF(DEFINED ENV{RAVEPATH})
 	# get compiler flags from rave
 	INCLUDE(FindPkgConfig)
 	SET(ENV{PKG_CONFIG_PATH} $ENV{RAVEPATH})
-	pkg_search_module(RAVE rave REQUIRED)
+	find_package(Rave REQUIRED)
 	
 	SET(RAVE True)
 ELSEIF(DEFINED RAVE_LDFLAGS)
@@ -63,14 +63,13 @@ ENDIF()
 
 IF(DEFINED RAVE)
 	# turn comma separated lists into space separated strings
-	string (REPLACE ";" " " RAVE_LDFLAGS_STR "${RAVE_LDFLAGS}")
-	string (REPLACE ";" " " RAVE_INCLUDE_DIRS_STR "${RAVE_INCLUDE_DIRS}")
-	string (REPLACE ";" " " RAVE_CFLAGS_STR "${RAVE_CFLAGS}")
-
-	SET (CMAKE_CXX_FLAGS ${RAVE_CFLAGS_STR})
+	string (REPLACE ";" " " Rave_LDFLAGS_STR "${Rave_LDFLAGS}")
+	string (REPLACE ";" " " Rave_INCLUDE_DIRS_STR "${Rave_INCLUDE_DIRS}")
+	string (REPLACE ";" " " Rave_CFLAGS_STR "${Rave_CFLAGS}")
+	SET (CMAKE_CXX_FLAGS ${Rave_DEFINITIONS} ${Rave_CFLAGS_STR})
 	
 	SET(GF_INC_DIRS
-		./GFRave/include/
+		./GFRave/include/ ${Rave_INCLUDE_DIRS}
 	)
 	
 	AUX_SOURCE_DIRECTORY( ./GFRave/src  library_sources )
@@ -301,7 +300,6 @@ if(DEFINED RAVE)
 			${PROJECT_NAME}
 			${ROOT_LIBS}
 			${RAVE_LDFLAGS_STR}
-			-I${RAVE_INCLUDE_DIRS_I}
   	)
 else()
 	TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS})
