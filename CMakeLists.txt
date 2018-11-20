@@ -38,38 +38,38 @@ ENDIF()
 
 FIND_PACKAGE(Eigen3 REQUIRED)
 
-# either, the environment variable RAVEPATH has to be specified, and RAVE's pkgConfig will be used to determine everything we need
+# either, the environment variable RAVEPATH has to be specified, and RAVE's RaveConfig.cmake will be used to determine everything we need
 # or, RAVE_LDFLAGS, RAVE_INCLUDE_DIRS and RAVE_CFLAGS have to be set via the command-line
 
 
 IF(DEFINED ENV{RAVEPATH})
-	MESSAGE("Environment variable RAVEPATH is set. Try to build GFRave.") 
+	MESSAGE(STATUS "Environment variable RAVEPATH is set. Try to build GFRave.")
 	# get compiler flags from rave
 	INCLUDE(FindPkgConfig)
 	SET(ENV{PKG_CONFIG_PATH} $ENV{RAVEPATH})
 	find_package(Rave REQUIRED)
 	
 	SET(RAVE True)
-ELSEIF(DEFINED RAVE_LDFLAGS)
-	IF(DEFINED RAVE_INCLUDE_DIRS)
-		IF(DEFINED RAVE_CFLAGS)
-			MESSAGE("RAVE_LDFLAGS, RAVE_INCLUDE_DIRS and RAVE_CFLAGS are set. Try to build GFRave.") 
+ELSEIF(DEFINED Rave_LDFLAGS)
+	IF(DEFINED Rave_INCLUDE_DIRS)
+		IF(DEFINED Rave_CFLAGS)
+			MESSAGE(STATUS "Rave_LDFLAGS, Rave_INCLUDE_DIRS and Rave_CFLAGS are set. Try to build GFRave.")
 			SET(RAVE True)
 		ENDIF()
 	ENDIF()
 ELSE()
-   	MESSAGE("You did not define the environment variable RAVEPATH which is needed to find rave. GFRave will not be built.") 
+   	MESSAGE(STATUS "No RAVEPATH or Rave flags given. GFRave will not be built.")
 ENDIF()
 
 IF(DEFINED RAVE)
 	# turn comma separated lists into space separated strings
-	string (REPLACE ";" " " Rave_LDFLAGS_STR "${Rave_LDFLAGS}")
+        string (REPLACE ";" " " Rave_LDFLAGS_STR "${Rave_LDFLAGS}")
 	string (REPLACE ";" " " Rave_INCLUDE_DIRS_STR "${Rave_INCLUDE_DIRS}")
 	string (REPLACE ";" " " Rave_CFLAGS_STR "${Rave_CFLAGS}")
+
 	SET (CMAKE_CXX_FLAGS ${Rave_DEFINITIONS} ${Rave_CFLAGS_STR})
-	
 	SET(GF_INC_DIRS
-		./GFRave/include/ ${Rave_INCLUDE_DIRS}
+		./GFRave/include/ ${Rave_INCLUDE_DIRS_STR}
 	)
 	
 	AUX_SOURCE_DIRECTORY( ./GFRave/src  library_sources )
@@ -299,7 +299,8 @@ if(DEFINED RAVE)
 	TARGET_LINK_LIBRARIES(
 			${PROJECT_NAME}
 			${ROOT_LIBS}
-			${RAVE_LDFLAGS_STR}
+			${Rave_LIB}
+                        ${Rave_LDFLAGS_STR}
   	)
 else()
 	TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS})
