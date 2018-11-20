@@ -63,7 +63,7 @@ ENDIF()
 
 IF(DEFINED RAVE)
 	# turn comma separated lists into space separated strings
-        string (REPLACE ";" " " Rave_LDFLAGS_STR "${Rave_LDFLAGS}")
+	string (REPLACE ";" " " Rave_LDFLAGS_STR "${Rave_LDFLAGS}")
 	string (REPLACE ";" " " Rave_INCLUDE_DIRS_STR "${Rave_INCLUDE_DIRS}")
 	string (REPLACE ";" " " Rave_CFLAGS_STR "${Rave_CFLAGS}")
 
@@ -300,8 +300,8 @@ if(DEFINED RAVE)
 			${PROJECT_NAME}
 			${ROOT_LIBS}
 			${Rave_LIB}
-                        ${Rave_LDFLAGS_STR}
-  	)
+			${Rave_LDFLAGS_STR}
+	)
 else()
 	TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS})
 endif()
