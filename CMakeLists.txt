@@ -39,7 +39,7 @@ ENDIF()
 FIND_PACKAGE(Eigen3 REQUIRED)
 
 # either, the environment variable RAVEPATH has to be specified, and RAVE's RaveConfig.cmake will be used to determine everything we need
-# or, RAVE_LDFLAGS, RAVE_INCLUDE_DIRS and RAVE_CFLAGS have to be set via the command-line
+# or, Rave_LDFLAGS, Rave_INCLUDE_DIRS and Rave_CFLAGS have to be set via the command-line
 
 
 IF(DEFINED ENV{RAVEPATH})
