@@ -1283,7 +1283,7 @@ void Track::Print(const Option_t* option) const {
 }
 
 
-void Track::checkConsistency() const {
+bool Track::checkConsistency() const {
 
   bool consistent = true;
   std::stringstream failures;
@@ -1444,6 +1444,8 @@ void Track::checkConsistency() const {
   if (not consistent) {
     throw genfit::Exception(failures.str(), __LINE__, __FILE__);
   }
+  
+  return consistent;
 }
 
 
