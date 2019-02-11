@@ -47,7 +47,7 @@ namespace genfit {
     
     virtual GblTrackSegmentController* clone() const {return new GblTrackSegmentController(*this);}
     
-    virtual void controlTrackSegment(TVector3, TVector3, GblFitter *) {;}
+    virtual void controlTrackSegment(TVector3, TVector3, double, GblFitter *) {;}
     
     virtual void Print(const Option_t* = "") const {;}
     
