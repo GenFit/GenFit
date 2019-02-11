@@ -458,7 +458,7 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
     
     // Call segment controller to set MS options:    
     if (m_segmentController)
-      m_segmentController->controlTrackSegment(segmentEntry, segmentExit, this);    
+      m_segmentController->controlTrackSegment(segmentEntry, segmentExit, scatTheta, this);    
     
     // Scattering options: OFF / THIN / THICK
     if (m_enableScatterers && !m_enableIntermediateScatterer) {
