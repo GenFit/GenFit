@@ -329,8 +329,8 @@ namespace genfit {
     fwdPrediction_ += fwdStateCorrection_; // This is the update!
     bwdPrediction_ += bwdStateCorrection_; // This is the update!
     
-    fittedStateFwd_.reset( new MeasuredStateOnPlane(fwdPrediction_, fwdCov_, sharedPlane_, rep_, fittedStateFwd_->getAuxInfo()) );         
-    fittedStateBwd_.reset( new MeasuredStateOnPlane(bwdPrediction_, bwdCov_, sharedPlane_, rep_, fittedStateBwd_->getAuxInfo()) );
+    fittedStateFwd_.reset( new MeasuredStateOnPlane(fwdPrediction_, fwdCov_, sharedPlane_, rep_, getFittedState(true).getAuxInfo()) );         
+    fittedStateBwd_.reset( new MeasuredStateOnPlane(bwdPrediction_, bwdCov_, sharedPlane_, rep_, getFittedState(true).getAuxInfo()) );
     
     // Set scattering/measurement residual data
     kinkResiduals_ = kResiduals;
