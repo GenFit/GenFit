@@ -83,8 +83,8 @@ namespace genfit {
     bwdPrediction_ = referenceState.getState();
     
     //TODO: reset even if already fitted?      
-    fittedStateBwd_.reset(new MeasuredStateOnPlane(referenceState, trackPoint_->getTrack()->getCovSeed()));
-    fittedStateFwd_.reset(new MeasuredStateOnPlane(referenceState, trackPoint_->getTrack()->getCovSeed()));
+    fittedStateBwd_.reset(new MeasuredStateOnPlane(referenceState.getState(), trackPoint_->getTrack()->getCovSeed(), sharedPlane_, rep_, referenceState.getAuxInfo()));
+    fittedStateFwd_.reset(new MeasuredStateOnPlane(referenceState.getState(), trackPoint_->getTrack()->getCovSeed(), sharedPlane_, rep_, referenceState.getAuxInfo()));
     
   }
   
@@ -116,7 +116,7 @@ namespace genfit {
     
     //NOTE: 3rd update and update anytime GblPoint is requested
     // mostly likely will update with reference as on 2nd update
-    StateOnPlane sop(getFittedState().getState(), sharedPlane_, rep_);
+    StateOnPlane sop(getFittedState().getState(), sharedPlane_, rep_, getFittedState(true).getAuxInfo());
     
     
     // Scatterer
@@ -329,8 +329,8 @@ namespace genfit {
     fwdPrediction_ += fwdStateCorrection_; // This is the update!
     bwdPrediction_ += bwdStateCorrection_; // This is the update!
     
-    fittedStateFwd_.reset( new MeasuredStateOnPlane(fwdPrediction_, fwdCov_, sharedPlane_, rep_) );         
-    fittedStateBwd_.reset( new MeasuredStateOnPlane(bwdPrediction_, bwdCov_, sharedPlane_, rep_) );
+    fittedStateFwd_.reset( new MeasuredStateOnPlane(fwdPrediction_, fwdCov_, sharedPlane_, rep_, getFittedState(true).getAuxInfo()) );         
+    fittedStateBwd_.reset( new MeasuredStateOnPlane(bwdPrediction_, bwdCov_, sharedPlane_, rep_, getFittedState(true).getAuxInfo()) );
     
     // Set scattering/measurement residual data
     kinkResiduals_ = kResiduals;
@@ -367,7 +367,7 @@ namespace genfit {
     // Take forward state from previous fitter info,
     // its (maybe updated) plane
     // and our rep
-    StateOnPlane prevState(prevFitterInfo->getFittedState(true).getState(), prevFitterInfo->getPlane(), rep_);
+    StateOnPlane prevState(prevFitterInfo->getFittedState(true).getState(), prevFitterInfo->getPlane(), rep_, getFittedState(true).getAuxInfo());
     
     if (hasMeasurements()) {
       SharedPlanePtr newPlane = trackPoint_->getRawMeasurement(0)->constructPlane(prevState);
@@ -383,14 +383,14 @@ namespace genfit {
     //
     // Extrap predictions to new plane
     //
-    StateOnPlane oldFwdState(fwdPrediction_, oldPlane, rep_);
-    StateOnPlane oldBwdState(bwdPrediction_, oldPlane, rep_);
+    StateOnPlane oldFwdState(fwdPrediction_, oldPlane, rep_, getFittedState(true).getAuxInfo());
+    StateOnPlane oldBwdState(bwdPrediction_, oldPlane, rep_, getFittedState(true).getAuxInfo());
     rep_->extrapolateToPlane(oldFwdState, sharedPlane_);
     rep_->extrapolateToPlane(oldBwdState, sharedPlane_);
     fwdPrediction_ = oldFwdState.getState();
     bwdPrediction_ = oldBwdState.getState();
-    fittedStateBwd_.reset();
-    fittedStateFwd_.reset();
+    fittedStateBwd_.reset(new MeasuredStateOnPlane(fwdPrediction_, fwdCov_, sharedPlane_, rep_, getFittedState(true).getAuxInfo()));
+    fittedStateFwd_.reset(new MeasuredStateOnPlane(bwdPrediction_, bwdCov_, sharedPlane_, rep_, getFittedState(true).getAuxInfo()));
     //
   }
 
@@ -399,6 +399,7 @@ namespace genfit {
     // ALways biased from GBL (global fit!)
     
     if (!fittedStateFwd_ || !fittedStateBwd_) { 
+      //NOTE: This should be already set (from reference)! The auxInfo is being book-kept by it. If reference is not set, default auxInfo is used
       fittedStateFwd_.reset(new MeasuredStateOnPlane(fwdPrediction_, fwdCov_, sharedPlane_, rep_));        
       fittedStateBwd_.reset(new MeasuredStateOnPlane(bwdPrediction_, bwdCov_, sharedPlane_, rep_));
     }
