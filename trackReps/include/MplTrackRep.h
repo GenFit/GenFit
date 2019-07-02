@@ -48,9 +48,10 @@ namespace genfit {
     const double m_magCharge;
     const double m_mass;
 
+
   public:
 
-    ClassDef(MplTrackRep, 1)
+    ClassDefOverride(MplTrackRep, 1)
 
   };
 } //end genfit namespace

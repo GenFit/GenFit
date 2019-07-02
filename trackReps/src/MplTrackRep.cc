@@ -26,6 +26,8 @@
 
 #include <math.h>
 
+#include <TBuffer.h>
+
 using namespace genfit;
 
 MplTrackRep::MplTrackRep(int pdgCode, float magCharge, char propDir) :
@@ -253,4 +255,22 @@ double MplTrackRep::RKPropagate(M1x7& state7,
   // Step length increase for a fifth order Runge-Kutta, see e.g. 17.2
   // in Numerical Recipes.  FIXME: move to caller.
   return pow(DLT/EST, 1./5.);
+}
+
+void MplTrackRep::Streamer(TBuffer &R__b)
+{
+   // I guess I have to reimplement this since it can not be taken from RKTrackRep?
+   typedef ::genfit::MplTrackRep thisClass;
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      ::genfit::AbsTrackRep::Streamer(R__b);
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+      lastStartState_.setRep(this);
+      lastEndState_.setRep(this);
+   } else {
+      ::genfit::AbsTrackRep::Streamer(R__b);
+      R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+      R__b.SetByteCount(R__c, kTRUE);
+   }
 }

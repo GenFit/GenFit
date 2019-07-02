@@ -284,9 +284,13 @@ class RKTrackRep : public AbsTrackRep {
 
   double momMag(const M1x7& state7) const;
 
+ protected:
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
   mutable StateOnPlane lastEndState_; //! state where the last extrapolation has ended
+
+ private:
+
   mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
   mutable int RKStepsFXStart_; //!
   mutable int RKStepsFXStop_; //!
