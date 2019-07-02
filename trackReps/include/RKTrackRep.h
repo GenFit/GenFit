@@ -185,12 +185,12 @@ class RKTrackRep : public AbsTrackRep {
    *  The return value is an estimation on how good the extrapolation is, and it is usually fine if it is > 1.
    *  It gives a suggestion how you must scale S so that the quality will be sufficient.
    */
-  double RKPropagate(M1x7& state7,
-                     M7x7* jacobian,
-                     M1x3& SA,
-                     double S,
-                     bool varField = true,
-                     bool calcOnlyLastRowOfJ = false) const;
+  virtual double RKPropagate(M1x7& state7,
+                             M7x7* jacobian,
+                             M1x3& SA,
+                             double S,
+                             bool varField = true,
+                             bool calcOnlyLastRowOfJ = false) const;
 
   virtual bool isSameType(const AbsTrackRep* other) override;
   virtual bool isSame(const AbsTrackRep* other) override;
