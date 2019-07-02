@@ -8,7 +8,7 @@
  * This software is provided "as is" without any warranty.                *
  **************************************************************************/
 
-#include <genfit/RKTrackRep.h>
+#include "RKTrackRep.h"
 
 namespace genfit {
   /**
