@@ -21,6 +21,14 @@
 
 namespace genfit {
 
+  /* The PDG code used for the magnetic monopole; somewhat arbitrary.
+   *
+   * PDG allocates all code starting with 99 to be
+   * used for user-defined particles. Some folks weave
+   * the magnetic charge and mass into the code itself,
+   * but here we would like to consider them as floats,
+   * and so we have to store them elsewhere as data members.
+   */
   const int c_monopolePDGCode = 99666;
 
 }

@@ -21,9 +21,14 @@
 
 namespace genfit {
   /**
-   * A prototype for monopole track representation.
-   * For now it would be a minimal modification of RKTrackRep
-   * with a different equation of motion for monopoles.
+   * Monopole track representation.
+   * It is a minimal modification of RKTrackRep
+   * with a different equations of motion for magnetic charges.
+   *
+   * In the current implementation the states on plane are 5-d:
+   * u, v, u', v', q/p
+   * except that q in this case is magnetic, and the monopole
+   * has no electic charge.
    */
   class MplTrackRep : public RKTrackRep {
 
@@ -41,12 +46,13 @@ namespace genfit {
                        bool varField = true,
                        bool calcOnlyLastRowOfJ = false) const override;
 
+    // Returns the magnetic charge instead of electric as in the base class.
     double getCharge(const StateOnPlane& state) const override; 
 
   private:
 
-    const double m_magCharge;
-    const double m_mass;
+    const double m_magCharge; // the magnitude of magnetic charge in units of e+
+    const double m_mass; // the mass of the monopole in units of GeV/c^2
 
 
   public:
