@@ -74,6 +74,7 @@ public:
   void setEnergyLossBrems(bool opt = true) {energyLossBrems_ = opt; noEffects_ = false;}
   void setNoiseBrems(bool opt = true) {noiseBrems_ = opt; noEffects_ = false;}
   void ignoreBoundariesBetweenEqualMaterials(bool opt = true) {ignoreBoundariesBetweenEqualMaterials_ = opt;}
+  void setMagCharge(double magCharge) {mag_charge_ = magCharge;} 
 
   /** @brief Select the multiple scattering model that will be used during track fit.
    *
@@ -125,7 +126,7 @@ public:
   double momentumLoss(double stepSign, double mom, bool linear);
 
   //! Calculate dEdx for a given energy
-  double dEdx(double Energy) const;
+  double dEdx(double Energy);
 
 
   //! Uses Bethe Bloch formula to calculate dEdx.
@@ -191,7 +192,8 @@ public:
   double mEE_; // mean excitation energy
 
   int pdg_;
-  int charge_;
+  double charge_;
+  double mag_charge_; // in units of e+
   double mass_;
 
   int mscModelCode_; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
