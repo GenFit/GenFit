@@ -189,7 +189,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
         double pSquare = p*p;
 
         if (pdg_ == c_monopolePDGCode) {
-          charge_ = mag_charge_ * sqrt(mom / hypot(mom, mass_)); //effective charge for monopoles
+          charge_ = mag_charge_ * mom / hypot(mom, mass_); //effective charge for monopoles
         }
 
         if (energyLossBetheBloch_ && noiseBetheBloch_)
@@ -853,7 +853,7 @@ void MaterialEffects::drawdEdx(int pdg) {
     double mom = pow(10., log10(minMom) + i*logStepSize);
     double E = hypot(mom, mass_);
     if (pdg_ == c_monopolePDGCode) {
-      charge_ = mag_charge_ * sqrt(mom / E); //effective charge for monopoles
+      charge_ = mag_charge_ * mom / E; //effective charge for monopoles
     }
 
     energyLossBrems_ = false;

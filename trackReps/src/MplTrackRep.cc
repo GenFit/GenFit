@@ -109,7 +109,7 @@ double MplTrackRep::RKPropagate(M1x7& state7,
   r[0] = R[0];           r[1] = R[1];           r[2]=R[2];
   FieldManager::getInstance()->getFieldVal(r[0], r[1], r[2], H0[0], H0[1], H0[2]);       // magnetic field in 10^-1 T = kGauss
   H0[0] *= PS2; H0[1] *= PS2; H0[2] *= PS2;     // H0 is PS2*(Hx, Hy, Hz) @ R0; effectively this is h/2 * Force
-  D0 = fabs(1.0/state7[6]); // p_n
+  D0 = fabs(m_magCharge/state7[6]); // p_n
   F0 = std::sqrt(m_mass * m_mass + D0 * D0) / (D0 * D0); // E / p^2
   AH0 = A[0]*H0[0] + A[1]*H0[1] + A[2]*H0[2]; // A dot Force
 
@@ -185,7 +185,7 @@ double MplTrackRep::RKPropagate(M1x7& state7,
       for(int i=start; i<7; ++i) { 
 
         //first point
-        dD0 = -D0*D0/sign*J(i,6);
+        dD0 = -D0*D0/m_magCharge/sign*J(i,6);
         dA0 = (1/(F0*F0*D0*D0*D0) - 2/D0)*A0*dD0 - (D1-D0)/D0*J(i,3) - F0*A[0]*(J(i,3)*H0[0] + J(i,4)*H0[1] + J(i,5)*H0[2]); // FIXME A true marvel of clarity
         dB0 = (1/(F0*F0*D0*D0*D0) - 2/D0)*B0*dD0 - (D1-D0)/D0*J(i,4) - F0*A[1]*(J(i,3)*H0[0] + J(i,4)*H0[1] + J(i,5)*H0[2]);
         dC0 = (1/(F0*F0*D0*D0*D0) - 2/D0)*C0*dD0 - (D1-D0)/D0*J(i,5) - F0*A[2]*(J(i,3)*H0[0] + J(i,4)*H0[1] + J(i,5)*H0[2]);
@@ -220,7 +220,7 @@ double MplTrackRep::RKPropagate(M1x7& state7,
         J(i, 0) += (dA2+dA3+dA4)*S3;  J(i, 3) = ((dA0+2.*dA3)+(dA5+dA6))*P3; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
         J(i, 1) += (dB2+dB3+dB4)*S3;  J(i, 4) = ((dB0+2.*dB3)+(dB5+dB6))*P3; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
         J(i, 2) += (dC2+dC3+dC4)*S3;  J(i, 5) = ((dC0+2.*dC3)+(dC5+dC6))*P3;
-        J(i,6) = -sign/D5/D5*P3*(dD1 + 2*dD2 + dD3 + dD4);
+        J(i,6) = -m_magCharge*sign/D5/D5*P3*(dD1 + 2*dD2 + dD3 + dD4);
       }
 
 //     } // end if (!calcOnlyLastRowOfJ)
