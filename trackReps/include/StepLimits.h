@@ -57,6 +57,8 @@ class StepLimits {
   StepLimits()
   : limits_(ENUM_NR_ITEMS, maxLimit_), stepSign_(1) {;}
 
+  StepLimits(const StepLimits&) = default;
+
   StepLimits& operator=(const StepLimits& other);
 
   //! Get limit of type. If that limit has not yet been set, return max double value.

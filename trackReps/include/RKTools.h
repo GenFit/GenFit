@@ -33,6 +33,9 @@ template <size_t nRows, size_t nCols>
 struct RKMatrix {
   double vals[nRows * nCols];
 
+  RKMatrix() = default;
+  RKMatrix(const RKMatrix&) = default;
+
   double& operator()(size_t iRow, size_t iCol) {
     return vals[nCols*iRow + iCol];
   }

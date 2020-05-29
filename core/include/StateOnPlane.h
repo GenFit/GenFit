@@ -48,6 +48,7 @@ class StateOnPlane {
 
  public:
 
+  StateOnPlane(const genfit::StateOnPlane&) = default;
 
   StateOnPlane(const AbsTrackRep* rep = nullptr);
   //! state is defined by the TrackReps parameterization
