@@ -53,6 +53,7 @@ class ReferenceStateOnPlane : public StateOnPlane {
       const AbsTrackRep* rep,
       const TVectorD& auxInfo);
   ReferenceStateOnPlane(const StateOnPlane& state);
+  ReferenceStateOnPlane(const ReferenceStateOnPlane&) = default;
 
   StateOnPlane& operator=(ReferenceStateOnPlane other);
   void swap(ReferenceStateOnPlane& other); // nothrow
