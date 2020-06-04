@@ -53,8 +53,8 @@ class GFRaveTrackParameters : public TObject
   public:
     // constructors, destructors
     GFRaveTrackParameters();
-    GFRaveTrackParameters(const Track* track, MeasuredStateOnPlane* originalState, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed);
-    GFRaveTrackParameters(const Track* track, MeasuredStateOnPlane* originalState, double weight);
+    GFRaveTrackParameters(const Track* track, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed);
+    GFRaveTrackParameters(const Track* track, double weight);
 
     // Accessors
     double getWeight() const {return weight_;}
