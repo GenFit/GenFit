@@ -394,21 +394,21 @@ unsigned int VSymMatrix::invert() {
 			theVec[kk] = -vkk;
 			int jk = kk - k;
 			int jl = -1;
-			for (int j = 1; j <= nSize; ++j) { // elimination
-				if (j == k) {
+			for (int m = 1; m <= nSize; ++m) { // elimination
+				if (m == k) {
 					jk = kk;
-					jl += j;
+					jl += m;
 				} else {
-					if (j < k) {
+					if (m < k) {
 						++jk;
 					} else {
-						jk += j - 1;
+						jk += m - 1;
 					}
 
 					double vjk = theVec[jk];
 					theVec[jk] = vkk * vjk;
 					int lk = kk - k;
-					if (j >= k) {
+					if (m >= k) {
 						for (int l = 1; l <= k - 1; ++l) {
 							++jl;
 							++lk;
@@ -416,13 +416,13 @@ unsigned int VSymMatrix::invert() {
 						}
 						++jl;
 						lk = kk;
-						for (int l = k + 1; l <= j; ++l) {
+						for (int l = k + 1; l <= m; ++l) {
 							++jl;
 							lk += l - 1;
 							theVec[jl] -= theVec[lk] * vjk;
 						}
 					} else {
-						for (int l = 1; l <= j; ++l) {
+						for (int l = 1; l <= m; ++l) {
 							++jl;
 							++lk;
 							theVec[jl] -= theVec[lk] * vjk;
@@ -431,12 +431,12 @@ unsigned int VSymMatrix::invert() {
 				}
 			}
 		} else {
-			for (int k = 1; k <= nSize; ++k) {
-				if (next[k - 1] >= 0) {
-					int kk = (k * k - k) / 2 - 1;
-					for (int j = 1; j <= nSize; ++j) {
-						if (next[j - 1] >= 0) {
-							theVec[kk + j] = 0.0; // clear matrix row/col
+			for (int m = 1; m <= nSize; ++m) {
+				if (next[m - 1] >= 0) {
+					int kk = (m * m - m) / 2 - 1;
+					for (int n = 1; n <= nSize; ++n) {
+						if (next[n - 1] >= 0) {
+							theVec[kk + n] = 0.0; // clear matrix row/col
 						}
 					}
 				}
