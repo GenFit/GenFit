@@ -21,6 +21,7 @@ void makeGeom()
 
    TGeoMaterial *_siliconMat = new TGeoMaterial("siliconMat",28.0855,14.,2.329);
    _siliconMat->SetRadLen(1.);//calc automatically, need this for elemental mats.
+   // cppcheck-suppress unreadVariable
    TGeoMedium *_silicon = new TGeoMedium("silicon",medInd++,_siliconMat,mPar);
 
    TGeoMixture *_airMat = new TGeoMixture("airMat",3);
@@ -28,6 +29,7 @@ void makeGeom()
    _airMat->AddElement(16.00,8.,.21);
    _airMat->AddElement(39.95,18.,.01);
    _airMat->SetDensity(1.2e-3);
+   // cppcheck-suppress unreadVariable
    TGeoMedium *_air = new TGeoMedium("air",medInd++,_airMat,mPar);
 
    TGeoMixture *_vacuumMat = new TGeoMixture("vacuumMat",3);
@@ -35,6 +37,7 @@ void makeGeom()
    _vacuumMat->AddElement(16.00,8.,.21);
    _vacuumMat->AddElement(39.95,18.,.01);
    _vacuumMat->SetDensity(1.2e-15);
+   // cppcheck-suppress unreadVariable
    TGeoMedium *_vacuum = new TGeoMedium("vacuum",medInd++,_vacuumMat,mPar);
 
 
