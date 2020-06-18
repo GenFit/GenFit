@@ -43,8 +43,8 @@ class AbsMeasurement : public TObject {
 
  public:
 
-  AbsMeasurement() : rawHitCoords_(), rawHitCov_(), detId_(-1), hitId_(-1) {;}
-  AbsMeasurement(int nDims) : rawHitCoords_(nDims), rawHitCov_(nDims), detId_(-1), hitId_(-1) {;}
+  AbsMeasurement() : rawHitCoords_(), rawHitCov_(), detId_(-1), hitId_(-1), trackPoint_(nullptr) {;}
+  AbsMeasurement(int nDims) : rawHitCoords_(nDims), rawHitCov_(nDims), detId_(-1), hitId_(-1), trackPoint_(nullptr) {;}
   AbsMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
   virtual ~AbsMeasurement();

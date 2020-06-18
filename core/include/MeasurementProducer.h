@@ -80,7 +80,7 @@ class MeasurementProducer : public AbsMeasurementProducer<genfit::AbsMeasurement
 
  public:
   /** @brief Constructor takes pointer to the hit array */
-  MeasurementProducer(TClonesArray*);
+  explicit MeasurementProducer(TClonesArray*);
   virtual ~MeasurementProducer();
 
   /** @brief Create a Measurement from the cluster at position index
