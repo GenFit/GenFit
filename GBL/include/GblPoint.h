@@ -67,8 +67,8 @@ namespace gbl {
  */
 class GblPoint {
 public:
-	GblPoint(const TMatrixD &aJacobian);
-	GblPoint(const SMatrix55 &aJacobian);
+	explicit GblPoint(const TMatrixD &aJacobian);
+	explicit GblPoint(const SMatrix55 &aJacobian);
 	virtual ~GblPoint();
 	void addMeasurement(const TMatrixD &aProjection, const TVectorD &aResiduals,
 			const TVectorD &aPrecision, double minPrecision = 0.);
