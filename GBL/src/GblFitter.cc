@@ -147,8 +147,9 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
     return;
   // -----------------------------------------------------------------
   
-
+  // cppcheck-suppress unreadVariable
   unsigned int nFailed = 0;
+  // cppcheck-suppress unreadVariable
   int fitRes = 0;
   std::vector<std::string> gblIterations;
   gblIterations.push_back(m_gblInternalIterations);
@@ -327,6 +328,7 @@ void GblFitter::getScattererFromMatList(double& length,
   // (part of) second moment / variance (non-normalized)
   double sumx3x3 = 0.;
   
+  // cppcheck-suppress unreadVariable
   double xmin = 0.;
   double xmax = 0.;
   

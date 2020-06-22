@@ -157,6 +157,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
   else if (calcJacobianNoise)
     fillExtrapSteps = true;
 
+  // cppcheck-suppress unreadVariable
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   double charge = getCharge(state);
   double mass = getMass(state);
@@ -257,6 +258,7 @@ double RKTrackRep::extrapToPoint(StateOnPlane& state,
   else if (calcJacobianNoise)
     fillExtrapSteps = true;
 
+  // cppcheck-suppress unreadVariable
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   TVector3 dir(state7[3], state7[4], state7[5]);
   if (G != nullptr) {
@@ -1824,6 +1826,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
   double  momentum   ( fabs(charge/state7[6]) ); // momentum [GeV]
   double  relMomLoss ( 0 );                      // relative momentum loss in RKutta
   double  deltaAngle ( 0. );                     // total angle by which the momentum has changed during extrapolation
+  // cppcheck-suppress unreadVariable
   double  An(0), S(0), Sl(0), CBA(0);
 
 
@@ -1985,6 +1988,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
 
       coveredDistance += S;
+      // cppcheck-suppress unreadVariable
       Way  += fabs(S);
 
       double beta = 1/hypot(1, mass*state7[6]/charge);
@@ -2322,6 +2326,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
   unsigned int numIt(0);
 
   double coveredDistance(0.);
+  // cppcheck-suppress unreadVariable
   double dqop(0.);
 
   const TVector3 W(destPlane.getNormal());

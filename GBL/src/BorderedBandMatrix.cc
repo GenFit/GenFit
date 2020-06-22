@@ -95,7 +95,7 @@ void BorderedBandMatrix::addBlockMatrix(double aWeight,
  * \param anIndex [in] List of rows/colums to be used
  */
 TMatrixDSym BorderedBandMatrix::getBlockMatrix(
-		const std::vector<unsigned int> anIndex) const {
+		const std::vector<unsigned int> &anIndex) const {
 
 	TMatrixDSym aMatrix(anIndex.size());
 	int nBorder = numBorder;
