@@ -165,9 +165,13 @@ double MplTrackRep::RKPropagate(M1x7& state7,
     // x x x x x x 1  q/p
     M7x7& J = *jacobianT;
 
+    // cppcheck-suppress unreadVariable
     double   dA0(0), dA2(0), dA3(0), dA4(0), dA5(0), dA6(0);
+    // cppcheck-suppress unreadVariable
     double   dB0(0), dB2(0), dB3(0), dB4(0), dB5(0), dB6(0);
+    // cppcheck-suppress unreadVariable
     double   dC0(0), dC2(0), dC3(0), dC4(0), dC5(0), dC6(0);
+    // cppcheck-suppress unreadVariable
     double   dD0(0), dD1(0), dD2(0), dD3(0), dD4(0); 
 
     int start(0);

@@ -95,6 +95,7 @@ MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane(bool ignor
 
   // more than one hit
 
+  // cppcheck-suppress unreadVariable
   double sumOfWeights(0), weight(0);
 
   retVal.getState().Zero();
@@ -561,7 +562,9 @@ bool KalmanFitterInfo::checkConsistency(const genfit::PruneFlags* flags) const {
     retVal = false;
   }
 
+  // cppcheck-suppress unreadVariable
   TVector3 oTest = plane->getO(); // see if the plane object is there
+  // cppcheck-suppress unreadVariable
   oTest *= 47.11;
 
   // if more than one measurement, check if they have the same dimensionality

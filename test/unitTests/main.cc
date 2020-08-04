@@ -1067,7 +1067,7 @@ e_testStatus checkExtrapolateBy(bool writeHisto = false) {
 //=====================================================================================================================
 
 struct TestCase {
-  TestCase(std::string name, e_testStatus(*function)(bool)) : name_(name), function_(function), nPassed_(0), nFailed_(0), nException_(0) {;}
+  TestCase(const std::string &name, e_testStatus(*function)(bool)) : name_(name), function_(function), nPassed_(0), nFailed_(0), nException_(0) {;}
   void Print() {std::cout << name_ << " \t" << nPassed_ << " \t" << nFailed_ << " \t" << nException_ << "\n";}
 
   std::string name_;

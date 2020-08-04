@@ -87,7 +87,7 @@ public:
 	void addBlockMatrix(double aWeight,
 			const std::vector<unsigned int>* anIndex,
 			const std::vector<double>* aVector);
-	TMatrixDSym getBlockMatrix(const std::vector<unsigned int> anIndex) const;
+	TMatrixDSym getBlockMatrix(const std::vector<unsigned int> &anIndex) const;
 	void printMatrix() const;
 
 private:

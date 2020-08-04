@@ -47,12 +47,12 @@ namespace gbl {
  */
 class GblTrajectory {
 public:
-	GblTrajectory(const std::vector<GblPoint> &aPointList, bool flagCurv = true,
+	explicit GblTrajectory(const std::vector<GblPoint> &aPointList, bool flagCurv = true,
 			bool flagU1dir = true, bool flagU2dir = true);
 	GblTrajectory(const std::vector<GblPoint> &aPointList, unsigned int aLabel,
 			const TMatrixDSym &aSeed, bool flagCurv = true, bool flagU1dir =
 					true, bool flagU2dir = true);
-	GblTrajectory(
+	explicit GblTrajectory(
 			const std::vector<std::pair<std::vector<GblPoint>, TMatrixD> > &aPointaAndTransList);
 	GblTrajectory(
 			const std::vector<std::pair<std::vector<GblPoint>, TMatrixD> > &aPointaAndTransList,

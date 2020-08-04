@@ -274,6 +274,7 @@ void getScattererFromMatList(double& length, double& theta, double& s, double& d
   // (part of) second moment / variance (non-normalized)
   double sumx3x3 = 0.;
   
+  // cppcheck-suppress unreadVariable
   double xmin = 0.;
   double xmax = 0.;
   

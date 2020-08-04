@@ -1285,6 +1285,7 @@ void Track::Print(const Option_t* option) const {
 
 void Track::checkConsistency() const {
 
+  // cppcheck-suppress unreadVariable
   bool consistent = true;
   std::stringstream failures;
 
@@ -1293,11 +1294,13 @@ void Track::checkConsistency() const {
   // check if seed is 6D
   if (stateSeed_.GetNrows() != 6) {
     failures << "Track::checkConsistency(): stateSeed_ dimension != 6" << std::endl;
+    // cppcheck-suppress unreadVariable
     consistent = false;
   }
 
   if (covSeed_.GetNrows() != 6) {
     failures << "Track::checkConsistency(): covSeed_ dimension != 6" << std::endl;
+    // cppcheck-suppress unreadVariable
     consistent = false;
   }
 
@@ -1310,12 +1313,14 @@ void Track::checkConsistency() const {
   // check if correct number of fitStatuses
   if (fitStatuses_.size() != trackReps_.size()) {
     failures << "Track::checkConsistency(): Number of fitStatuses is != number of TrackReps " << std::endl;
+    // cppcheck-suppress unreadVariable
     consistent = false;
   }
 
   // check if cardinalRep_ is in range of trackReps_
   if (trackReps_.size() && cardinalRep_ >= trackReps_.size()) {
     failures << "Track::checkConsistency(): cardinalRep id " << cardinalRep_ << " out of bounds" << std::endl;
+    // cppcheck-suppress unreadVariable
     consistent = false;
   }
 
@@ -1323,6 +1328,7 @@ void Track::checkConsistency() const {
     // check for nullptr
     if ((*rep) == nullptr) {
       failures << "Track::checkConsistency(): TrackRep is nullptr" << std::endl;
+      // cppcheck-suppress unreadVariable
       consistent = false;
     }
 
@@ -1330,12 +1336,14 @@ void Track::checkConsistency() const {
     TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle((*rep)->getPDG());
     if (particle == nullptr) {
       failures << "Track::checkConsistency(): TrackRep pdg ID " << (*rep)->getPDG() << " is not valid" << std::endl;
+      // cppcheck-suppress unreadVariable
       consistent = false;
     }
 
     // check if corresponding FitStatus is there
     if (fitStatuses_.find(*rep) == fitStatuses_.end() and fitStatuses_.find(*rep)->second != nullptr) {
       failures << "Track::checkConsistency(): No FitStatus for Rep or FitStatus is nullptr" << std::endl;
+      // cppcheck-suppress unreadVariable
       consistent = false;
     }
   }
@@ -1345,11 +1353,13 @@ void Track::checkConsistency() const {
     // check for nullptr
     if ((*tp) == nullptr) {
       failures << "Track::checkConsistency(): TrackPoint is nullptr" << std::endl;
+      // cppcheck-suppress unreadVariable
       consistent = false;
     }
     // check if trackPoint points back to this track
     if ((*tp)->getTrack() != this) {
       failures << "Track::checkConsistency(): TrackPoint does not point back to this track" << std::endl;
+      // cppcheck-suppress unreadVariable
       consistent = false;
     }
 
@@ -1359,11 +1369,13 @@ void Track::checkConsistency() const {
       // check for nullptr
       if ((*m) == nullptr) {
         failures << "Track::checkConsistency(): Measurement is nullptr" << std::endl;
+	// cppcheck-suppress unreadVariable
         consistent = false;
       }
       // check if measurement points back to TrackPoint
       if ((*m)->getTrackPoint() != *tp) {
         failures << "Track::checkConsistency(): Measurement does not point back to correct TrackPoint" << std::endl;
+	// cppcheck-suppress unreadVariable
         consistent = false;
       }
     }
@@ -1374,6 +1386,7 @@ void Track::checkConsistency() const {
       // check for nullptr
       if ((*fi) == nullptr) {
         failures << "Track::checkConsistency(): FitterInfo is nullptr. TrackPoint: " << *tp << std::endl;
+	// cppcheck-suppress unreadVariable
         consistent = false;
       }
 
@@ -1386,11 +1399,13 @@ void Track::checkConsistency() const {
       }
       if (mycount ==  0) {
         failures << "Track::checkConsistency(): fitterInfo points to TrackRep which is not in Track" << std::endl;
+	// cppcheck-suppress unreadVariable
         consistent = false;
       }
 
       if (!( (*fi)->checkConsistency(&(this->getFitStatus((*fi)->getRep())->getPruneFlags())) ) ) {
         failures << "Track::checkConsistency(): FitterInfo not consistent. TrackPoint: " << *tp << std::endl;
+	// cppcheck-suppress unreadVariable
         consistent = false;
       }
 
@@ -1404,6 +1419,7 @@ void Track::checkConsistency() const {
             failures << "Track::checkConsistency(): segment lengths of reference states for rep " << (*fi)->getRep() << " (id " << getIdForRep((*fi)->getRep()) << ") at TrackPoint " << (*tp) << " don't match" << std::endl;
             failures << prevLen << " + " << len << " = " << prevLen + len << std::endl;
             failures << "TrackPoint " << *tp << ", FitterInfo " << *fi << ", rep " << getIdForRep((*fi)->getRep()) << std::endl;
+	    // cppcheck-suppress unreadVariable
             consistent = false;
           }
         }
@@ -1429,6 +1445,7 @@ void Track::checkConsistency() const {
 
   if (trackPointsWithMeasurement.size() != trackPointsWithMeasurement_.size()) {
     failures << "Track::checkConsistency(): trackPointsWithMeasurement_ has incorrect size" << std::endl;
+    // cppcheck-suppress unreadVariable
     consistent = false;
   }
 
@@ -1437,6 +1454,7 @@ void Track::checkConsistency() const {
       failures << "Track::checkConsistency(): trackPointsWithMeasurement_ is not correct" << std::endl;
       failures << "has         id " << i << ", address " << trackPointsWithMeasurement_[i] << std::endl;
       failures << "should have id " << i << ", address " << trackPointsWithMeasurement[i] << std::endl;
+      // cppcheck-suppress unreadVariable
       consistent = false;
     }
   }
