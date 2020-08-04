@@ -48,8 +48,8 @@ GFRavePropagator::~GFRavePropagator()
     
     
 std::pair < rave::Track, double >
-GFRavePropagator::to ( const rave::Track & orig,
-                       const ravesurf::Cylinder & rcyl ) const
+GFRavePropagator::to ( const rave::Track & /*orig*/,
+                       const ravesurf::Cylinder & /*rcyl*/ ) const
 {
   // todo to be implemented!!
   Exception exc("GFRavePropagator::to (cylinder) ==> not yet implemented!",__LINE__,__FILE__);

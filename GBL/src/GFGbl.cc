@@ -324,7 +324,7 @@ void getScattererFromMatList(double& length, double& theta, double& s, double& d
 }
 
 
-void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits)
+void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resortHits*/)
 {
   // Flag used to mark error in raw measurement combination
   // measurement won't be considered, but scattering yes

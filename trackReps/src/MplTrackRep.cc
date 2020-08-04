@@ -63,7 +63,7 @@ double MplTrackRep::RKPropagate(M1x7& state7,
                                 M1x3& SA,
                                 double S,
                                 bool varField,
-                                bool calcOnlyLastRowOfJ) const
+                                bool /*calcOnlyLastRowOfJ*/) const
 {
   // The algorithm is
   //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001

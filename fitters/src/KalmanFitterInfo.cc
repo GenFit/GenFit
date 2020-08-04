@@ -795,7 +795,7 @@ void KalmanFitterInfo::Streamer(TBuffer &R__b)
        backwardUpdate_->Streamer(R__b);
      {
        std::vector<genfit::MeasurementOnPlane*,std::allocator<genfit::MeasurementOnPlane*> > &R__stl =  measurementsOnPlane_;
-       int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+       int R__n=int(R__stl.size());
        R__b << R__n;
        if(R__n) {
          std::vector<genfit::MeasurementOnPlane*,std::allocator<genfit::MeasurementOnPlane*> >::iterator R__k;
