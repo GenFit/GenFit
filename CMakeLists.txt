@@ -99,7 +99,12 @@ IF(NOT CMAKE_BUILD_TYPE)
       FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-SET(CPP_STANDARD c++11)
+if(NOT CPP_STANDARD)
+  SET(CPP_STANDARD c++11)
+endif()
+
+message("CPP STANDARD: ${CPP_STANDARD}")
+
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=${CPP_STANDARD} -pthread -Wpedantic -Wall -Wextra \
  -Wno-long-long -Wshadow -Werror=overloaded-virtual -Wunused-parameter -Waddress")
 
