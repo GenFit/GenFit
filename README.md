@@ -17,6 +17,6 @@ GenFit is an experiment-independent framework for track reconstruction in partic
   
   The measurement dimensionality and the orientation of planar tracking detectors can be chosen freely. GENFIT is especially useful for tracking systems which include detectors which do not measure the passage of particles on predefined planes, like TPCs or wire-based drift chambers. The concept of so-called virtual detector planes provides a simple mechanism to use these detector hits in a transparent way without any geometrical simplifications.
 
-GenFit has been developed in the framework of the PANDA experiment at FAIR, Darmstadt, Germany. It is also used in the Belle-2, Fopi, and GEM-TPC experiments.
+GenFit has been developed in the framework of the PANDA experiment at FAIR, Darmstadt, Germany. It is also used in the Belle II, Fopi, and GEM-TPC experiments.
 
 GenFit Homepage: (https://github.com/GenFit/GenFit)
