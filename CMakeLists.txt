@@ -35,6 +35,8 @@ FIND_PACKAGE(ROOT REQUIRED COMPONENTS Geom)
 IF(${ROOT_found_version} LESS 60000)
 	MESSAGE(FATAL_ERROR "GenFit requires a ROOT version > 6.00.00")
 ENDIF()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
+
 
 FIND_PACKAGE(Eigen3 REQUIRED)
 
@@ -99,13 +101,7 @@ IF(NOT CMAKE_BUILD_TYPE)
       FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-if(NOT CPP_STANDARD)
-  SET(CPP_STANDARD c++11)
-endif()
-
-message("CPP STANDARD: ${CPP_STANDARD}")
-
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=${CPP_STANDARD} -pthread -Wpedantic -Wall -Wextra \
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -Wpedantic -Wall -Wextra \
  -Wno-long-long -Wshadow -Werror=overloaded-virtual -Wunused-parameter -Waddress")
 
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0 -g")
