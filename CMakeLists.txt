@@ -326,8 +326,6 @@ IF(GTEST_FOUND)
 			gtest/TestConstField.cpp
 			gtest/TestMaterialEffects.cpp
 			gtest/TestRKTrackRep.cpp
-			gtest/TestRootEigenTransformations.cpp
-			gtest/TestRKMatrixEigenTransformations.cpp
 			gtest/TestUnits.cpp
 			gtest/TestMaterial.cpp
 			)
