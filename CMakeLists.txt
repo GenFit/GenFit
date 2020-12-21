@@ -38,8 +38,6 @@ ENDIF()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
 
 
-FIND_PACKAGE(Eigen3 REQUIRED)
-
 # either, the environment variable RAVEPATH has to be specified, and RAVE's RaveConfig.cmake will be used to determine everything we need
 # or, Rave_LDFLAGS, Rave_INCLUDE_DIRS and Rave_CFLAGS have to be set via the command-line
 
@@ -329,9 +327,6 @@ IF(GTEST_FOUND)
 			gtest/TestConstField.cpp
 			gtest/TestMaterialEffects.cpp
 			gtest/TestRKTrackRep.cpp
-			gtest/TestRootEigenTransformations.cpp
-			gtest/TestRKMatrixEigenTransformations.cpp
-			gtest/TestUnits.cpp
 			gtest/TestMaterial.cpp
 			)
 	TARGET_LINK_LIBRARIES(gtests ${GTEST_BOTH_LIBRARIES} ${ROOT_LIBS} ${PROJECT_NAME})  # gtest gtest_main
