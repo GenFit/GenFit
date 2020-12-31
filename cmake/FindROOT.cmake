@@ -20,6 +20,7 @@
 #   ROOT_LIBS                : required ROOT libraries
 #   ROOT_found_version      : contains the version of ROOT in a comparable
 #                             way, i.e. 5.99.00 as 59900
+#   ROOT_CXX_FLAGS          : the c++ compiler flags
 #
 #   Please note that by convention components should be entered exactly as
 #   the library names, i.e. the component name equivalent to the library
@@ -204,6 +205,21 @@ IF( ROOT_CONFIG_EXECUTABLE )
         SET( ROOT_LIBRARY_DIR )
     ENDIF()
 
+
+    # ==============================================
+    # ===            ROOT_CXX_FLAGS              ===
+    # ==============================================
+    # get cxx flags from root-config output
+    EXECUTE_PROCESS( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --cflags
+        OUTPUT_VARIABLE ROOT_CXX_FLAGS
+        RESULT_VARIABLE _exit_code
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    IF( NOT _exit_code EQUAL 0 )
+        # clear variable if root-config exits with error
+        # it might contain garbage
+        SET( ROOT_CXX_FLAGS )
+    ENDIF()
 
 
     # ========== standard root libraries =================
