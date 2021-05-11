@@ -1,6 +1,5 @@
 #pragma once
 
-#include "EigenMatrixTypedefs.h"
 #include "Units.h"
 
 namespace genfit {
