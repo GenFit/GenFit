@@ -435,7 +435,8 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       if (tp->getNumRawMeasurements() > 1) {
         bool sameTypes(true);
         for (unsigned int iM=1; iM<tp->getNumRawMeasurements(); ++iM) {
-          if (typeid(*(tp->getRawMeasurement(iM))) != typeid(*m))
+	  auto& rawMeasurement = *(tp->getRawMeasurement(iM));
+          if (typeid(rawMeasurement) != typeid(*m))
             sameTypes = false;
         }
         if (!sameTypes) {
