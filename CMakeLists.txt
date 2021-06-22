@@ -320,9 +320,12 @@ IF(DEFINED RAVE)
   ADD_GENFIT_TEST( vertexingTestRead       test/vertexingTest/read.cc)
 ENDIF()
 
+INCLUDE(CTest)
+IF(BUILD_TESTING)
+    ENABLE_TESTING()
 
-FIND_PACKAGE(GTest)
-IF(GTEST_FOUND)
+
+	FIND_PACKAGE(GTest REQUIRED)
 	ADD_EXECUTABLE(gtests
 			gtest/TestConstField.cpp
 			gtest/TestMaterialEffects.cpp
@@ -332,9 +335,8 @@ IF(GTEST_FOUND)
 	TARGET_LINK_LIBRARIES(gtests ${GTEST_BOTH_LIBRARIES} ${ROOT_LIBS} ${PROJECT_NAME})  # gtest gtest_main
 	MESSAGE(STATUS  ${GTEST_INCLUDE_DIRS})
 	TARGET_INCLUDE_DIRECTORIES(gtests PUBLIC ${GTEST_INCLUDE_DIRS})
+	GTEST_DISCOVER_TESTS(gtests)
 	INSTALL(TARGETS gtests DESTINATION bin)
-ELSE()
-	MESSAGE(STATUS "GTest not installed or found -- skip building unittests.")
 ENDIF()
 
 # generate and install following configuration files
