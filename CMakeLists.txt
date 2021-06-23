@@ -306,6 +306,7 @@ else()
 	TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS})
 endif()
 
+INCLUDE(CTest)
 
 ADD_CUSTOM_TARGET( tests )
 
@@ -320,8 +321,18 @@ IF(DEFINED RAVE)
   ADD_GENFIT_TEST( vertexingTestRead       test/vertexingTest/read.cc)
 ENDIF()
 
-INCLUDE(CTest)
 IF(BUILD_TESTING)
+
+	# Run these automatically via ctest since they do not need a GUI. Create the
+	# necessary geometry first via a dummy test
+	ADD_TEST(NAME createGeometry COMMAND root -l -b -q ${CMAKE_CURRENT_LIST_DIR}/test/makeGeom.C)
+
+	ADD_TEST(NAME streamerTest COMMAND streamerTest)
+	SET_PROPERTY(TEST streamerTest PROPERTY DEPENDS createGeometry)
+
+	ADD_TEST(NAME unitTests COMMAND unitTests)
+	SET_PROPERTY(TEST unitTests PROPERTY DEPENDS createGeometry)
+
     ENABLE_TESTING()
 
 
