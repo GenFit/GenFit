@@ -36,12 +36,5 @@ install:
   - cd .. && mkdir build && cd build
   - cmake ../GenFit
   - make
-  - make tests
 script:
-  # generate test geometry
-  - root -l -b -q ../GenFit/test/makeGeom.C
-  # run unit tests, must be executed in the build folder
-  # so ROOT can find its .pcm files
-  - ./bin/gtests
-  - ./bin/streamerTest
-  - ./bin/unitTests
+  - ctest --output-on-failure
