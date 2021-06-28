@@ -306,6 +306,7 @@ else()
 	TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS})
 endif()
 
+INCLUDE(CTest)
 
 ADD_CUSTOM_TARGET( tests )
 
@@ -320,9 +321,22 @@ IF(DEFINED RAVE)
   ADD_GENFIT_TEST( vertexingTestRead       test/vertexingTest/read.cc)
 ENDIF()
 
+IF(BUILD_TESTING)
 
-FIND_PACKAGE(GTest)
-IF(GTEST_FOUND)
+	# Run these automatically via ctest since they do not need a GUI. Create the
+	# necessary geometry first via a dummy test
+	ADD_TEST(NAME createGeometry COMMAND root -l -b -q ${CMAKE_CURRENT_LIST_DIR}/test/makeGeom.C)
+
+	ADD_TEST(NAME streamerTest COMMAND streamerTest)
+	SET_PROPERTY(TEST streamerTest PROPERTY DEPENDS createGeometry)
+
+	ADD_TEST(NAME unitTests COMMAND unitTests)
+	SET_PROPERTY(TEST unitTests PROPERTY DEPENDS createGeometry)
+
+    ENABLE_TESTING()
+
+
+	FIND_PACKAGE(GTest REQUIRED)
 	ADD_EXECUTABLE(gtests
 			gtest/TestConstField.cpp
 			gtest/TestMaterialEffects.cpp
@@ -332,9 +346,8 @@ IF(GTEST_FOUND)
 	TARGET_LINK_LIBRARIES(gtests ${GTEST_BOTH_LIBRARIES} ${ROOT_LIBS} ${PROJECT_NAME})  # gtest gtest_main
 	MESSAGE(STATUS  ${GTEST_INCLUDE_DIRS})
 	TARGET_INCLUDE_DIRECTORIES(gtests PUBLIC ${GTEST_INCLUDE_DIRS})
+	GTEST_DISCOVER_TESTS(gtests)
 	INSTALL(TARGETS gtests DESTINATION bin)
-ELSE()
-	MESSAGE(STATUS "GTest not installed or found -- skip building unittests.")
 ENDIF()
 
 # generate and install following configuration files
