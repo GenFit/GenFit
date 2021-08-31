@@ -316,7 +316,7 @@ namespace genfit {
         genfit::M1x7 myStartState;
         genfit::M1x7 myDestState;
 
-        EXPECT_EQ(0, myRKTrackRep.ExtrapSteps_.size());
+        EXPECT_EQ(0u, myRKTrackRep.ExtrapSteps_.size());
         EXPECT_THROW(myRKTrackRep.calcForwardJacobianAndNoise(myStartState, myStartPlane, myDestState, myDestPlane),
                      genfit::Exception);
     }

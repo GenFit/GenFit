@@ -35,6 +35,9 @@ struct RKMatrix {
 
   RKMatrix() = default;
   RKMatrix(const RKMatrix&) = default;
+  RKMatrix(std::initializer_list<double> initList) {
+    std::copy(initList.begin(), initList.end(), vals);
+  };
 
   double& operator()(size_t iRow, size_t iCol) {
     return vals[nCols*iRow + iCol];

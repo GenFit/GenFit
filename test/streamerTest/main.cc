@@ -43,7 +43,7 @@ bool emptyTrackTest()
   genfit::Track *t = new genfit::Track();
   try {
     t->checkConsistency();
-  } catch (genfit::Exception) {
+  } catch (genfit::Exception&) {
     return false;
   }
 
@@ -59,7 +59,7 @@ bool emptyTrackTest()
   try {
     t->checkConsistency();
     result = true;
-  } catch (genfit::Exception) {
+  } catch (genfit::Exception&) {
     result = false;
   }
   delete t;
