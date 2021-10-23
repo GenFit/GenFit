@@ -26,6 +26,7 @@
 
 #include <stddef.h>
 #include <algorithm>
+#include <initializer_list>
 
 namespace genfit {
 
@@ -48,10 +49,12 @@ struct RKMatrix {
   const double& operator[](size_t n) const {
     return vals[n];
   }
+
   double* begin() { return vals; }
   double* end() { return vals + nRows * nCols; }
   const double* begin() const { return vals; }
   const double* end() const { return vals + nRows * nCols; }
+
   RKMatrix<nRows, nCols>& operator=(const RKMatrix<nRows, nCols>& o) {
     std::copy(o.begin(), o.end(), this->begin());
     return *this;
