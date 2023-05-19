@@ -151,7 +151,7 @@ Track& Track::operator=(Track other) {
   swap(other);
 
   for (std::vector<TrackPoint*>::const_iterator it=trackPoints_.begin(); it!=trackPoints_.end(); ++it) {
-    trackPoints_.back()->setTrack(this);
+    (*it)->setTrack(this);
   }
 
   fillPointsWithMeasurement();
