@@ -32,7 +32,8 @@ jobs:
        
     - name: Build GenFit
       run: |
-        cd ${{github.workspace}} && mkdir build && cd build
+        cd ${{github.workspace}} && ls
+        cd ${{github.workspace}} && cd .. && mkdir build && cd build
         cmake ../GenFit
         make
         
