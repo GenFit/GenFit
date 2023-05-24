@@ -32,6 +32,7 @@ jobs:
        
     - name: Build GenFit
       run: |
+        source root/bin/thisroot.sh
         cd ${{github.workspace}} && ls
         cd ${{github.workspace}} && cd .. && mkdir build && cd build
         cmake ../GenFit
