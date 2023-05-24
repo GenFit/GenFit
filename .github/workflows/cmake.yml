@@ -29,4 +29,11 @@ jobs:
         wget https://root.cern.ch/download/${ROOT_VERSION}
         tar xzf ${ROOT_VERSION}
         source root/bin/thisroot.sh
+        
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build
+      
+    - name: Build GenFit
+      run: cmake --build ${{github.workspace}}/build
+        
 
