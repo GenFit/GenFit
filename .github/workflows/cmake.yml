@@ -42,7 +42,7 @@ jobs:
     - name: Run Tests
       run: |
         source root/bin/thisroot.sh
-        cd build
+        cd ${{github.workspace}} && cd ../build
         ctest
         
 
