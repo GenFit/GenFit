@@ -40,6 +40,9 @@ jobs:
         make
     
     - name: Run Tests
-      run: ctest
+      run: |
+        source root/bin/thisroot.sh
+        cd build
+        ctest
         
 
