@@ -38,5 +38,8 @@ jobs:
         cd ${{github.workspace}} && cd .. && mkdir build && cd build
         cmake ../GenFit
         make
+    
+    - name: Run Tests
+      run: ctest
         
 
