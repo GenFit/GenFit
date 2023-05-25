@@ -60,7 +60,13 @@ class DAF : public AbsKalmanFitter {
    *
    * @param useRefKalman If false, use KalmanFitter as fitter.
    */
-  DAF(bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3);
+  DAF(bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3, std::tuple<double, double, int> annealingScheme = std::tuple<double, double, int>(100., 0.1, 5), int minIter = 1, int maxIter = 10, int minIterForPval = 1);
+  /**
+   * @brief Create DAF. Per default, use KalmanFitterRefTrack as fitter.
+   *
+   * @param useRefKalman If false, use KalmanFitter as fitter.
+   */
+  DAF(bool useRefKalman, double deltaPval, double deltaWeight);
   /**
    * @brief Create DAF. Use the provided AbsKalmanFitter as fitter.
    */
@@ -89,6 +95,7 @@ class DAF : public AbsKalmanFitter {
    * Also sets #minIterations_ and #maxIterations_.
    */
   void setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps);
+  void setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps, unsigned int minIter, unsigned int  maxIter);
 
   void setMaxIterations(unsigned int n) override {maxIterations_ = n; betas_.resize(maxIterations_,betas_.back());}
 
@@ -109,7 +116,7 @@ class DAF : public AbsKalmanFitter {
     */
   bool calcWeights(Track* trk, const AbsTrackRep* rep, double beta);
 
-
+  int minIterForPval_; //minimum number of iterations before checking pvalue convergence criterion
   double deltaWeight_; // convergence criterium
   std::vector<double> betas_;   // Temperatures, NOT inverse temperatures.
   double chi2Cuts_[7];  // '7' assumes tracks are helices with one

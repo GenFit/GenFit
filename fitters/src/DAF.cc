@@ -40,6 +40,26 @@
 
 namespace genfit {
 
+DAF::DAF(bool useRefKalman, double deltaPval, double deltaWeight, double probCut, std::tuple<double, double, int> annealingScheme, int minIter, int maxIter, int minIterForPval)
+  : AbsKalmanFitter(10, deltaPval), deltaWeight_(deltaWeight), minIterForPval_(minIterForPval)
+{
+  if (useRefKalman) {
+    kalman_.reset(new KalmanFitterRefTrack());
+    static_cast<KalmanFitterRefTrack*>(kalman_.get())->setRefitAll();
+  }
+  else
+    kalman_.reset(new KalmanFitter());
+
+  kalman_->setMultipleMeasurementHandling(weightedAverage);
+  kalman_->setMaxIterations(maxIter);
+
+  setAnnealingScheme(std::get<0>(annealingScheme), 
+                     std::get<1>(annealingScheme), 
+                     std::get<2>(annealingScheme),
+                     minIter, maxIter, minIterForPval); // also sets maxIterations_
+  setProbCut(probCut);
+}
+
 DAF::DAF(bool useRefKalman, double deltaPval, double deltaWeight)
   : AbsKalmanFitter(10, deltaPval), deltaWeight_(deltaWeight)
 {
@@ -130,8 +150,8 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
     bool converged(false);
     try{
       converged = calcWeights(tr, rep, betas_.at(iBeta));
-      if (!converged && iBeta >= minIterations_-1 &&
-          status->getBackwardPVal() != 0 && fabs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
+      if (!converged && iBeta >= minIterForPval_-1 &&
+          status->getBackwardPVal() > 1e-10 && lastPval > 1e-10 && fabs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
         if (debugLvl_ > 0) {
           debugOut << "converged by Pval = " << status->getBackwardPVal() << " even though weights changed at iBeta = " << iBeta << std::endl;
         }
@@ -191,15 +211,16 @@ void DAF::addProbCut(const double prob_cut, const int measDim){
   chi2Cuts_[measDim] = ROOT::Math::chisquared_quantile_c( prob_cut, measDim);
 }
 
-void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) {
+void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) {}
+void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps, unsigned int minIter, unsigned int maxIter) {
   // The betas are calculated as a geometric series that takes nSteps
   // steps to go from bStart to bFinal.
   assert(bStart > bFinal);
   assert(bFinal > 1.E-10);
   assert(nSteps > 1);
 
-  minIterations_ = nSteps;
-  maxIterations_ = nSteps + 4;
+  minIterations_ = minIter;
+  maxIterations_ = maxIter;
 
   betas_.clear();
 
