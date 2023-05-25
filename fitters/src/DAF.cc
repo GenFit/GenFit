@@ -40,6 +40,26 @@
 
 namespace genfit {
 
+DAF::DAF(std::tuple<double, double, int> annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman, double deltaPval, double deltaWeight, double probCut)
+  : AbsKalmanFitter(10, deltaPval), deltaWeight_(deltaWeight), minIterForPval_(minIterForPval)
+{
+  if (useRefKalman) {
+    kalman_.reset(new KalmanFitterRefTrack());
+    static_cast<KalmanFitterRefTrack*>(kalman_.get())->setRefitAll();
+  }
+  else
+    kalman_.reset(new KalmanFitter());
+
+  kalman_->setMultipleMeasurementHandling(weightedAverage);
+  kalman_->setMaxIterations(maxIter);
+
+  setAnnealingScheme(std::get<0>(annealingScheme), 
+                     std::get<1>(annealingScheme), 
+                     std::get<2>(annealingScheme),
+                     minIter, maxIter); // also sets maxIterations_
+  setProbCut(probCut);
+}
+
 DAF::DAF(bool useRefKalman, double deltaPval, double deltaWeight)
   : AbsKalmanFitter(10, deltaPval), deltaWeight_(deltaWeight)
 {
@@ -130,8 +150,8 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
     bool converged(false);
     try{
       converged = calcWeights(tr, rep, betas_.at(iBeta));
-      if (!converged && iBeta >= minIterations_-1 &&
-          status->getBackwardPVal() != 0 && fabs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
+      if (!converged && iBeta >= minIterForPval_-1 &&
+          status->getBackwardPVal() > 1e-10 && lastPval > 1e-10 && fabs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
         if (debugLvl_ > 0) {
           debugOut << "converged by Pval = " << status->getBackwardPVal() << " even though weights changed at iBeta = " << iBeta << std::endl;
         }
@@ -200,6 +220,29 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
 
   minIterations_ = nSteps;
   maxIterations_ = nSteps + 4;
+
+  betas_.clear();
+
+  for (unsigned int i=0; i<nSteps; ++i) {
+    betas_.push_back(bStart * pow(bFinal / bStart, i / (nSteps - 1.)));
+  }
+
+  betas_.resize(maxIterations_,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
+
+  /*for (unsigned int i=0; i<betas_.size(); ++i) {
+    debugOut<< betas_.at(i) << ", ";
+  }*/
+}
+
+void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps, unsigned int minIter, unsigned int maxIter) {
+  // The betas are calculated as a geometric series that takes nSteps
+  // steps to go from bStart to bFinal.
+  assert(bStart > bFinal);
+  assert(bFinal > 1.E-10);
+  assert(nSteps > 1);
+
+  minIterations_ = minIter;
+  maxIterations_ = maxIter;
 
   betas_.clear();
 
