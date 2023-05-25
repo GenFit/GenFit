@@ -40,7 +40,7 @@
 
 namespace genfit {
 
-DAF::DAF(bool useRefKalman, double deltaPval, double deltaWeight, double probCut, std::tuple<double, double, int> annealingScheme, int minIter, int maxIter, int minIterForPval)
+DAF::DAF(std::tuple<double, double, int> annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman, double deltaPval, double deltaWeight, double probCut)
   : AbsKalmanFitter(10, deltaPval), deltaWeight_(deltaWeight), minIterForPval_(minIterForPval)
 {
   if (useRefKalman) {
@@ -211,7 +211,29 @@ void DAF::addProbCut(const double prob_cut, const int measDim){
   chi2Cuts_[measDim] = ROOT::Math::chisquared_quantile_c( prob_cut, measDim);
 }
 
-void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) {}
+void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) {
+  // The betas are calculated as a geometric series that takes nSteps
+  // steps to go from bStart to bFinal.
+  assert(bStart > bFinal);
+  assert(bFinal > 1.E-10);
+  assert(nSteps > 1);
+
+  minIterations_ = nSteps;
+  maxIterations_ = nSteps + 4;
+
+  betas_.clear();
+
+  for (unsigned int i=0; i<nSteps; ++i) {
+    betas_.push_back(bStart * pow(bFinal / bStart, i / (nSteps - 1.)));
+  }
+
+  betas_.resize(maxIterations_,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
+
+  /*for (unsigned int i=0; i<betas_.size(); ++i) {
+    debugOut<< betas_.at(i) << ", ";
+  }*/
+}
+
 void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps, unsigned int minIter, unsigned int maxIter) {
   // The betas are calculated as a geometric series that takes nSteps
   // steps to go from bStart to bFinal.
