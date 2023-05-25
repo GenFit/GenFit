@@ -36,101 +36,103 @@
 namespace genfit {
 
 
-WireMeasurement::WireMeasurement(int nDim)
-  : AbsMeasurement(nDim), maxDistance_(2), leftRight_(0)
-{
-  assert(nDim >= 7);
-}
-
-WireMeasurement::WireMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
-  : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), maxDistance_(2), leftRight_(0)
-{
-  assert(rawHitCoords_.GetNrows() >= 7);
-}
-
-SharedPlanePtr WireMeasurement::constructPlane(const StateOnPlane& state) const {
-
-  // copy state. Neglect covariance.
-  StateOnPlane st(state);
-
-  TVector3 wire1(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
-  TVector3 wire2(rawHitCoords_(3), rawHitCoords_(4), rawHitCoords_(5));
-
-  // unit vector along the wire (V)
-  TVector3 wireDirection = wire2 - wire1; 
-  wireDirection.SetMag(1.);
-
-  // point of closest approach
-  const AbsTrackRep* rep = state.getRep();
-  rep->extrapolateToLine(st, wire1, wireDirection);
-  const TVector3& poca = rep->getPos(st);
-  TVector3 dirInPoca = rep->getMom(st);
-  dirInPoca.SetMag(1.);
-  const TVector3& pocaOnWire = wire1 + wireDirection.Dot(poca - wire1)*wireDirection;
- 
-  // check if direction is parallel to wire
-  if (fabs(wireDirection.Angle(dirInPoca)) < 0.01){
-    Exception exc("WireMeasurement::detPlane(): Cannot construct detector plane, direction is parallel to wire", __LINE__,__FILE__);
-    throw exc;
-  }
-  
-  // construct orthogonal vector
-  TVector3 U = dirInPoca.Cross(wireDirection);
-  // U.SetMag(1.); automatically assured
-
-  return SharedPlanePtr(new DetPlane(pocaOnWire, U, wireDirection));
-}
-
-
-std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(const StateOnPlane& state) const
-{
-  double mR = rawHitCoords_(6);
-  double mL = -mR;
-  double V = rawHitCov_(6,6);
-
-  MeasurementOnPlane* mopL = new MeasurementOnPlane(TVectorD(1, &mL),
-			 TMatrixDSym(1, &V),
-			 state.getPlane(), state.getRep(), constructHMatrix(state.getRep()));
-
-  MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(1, &mR),
-       TMatrixDSym(1, &V),
-       state.getPlane(), state.getRep(), constructHMatrix(state.getRep()));
-
-  // set left/right weights
-  if (leftRight_ < 0) {
-    mopL->setWeight(1);
-    mopR->setWeight(0);
-  }
-  else if (leftRight_ > 0) {
-    mopL->setWeight(0);
-    mopR->setWeight(1);
-  }
-  else {
-    double val = 0.5 * pow(std::max(0., 1 - mR/maxDistance_), 2.);
-    mopL->setWeight(val);
-    mopR->setWeight(val);
+  WireMeasurement::WireMeasurement(int nDim)
+    : AbsMeasurement(nDim), maxDistance_(2), leftRight_(0)
+  {
+    assert(nDim >= 7);
   }
 
-  std::vector<MeasurementOnPlane*> retVal;
-  retVal.push_back(mopL);
-  retVal.push_back(mopR);
-  return retVal;
-}
-
-const AbsHMatrix* WireMeasurement::constructHMatrix(const AbsTrackRep* rep) const {
-  if (dynamic_cast<const RKTrackRep*>(rep) == nullptr) {
-    Exception exc("WireMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
-    throw exc;
+  WireMeasurement::WireMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId,
+                                   TrackPoint* trackPoint)
+    : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), maxDistance_(2), leftRight_(0)
+  {
+    assert(rawHitCoords_.GetNrows() >= 7);
   }
 
-  return new HMatrixU();
-}
+  SharedPlanePtr WireMeasurement::constructPlane(const StateOnPlane& state) const
+  {
 
-void WireMeasurement::setLeftRightResolution(int lr) {
-  if (lr==0) leftRight_ = 0;
-  else if (lr<0) leftRight_ = -1;
-  else leftRight_ = 1;
-}
+    // copy state. Neglect covariance.
+    StateOnPlane st(state);
+
+    TVector3 wire1(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
+    TVector3 wire2(rawHitCoords_(3), rawHitCoords_(4), rawHitCoords_(5));
+
+    // unit vector along the wire (V)
+    TVector3 wireDirection = wire2 - wire1;
+    wireDirection.SetMag(1.);
+
+    // point of closest approach
+    const AbsTrackRep* rep = state.getRep();
+    rep->extrapolateToLine(st, wire1, wireDirection);
+    const TVector3& poca = rep->getPos(st);
+    TVector3 dirInPoca = rep->getMom(st);
+    dirInPoca.SetMag(1.);
+    const TVector3& pocaOnWire = wire1 + wireDirection.Dot(poca - wire1) * wireDirection;
+
+    // check if direction is parallel to wire
+    if (fabs(wireDirection.Angle(dirInPoca)) < 0.01) {
+      Exception exc("WireMeasurement::detPlane(): Cannot construct detector plane, direction is parallel to wire", __LINE__, __FILE__);
+      throw exc;
+    }
+
+    // construct orthogonal vector
+    TVector3 U = dirInPoca.Cross(wireDirection);
+    // U.SetMag(1.); automatically assured
+
+    return SharedPlanePtr(new DetPlane(pocaOnWire, U, wireDirection));
+  }
+
+
+  std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(const StateOnPlane& state) const
+  {
+    double mR = rawHitCoords_(6);
+    double mL = -mR;
+    double V = rawHitCov_(6, 6);
+
+    MeasurementOnPlane* mopL = new MeasurementOnPlane(TVectorD(1, &mL),
+                                                      TMatrixDSym(1, &V),
+                                                      state.getPlane(), state.getRep(), constructHMatrix(state.getRep()));
+
+    MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(1, &mR),
+                                                      TMatrixDSym(1, &V),
+                                                      state.getPlane(), state.getRep(), constructHMatrix(state.getRep()));
+
+    // set left/right weights
+    if (leftRight_ < 0) {
+      mopL->setWeight(1);
+      mopR->setWeight(0);
+    } else if (leftRight_ > 0) {
+      mopL->setWeight(0);
+      mopR->setWeight(1);
+    } else {
+      double val = 0.5 * pow(std::max(0., 1 - mR / maxDistance_), 2.);
+      mopL->setWeight(val);
+      mopR->setWeight(val);
+    }
+
+    std::vector<MeasurementOnPlane*> retVal;
+    retVal.push_back(mopL);
+    retVal.push_back(mopR);
+    return retVal;
+  }
+
+  const AbsHMatrix* WireMeasurement::constructHMatrix(const AbsTrackRep* rep) const
+  {
+    if (dynamic_cast<const RKTrackRep*>(rep) == nullptr) {
+      Exception exc("WireMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__, __FILE__);
+      throw exc;
+    }
+
+    return new HMatrixU();
+  }
+
+  void WireMeasurement::setLeftRightResolution(int lr)
+  {
+    if (lr == 0) leftRight_ = 0;
+    else if (lr < 0) leftRight_ = -1;
+    else leftRight_ = 1;
+  }
 
 
 } /* End of namespace genfit */

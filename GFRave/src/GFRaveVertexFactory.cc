@@ -37,103 +37,109 @@
 
 namespace genfit {
 
-GFRaveVertexFactory::GFRaveVertexFactory(int verbosity, bool useVacuumPropagator) {
+  GFRaveVertexFactory::GFRaveVertexFactory(int verbosity, bool useVacuumPropagator)
+  {
 
-  if (useVacuumPropagator) {
-    propagator_ = new rave::VacuumPropagator();
+    if (useVacuumPropagator) {
+      propagator_ = new rave::VacuumPropagator();
+    } else {
+      propagator_ = new GFRavePropagator();
+      (static_cast<GFRavePropagator*>(propagator_))->setIdGFTrackStateMap(&IdGFTrackStateMap_);
+    }
+
+    magneticField_ = new GFRaveMagneticField();
+
+    if (verbosity > 0) ++verbosity; // verbosity has to be >1 for rave
+
+    factory_ = new rave::VertexFactory(*magneticField_, *propagator_, "kalman-smoothing:1",
+                                       verbosity); // here copies of magneticField_ and propagator_ are made!
   }
-  else {
-    propagator_ = new GFRavePropagator();
-    (static_cast<GFRavePropagator*>(propagator_))->setIdGFTrackStateMap(&IdGFTrackStateMap_);
-  }
-
-  magneticField_ = new GFRaveMagneticField();
-
-  if (verbosity > 0) ++verbosity; // verbosity has to be >1 for rave
-
-  factory_ = new rave::VertexFactory(*magneticField_, *propagator_, "kalman-smoothing:1", verbosity); // here copies of magneticField_ and propagator_ are made!
-}
 
 
-GFRaveVertexFactory::~GFRaveVertexFactory(){
-  clearMap();
-  delete magneticField_;
-  delete propagator_;
-  delete factory_;
-}
-
-
-void
-GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFvertices,
-    const std::vector < genfit::Track* > & GFTracks,
-    bool use_beamspot ){
-
-  clearMap();
-
-  try{
-    RaveToGFVertices(GFvertices,
-                     factory_->create(GFTracksToTracks(GFTracks, nullptr, IdGFTrackStateMap_, 0),
-                                      use_beamspot),
-                     IdGFTrackStateMap_);
-  }
-  catch(Exception & e){
+  GFRaveVertexFactory::~GFRaveVertexFactory()
+  {
     clearMap();
-    std::cerr << e.what();
+    delete magneticField_;
+    delete propagator_;
+    delete factory_;
   }
 
-  clearMap();
-}
 
+  void
+  GFRaveVertexFactory::findVertices(std::vector <  genfit::GFRaveVertex* >* GFvertices,
+                                    const std::vector < genfit::Track* >& GFTracks,
+                                    bool use_beamspot)
+  {
 
-void
-GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFvertices,
-    const std::vector < genfit::Track* > & GFTracks,
-    std::vector < genfit::MeasuredStateOnPlane* > & GFStates,
-    bool use_beamspot ){
-
-  clearMap();
-
-  try{
-    RaveToGFVertices(GFvertices,
-                     factory_->create(GFTracksToTracks(GFTracks, &GFStates, IdGFTrackStateMap_, 0),
-                                      use_beamspot),
-                     IdGFTrackStateMap_);
-  }
-  catch(Exception & e){
     clearMap();
-    std::cerr << e.what();
+
+    try {
+      RaveToGFVertices(GFvertices,
+                       factory_->create(GFTracksToTracks(GFTracks, nullptr, IdGFTrackStateMap_, 0),
+                                        use_beamspot),
+                       IdGFTrackStateMap_);
+    } catch (Exception& e) {
+      clearMap();
+      std::cerr << e.what();
+    }
+
+    clearMap();
   }
 
-  clearMap();
-}
 
+  void
+  GFRaveVertexFactory::findVertices(std::vector <  genfit::GFRaveVertex* >* GFvertices,
+                                    const std::vector < genfit::Track* >& GFTracks,
+                                    std::vector < genfit::MeasuredStateOnPlane* >& GFStates,
+                                    bool use_beamspot)
+  {
 
-void
-GFRaveVertexFactory::setBeamspot(const TVector3 & pos, const TMatrixDSym & cov){
-  factory_->setBeamSpot(rave::Ellipsoid3D(TVector3ToPoint3D(pos),
-                        TMatrixDSymToCovariance3D(cov)));
-}
+    clearMap();
 
+    try {
+      RaveToGFVertices(GFvertices,
+                       factory_->create(GFTracksToTracks(GFTracks, &GFStates, IdGFTrackStateMap_, 0),
+                                        use_beamspot),
+                       IdGFTrackStateMap_);
+    } catch (Exception& e) {
+      clearMap();
+      std::cerr << e.what();
+    }
 
-void
-GFRaveVertexFactory::setMethod(const std::string & method){
-  size_t found = method.find("smoothing:1");
-  if (found==std::string::npos){
-    std::cerr << "GFRaveVertexFactory::setMethod(" << method << ") ==> smoothing not turned on! GFRaveTrackParameters will be unsmoothed!" << std::endl;
+    clearMap();
   }
-  factory_->setDefaultMethod(method);
-  std::cout << "GFRaveVertexFactory::setMethod ==> set method to " << factory_->method() << std::endl;
-}
 
 
-void
-GFRaveVertexFactory::clearMap() {
+  void
+  GFRaveVertexFactory::setBeamspot(const TVector3& pos, const TMatrixDSym& cov)
+  {
+    factory_->setBeamSpot(rave::Ellipsoid3D(TVector3ToPoint3D(pos),
+                                            TMatrixDSymToCovariance3D(cov)));
+  }
 
-  for (unsigned int i=0; i<IdGFTrackStateMap_.size(); ++i)
-    delete IdGFTrackStateMap_[i].state_;
 
-  IdGFTrackStateMap_.clear();
-}
+  void
+  GFRaveVertexFactory::setMethod(const std::string& method)
+  {
+    size_t found = method.find("smoothing:1");
+    if (found == std::string::npos) {
+      std::cerr << "GFRaveVertexFactory::setMethod(" << method <<
+                ") ==> smoothing not turned on! GFRaveTrackParameters will be unsmoothed!" << std::endl;
+    }
+    factory_->setDefaultMethod(method);
+    std::cout << "GFRaveVertexFactory::setMethod ==> set method to " << factory_->method() << std::endl;
+  }
+
+
+  void
+  GFRaveVertexFactory::clearMap()
+  {
+
+    for (unsigned int i = 0; i < IdGFTrackStateMap_.size(); ++i)
+      delete IdGFTrackStateMap_[i].state_;
+
+    IdGFTrackStateMap_.clear();
+  }
 
 
 } /* End of namespace genfit */

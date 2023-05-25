@@ -38,19 +38,19 @@
 
 
 namespace genfit {
-  
-  
+
+
   /** @brief Generic GBL implementation
-   * 
+   *
    * The interface class to GBL track fit
    *
    */
   class GFGbl : public AbsFitter {
-    
+
   private:
     GFGbl(const GFGbl&);
     GFGbl& operator=(GFGbl const&);
-    
+
     std::string m_milleFileName;
     std::string m_gblInternalIterations;
     double m_pValueCut;
@@ -58,47 +58,48 @@ namespace genfit {
     double m_chi2Cut;
     bool m_enableScatterers;
     bool m_enableIntermediateScatterer;
-    
-    
+
+
   public:
-    
+
     /**
      * Constructor
      */
     GFGbl();
-    
+
     /**
      * Destructor
      */
     virtual ~GFGbl() {;}
-    
+
     /**
      * Creates the mille binary file for output of
      * data for Millepede II alignment, can be set by setMP2Options
      */
     void beginRun();
-    
+
     /**
      * Required to write and close ROOT file
      * with debug output. Destructor cannot be used.
      * To be called from endRun function of a module
      */
     void endRun();
-    
-    
+
+
     /**
      * @brief Sets internal GBL down-weighting
      * @param internalIterations GBL internal down-weighting settings, see GBL doc
      * @return void
      */
-    void setGBLOptions(std::string internalIterations = "THC", bool enableScatterers = true, bool enableIntermediateScatterer = true) {
+    void setGBLOptions(std::string internalIterations = "THC", bool enableScatterers = true, bool enableIntermediateScatterer = true)
+    {
       m_gblInternalIterations = internalIterations;
       if (!enableScatterers)
         enableIntermediateScatterer = false;
       m_enableScatterers = enableScatterers;
       m_enableIntermediateScatterer = enableIntermediateScatterer;
     }
-    
+
     /**
      * @brief Sets GBL & Millepede settings
      * @param pValueCut minimum track p-value for MP2 output
@@ -106,26 +107,28 @@ namespace genfit {
      * @param mille_file_name name of MP2 binary file for output
      * @return void
      */
-    void setMP2Options(double pValueCut = 0., unsigned int minNdf = 1, std::string mille_file_name = "millefile.dat", double chi2Cut = 0.) {
+    void setMP2Options(double pValueCut = 0., unsigned int minNdf = 1, std::string mille_file_name = "millefile.dat",
+                       double chi2Cut = 0.)
+    {
       m_pValueCut = pValueCut;
       m_minNdf = minNdf;
       m_milleFileName = mille_file_name;
       m_chi2Cut = chi2Cut;
     }
-    
+
     /**
      * Performs fit on a Track.
      * Hit resorting currently NOT supported.
      */
     void processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits = false) override;
-    
-    
+
+
   public:
-    
+
     ClassDef(GFGbl, 1)
-    
+
   };
-  
+
 }  /* End of namespace genfit */
 /** @} */
 

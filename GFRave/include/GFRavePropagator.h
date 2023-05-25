@@ -42,37 +42,37 @@
 
 namespace genfit {
 
-/**
- * @brief GFRavePropagator class
- *
- * Inherits from rave::Propagator. A map has to be provided,
- * containing pointers the genfit::Tracks, as well as pointers to clones of fitted states.
- * The GFRavePropagator uses the information of the rave::track to set
- * the state and covariance of the corresponding MeasuredStateOnPlane,
- * extrapolates and then returns a new rave::track with the
- * extrapolated state and covariance.
- */
-class GFRavePropagator : public rave::Propagator
-{
+  /**
+   * @brief GFRavePropagator class
+   *
+   * Inherits from rave::Propagator. A map has to be provided,
+   * containing pointers the genfit::Tracks, as well as pointers to clones of fitted states.
+   * The GFRavePropagator uses the information of the rave::track to set
+   * the state and covariance of the corresponding MeasuredStateOnPlane,
+   * extrapolates and then returns a new rave::track with the
+   * extrapolated state and covariance.
+   */
+  class GFRavePropagator : public rave::Propagator {
   public:
     GFRavePropagator();
     virtual GFRavePropagator* copy() const;
-    virtual rave::Track closestTo ( const rave::Track &,
-                                    const rave::Point3D &, bool transverse ) const;
-    virtual std::pair < rave::Track, double > to ( const rave::Track & orig,
-                                                   const ravesurf::Plane & ) const;
-    virtual std::pair < rave::Track, double > to ( const rave::Track & orig,
-                                                   const ravesurf::Cylinder & ) const;
+    virtual rave::Track closestTo(const rave::Track&,
+                                  const rave::Point3D&, bool transverse) const;
+    virtual std::pair < rave::Track, double > to(const rave::Track& orig,
+                                                 const ravesurf::Plane&) const;
+    virtual std::pair < rave::Track, double > to(const rave::Track& orig,
+                                                 const ravesurf::Cylinder&) const;
 
     virtual ~GFRavePropagator();
 
-    void setIdGFTrackStateMap(std::map < int, genfit::trackAndState > * map);
+    void setIdGFTrackStateMap(std::map < int, genfit::trackAndState >* map);
 
   private:
 
     // data members
-    std::map < int, genfit::trackAndState > * IdGFTrackStateMap_; // pointers to genfit::tracks and measuredStateOnPlanes via rave track ID
-};
+    std::map < int, genfit::trackAndState >*
+    IdGFTrackStateMap_;  // pointers to genfit::tracks and measuredStateOnPlanes via rave track ID
+  };
 
 } /* End of namespace genfit */
 /** @} */

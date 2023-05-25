@@ -25,30 +25,33 @@
 
 namespace genfit {
 
-RectangularFinitePlane::RectangularFinitePlane(const double& umin,const double& umax,
-             const double& vmin,const double& vmax)
-  : uMin_(umin),uMax_(umax),vMin_(vmin),vMax_(vmax)
-{
-  assert(umin<umax);
-  assert(vmin<vmax);
-}
+  RectangularFinitePlane::RectangularFinitePlane(const double& umin, const double& umax,
+                                                 const double& vmin, const double& vmax)
+    : uMin_(umin), uMax_(umax), vMin_(vmin), vMax_(vmax)
+  {
+    assert(umin < umax);
+    assert(vmin < vmax);
+  }
 
-RectangularFinitePlane::RectangularFinitePlane()
-  : uMin_(1.),uMax_(-1.),vMin_(1.),vMax_(-1.)//for this default ctor inActive always false
-{}
+  RectangularFinitePlane::RectangularFinitePlane()
+    : uMin_(1.), uMax_(-1.), vMin_(1.), vMax_(-1.) //for this default ctor inActive always false
+  {}
 
 
-RectangularFinitePlane::~RectangularFinitePlane(){
+  RectangularFinitePlane::~RectangularFinitePlane()
+  {
 
-}
+  }
 
-bool RectangularFinitePlane::isInActive(double u, double v) const{
-  return (u>=uMin_ && u<=uMax_ && v>=vMin_ && v<=vMax_);
-}
+  bool RectangularFinitePlane::isInActive(double u, double v) const
+  {
+    return (u >= uMin_ && u <= uMax_ && v >= vMin_ && v <= vMax_);
+  }
 
-void RectangularFinitePlane::Print(const Option_t*) const{
-  printOut << "Rectangular Finite Plane Umin=" << uMin_ << ", Umax="
-      << uMax_ << ", Vmin=" << vMin_ << ", Vmax=" << vMax_ << std::endl;
-}
+  void RectangularFinitePlane::Print(const Option_t*) const
+  {
+    printOut << "Rectangular Finite Plane Umin=" << uMin_ << ", Umax="
+             << uMax_ << ", Vmin=" << vMin_ << ", Vmax=" << vMax_ << std::endl;
+  }
 
 } /* End of namespace genfit */

@@ -36,25 +36,25 @@
 
 namespace genfit {
 
-/**
- * @brief GFRaveVertex class
- *
- * A Vertex contains information about its position and covariance.
- * The tracks the vertex is consisting of are stored in smoothedTracks_.
- * These GFRaveTrackParameters contain the weight of the corresponding track
- * in the vertex, smoothed track parameters and a pointer to the original
- * unaltered genfit::Track.
- */
-class GFRaveVertex : public TObject {
+  /**
+   * @brief GFRaveVertex class
+   *
+   * A Vertex contains information about its position and covariance.
+   * The tracks the vertex is consisting of are stored in smoothedTracks_.
+   * These GFRaveTrackParameters contain the weight of the corresponding track
+   * in the vertex, smoothed track parameters and a pointer to the original
+   * unaltered genfit::Track.
+   */
+  class GFRaveVertex : public TObject {
 
   public:
     // constructors, destructors
     GFRaveVertex();
-    GFRaveVertex(const TVector3 & pos, const TMatrixDSym & cov,
-                 const std::vector < genfit::GFRaveTrackParameters* > & smoothedTracks,
+    GFRaveVertex(const TVector3& pos, const TMatrixDSym& cov,
+                 const std::vector < genfit::GFRaveTrackParameters* >& smoothedTracks,
                  double ndf, double chi2, int id = -1);
 
-    GFRaveVertex(const GFRaveVertex &);
+    GFRaveVertex(const GFRaveVertex&);
 
     GFRaveVertex& operator=(GFRaveVertex);
     void swap(GFRaveVertex&);
@@ -89,12 +89,13 @@ class GFRaveVertex : public TObject {
     double chi2_;
     int id_; // id of the rave::vertex the GFVertex is created from
 
-    std::vector < genfit::GFRaveTrackParameters* > smoothedTracks_; //-> track parameters of smoothed (with the vertex information) tracks, weights and original tracks; Vertex has ownership!
+    std::vector < genfit::GFRaveTrackParameters* >
+    smoothedTracks_; //-> track parameters of smoothed (with the vertex information) tracks, weights and original tracks; Vertex has ownership!
 
   public:
     ClassDef(GFRaveVertex, 1)
 
-};
+  };
 
 } /* End of namespace genfit */
 /** @} */

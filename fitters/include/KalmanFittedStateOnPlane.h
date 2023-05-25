@@ -29,80 +29,87 @@
 namespace genfit {
 
 
-/**
- *  @brief #MeasuredStateOnPlane with additional info produced by a Kalman filter or DAF.
- */
-class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
+  /**
+   *  @brief #MeasuredStateOnPlane with additional info produced by a Kalman filter or DAF.
+   */
+  class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
 
- public:
+  public:
 
-  KalmanFittedStateOnPlane();
-  KalmanFittedStateOnPlane(const KalmanFittedStateOnPlane&) = default;
-  KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep, double chiSquareIncrement, double ndf);
-  KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo, double chiSquareIncrement, double ndf);
-  KalmanFittedStateOnPlane(const MeasuredStateOnPlane& state, double chiSquareIncrement, double ndf);
+    KalmanFittedStateOnPlane();
+    KalmanFittedStateOnPlane(const KalmanFittedStateOnPlane&) = default;
+    KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep,
+                             double chiSquareIncrement, double ndf);
+    KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep,
+                             const TVectorD& auxInfo, double chiSquareIncrement, double ndf);
+    KalmanFittedStateOnPlane(const MeasuredStateOnPlane& state, double chiSquareIncrement, double ndf);
 
-  KalmanFittedStateOnPlane& operator=(KalmanFittedStateOnPlane other);
-  void swap(KalmanFittedStateOnPlane& other); // nothrow
+    KalmanFittedStateOnPlane& operator=(KalmanFittedStateOnPlane other);
+    void swap(KalmanFittedStateOnPlane& other); // nothrow
 
-  virtual ~KalmanFittedStateOnPlane() {}
+    virtual ~KalmanFittedStateOnPlane() {}
 
-  double getChiSquareIncrement() const {return chiSquareIncrement_;}
-  double getNdf() const {return ndf_;}
+    double getChiSquareIncrement() const {return chiSquareIncrement_;}
+    double getNdf() const {return ndf_;}
 
-  void setChiSquareIncrement(double chiSquareIncrement) {chiSquareIncrement_ = chiSquareIncrement;}
-  void setNdf(double ndf) {ndf_ = ndf;}
-
-
- protected:
-
-  double chiSquareIncrement_;
-  
-  //! Degrees of freedom. Needs to be a double because of DAF.
-  double ndf_;
+    void setChiSquareIncrement(double chiSquareIncrement) {chiSquareIncrement_ = chiSquareIncrement;}
+    void setNdf(double ndf) {ndf_ = ndf;}
 
 
- public:
+  protected:
 
-  ClassDef(KalmanFittedStateOnPlane,1)
+    double chiSquareIncrement_;
 
-};
+    //! Degrees of freedom. Needs to be a double because of DAF.
+    double ndf_;
 
 
-inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane() :
-  MeasuredStateOnPlane(), chiSquareIncrement_(0), ndf_(0)
-{
-  ;
-}
+  public:
 
-inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep, double chiSquareIncrement, double ndf) :
-  MeasuredStateOnPlane(state, cov, plane, rep), chiSquareIncrement_(chiSquareIncrement), ndf_(ndf)
-{
-  ;
-}
+    ClassDef(KalmanFittedStateOnPlane, 1)
 
-inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo, double chiSquareIncrement, double ndf) :
-  MeasuredStateOnPlane(state, cov, plane, rep, auxInfo), chiSquareIncrement_(chiSquareIncrement), ndf_(ndf)
-{
-  ;
-}
+  };
 
-inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane(const MeasuredStateOnPlane& state, double chiSquareIncrement, double ndf) :
-  MeasuredStateOnPlane(state), chiSquareIncrement_(chiSquareIncrement), ndf_(ndf)
-{
-  ;
-}
 
-inline KalmanFittedStateOnPlane& KalmanFittedStateOnPlane::operator=(KalmanFittedStateOnPlane other) {
-  swap(other);
-  return *this;
-}
+  inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane() :
+    MeasuredStateOnPlane(), chiSquareIncrement_(0), ndf_(0)
+  {
+    ;
+  }
 
-inline void KalmanFittedStateOnPlane::swap(KalmanFittedStateOnPlane& other) {
-  MeasuredStateOnPlane::swap(other);
-  std::swap(this->chiSquareIncrement_, other.chiSquareIncrement_);
-  std::swap(this->ndf_, other.ndf_);
-}
+  inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov,
+                                                            const SharedPlanePtr& plane, const AbsTrackRep* rep, double chiSquareIncrement, double ndf) :
+    MeasuredStateOnPlane(state, cov, plane, rep), chiSquareIncrement_(chiSquareIncrement), ndf_(ndf)
+  {
+    ;
+  }
+
+  inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov,
+                                                            const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo, double chiSquareIncrement, double ndf) :
+    MeasuredStateOnPlane(state, cov, plane, rep, auxInfo), chiSquareIncrement_(chiSquareIncrement), ndf_(ndf)
+  {
+    ;
+  }
+
+  inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane(const MeasuredStateOnPlane& state, double chiSquareIncrement,
+                                                            double ndf) :
+    MeasuredStateOnPlane(state), chiSquareIncrement_(chiSquareIncrement), ndf_(ndf)
+  {
+    ;
+  }
+
+  inline KalmanFittedStateOnPlane& KalmanFittedStateOnPlane::operator=(KalmanFittedStateOnPlane other)
+  {
+    swap(other);
+    return *this;
+  }
+
+  inline void KalmanFittedStateOnPlane::swap(KalmanFittedStateOnPlane& other)
+  {
+    MeasuredStateOnPlane::swap(other);
+    std::swap(this->chiSquareIncrement_, other.chiSquareIncrement_);
+    std::swap(this->ndf_, other.ndf_);
+  }
 
 } /* End of namespace genfit */
 /** @} */

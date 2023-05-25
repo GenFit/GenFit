@@ -22,33 +22,35 @@
 
 namespace genfit {
 
-TrackCandHit::TrackCandHit(int detId,
-                               int hitId,
-                               int planeId,
-                               double sortingParameter)
-  : detId_(detId),
-    hitId_(hitId),
-    planeId_(planeId),
-    sortingParameter_(sortingParameter)
-{
-  ;
-}
+  TrackCandHit::TrackCandHit(int detId,
+                             int hitId,
+                             int planeId,
+                             double sortingParameter)
+    : detId_(detId),
+      hitId_(hitId),
+      planeId_(planeId),
+      sortingParameter_(sortingParameter)
+  {
+    ;
+  }
 
 
-void TrackCandHit::Print(Option_t*) const {
-  printOut << "  TrackCandHit. DetId = " << detId_
-           << " \t HitId = " << hitId_
-           << " \t PlaneId = " << planeId_
-           << " \t SortingParameter = " << sortingParameter_ << "\n";
-}
+  void TrackCandHit::Print(Option_t*) const
+  {
+    printOut << "  TrackCandHit. DetId = " << detId_
+             << " \t HitId = " << hitId_
+             << " \t PlaneId = " << planeId_
+             << " \t SortingParameter = " << sortingParameter_ << "\n";
+  }
 
 
-bool operator== (const TrackCandHit& lhs, const TrackCandHit& rhs){
-  if(lhs.detId_ == rhs.detId_ &&
-     lhs.hitId_ == rhs.hitId_ &&
-     lhs.planeId_ == rhs.planeId_)
-    return true;
-  return false;
-}
+  bool operator== (const TrackCandHit& lhs, const TrackCandHit& rhs)
+  {
+    if (lhs.detId_ == rhs.detId_ &&
+        lhs.hitId_ == rhs.hitId_ &&
+        lhs.planeId_ == rhs.planeId_)
+      return true;
+    return false;
+  }
 
 } /* End of namespace genfit */

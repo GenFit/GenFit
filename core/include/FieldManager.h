@@ -35,113 +35,122 @@
 namespace genfit {
 
 #ifdef CACHE
-/**
- * @brief Cache B field at a position. Used by FieldManager.
- */
-struct fieldCache {
-  double posX; double posY; double posZ;
-  double Bx; double By; double Bz;
-};
+  /**
+   * @brief Cache B field at a position. Used by FieldManager.
+   */
+  struct fieldCache {
+    double posX; double posY; double posZ;
+    double Bx; double By; double Bz;
+  };
 #endif
 
 
-/** @brief Singleton which provides access to magnetic field maps.
- *
- *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
- *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
- */
-class FieldManager {
+  /** @brief Singleton which provides access to magnetic field maps.
+   *
+   *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
+   *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
+   */
+  class FieldManager {
 
- public:
+  public:
 
-  AbsBField* getField(){
-    checkInitialized();
-    return field_;
-  }
+    AbsBField* getField()
+    {
+      checkInitialized();
+      return field_;
+    }
 
-  //! This does NOT use the cache!
-  TVector3 getFieldVal(const TVector3& position){
-    checkInitialized();
-    return field_->get(position);
-  }
+    //! This does NOT use the cache!
+    TVector3 getFieldVal(const TVector3& position)
+    {
+      checkInitialized();
+      return field_->get(position);
+    }
 
 #ifdef CACHE
-  void getFieldVal(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz);
+    void getFieldVal(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz);
 #else
-  inline void getFieldVal(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz) {
-    checkInitialized();
-    return field_->get(posX, posY, posZ, Bx, By, Bz);
-  }
+    inline void getFieldVal(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz)
+    {
+      checkInitialized();
+      return field_->get(posX, posY, posZ, Bx, By, Bz);
+    }
 #endif
 
-  //! set the magnetic field here. Magnetic field classes must be derived from AbsBField.
-  void init(AbsBField* b) {
-    field_=b;
-  }
-
-  void destruct() {
-    if (instance_ != nullptr) {
-      delete instance_;
-      instance_ = nullptr;
+    //! set the magnetic field here. Magnetic field classes must be derived from AbsBField.
+    void init(AbsBField* b)
+    {
+      field_ = b;
     }
-  }
 
-  bool isInitialized() { return field_ != nullptr; }
-
-  void checkInitialized() {
-    if(! isInitialized()){
-      errorOut << "FieldManager hasn't been initialized with a correct AbsBField pointer!" << std::endl;
-      std::string msg("FieldManager hasn't been initialized with a correct AbsBField pointer!");
-      std::runtime_error err(msg);
-      throw err;
+    void destruct()
+    {
+      if (instance_ != nullptr) {
+        delete instance_;
+        instance_ = nullptr;
+      }
     }
-  }
 
-  static void checkInstanciated() {
-    if(instance_==nullptr){
-      errorOut << "FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!" << std::endl;
-      std::string msg("FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!");
-      std::runtime_error err(msg);
-      throw err;
+    bool isInitialized() { return field_ != nullptr; }
+
+    void checkInitialized()
+    {
+      if (! isInitialized()) {
+        errorOut << "FieldManager hasn't been initialized with a correct AbsBField pointer!" << std::endl;
+        std::string msg("FieldManager hasn't been initialized with a correct AbsBField pointer!");
+        std::runtime_error err(msg);
+        throw err;
+      }
     }
-  }
+
+    static void checkInstanciated()
+    {
+      if (instance_ == nullptr) {
+        errorOut << "FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!" << std::endl;
+        std::string msg("FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!");
+        std::runtime_error err(msg);
+        throw err;
+      }
+    }
 
 #ifdef CACHE
-  //! Cache last lookup positions, and use stored field values if a lookup at (almost) the same position is done.
-  void useCache(bool opt = true, unsigned int nBuckets = 8);
+    //! Cache last lookup positions, and use stored field values if a lookup at (almost) the same position is done.
+    void useCache(bool opt = true, unsigned int nBuckets = 8);
 #else
-  void useCache(bool opt = true, unsigned int nBuckets = 8) {
-    std::cerr << "genfit::FieldManager::useCache() - FieldManager is compiled w/o CACHE, no caching will be done!" << std::endl;
-  }
-#endif
-
-  //! Get singleton instance.
-  static FieldManager* getInstance(){
-    if(instance_ == nullptr) {
-      instance_ = new FieldManager();
+    void useCache(bool opt = true, unsigned int nBuckets = 8)
+    {
+      std::cerr << "genfit::FieldManager::useCache() - FieldManager is compiled w/o CACHE, no caching will be done!" << std::endl;
     }
-    return instance_;
-  }
+#endif
+
+    //! Get singleton instance.
+    static FieldManager* getInstance()
+    {
+      if (instance_ == nullptr) {
+        instance_ = new FieldManager();
+      }
+      return instance_;
+    }
 
 
- private:
+  private:
 
-  FieldManager() {}
+    FieldManager() {}
 #ifdef CACHE
-  ~FieldManager() { delete cache_; }
+    ~FieldManager() { delete cache_; }
 #else
-  ~FieldManager() { }
+    ~FieldManager() { }
 #endif
-  static FieldManager* instance_;
-  static AbsBField* field_;
+    static FieldManager* instance_;
+    static AbsBField* field_;
 
 #ifdef CACHE
-  static bool useCache_;
-  static unsigned int n_buckets_;
-  static fieldCache* cache_;
+    static bool useCache_;
+    static unsigned int n_buckets_;
+    static fieldCache* cache_;
 #endif
 
-};
+  };
 
 } /* End of namespace genfit */
 /** @} */

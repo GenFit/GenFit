@@ -47,7 +47,7 @@ namespace genfit {
                        bool calcOnlyLastRowOfJ = false) const override;
 
     // Returns the magnetic charge instead of electric as in the base class.
-    double getCharge(const StateOnPlane& state) const override; 
+    double getCharge(const StateOnPlane& state) const override;
 
   private:
 

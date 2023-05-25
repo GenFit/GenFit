@@ -27,15 +27,15 @@
 
 namespace genfit {
 
-/** Default stream for debug output.  Defaults to std::cout.
-   Override destination with debugOut.rdbuf(newStream.rdbuf()).  */
-extern std::ostream debugOut;
-/** Default stream for error output.  Defaults to std::cerr.
-    Override destination with errorOut.rdbuf(newStream.rdbuf()).  */
-extern std::ostream errorOut;
-/** Default stream for output of Print calls.  Defaults to std::cout.
-   Override destination with printOut.rdbuf(newStream.rdbuf()).  */
-extern std::ostream printOut;
+  /** Default stream for debug output.  Defaults to std::cout.
+     Override destination with debugOut.rdbuf(newStream.rdbuf()).  */
+  extern std::ostream debugOut;
+  /** Default stream for error output.  Defaults to std::cerr.
+      Override destination with errorOut.rdbuf(newStream.rdbuf()).  */
+  extern std::ostream errorOut;
+  /** Default stream for output of Print calls.  Defaults to std::cout.
+     Override destination with printOut.rdbuf(newStream.rdbuf()).  */
+  extern std::ostream printOut;
 
 }
 

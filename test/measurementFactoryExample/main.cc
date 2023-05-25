@@ -35,7 +35,8 @@
 
 
 
-int main() {
+int main()
+{
 
   gRandom->SetSeed(14);
 
@@ -46,7 +47,7 @@ int main() {
   // init geometry and mag. field
   new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
-  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0., 15.)); // 15 kGauss
+  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0., 0., 15.)); // 15 kGauss
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
 
@@ -68,7 +69,7 @@ int main() {
 
 
   // main loop
-  for (unsigned int iEvent=0; iEvent<100; ++iEvent){
+  for (unsigned int iEvent = 0; iEvent < 100; ++iEvent) {
 
     myDetectorHitArray.Clear();
 
@@ -77,15 +78,15 @@ int main() {
 
     // true start values
     TVector3 pos(0, 0, 0);
-    TVector3 mom(1.,0,0);
-    mom.SetPhi(gRandom->Uniform(0.,2*TMath::Pi()));
-    mom.SetTheta(gRandom->Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
+    TVector3 mom(1., 0, 0);
+    mom.SetPhi(gRandom->Uniform(0., 2 * TMath::Pi()));
+    mom.SetTheta(gRandom->Uniform(0.4 * TMath::Pi(), 0.6 * TMath::Pi()));
     mom.SetMag(gRandom->Uniform(0.2, 1.));
 
 
     // helix track model
     const int pdg = 13;               // particle pdg code
-    const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
+    const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge() / (3.);
     genfit::HelixTrackModel* helix = new genfit::HelixTrackModel(pos, mom, charge);
     measurementCreator.setTrackModel(helix);
 
@@ -96,11 +97,11 @@ int main() {
     double resolution = 0.01;
     TMatrixDSym cov(3);
     for (int i = 0; i < 3; ++i)
-      cov(i,i) = resolution*resolution;
+      cov(i, i) = resolution * resolution;
 
-    for (unsigned int i=0; i<nMeasurements; ++i) {
+    for (unsigned int i = 0; i < nMeasurements; ++i) {
       // "simulate" the detector
-      TVector3 currentPos = helix->getPos(i*2.);
+      TVector3 currentPos = helix->getPos(i * 2.);
       currentPos.SetX(gRandom->Gaus(currentPos.X(), resolution));
       currentPos.SetY(gRandom->Gaus(currentPos.Y(), resolution));
       currentPos.SetZ(gRandom->Gaus(currentPos.Z(), resolution));
@@ -108,7 +109,7 @@ int main() {
       // Fill the TClonesArray and the TrackCand
       // In a real experiment, you detector code would deliver mySpacepointDetectorHits and fill the TClonesArray.
       // The patternRecognition would create the TrackCand.
-      new(myDetectorHitArray[i]) genfit::mySpacepointDetectorHit(currentPos, cov);
+      new (myDetectorHitArray[i]) genfit::mySpacepointDetectorHit(currentPos, cov);
       myCand.addHit(myDetId, i);
     }
 
@@ -116,27 +117,27 @@ int main() {
     // smeared start values (would come from the pattern recognition)
     const bool smearPosMom = true;   // init the Reps with smeared pos and mom
     const double posSmear = 0.1;     // cm
-    const double momSmear = 3. /180.*TMath::Pi();     // rad
+    const double momSmear = 3. / 180.*TMath::Pi();    // rad
     const double momMagSmear = 0.1;   // relative
 
     TVector3 posM(pos);
     TVector3 momM(mom);
     if (smearPosMom) {
-      posM.SetX(gRandom->Gaus(posM.X(),posSmear));
-      posM.SetY(gRandom->Gaus(posM.Y(),posSmear));
-      posM.SetZ(gRandom->Gaus(posM.Z(),posSmear));
+      posM.SetX(gRandom->Gaus(posM.X(), posSmear));
+      posM.SetY(gRandom->Gaus(posM.Y(), posSmear));
+      posM.SetZ(gRandom->Gaus(posM.Z(), posSmear));
 
-      momM.SetPhi(gRandom->Gaus(mom.Phi(),momSmear));
-      momM.SetTheta(gRandom->Gaus(mom.Theta(),momSmear));
-      momM.SetMag(gRandom->Gaus(mom.Mag(), momMagSmear*mom.Mag()));
+      momM.SetPhi(gRandom->Gaus(mom.Phi(), momSmear));
+      momM.SetTheta(gRandom->Gaus(mom.Theta(), momSmear));
+      momM.SetMag(gRandom->Gaus(mom.Mag(), momMagSmear * mom.Mag()));
     }
 
     // initial guess for cov
     TMatrixDSym covSeed(6);
     for (int i = 0; i < 3; ++i)
-      covSeed(i,i) = resolution*resolution;
+      covSeed(i, i) = resolution * resolution;
     for (int i = 3; i < 6; ++i)
-      covSeed(i,i) = pow(resolution / nMeasurements / sqrt(3), 2);
+      covSeed(i, i) = pow(resolution / nMeasurements / sqrt(3), 2);
 
 
     // set start values and pdg to cand
@@ -149,10 +150,9 @@ int main() {
 
 
     // do the fit
-    try{
+    try {
       fitter->processTrack(&fitTrack);
-    }
-    catch(genfit::Exception& e){
+    } catch (genfit::Exception& e) {
       std::cerr << e.what();
       std::cerr << "Exception, next track" << std::endl;
       continue;

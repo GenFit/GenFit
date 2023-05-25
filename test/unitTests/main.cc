@@ -70,8 +70,9 @@ enum e_testStatus {
 
 constexpr bool verbose = false;
 
-void handler(int sig) {
-  void *array[10];
+void handler(int sig)
+{
+  void* array[10];
   size_t size;
 
   // get void*'s for all entries on the stack
@@ -83,61 +84,65 @@ void handler(int sig) {
   exit(1);
 }
 
-int randomPdg() {
+int randomPdg()
+{
   int pdg;
 
-  switch(int(gRandom->Uniform(8))) {
-  case 1:
-    pdg = -11; break;
-  case 2:
-    pdg = 11; break;
-  case 3:
-    pdg = 13; break;
-  case 4:
-    pdg = -13; break;
-  case 5:
-    pdg = 211; break;
-  case 6:
-    pdg = -211; break;
-  case 7:
-    pdg = 2212; break;
-  default:
-    pdg = 211;
+  switch (int(gRandom->Uniform(8))) {
+    case 1:
+      pdg = -11; break;
+    case 2:
+      pdg = 11; break;
+    case 3:
+      pdg = 13; break;
+    case 4:
+      pdg = -13; break;
+    case 5:
+      pdg = 211; break;
+    case 6:
+      pdg = -211; break;
+    case 7:
+      pdg = 2212; break;
+    default:
+      pdg = 211;
   }
 
   return pdg;
 }
 
 
-int randomSign() {
+int randomSign()
+{
   if (gRandom->Uniform(1) > 0.5)
     return 1;
   return -1;
 }
 
 
-e_testStatus compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<double>& B, double maxRelErr) {
+e_testStatus compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<double>& B, double maxRelErr)
+{
   e_testStatus retVal = kPassed;
 
   // search max abs value
   double max(0);
-  for (int i=0; i<A.GetNrows(); ++i) {
-    for (int j=0; j<A.GetNcols(); ++j) {
-      if (fabs(A(i,j)) > max)
-        max = fabs(A(i,j));
+  for (int i = 0; i < A.GetNrows(); ++i) {
+    for (int j = 0; j < A.GetNcols(); ++j) {
+      if (fabs(A(i, j)) > max)
+        max = fabs(A(i, j));
     }
   }
 
-  double maxAbsErr = maxRelErr*max;
+  double maxAbsErr = maxRelErr * max;
 
-  for (int i=0; i<A.GetNrows(); ++i) {
-    for (int j=0; j<A.GetNcols(); ++j) {
-      double absErr = A(i,j) - B(i,j);
-      if ( fabs(absErr) > maxAbsErr ) {
-        double relErr = A(i,j)/B(i,j) - 1;
-        if ( fabs(relErr) > maxRelErr ) {
+  for (int i = 0; i < A.GetNrows(); ++i) {
+    for (int j = 0; j < A.GetNcols(); ++j) {
+      double absErr = A(i, j) - B(i, j);
+      if (fabs(absErr) > maxAbsErr) {
+        double relErr = A(i, j) / B(i, j) - 1;
+        if (fabs(relErr) > maxRelErr) {
           if (verbose)  {
-            std::cout << "compareMatrices: A("<<i<<","<<j<<") = " << A(i,j) << "  B("<<i<<","<<j<<") = " << B(i,j) << "     absErr = " << absErr << "    relErr = " << relErr << "\n";
+            std::cout << "compareMatrices: A(" << i << "," << j << ") = " << A(i, j) << "  B(" << i << "," << j << ") = " << B(i,
+                      j) << "     absErr = " << absErr << "    relErr = " << relErr << "\n";
           }
           retVal = kFailed;
         }
@@ -147,7 +152,8 @@ e_testStatus compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<d
   return retVal;
 }
 
-e_testStatus isCovMatrix(TMatrixTBase<double>& cov) {
+e_testStatus isCovMatrix(TMatrixTBase<double>& cov)
+{
 
   if (!(cov.IsSymmetric())) {
     if (verbose) {
@@ -156,20 +162,20 @@ e_testStatus isCovMatrix(TMatrixTBase<double>& cov) {
     return kFailed;
   }
 
-  for (int i=0; i<cov.GetNrows(); ++i) {
-    for (int j=0; j<cov.GetNcols(); ++j) {
-       if (std::isnan(cov(i,j))) {
-         if (verbose) {
-           std::cout << "isCovMatrix: element isnan\n";
-         }
-         return kFailed;
-       }
-       if (i==j && cov(i,j) < 0) {
-         if (verbose) {
-           std::cout << "isCovMatrix: negative diagonal element\n";
-         }
-         return kFailed;
-       }
+  for (int i = 0; i < cov.GetNrows(); ++i) {
+    for (int j = 0; j < cov.GetNcols(); ++j) {
+      if (std::isnan(cov(i, j))) {
+        if (verbose) {
+          std::cout << "isCovMatrix: element isnan\n";
+        }
+        return kFailed;
+      }
+      if (i == j && cov(i, j) < 0) {
+        if (verbose) {
+          std::cout << "isCovMatrix: negative diagonal element\n";
+        }
+        return kFailed;
+      }
     }
   }
 
@@ -178,7 +184,8 @@ e_testStatus isCovMatrix(TMatrixTBase<double>& cov) {
 
 
 
-e_testStatus checkSetGetPosMom(bool writeHisto = false) {
+e_testStatus checkSetGetPosMom(bool writeHisto = false)
+{
 
   if (writeHisto)
     return kPassed;
@@ -191,8 +198,8 @@ e_testStatus checkSetGetPosMom(bool writeHisto = false) {
   rep = new genfit::RKTrackRep(pdg);
 
   //TVector3 pos(0,0,0);
-  TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,gRandom->Gaus(0,0.3));
+  TVector3 pos(gRandom->Gaus(0, 0.1), gRandom->Gaus(0, 0.1), gRandom->Gaus(0, 0.1));
+  TVector3 mom(0, 0.5, gRandom->Gaus(0, 0.3));
   mom.SetMag(0.5);
   mom *= randomSign();
 
@@ -211,7 +218,7 @@ e_testStatus checkSetGetPosMom(bool writeHisto = false) {
     pos += gRandom->Gaus() * v;
 
     // new random momentum
-    mom.SetXYZ(0,0.5,gRandom->Gaus(0,0.3));
+    mom.SetXYZ(0, 0.5, gRandom->Gaus(0, 0.3));
     mom.SetMag(0.5);
     mom *= randomSign();
 
@@ -219,9 +226,9 @@ e_testStatus checkSetGetPosMom(bool writeHisto = false) {
 
     // check if plane has changed
     if (state.getPlane() != plane) {
-        if (verbose) {
-          std::cout << "plane has changed unexpectedly! \n";
-        }
+      if (verbose) {
+        std::cout << "plane has changed unexpectedly! \n";
+      }
       delete rep;
       return kFailed;
     }
@@ -249,14 +256,15 @@ e_testStatus checkSetGetPosMom(bool writeHisto = false) {
 }
 
 
-e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
+e_testStatus compareForthBackExtrapolation(bool writeHisto = false)
+{
   static std::map<int, std::vector<TH2D*> > histoMap;
 
   static const int nPDGs(5);
-  int pdgs[nPDGs]={0, 211,13,11,2212};
+  int pdgs[nPDGs] = {0, 211, 13, 11, 2212};
   static bool fill(true);
   if (fill) {
-    for (int i = 0; i<nPDGs; ++i) {
+    for (int i = 0; i < nPDGs; ++i) {
       int pdg = pdgs[i];
 
       std::string Result;//string which will contain the result
@@ -264,9 +272,12 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
       convert << pdg;//add the value of Number to the characters in the stream
       Result = convert.str();//set Result to the content of the stream
 
-      histoMap[pdg].push_back(new TH2D((std::string("deviationRel_")+Result).c_str(), "log(betaGamma) vs relative deviation", 100000, -1.e-2, 1.e-2, 50, -4, 8));
-      histoMap[pdg].push_back(new TH2D((std::string("deviationAbs_")+Result).c_str(), "log(betaGamma) vs absolute deviation; deviation (keV)", 100000, -90.0, 10.0, 50, -4, 8));
-      histoMap[pdg].push_back(new TH2D((std::string("ExtrapLen_")+Result).c_str(), "delta ExtrapLen vs relative deviation", 50000, -5.e-2, 5.e-2, 400, -0.1, 0.1));
+      histoMap[pdg].push_back(new TH2D((std::string("deviationRel_") + Result).c_str(), "log(betaGamma) vs relative deviation", 100000,
+                                       -1.e-2, 1.e-2, 50, -4, 8));
+      histoMap[pdg].push_back(new TH2D((std::string("deviationAbs_") + Result).c_str(),
+                                       "log(betaGamma) vs absolute deviation; deviation (keV)", 100000, -90.0, 10.0, 50, -4, 8));
+      histoMap[pdg].push_back(new TH2D((std::string("ExtrapLen_") + Result).c_str(), "delta ExtrapLen vs relative deviation", 50000,
+                                       -5.e-2, 5.e-2, 400, -0.1, 0.1));
     }
     fill = false;
   }
@@ -276,7 +287,7 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
     TFile outfile("deviation.root", "recreate");
     outfile.cd();
 
-    for (int i = 0; i<nPDGs; ++i) {
+    for (int i = 0; i < nPDGs; ++i) {
       int pdg = pdgs[i];
       histoMap[pdg][0]->Write();
       histoMap[pdg][1]->Write();
@@ -306,13 +317,13 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
   double mass = part->Mass(); // GeV
 
   //TVector3 pos(0,0,0);
-  TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,gRandom->Gaus(0,0.3));
-  mom.SetMag( exp(gRandom->Uniform(-4, 8)) * mass );
+  TVector3 pos(gRandom->Gaus(0, 0.1), gRandom->Gaus(0, 0.1), gRandom->Gaus(0, 0.1));
+  TVector3 mom(0, 0.5, gRandom->Gaus(0, 0.3));
+  mom.SetMag(exp(gRandom->Uniform(-4, 8)) * mass);
   mom *= randomSign();
 
 
-  double betaGamma = log(mom.Mag()/mass);
+  double betaGamma = log(mom.Mag() / mass);
 
   //mom.Print();
 
@@ -320,7 +331,7 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
   rep->setPosMom(state, pos, mom);
 
   genfit::SharedPlanePtr origPlane = state.getPlane();
-  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*10,0), TVector3(0,randomSign()*1,0)));
+  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0, randomSign() * 10, 0), TVector3(0, randomSign() * 1, 0)));
 
   genfit::StateOnPlane origState(state);
 
@@ -333,12 +344,11 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
     extrapLen = rep->extrapolateToPlane(state, plane);
 
     mom2 = state.getMom();
-    momLoss1 = mom.Mag()-mom2.Mag();
+    momLoss1 = mom.Mag() - mom2.Mag();
 
     //mom2.Print();
     //std::cout << "MomLoss = " << momLoss1 << "\n";
-  }
-  catch (genfit::Exception& e) {
+  } catch (genfit::Exception& e) {
     if (verbose) {
       std::cerr << "Exception in forth Extrapolation. PDG = " << pdg << "; mom: \n";
       mom.Print();
@@ -356,23 +366,22 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
   try {
     backExtrapLen = rep->extrapolateToPlane(state, origPlane);
 
-    momLoss2 = mom2.Mag()-state.getMom().Mag();
+    momLoss2 = mom2.Mag() - state.getMom().Mag();
 
     //state.getMom().Print();
     //std::cout << "MomLoss = " << momLoss2 << "\n";
 
-    double deviation = 1. + momLoss1/momLoss2;
+    double deviation = 1. + momLoss1 / momLoss2;
     histoMap[abs(pdg)][0]->Fill(deviation, betaGamma);
-    histoMap[abs(pdg)][1]->Fill((mom.Mag() - state.getMom().Mag())*1e6, betaGamma);
-    histoMap[abs(pdg)][2]->Fill(deviation, extrapLen+backExtrapLen);
+    histoMap[abs(pdg)][1]->Fill((mom.Mag() - state.getMom().Mag()) * 1e6, betaGamma);
+    histoMap[abs(pdg)][2]->Fill(deviation, extrapLen + backExtrapLen);
 
     histoMap[0][0]->Fill(deviation, betaGamma);
-    histoMap[0][1]->Fill((mom.Mag() - state.getMom().Mag())*1e6, betaGamma);
-    histoMap[0][2]->Fill(deviation, extrapLen+backExtrapLen);
+    histoMap[0][1]->Fill((mom.Mag() - state.getMom().Mag()) * 1e6, betaGamma);
+    histoMap[0][2]->Fill(deviation, extrapLen + backExtrapLen);
 
     //std::cout << "deviation = " << deviation << "\n";
-  }
-  catch (genfit::Exception& e) {
+  } catch (genfit::Exception& e) {
     if (verbose) {
       std::cerr << "Exception in back Extrapolation. PDG = " << pdg << "; mom:  \n";
       mom.Print();
@@ -391,14 +400,14 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
       fabs(extrapLen + backExtrapLen) > epsilonLen) {
 
     if (verbose) {
-        origState.Print();
-        state.Print();
+      origState.Print();
+      state.Print();
 
-        std::cout << "pos difference = " << (rep->getPos(origState) - rep->getPos(state)).Mag() << "\n";
-        std::cout << "mom difference = " << (rep->getMom(origState) - rep->getMom(state)).Mag() << "\n";
-        std::cout << "len difference = " << extrapLen + backExtrapLen << "\n";
+      std::cout << "pos difference = " << (rep->getPos(origState) - rep->getPos(state)).Mag() << "\n";
+      std::cout << "mom difference = " << (rep->getMom(origState) - rep->getMom(state)).Mag() << "\n";
+      std::cout << "len difference = " << extrapLen + backExtrapLen << "\n";
 
-        std::cout << std::endl;
+      std::cout << std::endl;
     }
     delete rep;
     return kFailed;
@@ -410,14 +419,15 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
 }
 
 
-e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
+e_testStatus compareForthBackJacNoise(bool writeHisto = false)
+{
 
   if (writeHisto)
     return kPassed;
 
   e_testStatus retVal(kPassed);
 
-  bool fx( randomSign() > 0);
+  bool fx(randomSign() > 0);
   genfit::MaterialEffects::getInstance()->setNoEffects(!fx);
 
   double deltaJac = 0.005; // relative
@@ -436,10 +446,10 @@ e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
 
   //TVector3 pos(0,0,0);
   //TVector3 mom(0,1,2);
-  TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
+  TVector3 pos(gRandom->Gaus(0, 0.1), gRandom->Gaus(0, 0.1), gRandom->Gaus(0, 0.1));
   TVector3 mom(0, 0.5, gRandom->Gaus(0, 1));
   mom *= randomSign();
-  mom.SetMag(gRandom->Uniform(2)+0.3);
+  mom.SetMag(gRandom->Uniform(2) + 0.3);
   //mom.SetMag(3);
 
   TMatrixD jac_f, jac_fi, jac_b, jac_bi;
@@ -455,9 +465,9 @@ e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
   TVector3 normal(mom);
   normal.SetMag(1);
   normal.SetXYZ(gRandom->Gaus(normal.X(), smear),
-      gRandom->Gaus(normal.Y(), smear),
-      gRandom->Gaus(normal.Z(), smear));
-  genfit::DetPlane* origPlanePtr = new genfit::DetPlane (pos, normal);
+                gRandom->Gaus(normal.Y(), smear),
+                gRandom->Gaus(normal.Z(), smear));
+  genfit::DetPlane* origPlanePtr = new genfit::DetPlane(pos, normal);
   //genfit::DetPlane* origPlanePtr = new genfit::DetPlane (pos, TVector3(1,0,0), TVector3(0,0,1));
   double rotAngleOrig = gRandom->Uniform(2.*TMath::Pi());
   origPlanePtr->rotate(rotAngleOrig);
@@ -472,21 +482,21 @@ e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
   normal = mom;
   normal.SetMag(1);
   normal.SetXYZ(gRandom->Gaus(normal.X(), smear),
-      gRandom->Gaus(normal.Y(), smear),
-      gRandom->Gaus(normal.Z(), smear));
+                gRandom->Gaus(normal.Y(), smear),
+                gRandom->Gaus(normal.Z(), smear));
   TVector3 dest(mom);
   dest.SetMag(10);
-  genfit::DetPlane* planePtr = new genfit::DetPlane (dest, normal);
+  genfit::DetPlane* planePtr = new genfit::DetPlane(dest, normal);
   //genfit::DetPlane* planePtr = new genfit::DetPlane (dest, TVector3(1,0,0), TVector3(0,0,1));
   double rotAngle = gRandom->Uniform(2.*TMath::Pi());
   planePtr->rotate(rotAngle);
   genfit::SharedPlanePtr plane(planePtr);
 
- /* genfit::DetPlane* planePtr = new genfit::DetPlane (*origPlane);
-  planePtr->setO(TVector3(0,randomSign()*10,0));
-  //planePtr->rotate(rotAngle);
-  genfit::SharedPlanePtr plane(planePtr);
-*/
+  /* genfit::DetPlane* planePtr = new genfit::DetPlane (*origPlane);
+   planePtr->setO(TVector3(0,randomSign()*10,0));
+   //planePtr->rotate(rotAngle);
+   genfit::SharedPlanePtr plane(planePtr);
+  */
 
   // numerical calculation
   TMatrixD jac_f_num;
@@ -502,8 +512,7 @@ e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
     extrapolatedState = state;
     rep->getForwardJacobianAndNoise(jac_f, noise_f, c_f);
     rep->getBackwardJacobianAndNoise(jac_fi, noise_fi, c_fi);
-  }
-  catch (genfit::Exception& e) {
+  } catch (genfit::Exception& e) {
     std::cerr << e.what();
 
     delete rep;
@@ -518,8 +527,7 @@ e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
     //std::cout << "GET INFO FOR BACK EXTRAPOLATION \n";
     rep->getForwardJacobianAndNoise(jac_b, noise_b, c_b);
     rep->getBackwardJacobianAndNoise(jac_bi, noise_bi, c_bi);
-  }
-  catch (genfit::Exception& e) {
+  } catch (genfit::Exception& e) {
     std::cerr << e.what();
 
     delete rep;
@@ -529,7 +537,7 @@ e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
 
 
   // compare
-  if (!((origState.getState() - state.getState()).Abs()  < deltaState) ) {
+  if (!((origState.getState() - state.getState()).Abs()  < deltaState)) {
     if (verbose) {
       std::cout << "(origState.getState() - state.getState()) ";
       (origState.getState() - state.getState()).Print();
@@ -542,7 +550,7 @@ e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
   if (!((jac_f * origState.getState() + c_f  -  extrapolatedState.getState()).Abs() < deltaState) ||
       !((jac_bi * origState.getState() + c_bi  -  extrapolatedState.getState()).Abs() < deltaState) ||
       !((jac_b * extrapolatedState.getState() + c_b  -  origState.getState()).Abs() < deltaState) ||
-      !((jac_fi * extrapolatedState.getState() + c_fi  -  origState.getState()).Abs() < deltaState)   ) {
+      !((jac_fi * extrapolatedState.getState() + c_fi  -  origState.getState()).Abs() < deltaState)) {
 
     if (verbose) {
       std::cout << "(jac_f * origState.getState() + c_f  -  extrapolatedState.getState()) ";
@@ -632,7 +640,8 @@ e_testStatus compareForthBackJacNoise(bool writeHisto = false) {
 }
 
 
-e_testStatus checkStopAtBoundary(bool writeHisto = false) {
+e_testStatus checkStopAtBoundary(bool writeHisto = false)
+{
 
   if (writeHisto)
     return kPassed;
@@ -647,8 +656,8 @@ e_testStatus checkStopAtBoundary(bool writeHisto = false) {
   rep = new genfit::RKTrackRep(pdg);
 
   //TVector3 pos(0,0,0);
-  TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,gRandom->Gaus(0,0.1));
+  TVector3 pos(gRandom->Gaus(0, 0.1), gRandom->Gaus(0, 0.1), gRandom->Gaus(0, 0.1));
+  TVector3 mom(0, 0.5, gRandom->Gaus(0, 0.1));
   mom *= randomSign();
 
 
@@ -656,15 +665,14 @@ e_testStatus checkStopAtBoundary(bool writeHisto = false) {
   rep->setPosMom(state, pos, mom);
 
   genfit::SharedPlanePtr origPlane = state.getPlane();
-  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*10,0), TVector3(0,randomSign()*1,0)));
+  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0, randomSign() * 10, 0), TVector3(0, randomSign() * 1, 0)));
 
   genfit::StateOnPlane origState(state);
 
   // forth
   try {
     rep->extrapolateToPlane(state, plane, true);
-  }
-  catch (genfit::Exception& e) {
+  } catch (genfit::Exception& e) {
     std::cerr << e.what();
 
     delete rep;
@@ -674,25 +682,26 @@ e_testStatus checkStopAtBoundary(bool writeHisto = false) {
 
   // compare
   if (fabs(rep->getPos(state).Perp() - matRadius) > epsilonLen) {
-      if (verbose) {
-        origState.Print();
-        state.Print();
+    if (verbose) {
+      origState.Print();
+      state.Print();
 
-        std::cerr << "radius difference = " << rep->getPos(state).Perp() - matRadius << "\n";
+      std::cerr << "radius difference = " << rep->getPos(state).Perp() - matRadius << "\n";
 
-        std::cerr << std::endl;
-      }
-      delete rep;
-      return kFailed;
+      std::cerr << std::endl;
     }
-
     delete rep;
-    return kPassed;
+    return kFailed;
+  }
+
+  delete rep;
+  return kPassed;
 
 }
 
 
-e_testStatus checkErrorPropagation(bool writeHisto = false) {
+e_testStatus checkErrorPropagation(bool writeHisto = false)
+{
 
   if (writeHisto)
     return kPassed;
@@ -705,8 +714,8 @@ e_testStatus checkErrorPropagation(bool writeHisto = false) {
   rep = new genfit::RKTrackRep(pdg);
 
   //TVector3 pos(0,0,0);
-  TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,gRandom->Gaus(0,0.1));
+  TVector3 pos(gRandom->Gaus(0, 0.1), gRandom->Gaus(0, 0.1), gRandom->Gaus(0, 0.1));
+  TVector3 mom(0, 0.5, gRandom->Gaus(0, 0.1));
   mom *= randomSign();
 
 
@@ -714,15 +723,14 @@ e_testStatus checkErrorPropagation(bool writeHisto = false) {
   rep->setPosMom(state, pos, mom);
 
   genfit::SharedPlanePtr origPlane = state.getPlane();
-  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*50,0), TVector3(0,randomSign()*1,0)));
+  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0, randomSign() * 50, 0), TVector3(0, randomSign() * 1, 0)));
 
   genfit::MeasuredStateOnPlane origState(state);
 
   // forth
   try {
     rep->extrapolateToPlane(state, plane);
-  }
-  catch (genfit::Exception& e) {
+  } catch (genfit::Exception& e) {
     std::cerr << e.what();
 
     delete rep;
@@ -746,7 +754,8 @@ e_testStatus checkErrorPropagation(bool writeHisto = false) {
 }
 
 
-e_testStatus checkExtrapolateToLine(bool writeHisto = false) {
+e_testStatus checkExtrapolateToLine(bool writeHisto = false)
+{
 
   if (writeHisto)
     return kPassed;
@@ -759,8 +768,8 @@ e_testStatus checkExtrapolateToLine(bool writeHisto = false) {
   rep = new genfit::RKTrackRep(pdg);
 
   //TVector3 pos(0,0,0);
-  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,0.);
+  TVector3 pos(0 + gRandom->Gaus(0, 0.1), 0 + gRandom->Gaus(0, 0.1), 0 + gRandom->Gaus(0, 0.1));
+  TVector3 mom(0, 0.5, 0.);
   mom *= randomSign();
 
 
@@ -770,14 +779,13 @@ e_testStatus checkExtrapolateToLine(bool writeHisto = false) {
   genfit::SharedPlanePtr origPlane = state.getPlane();
   genfit::StateOnPlane origState(state);
 
-  TVector3 linePoint(gRandom->Gaus(),randomSign()*10+gRandom->Gaus(),gRandom->Gaus());
-  TVector3 lineDirection(gRandom->Gaus(),gRandom->Gaus(),randomSign()*10+gRandom->Gaus());
+  TVector3 linePoint(gRandom->Gaus(), randomSign() * 10 + gRandom->Gaus(), gRandom->Gaus());
+  TVector3 lineDirection(gRandom->Gaus(), gRandom->Gaus(), randomSign() * 10 + gRandom->Gaus());
 
   // forth
   try {
     rep->extrapolateToLine(state, linePoint, lineDirection, false);
-  }
-  catch (genfit::Exception& e) {
+  } catch (genfit::Exception& e) {
     std::cerr << e.what();
 
     delete rep;
@@ -787,29 +795,30 @@ e_testStatus checkExtrapolateToLine(bool writeHisto = false) {
 
   // compare
   if (fabs(state.getPlane()->distance(linePoint)) > epsilonLen ||
-      fabs(state.getPlane()->distance(linePoint+lineDirection)) > epsilonLen ||
+      fabs(state.getPlane()->distance(linePoint + lineDirection)) > epsilonLen ||
       (rep->getMom(state).Unit() * state.getPlane()->getNormal()) > epsilonMom) {
 
-      if (verbose) {
-        origState.Print();
-        state.Print();
+    if (verbose) {
+      origState.Print();
+      state.Print();
 
-        std::cout << "distance of linePoint to plane = " << state.getPlane()->distance(linePoint) << "\n";
-        std::cout << "distance of linePoint+lineDirection to plane = "
-                  << state.getPlane()->distance(linePoint + lineDirection) << "\n";
-        std::cout << "direction * plane normal = " << rep->getMom(state).Unit() * state.getPlane()->getNormal() << "\n";
-      }
-      delete rep;
-      return kFailed;
+      std::cout << "distance of linePoint to plane = " << state.getPlane()->distance(linePoint) << "\n";
+      std::cout << "distance of linePoint+lineDirection to plane = "
+                << state.getPlane()->distance(linePoint + lineDirection) << "\n";
+      std::cout << "direction * plane normal = " << rep->getMom(state).Unit() * state.getPlane()->getNormal() << "\n";
     }
-
     delete rep;
-    return kPassed;
+    return kFailed;
+  }
+
+  delete rep;
+  return kPassed;
 
 }
 
 
-e_testStatus checkExtrapolateToPoint(bool writeHisto = false) {
+e_testStatus checkExtrapolateToPoint(bool writeHisto = false)
+{
 
   if (writeHisto)
     return kPassed;
@@ -822,8 +831,8 @@ e_testStatus checkExtrapolateToPoint(bool writeHisto = false) {
   rep = new genfit::RKTrackRep(pdg);
 
   //TVector3 pos(0,0,0);
-  TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,gRandom->Gaus(0,0.1));
+  TVector3 pos(gRandom->Gaus(0, 0.1), gRandom->Gaus(0, 0.1), gRandom->Gaus(0, 0.1));
+  TVector3 mom(0, 0.5, gRandom->Gaus(0, 0.1));
   mom *= randomSign();
 
 
@@ -833,13 +842,12 @@ e_testStatus checkExtrapolateToPoint(bool writeHisto = false) {
   genfit::SharedPlanePtr origPlane = state.getPlane();
   genfit::StateOnPlane origState(state);
 
-  TVector3 point(gRandom->Gaus(),randomSign()*10+gRandom->Gaus(),gRandom->Gaus());
+  TVector3 point(gRandom->Gaus(), randomSign() * 10 + gRandom->Gaus(), gRandom->Gaus());
 
   // forth
   try {
     rep->extrapolateToPoint(state, point, false);
-  }
-  catch (genfit::Exception& e) {
+  } catch (genfit::Exception& e) {
     std::cerr << e.what();
 
     delete rep;
@@ -850,24 +858,25 @@ e_testStatus checkExtrapolateToPoint(bool writeHisto = false) {
   // compare
   if (fabs(state.getPlane()->distance(point)) > epsilonLen ||
       fabs((rep->getMom(state).Unit() * state.getPlane()->getNormal())) - 1 > epsilonMom) {
-      if (verbose) {
-        origState.Print();
-        state.Print();
+    if (verbose) {
+      origState.Print();
+      state.Print();
 
-        std::cout << "distance of point to plane = " << state.getPlane()->distance(point) << "\n";
-        std::cout << "direction * plane normal = " << rep->getMom(state).Unit() * state.getPlane()->getNormal() << "\n";
-      }
-      delete rep;
-      return kFailed;
+      std::cout << "distance of point to plane = " << state.getPlane()->distance(point) << "\n";
+      std::cout << "direction * plane normal = " << rep->getMom(state).Unit() * state.getPlane()->getNormal() << "\n";
     }
-
     delete rep;
-    return kPassed;
+    return kFailed;
+  }
+
+  delete rep;
+  return kPassed;
 
 }
 
 
-e_testStatus checkExtrapolateToCylinder(bool writeHisto = false) {
+e_testStatus checkExtrapolateToCylinder(bool writeHisto = false)
+{
 
   if (writeHisto)
     return kPassed;
@@ -880,8 +889,8 @@ e_testStatus checkExtrapolateToCylinder(bool writeHisto = false) {
   rep = new genfit::RKTrackRep(pdg);
 
   //TVector3 pos(0,0,0);
-  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,0.);
+  TVector3 pos(0 + gRandom->Gaus(0, 0.1), 0 + gRandom->Gaus(0, 0.1), 0 + gRandom->Gaus(0, 0.1));
+  TVector3 mom(0, 0.5, 0.);
   mom *= randomSign();
 
 
@@ -891,15 +900,14 @@ e_testStatus checkExtrapolateToCylinder(bool writeHisto = false) {
   genfit::SharedPlanePtr origPlane = state.getPlane();
   genfit::StateOnPlane origState(state);
 
-  const TVector3 linePoint(gRandom->Gaus(0,5), gRandom->Gaus(0,5), gRandom->Gaus(0,5));
-  const TVector3 lineDirection(gRandom->Gaus(),gRandom->Gaus(),2+gRandom->Gaus());
+  const TVector3 linePoint(gRandom->Gaus(0, 5), gRandom->Gaus(0, 5), gRandom->Gaus(0, 5));
+  const TVector3 lineDirection(gRandom->Gaus(), gRandom->Gaus(), 2 + gRandom->Gaus());
   const double radius = gRandom->Uniform(10);
 
   // forth
   try {
     rep->extrapolateToCylinder(state, radius, linePoint, lineDirection, false);
-  }
-  catch (genfit::Exception& e) {
+  } catch (genfit::Exception& e) {
     std::cerr << e.what();
 
     delete rep;
@@ -908,34 +916,35 @@ e_testStatus checkExtrapolateToCylinder(bool writeHisto = false) {
   }
 
   TVector3 pocaOnLine(lineDirection);
-  double t = 1./(pocaOnLine.Mag2()) * ((rep->getPos(state)*pocaOnLine) - (linePoint*pocaOnLine));
+  double t = 1. / (pocaOnLine.Mag2()) * ((rep->getPos(state) * pocaOnLine) - (linePoint * pocaOnLine));
   pocaOnLine *= t;
   pocaOnLine += linePoint;
 
   TVector3 radiusVec = rep->getPos(state) - pocaOnLine;
 
   // compare
-  if (fabs(state.getPlane()->getNormal()*radiusVec.Unit())-1 > epsilonLen ||
-      fabs(lineDirection*radiusVec) > epsilonLen ||
-      fabs(radiusVec.Mag()-radius) > epsilonLen) {
-      if (verbose) {
-        origState.Print();
-        state.Print();
+  if (fabs(state.getPlane()->getNormal()*radiusVec.Unit()) - 1 > epsilonLen ||
+      fabs(lineDirection * radiusVec) > epsilonLen ||
+      fabs(radiusVec.Mag() - radius) > epsilonLen) {
+    if (verbose) {
+      origState.Print();
+      state.Print();
 
-        std::cout << "lineDirection*radiusVec = " << lineDirection * radiusVec << "\n";
-        std::cout << "radiusVec.Mag()-radius = " << radiusVec.Mag() - radius << "\n";
-      }
-      delete rep;
-      return kFailed;
+      std::cout << "lineDirection*radiusVec = " << lineDirection* radiusVec << "\n";
+      std::cout << "radiusVec.Mag()-radius = " << radiusVec.Mag() - radius << "\n";
     }
-
     delete rep;
-    return kPassed;
+    return kFailed;
+  }
+
+  delete rep;
+  return kPassed;
 
 }
 
 
-e_testStatus checkExtrapolateToSphere(bool writeHisto = false) {
+e_testStatus checkExtrapolateToSphere(bool writeHisto = false)
+{
 
   if (writeHisto)
     return kPassed;
@@ -948,8 +957,8 @@ e_testStatus checkExtrapolateToSphere(bool writeHisto = false) {
   rep = new genfit::RKTrackRep(pdg);
 
   //TVector3 pos(0,0,0);
-  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,0.);
+  TVector3 pos(0 + gRandom->Gaus(0, 0.1), 0 + gRandom->Gaus(0, 0.1), 0 + gRandom->Gaus(0, 0.1));
+  TVector3 mom(0, 0.5, 0.);
   mom *= randomSign();
 
 
@@ -959,14 +968,13 @@ e_testStatus checkExtrapolateToSphere(bool writeHisto = false) {
   genfit::SharedPlanePtr origPlane = state.getPlane();
   genfit::StateOnPlane origState(state);
 
-  const TVector3 centerPoint(gRandom->Gaus(0,10), gRandom->Gaus(0,10), gRandom->Gaus(0,10));
+  const TVector3 centerPoint(gRandom->Gaus(0, 10), gRandom->Gaus(0, 10), gRandom->Gaus(0, 10));
   const double radius = gRandom->Uniform(10);
 
   // forth
   try {
     rep->extrapolateToSphere(state, radius, centerPoint, false);
-  }
-  catch (genfit::Exception& e) {
+  } catch (genfit::Exception& e) {
     std::cerr << e.what();
 
     delete rep;
@@ -978,26 +986,27 @@ e_testStatus checkExtrapolateToSphere(bool writeHisto = false) {
   TVector3 radiusVec = rep->getPos(state) - centerPoint;
 
   // compare
-  if (fabs(state.getPlane()->getNormal()*radiusVec.Unit())-1 > epsilonLen ||
-      fabs(radiusVec.Mag()-radius) > epsilonLen) {
-      if (verbose) {
-        origState.Print();
-        state.Print();
+  if (fabs(state.getPlane()->getNormal()*radiusVec.Unit()) - 1 > epsilonLen ||
+      fabs(radiusVec.Mag() - radius) > epsilonLen) {
+    if (verbose) {
+      origState.Print();
+      state.Print();
 
-        std::cout << "state.getPlane()->getNormal()*radiusVec = " << state.getPlane()->getNormal() * radiusVec << "\n";
-        std::cout << "radiusVec.Mag()-radius = " << radiusVec.Mag() - radius << "\n";
-      }
-      delete rep;
-      return kFailed;
+      std::cout << "state.getPlane()->getNormal()*radiusVec = " << state.getPlane()->getNormal() * radiusVec << "\n";
+      std::cout << "radiusVec.Mag()-radius = " << radiusVec.Mag() - radius << "\n";
     }
-
     delete rep;
-    return kPassed;
+    return kFailed;
+  }
+
+  delete rep;
+  return kPassed;
 
 }
 
 
-e_testStatus checkExtrapolateBy(bool writeHisto = false) {
+e_testStatus checkExtrapolateBy(bool writeHisto = false)
+{
 
   if (writeHisto)
     return kPassed;
@@ -1009,8 +1018,8 @@ e_testStatus checkExtrapolateBy(bool writeHisto = false) {
   rep = new genfit::RKTrackRep(pdg);
 
   //TVector3 pos(0,0,0);
-  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,0.);
+  TVector3 pos(0 + gRandom->Gaus(0, 0.1), 0 + gRandom->Gaus(0, 0.1), 0 + gRandom->Gaus(0, 0.1));
+  TVector3 mom(0, 0.5, 0.);
   mom *= randomSign();
 
 
@@ -1022,14 +1031,13 @@ e_testStatus checkExtrapolateBy(bool writeHisto = false) {
   genfit::SharedPlanePtr origPlane = state.getPlane();
   genfit::StateOnPlane origState(state);
 
-  double step = gRandom->Uniform(-15.,15.);
+  double step = gRandom->Uniform(-15., 15.);
   double extrapolatedLen(0);
 
   // forth
   try {
     extrapolatedLen = rep->extrapolateBy(state, step, false);
-  }
-  catch (genfit::Exception& e) {
+  } catch (genfit::Exception& e) {
     return kException;
   }
 
@@ -1039,26 +1047,26 @@ e_testStatus checkExtrapolateBy(bool writeHisto = false) {
 
 
   // compare
-  if (fabs(extrapolatedLen-step) > epsilonLen ||
+  if (fabs(extrapolatedLen - step) > epsilonLen ||
       (posOrig - posExt).Mag() > fabs(step)) {
-      if (verbose) {
-        origState.Print();
-        state.Print();
+    if (verbose) {
+      origState.Print();
+      state.Print();
 
-        std::cout << "extrapolatedLen-step = " << extrapolatedLen - step << "\n";
-        std::cout << "started extrapolation from: ";
-        posOrig.Print();
-        std::cout << "extrapolated to ";
-        posExt.Print();
-        std::cout << "difference = " << (posOrig - posExt).Mag() << "; step = " << step << "; delta = "
-                  << (posOrig - posExt).Mag() - fabs(step) << "\n";
-      }
-      delete rep;
-      return kFailed;
+      std::cout << "extrapolatedLen-step = " << extrapolatedLen - step << "\n";
+      std::cout << "started extrapolation from: ";
+      posOrig.Print();
+      std::cout << "extrapolated to ";
+      posExt.Print();
+      std::cout << "difference = " << (posOrig - posExt).Mag() << "; step = " << step << "; delta = "
+                << (posOrig - posExt).Mag() - fabs(step) << "\n";
     }
-
     delete rep;
-    return kPassed;
+    return kFailed;
+  }
+
+  delete rep;
+  return kPassed;
 
 }
 //=====================================================================================================================
@@ -1067,7 +1075,8 @@ e_testStatus checkExtrapolateBy(bool writeHisto = false) {
 //=====================================================================================================================
 
 struct TestCase {
-  TestCase(const std::string &name, e_testStatus(*function)(bool)) : name_(name), function_(function), nPassed_(0), nFailed_(0), nException_(0) {;}
+  TestCase(const std::string& name, e_testStatus(*function)(bool)) : name_(name), function_(function), nPassed_(0), nFailed_(0),
+    nException_(0) {;}
   void Print() {std::cout << name_ << " \t" << nPassed_ << " \t" << nFailed_ << " \t" << nException_ << "\n";}
 
   std::string name_;
@@ -1078,7 +1087,8 @@ struct TestCase {
 };
 
 
-int main() {
+int main()
+{
 
   const double BField = 15.;       // kGauss
   //const bool debug = true;
@@ -1089,7 +1099,7 @@ int main() {
   // init geometry and mag. field
   new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
-  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,BField));
+  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0., 0., BField));
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
   /*genfit::MaterialEffects::getInstance()->drawdEdx(2212);
@@ -1115,21 +1125,21 @@ int main() {
   testCases.push_back(TestCase(std::string("compareForthBackJacNoise()     "), &compareForthBackJacNoise));
 
 
-  for (unsigned int i=0; i<nTests; ++i) {
+  for (unsigned int i = 0; i < nTests; ++i) {
 
-    for (unsigned int j=0; j<testCases.size(); ++j) {
+    for (unsigned int j = 0; j < testCases.size(); ++j) {
       e_testStatus status = testCases[j].function_(false);
       switch (status) {
-      case kPassed:
-        testCases[j].nPassed_++;
-        break;
-      case kFailed:
-        testCases[j].nFailed_++;
-        std::cout << "failed " << testCases[j].name_ << " nr " << i << "\n";
-        break;
-      case kException:
-        testCases[j].nException_++;
-        std::cout << "exception at " << testCases[j].name_ << " nr " << i << "\n";
+        case kPassed:
+          testCases[j].nPassed_++;
+          break;
+        case kFailed:
+          testCases[j].nFailed_++;
+          std::cout << "failed " << testCases[j].name_ << " nr " << i << "\n";
+          break;
+        case kException:
+          testCases[j].nException_++;
+          std::cout << "exception at " << testCases[j].name_ << " nr " << i << "\n";
       }
     }
 
@@ -1137,11 +1147,11 @@ int main() {
 
   //CALLGRIND_STOP_INSTRUMENTATION;
   std::cout << "name                           " << " \t" << "pass" << " \t" << "fail" << " \t" << "exception" << "\n";
-  for (unsigned int j=0; j<testCases.size(); ++j) {
+  for (unsigned int j = 0; j < testCases.size(); ++j) {
     testCases[j].Print();
   }
 
-  for (unsigned int j=0; j<testCases.size(); ++j) {
+  for (unsigned int j = 0; j < testCases.size(); ++j) {
     testCases[j].function_(true);
   }
 

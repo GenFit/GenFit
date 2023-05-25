@@ -28,273 +28,294 @@
 namespace genfit {
 
 
-TrackCand::TrackCand() :
-  mcTrackId_(-1),
-  pdg_(0),
-  time_(0),
-  state6D_(6),
-  cov6D_(6),
-  q_(0)
-{
-  ;
-}
-
-TrackCand::~TrackCand() {
-  for (unsigned int i=0; i<hits_.size(); ++i) {
-    delete hits_[i];
-  }
-  hits_.clear();
-}
-
-
-TrackCand::TrackCand( const TrackCand& other ) :
-  TObject(other),
-  mcTrackId_(other.mcTrackId_),
-  pdg_(0),
-  time_(other.time_),
-  state6D_(other.state6D_),
-  cov6D_(other.cov6D_),
-  q_(other.q_)
-{
-  // deep copy
-  hits_.reserve(other.hits_.size());
-  for (unsigned int i=0; i<other.hits_.size(); ++i) {
-    hits_.push_back( (other.hits_[i])->clone() );
+  TrackCand::TrackCand() :
+    mcTrackId_(-1),
+    pdg_(0),
+    time_(0),
+    state6D_(6),
+    cov6D_(6),
+    q_(0)
+  {
+    ;
   }
 
-  if (other.pdg_ != 0)
-    setPdgCode(other.pdg_);
-}
-
-TrackCand& TrackCand::operator=(TrackCand other) {
-  swap(other);
-  return *this;
-}
-
-
-void TrackCand::swap(TrackCand& other) {
-  // by swapping the members of two classes,
-  // the two classes are effectively swapped
-  std::swap(this->hits_, other.hits_);
-  std::swap(this->mcTrackId_, other.mcTrackId_);
-  std::swap(this->pdg_, other.pdg_);
-  std::swap(this->time_, other.time_);
-  std::swap(this->state6D_, other.state6D_);
-  std::swap(this->cov6D_, other.cov6D_);
-  std::swap(this->q_, other.q_);
-}
+  TrackCand::~TrackCand()
+  {
+    for (unsigned int i = 0; i < hits_.size(); ++i) {
+      delete hits_[i];
+    }
+    hits_.clear();
+  }
 
 
-TrackCandHit* TrackCand::getHit(int i) const {
-  if (i < 0)
-    i += hits_.size();
+  TrackCand::TrackCand(const TrackCand& other) :
+    TObject(other),
+    mcTrackId_(other.mcTrackId_),
+    pdg_(0),
+    time_(other.time_),
+    state6D_(other.state6D_),
+    cov6D_(other.cov6D_),
+    q_(other.q_)
+  {
+    // deep copy
+    hits_.reserve(other.hits_.size());
+    for (unsigned int i = 0; i < other.hits_.size(); ++i) {
+      hits_.push_back((other.hits_[i])->clone());
+    }
 
-  return hits_.at(i);
-}
+    if (other.pdg_ != 0)
+      setPdgCode(other.pdg_);
+  }
 
-
-void TrackCand::getHit(int i, int& detId, int& hitId) const {
-  if (i < 0)
-    i += hits_.size();
-
-  detId = hits_.at(i)->getDetId();
-  hitId = hits_[i]->getHitId();
-}
-
-
-void TrackCand::getHit(int i, int& detId, int& hitId, double& sortingParameter) const {
-  if (i < 0)
-    i += hits_.size();
-
-  detId = hits_.at(i)->getDetId();
-  hitId = hits_[i]->getHitId();
-  sortingParameter = hits_[i]->getSortingParameter();
-}
-
-
-void TrackCand::getHitWithPlane(int i, int& detId, int& hitId, int& planeId) const {
-  if (i < 0)
-    i += hits_.size();
-
-  detId = hits_.at(i)->getDetId();
-  hitId = hits_[i]->getHitId();
-  planeId = hits_[i]->getPlaneId();
-}
+  TrackCand& TrackCand::operator=(TrackCand other)
+  {
+    swap(other);
+    return *this;
+  }
 
 
-void TrackCand::addHit(int detId, int hitId, int planeId, double sortingParameter)
-{
-  hits_.push_back(new TrackCandHit(detId, hitId, planeId, sortingParameter));
-}
+  void TrackCand::swap(TrackCand& other)
+  {
+    // by swapping the members of two classes,
+    // the two classes are effectively swapped
+    std::swap(this->hits_, other.hits_);
+    std::swap(this->mcTrackId_, other.mcTrackId_);
+    std::swap(this->pdg_, other.pdg_);
+    std::swap(this->time_, other.time_);
+    std::swap(this->state6D_, other.state6D_);
+    std::swap(this->cov6D_, other.cov6D_);
+    std::swap(this->q_, other.q_);
+  }
 
-std::vector<int> TrackCand::getHitIDs(int detId) const {
-  std::vector<int> result;
-  for(unsigned int i=0; i<hits_.size(); ++i){
-    if(detId==-2 || hits_[i]->getDetId() == detId) {
-      result.push_back(hits_[i]->getHitId());
+
+  TrackCandHit* TrackCand::getHit(int i) const
+  {
+    if (i < 0)
+      i += hits_.size();
+
+    return hits_.at(i);
+  }
+
+
+  void TrackCand::getHit(int i, int& detId, int& hitId) const
+  {
+    if (i < 0)
+      i += hits_.size();
+
+    detId = hits_.at(i)->getDetId();
+    hitId = hits_[i]->getHitId();
+  }
+
+
+  void TrackCand::getHit(int i, int& detId, int& hitId, double& sortingParameter) const
+  {
+    if (i < 0)
+      i += hits_.size();
+
+    detId = hits_.at(i)->getDetId();
+    hitId = hits_[i]->getHitId();
+    sortingParameter = hits_[i]->getSortingParameter();
+  }
+
+
+  void TrackCand::getHitWithPlane(int i, int& detId, int& hitId, int& planeId) const
+  {
+    if (i < 0)
+      i += hits_.size();
+
+    detId = hits_.at(i)->getDetId();
+    hitId = hits_[i]->getHitId();
+    planeId = hits_[i]->getPlaneId();
+  }
+
+
+  void TrackCand::addHit(int detId, int hitId, int planeId, double sortingParameter)
+  {
+    hits_.push_back(new TrackCandHit(detId, hitId, planeId, sortingParameter));
+  }
+
+  std::vector<int> TrackCand::getHitIDs(int detId) const
+  {
+    std::vector<int> result;
+    for (unsigned int i = 0; i < hits_.size(); ++i) {
+      if (detId == -2 || hits_[i]->getDetId() == detId) {
+        result.push_back(hits_[i]->getHitId());
+      }
+    }
+    return result;
+  }
+
+  std::vector<int> TrackCand::getDetIDs() const
+  {
+    std::vector<int> result;
+    for (unsigned int i = 0; i < hits_.size(); ++i) {
+      result.push_back(hits_[i]->getDetId());
+    }
+    return result;
+  }
+
+  std::vector<double> TrackCand::getSortingParameters() const
+  {
+    std::vector<double> result;
+    for (unsigned int i = 0; i < hits_.size(); ++i) {
+      result.push_back(hits_[i]->getSortingParameter());
+    }
+    return result;
+  }
+
+  std::set<int> TrackCand::getUniqueDetIDs() const
+  {
+    std::set<int> retVal;
+    for (unsigned int i = 0; i < hits_.size(); ++i) {
+      retVal.insert(hits_[i]->getDetId());
+    }
+    return retVal;
+  }
+
+
+  void TrackCand::setPdgCode(int pdgCode)
+  {
+    pdg_ = pdgCode;
+    TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg_);
+    q_ = part->Charge() / (3.);
+  }
+
+
+  void TrackCand::reset()
+  {
+    for (unsigned int i = 0; i < hits_.size(); ++i) {
+      delete hits_[i];
+    }
+    hits_.clear();
+  }
+
+
+  bool TrackCand::hitInTrack(int detId, int hitId) const
+  {
+    for (unsigned int i = 0; i < hits_.size(); ++i) {
+      if (detId == hits_[i]->getDetId() && hitId == hits_[i]->getHitId())
+        return true;
+    }
+    return false;
+  }
+
+
+  bool operator== (const TrackCand& lhs, const TrackCand& rhs)
+  {
+    if (lhs.getNHits() != rhs.getNHits()) return false;
+    for (unsigned int i = 0; i < lhs.getNHits(); ++i) {
+      // use == operator of the TrackCandHits
+      if (*(lhs.getHit(i)) != *(rhs.getHit(i)))
+        return false;
+    }
+    return true;
+  }
+
+
+  void TrackCand::Print(const Option_t* option) const
+  {
+    printOut << "======== TrackCand::print ========\n";
+    printOut << "mcTrackId=" << mcTrackId_ << "\n";
+    printOut << "seed values for 6D state: \n";
+    state6D_.Print(option);
+    printOut << "charge = " << q_ << "\n";
+    printOut << "PDG code = " << pdg_ << "\n";
+    for (unsigned int i = 0; i < hits_.size(); ++i) {
+      hits_[i]->Print();
     }
   }
-  return result;
-}
-
-std::vector<int> TrackCand::getDetIDs() const {
-  std::vector<int> result;
-  for(unsigned int i=0; i<hits_.size(); ++i){
-    result.push_back(hits_[i]->getDetId());
-  }
-  return result;
-}
-
-std::vector<double> TrackCand::getSortingParameters() const {
-  std::vector<double> result;
-  for(unsigned int i=0; i<hits_.size(); ++i){
-    result.push_back(hits_[i]->getSortingParameter());
-  }
-  return result;
-}
-
-std::set<int> TrackCand::getUniqueDetIDs() const {
-  std::set<int> retVal;
-  for (unsigned int i = 0; i < hits_.size(); ++i) {
-    retVal.insert(hits_[i]->getDetId());
-  }
-  return retVal;
-}
 
 
-void TrackCand::setPdgCode(int pdgCode) {
-  pdg_ = pdgCode;
-  TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg_);
-  q_ = part->Charge() / (3.);
-}
-
-
-void TrackCand::reset()
-{
-  for (unsigned int i=0; i<hits_.size(); ++i) {
-    delete hits_[i];
-  }
-  hits_.clear();
-}
-
-
-bool TrackCand::hitInTrack(int detId, int hitId) const
-{
-  for (unsigned int i = 0; i < hits_.size(); ++i){
-    if (detId == hits_[i]->getDetId() && hitId == hits_[i]->getHitId())
-      return true;
-  }
-  return false;
-}
-
-
-bool operator== (const TrackCand& lhs, const TrackCand& rhs){
-  if(lhs.getNHits() != rhs.getNHits()) return false;
-  for (unsigned int i = 0; i < lhs.getNHits(); ++i){
-    // use == operator of the TrackCandHits
-    if (*(lhs.getHit(i)) != *(rhs.getHit(i)))
-      return false;
-  }
-  return true;
-}
-
-
-void TrackCand::Print(const Option_t* option) const {
-  printOut << "======== TrackCand::print ========\n";
-  printOut << "mcTrackId=" << mcTrackId_ << "\n";
-  printOut << "seed values for 6D state: \n";
-  state6D_.Print(option);
-  printOut << "charge = " << q_ << "\n";
-  printOut << "PDG code = " << pdg_ << "\n";
-  for(unsigned int i=0; i<hits_.size(); ++i){
-    hits_[i]->Print();
-  }
-}
-
-
-void TrackCand::append(const TrackCand& rhs){
-  for(unsigned int i=0; i<rhs.getNHits(); ++i){
-    addHit(rhs.getHit(i)->clone());
-  }
-}
-
-
-void TrackCand::sortHits(){
-  std::stable_sort(hits_.begin(), hits_.end(), compareTrackCandHits);
-}
-
-
-void TrackCand::sortHits(const std::vector<unsigned int>& indices){
-
-  const unsigned int nHits(getNHits());
-  if (indices.size() != nHits){
-    abort();
-    Exception exc("TrackCand::sortHits ==> Size of indices != number of hits!",__LINE__,__FILE__);
-    throw exc;
+  void TrackCand::append(const TrackCand& rhs)
+  {
+    for (unsigned int i = 0; i < rhs.getNHits(); ++i) {
+      addHit(rhs.getHit(i)->clone());
+    }
   }
 
-  //these containers will hold the sorted results. They are created to avoid probably slower in-place sorting
-  std::vector<TrackCandHit*> sortedHits(nHits);
-  for (unsigned int i=0; i<nHits; ++i){
-    sortedHits[i] = hits_[indices[i]];
+
+  void TrackCand::sortHits()
+  {
+    std::stable_sort(hits_.begin(), hits_.end(), compareTrackCandHits);
   }
-  //write the changes back to the private data members:
-  hits_ = sortedHits;
-}
 
 
-void TrackCand::set6DSeed(const TVectorD& state6D, const double charge) {
-  if (pdg_ != 0 && q_ != charge)
-    pdg_ = -pdg_;
-  q_ = charge;
-  state6D_ = state6D;
-}
+  void TrackCand::sortHits(const std::vector<unsigned int>& indices)
+  {
 
-void TrackCand::set6DSeedAndPdgCode(const TVectorD& state6D, const int pdgCode) {
-  setPdgCode(pdgCode);
-  state6D_ = state6D;
-}
+    const unsigned int nHits(getNHits());
+    if (indices.size() != nHits) {
+      abort();
+      Exception exc("TrackCand::sortHits ==> Size of indices != number of hits!", __LINE__, __FILE__);
+      throw exc;
+    }
 
-void TrackCand::setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge) {
-  if (pdg_ != 0 && q_ != charge)
-    pdg_ = -pdg_;
-  q_ = charge;
-  state6D_[0] = pos[0];  state6D_[1] = pos[1];  state6D_[2] = pos[2];
-  state6D_[3] = mom[0];  state6D_[4] = mom[1];  state6D_[5] = mom[2];
-}
-
-void TrackCand::setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode) {
-  setPdgCode(pdgCode);
-  state6D_[0] = pos[0];  state6D_[1] = pos[1];  state6D_[2] = pos[2];
-  state6D_[3] = mom[0];  state6D_[4] = mom[1];  state6D_[5] = mom[2];
-}
+    //these containers will hold the sorted results. They are created to avoid probably slower in-place sorting
+    std::vector<TrackCandHit*> sortedHits(nHits);
+    for (unsigned int i = 0; i < nHits; ++i) {
+      sortedHits[i] = hits_[indices[i]];
+    }
+    //write the changes back to the private data members:
+    hits_ = sortedHits;
+  }
 
 
-void TrackCand::setTime6DSeed(double time, const TVectorD& state6D, const double charge)
-{
-  time_ = time;
-  set6DSeed(state6D, charge);
-}
+  void TrackCand::set6DSeed(const TVectorD& state6D, const double charge)
+  {
+    if (pdg_ != 0 && q_ != charge)
+      pdg_ = -pdg_;
+    q_ = charge;
+    state6D_ = state6D;
+  }
 
-void TrackCand::setTime6DSeedAndPdgCode(double time, const TVectorD& state6D, const int pdgCode)
-{
-  time_ = time;
-  set6DSeedAndPdgCode(state6D, pdgCode);
-}
+  void TrackCand::set6DSeedAndPdgCode(const TVectorD& state6D, const int pdgCode)
+  {
+    setPdgCode(pdgCode);
+    state6D_ = state6D;
+  }
 
-void TrackCand::setTimePosMomSeed(double time, const TVector3& pos,
-				  const TVector3& mom, const double charge)
-{
-  time_ = time;
-  setPosMomSeed(pos, mom, charge);
-}
+  void TrackCand::setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge)
+  {
+    if (pdg_ != 0 && q_ != charge)
+      pdg_ = -pdg_;
+    q_ = charge;
+    state6D_[0] = pos[0];  state6D_[1] = pos[1];  state6D_[2] = pos[2];
+    state6D_[3] = mom[0];  state6D_[4] = mom[1];  state6D_[5] = mom[2];
+  }
 
-void TrackCand::setTimePosMomSeedAndPdgCode(double time, const TVector3& pos,
-					    const TVector3& mom, const int pdgCode)
-{
-  time_ = time;
-  setPosMomSeedAndPdgCode(pos, mom, pdgCode);
-}
+  void TrackCand::setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode)
+  {
+    setPdgCode(pdgCode);
+    state6D_[0] = pos[0];  state6D_[1] = pos[1];  state6D_[2] = pos[2];
+    state6D_[3] = mom[0];  state6D_[4] = mom[1];  state6D_[5] = mom[2];
+  }
+
+
+  void TrackCand::setTime6DSeed(double time, const TVectorD& state6D, const double charge)
+  {
+    time_ = time;
+    set6DSeed(state6D, charge);
+  }
+
+  void TrackCand::setTime6DSeedAndPdgCode(double time, const TVectorD& state6D, const int pdgCode)
+  {
+    time_ = time;
+    set6DSeedAndPdgCode(state6D, pdgCode);
+  }
+
+  void TrackCand::setTimePosMomSeed(double time, const TVector3& pos,
+                                    const TVector3& mom, const double charge)
+  {
+    time_ = time;
+    setPosMomSeed(pos, mom, charge);
+  }
+
+  void TrackCand::setTimePosMomSeedAndPdgCode(double time, const TVector3& pos,
+                                              const TVector3& mom, const int pdgCode)
+  {
+    time_ = time;
+    setPosMomSeedAndPdgCode(pos, mom, pdgCode);
+  }
 
 
 } /* End of namespace genfit */

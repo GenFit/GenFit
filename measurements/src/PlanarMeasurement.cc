@@ -30,72 +30,78 @@
 
 namespace genfit {
 
-PlanarMeasurement::PlanarMeasurement(int nDim)
-  : AbsMeasurement(nDim), physicalPlane_(), planeId_(-1), stripV_(false)
-{
-  assert(nDim >= 1);
-}
-
-PlanarMeasurement::PlanarMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
-  : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), physicalPlane_(), planeId_(-1), stripV_(false)
-{
-  assert(rawHitCoords_.GetNrows() >= 1);
-}
-
-
-SharedPlanePtr PlanarMeasurement::constructPlane(const StateOnPlane&) const {
-  if (!physicalPlane_) {
-    Exception exc("PlanarMeasurement::constructPlane(): No plane has been set!", __LINE__,__FILE__);
-    throw exc;
-  }
-  return physicalPlane_;
-}
-
-
-std::vector<MeasurementOnPlane*> PlanarMeasurement::constructMeasurementsOnPlane(const StateOnPlane& state) const {
-
-  MeasurementOnPlane* mop = new MeasurementOnPlane(rawHitCoords_,
-       rawHitCov_,
-       state.getPlane(), state.getRep(), constructHMatrix(state.getRep()));
-
-  std::vector<MeasurementOnPlane*> retVal;
-  retVal.push_back(mop);
-  return retVal;
-}
-
-
-const AbsHMatrix* PlanarMeasurement::constructHMatrix(const AbsTrackRep* rep) const {
-
-  if (dynamic_cast<const RKTrackRep*>(rep) == nullptr) {
-    Exception exc("SpacepointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
-    throw exc;
+  PlanarMeasurement::PlanarMeasurement(int nDim)
+    : AbsMeasurement(nDim), physicalPlane_(), planeId_(-1), stripV_(false)
+  {
+    assert(nDim >= 1);
   }
 
-  switch(rawHitCoords_.GetNrows()) {
-  case 1:
-    if (stripV_)
-      return new HMatrixV();
-    return new HMatrixU();
-
-  case 2:
-    return new HMatrixUV();
-
-  default:
-    Exception exc("PlanarMeasurement default implementation can only handle 1D (strip) or 2D (pixel) measurements!", __LINE__,__FILE__);
-    throw exc;
+  PlanarMeasurement::PlanarMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId,
+                                       TrackPoint* trackPoint)
+    : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), physicalPlane_(), planeId_(-1), stripV_(false)
+  {
+    assert(rawHitCoords_.GetNrows() >= 1);
   }
 
-}
 
-void PlanarMeasurement::Streamer(TBuffer &R__b)
-{
-   // Stream an object of class genfit::PlanarMeasurement.
+  SharedPlanePtr PlanarMeasurement::constructPlane(const StateOnPlane&) const
+  {
+    if (!physicalPlane_) {
+      Exception exc("PlanarMeasurement::constructPlane(): No plane has been set!", __LINE__, __FILE__);
+      throw exc;
+    }
+    return physicalPlane_;
+  }
 
-   //This works around a msvc bug and should be harmless on other platforms
-   typedef ::genfit::PlanarMeasurement thisClass;
-   UInt_t R__s, R__c;
-   if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+
+  std::vector<MeasurementOnPlane*> PlanarMeasurement::constructMeasurementsOnPlane(const StateOnPlane& state) const
+  {
+
+    MeasurementOnPlane* mop = new MeasurementOnPlane(rawHitCoords_,
+                                                     rawHitCov_,
+                                                     state.getPlane(), state.getRep(), constructHMatrix(state.getRep()));
+
+    std::vector<MeasurementOnPlane*> retVal;
+    retVal.push_back(mop);
+    return retVal;
+  }
+
+
+  const AbsHMatrix* PlanarMeasurement::constructHMatrix(const AbsTrackRep* rep) const
+  {
+
+    if (dynamic_cast<const RKTrackRep*>(rep) == nullptr) {
+      Exception exc("SpacepointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__, __FILE__);
+      throw exc;
+    }
+
+    switch (rawHitCoords_.GetNrows()) {
+      case 1:
+        if (stripV_)
+          return new HMatrixV();
+        return new HMatrixU();
+
+      case 2:
+        return new HMatrixUV();
+
+      default:
+        Exception exc("PlanarMeasurement default implementation can only handle 1D (strip) or 2D (pixel) measurements!", __LINE__,
+                      __FILE__);
+        throw exc;
+    }
+
+  }
+
+  void PlanarMeasurement::Streamer(TBuffer& R__b)
+  {
+    // Stream an object of class genfit::PlanarMeasurement.
+
+    //This works around a msvc bug and should be harmless on other platforms
+    typedef ::genfit::PlanarMeasurement thisClass;
+    UInt_t R__s, R__c;
+    if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v) { }
       //This works around a msvc bug and should be harmless on other platforms
       typedef genfit::AbsMeasurement baseClass0;
       baseClass0::Streamer(R__b);
@@ -108,7 +114,7 @@ void PlanarMeasurement::Streamer(TBuffer &R__b)
       }
       R__b >> planeId_;
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
-   } else {
+    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
       //This works around a msvc bug and should be harmless on other platforms
       typedef genfit::AbsMeasurement baseClass0;
@@ -121,7 +127,7 @@ void PlanarMeasurement::Streamer(TBuffer &R__b)
       }
       R__b << planeId_;
       R__b.SetByteCount(R__c, kTRUE);
-   }
-}
+    }
+  }
 
 } /* End of namespace genfit */

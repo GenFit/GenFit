@@ -30,55 +30,55 @@
 
 namespace genfit {
 
-class AbsTrackRep;
+  class AbsTrackRep;
 
-/** @brief Measurement class implementing a planar hit geometry (1 or 2D).
- *
- *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
- *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
- *  @author Johannes Rauch  (Technische Universit&auml;t M&uuml;nchen, original author)
- *
- * The main feature of this type of hit is, that the detector plane
- * is defined by the detector hardware. 
- */
-class PlanarMeasurement : public AbsMeasurement {
-
- public:
-  PlanarMeasurement(int nDim = 1);
-  PlanarMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
-
-  virtual ~PlanarMeasurement() {;}
-
-  virtual AbsMeasurement* clone() const override {return new PlanarMeasurement(*this);}
-
-  int getPlaneId() const {return planeId_;}
-
-  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const override;
-
-  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const override;
-
-  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const override;
-
-  virtual void setPlane(const SharedPlanePtr& physicalPlane, int planeId = -1) {physicalPlane_ = physicalPlane; planeId_ = planeId;}
-
-  /** @brief Use if the coordinate for 1D hits measured in V direction.
+  /** @brief Measurement class implementing a planar hit geometry (1 or 2D).
    *
-   * Per default for 1D planar hits, the coordinate is measured in U direction.
-   * With this function you can set it to be measured in V direction.
-   * This affects the outcoe of constructHMatrix().
+   *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
+   *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
+   *  @author Johannes Rauch  (Technische Universit&auml;t M&uuml;nchen, original author)
+   *
+   * The main feature of this type of hit is, that the detector plane
+   * is defined by the detector hardware.
    */
-  void setStripV(bool v = true) {stripV_ = v;}
+  class PlanarMeasurement : public AbsMeasurement {
 
- protected:
-  SharedPlanePtr physicalPlane_;   //! This is persistent, but '!' makes ROOT shut up.
-  int planeId_; // planeId id is -1 per default
-  bool stripV_;
+  public:
+    PlanarMeasurement(int nDim = 1);
+    PlanarMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
- public:
+    virtual ~PlanarMeasurement() {;}
 
-  ClassDefOverride(PlanarMeasurement,1)
+    virtual AbsMeasurement* clone() const override {return new PlanarMeasurement(*this);}
 
-};
+    int getPlaneId() const {return planeId_;}
+
+    virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const override;
+
+    virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const override;
+
+    virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const override;
+
+    virtual void setPlane(const SharedPlanePtr& physicalPlane, int planeId = -1) {physicalPlane_ = physicalPlane; planeId_ = planeId;}
+
+    /** @brief Use if the coordinate for 1D hits measured in V direction.
+     *
+     * Per default for 1D planar hits, the coordinate is measured in U direction.
+     * With this function you can set it to be measured in V direction.
+     * This affects the outcoe of constructHMatrix().
+     */
+    void setStripV(bool v = true) {stripV_ = v;}
+
+  protected:
+    SharedPlanePtr physicalPlane_;   //! This is persistent, but '!' makes ROOT shut up.
+    int planeId_; // planeId id is -1 per default
+    bool stripV_;
+
+  public:
+
+    ClassDefOverride(PlanarMeasurement, 1)
+
+  };
 
 } /* End of namespace genfit */
 /** @} */

@@ -62,41 +62,41 @@ TrackPoint* KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, do
   C_.ResizeTo(dim, dim);
 
   for (size_t i = 0; i < tr->getNumPointsWithMeasurement(); ++i) {
-      TrackPoint *tp = 0;
-      assert(direction == +1 || direction == -1);
-      if (direction == +1)
-        tp = tr->getPointWithMeasurement(i);
-      else if (direction == -1)
-        tp = tr->getPointWithMeasurement(-i-1);
+    TrackPoint* tp = 0;
+    assert(direction == +1 || direction == -1);
+    if (direction == +1)
+      tp = tr->getPointWithMeasurement(i);
+    else if (direction == -1)
+      tp = tr->getPointWithMeasurement(-i - 1);
 
-      if (! tp->hasFitterInfo(rep)) {
-        if (debugLvl_ > 0) {
-          debugOut << "TrackPoint " << i << " has no fitterInfo -> continue. \n";
-        }
-        continue;
-      }
-
-      KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep));
-
-      if (alreadyFitted && fi->hasUpdate(direction)) {
-        if (debugLvl_ > 0) {
-          debugOut << "TrackPoint " << i << " is already fitted -> continue. \n";
-        }
-        prevFi = fi;
-        chi2 += fi->getUpdate(direction)->getChiSquareIncrement();
-        ndf += fi->getUpdate(direction)->getNdf();
-        continue;
-      }
-
-      alreadyFitted = false;
-
+    if (! tp->hasFitterInfo(rep)) {
       if (debugLvl_ > 0) {
-        debugOut << " process TrackPoint nr. " << i << "\n";
+        debugOut << "TrackPoint " << i << " has no fitterInfo -> continue. \n";
       }
-      processTrackPoint(fi, prevFi, tp, chi2, ndf, direction);
-      retVal = tp;
+      continue;
+    }
 
+    KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep));
+
+    if (alreadyFitted && fi->hasUpdate(direction)) {
+      if (debugLvl_ > 0) {
+        debugOut << "TrackPoint " << i << " is already fitted -> continue. \n";
+      }
       prevFi = fi;
+      chi2 += fi->getUpdate(direction)->getChiSquareIncrement();
+      ndf += fi->getUpdate(direction)->getNdf();
+      continue;
+    }
+
+    alreadyFitted = false;
+
+    if (debugLvl_ > 0) {
+      debugOut << " process TrackPoint nr. " << i << "\n";
+    }
+    processTrackPoint(fi, prevFi, tp, chi2, ndf, direction);
+    retVal = tp;
+
+    prevFi = fi;
   }
 
   return retVal;
@@ -106,7 +106,7 @@ TrackPoint* KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, do
 void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits)
 {
   if (tr->hasFitStatus(rep) && tr->getFitStatus(rep)->isTrackPruned()) {
-    Exception exc("KalmanFitterRefTrack::processTrack: Cannot process pruned track!", __LINE__,__FILE__);
+    Exception exc("KalmanFitterRefTrack::processTrack: Cannot process pruned track!", __LINE__, __FILE__);
     throw exc;
   }
 
@@ -123,13 +123,13 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
 
   status->setIsFittedWithReferenceTrack(true);
 
-  unsigned int nIt=0;
+  unsigned int nIt = 0;
   for (;;) {
 
     try {
       if (debugLvl_ > 0) {
         debugOut << " KalmanFitterRefTrack::processTrack with rep " << rep
-        << " (id == " << tr->getIdForRep(rep) << ")"<< ", iteration nr. " << nIt << "\n";
+                 << " (id == " << tr->getIdForRep(rep) << ")" << ", iteration nr. " << nIt << "\n";
       }
 
       // prepare
@@ -149,7 +149,8 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
         status->setNFailedPoints(nFailedHits);
 
         status->setHasTrackChanged(false);
-        status->setCharge(rep->getCharge(*static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
+        status->setCharge(rep->getCharge(*static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(
+                                           rep))->getBackwardUpdate()));
         status->setNumIterations(nIt);
         status->setForwardChi2(chi2FW);
         status->setBackwardChi2(chi2BW);
@@ -211,16 +212,17 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
       ++nIt;
 
 
-      double PvalBW = std::max(0.,ROOT::Math::chisquared_cdf_c(chi2BW, ndfBW));
-      double PvalFW = (debugLvl_ > 0) ? std::max(0.,ROOT::Math::chisquared_cdf_c(chi2FW, ndfFW)) : 0; // Don't calculate if not debugging as this function potentially takes a lot of time.
+      double PvalBW = std::max(0., ROOT::Math::chisquared_cdf_c(chi2BW, ndfBW));
+      double PvalFW = (debugLvl_ > 0) ? std::max(0., ROOT::Math::chisquared_cdf_c(chi2FW,
+                                                 ndfFW)) : 0; // Don't calculate if not debugging as this function potentially takes a lot of time.
 
       if (debugLvl_ > 0) {
         debugOut << "KalmanFitterRefTrack::Track after fit:"; tr->Print("C");
 
         debugOut << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
-            << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
+                 << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
         debugOut << "old pVals: " << oldPvalBW << ", " << oldPvalFW
-            << " new pVals: " << PvalBW << ", " << PvalFW << std::endl;
+                 << " new pVals: " << PvalBW << ", " << PvalFW << std::endl;
       }
 
       // See if p-value only changed little.  If the initial
@@ -234,8 +236,7 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
         // if pVal ~ 0, check if chi2 has changed significantly
         if (fabs(1 - fabs(oldChi2BW / chi2BW)) > relChi2Change_) {
           finished = false;
-        }
-        else {
+        } else {
           finished = true;
           converged = true;
         }
@@ -247,7 +248,7 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
       if (finished) {
         if (debugLvl_ > 0) {
           debugOut << "Fit is finished! ";
-          if(converged)
+          if (converged)
             debugOut << "Fit is converged! ";
           debugOut << "\n";
         }
@@ -261,8 +262,7 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
         status->setNFailedPoints(nFailedHits);
 
         break;
-      }
-      else {
+      } else {
         oldPvalBW = PvalBW;
         oldChi2BW = chi2BW;
         if (debugLvl_ > 0) {
@@ -277,8 +277,7 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
         }
         break;
       }
-    }
-    catch(Exception& e) {
+    } catch (Exception& e) {
       errorOut << e.what();
       status->setIsFitted(false);
       status->setIsFitConvergedFully(false);
@@ -304,8 +303,7 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
 
   if (tp != nullptr) {
     status->setIsFitted();
-  }
-  else { // none of the trackPoints has a fitterInfo
+  } else { // none of the trackPoints has a fitterInfo
     status->setIsFitted(false);
     status->setIsFitConvergedFully(false);
     status->setIsFitConvergedPartially(false);
@@ -325,7 +323,8 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
 }
 
 
-bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool setSortingParams, int& nFailedHits) {
+bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool setSortingParams, int& nFailedHits)
+{
 
   if (debugLvl_ > 0) {
     debugOut << "KalmanFitterRefTrack::prepareTrack \n";
@@ -366,12 +365,12 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
   unsigned int nPoints = tr->getNumPoints();
 
 
-  unsigned int i=0;
+  unsigned int i = 0;
   nFailedHits = 0;
 
 
   // loop over TrackPoints
-  for (; i<nPoints; ++i) {
+  for (; i < nPoints; ++i) {
 
     try {
 
@@ -405,8 +404,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         changedSmthg = true;
         fitterInfo = new KalmanFitterInfo(trackPoint, rep);
         trackPoint->setFitterInfo(fitterInfo);
-      }
-      else {
+      } else {
         if (debugLvl_ > 0) {
           debugOut << "TrackPoint " << i << " (" << trackPoint << ") already has KalmanFitterInfo \n";
         }
@@ -424,8 +422,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           debugOut << "got smoothed state \n";
           //smoothedState->Print();
         }
-      }
-      else {
+      } else {
         smoothedState = nullptr;
       }
 
@@ -454,7 +451,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
         if (prevReferenceState == nullptr) {
           if (debugLvl_ > 0) {
-            debugOut << "TrackPoint already has referenceState but previous referenceState is nullptr -> reset forward info of current reference state and continue \n";
+            debugOut <<
+                     "TrackPoint already has referenceState but previous referenceState is nullptr -> reset forward info of current reference state and continue \n";
           }
 
           referenceState->resetForward();
@@ -472,7 +470,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
         // previous refState has been altered ->need to update transport matrices
         if (debugLvl_ > 0) {
-          debugOut << "TrackPoint already has referenceState but previous referenceState has been altered -> update transport matrices and continue \n";
+          debugOut <<
+                   "TrackPoint already has referenceState but previous referenceState has been altered -> update transport matrices and continue \n";
         }
         StateOnPlane stateToExtrapolate(*prevReferenceState);
 
@@ -493,8 +492,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           BTransportMatrix_.UnitMatrix();
           BNoiseMatrix_.Zero();
           backwardDeltaState_.Zero();
-        }
-        else {
+        } else {
           rep->getForwardJacobianAndNoise(FTransportMatrix_, FNoiseMatrix_, forwardDeltaState_);
           rep->getBackwardJacobianAndNoise(BTransportMatrix_, BNoiseMatrix_, backwardDeltaState_);
         }
@@ -529,36 +527,33 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         if (debugLvl_ > 0)
           debugOut << "construct plane with smoothedState \n";
         plane = trackPoint->getRawMeasurement(0)->constructPlane(*smoothedState);
-      }
-      else if (prevSmoothedState != nullptr) {
+      } else if (prevSmoothedState != nullptr) {
         if (debugLvl_ > 0) {
           debugOut << "construct plane with prevSmoothedState \n";
           //prevSmoothedState->Print();
         }
         plane = trackPoint->getRawMeasurement(0)->constructPlane(*prevSmoothedState);
-      }
-      else if (prevReferenceState != nullptr) {
+      } else if (prevReferenceState != nullptr) {
         if (debugLvl_ > 0) {
           debugOut << "construct plane with prevReferenceState \n";
         }
         plane = trackPoint->getRawMeasurement(0)->constructPlane(*prevReferenceState);
-      }
-      else if (rep != tr->getCardinalRep() &&
-                trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
-                dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != nullptr &&
-                static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
+      } else if (rep != tr->getCardinalRep() &&
+                 trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
+                 dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != nullptr &&
+                 static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates()) {
         if (debugLvl_ > 0) {
           debugOut << "construct plane with smoothed state of cardinal rep fit \n";
         }
         TVector3 pos, mom;
-        const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
+        const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(
+                                                    tr->getCardinalRep()))->getFittedState(true);
         tr->getCardinalRep()->getPosMom(fittedState, pos, mom);
         StateOnPlane cardinalState(rep);
         rep->setPosMom(cardinalState, pos, mom);
         rep->setQop(cardinalState, tr->getCardinalRep()->getQop(fittedState));
         plane = trackPoint->getRawMeasurement(0)->constructPlane(cardinalState);
-      }
-      else {
+      } else {
         if (debugLvl_ > 0) {
           debugOut << "construct plane with state from track \n";
         }
@@ -568,7 +563,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       }
 
       if (plane.get() == nullptr) {
-        Exception exc("KalmanFitterRefTrack::prepareTrack ==> construced plane is nullptr!",__LINE__,__FILE__);
+        Exception exc("KalmanFitterRefTrack::prepareTrack ==> construced plane is nullptr!", __LINE__, __FILE__);
         exc.setFatal();
         throw exc;
       }
@@ -586,32 +581,30 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
             debugOut << "extrapolate smoothedState to plane\n";
           }
           stateToExtrapolate.reset(new StateOnPlane(*smoothedState));
-        }
-        else if (referenceState != nullptr) {
+        } else if (referenceState != nullptr) {
           if (debugLvl_ > 0) {
             debugOut << "extrapolate referenceState to plane\n";
           }
           stateToExtrapolate.reset(new StateOnPlane(*referenceState));
-        }
-        else if (rep != tr->getCardinalRep() &&
-                  trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
-                  dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != nullptr &&
-                  static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
+        } else if (rep != tr->getCardinalRep() &&
+                   trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
+                   dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != nullptr &&
+                   static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates()) {
           if (debugLvl_ > 0) {
             debugOut << "extrapolate smoothed state of cardinal rep fit to plane\n";
           }
           TVector3 pos, mom;
-          const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
+          const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(
+                                                      tr->getCardinalRep()))->getFittedState(true);
           stateToExtrapolate.reset(new StateOnPlane(fittedState));
           stateToExtrapolate->setRep(rep);
-        }
-        else {
+        } else {
           if (debugLvl_ > 0) {
             debugOut << "extrapolate seed from track to plane\n";
           }
           stateToExtrapolate.reset(new StateOnPlane(rep));
           rep->setPosMom(*stateToExtrapolate, tr->getStateSeed());
-      	  rep->setTime(*stateToExtrapolate, tr->getTimeSeed());
+          rep->setTime(*stateToExtrapolate, tr->getTimeSeed());
         }
       } // end if (prevFitterInfo == nullptr)
       else {
@@ -620,9 +613,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
             debugOut << "extrapolate prevSmoothedState to plane \n";
           }
           stateToExtrapolate.reset(new StateOnPlane(*prevSmoothedState));
-        }
-        else {
-          assert (prevReferenceState != nullptr);
+        } else {
+          assert(prevReferenceState != nullptr);
           if (debugLvl_ > 0) {
             debugOut << "extrapolate prevReferenceState to plane \n";
           }
@@ -657,15 +649,14 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         BTransportMatrix_.UnitMatrix();
         BNoiseMatrix_.Zero();
         backwardDeltaState_.Zero();
-      }
-      else {
-        if (i>0)
+      } else {
+        if (i > 0)
           rep->getForwardJacobianAndNoise(FTransportMatrix_, FNoiseMatrix_, forwardDeltaState_);
         rep->getBackwardJacobianAndNoise(BTransportMatrix_, BNoiseMatrix_, backwardDeltaState_);
       }
 
 
-      if (i==0) {
+      if (i == 0) {
         // if we are at first measurement and seed state is defined somewhere else
         segmentLen = 0;
         trackLen = 0;
@@ -687,9 +678,9 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       newRefState = true;
       changedSmthg = true;
       referenceState = new ReferenceStateOnPlane(stateToExtrapolate->getState(),
-             stateToExtrapolate->getPlane(),
-             stateToExtrapolate->getRep(),
-             stateToExtrapolate->getAuxInfo());
+                                                 stateToExtrapolate->getPlane(),
+                                                 stateToExtrapolate->getRep(),
+                                                 stateToExtrapolate->getAuxInfo());
       referenceState->setForwardSegmentLength(segmentLen);
       referenceState->setForwardTransportMatrix(FTransportMatrix_);
       referenceState->setForwardNoiseMatrix(FNoiseMatrix_);
@@ -705,7 +696,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       bool oldWeightsFixed = fitterInfo->areWeightsFixed();
       fitterInfo->deleteMeasurementInfo();
       const std::vector<AbsMeasurement*>& rawMeasurements = trackPoint->getRawMeasurements();
-      for ( std::vector< genfit::AbsMeasurement* >::const_iterator measurement = rawMeasurements.begin(), lastMeasurement = rawMeasurements.end(); measurement != lastMeasurement; ++measurement) {
+      for (std::vector< genfit::AbsMeasurement* >::const_iterator measurement = rawMeasurements.begin(),
+           lastMeasurement = rawMeasurements.end(); measurement != lastMeasurement; ++measurement) {
         assert((*measurement) != nullptr);
         fitterInfo->addMeasurementsOnPlane((*measurement)->constructMeasurementsOnPlane(*referenceState));
       }
@@ -721,8 +713,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       prevFitterInfo = fitterInfo;
       prevSmoothedState = smoothedState;
 
-    }
-    catch (Exception& e) {
+    } catch (Exception& e) {
 
       if (debugLvl_ > 0) {
         errorOut << "exception at hit " << i << "\n";
@@ -731,7 +722,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
       ++nFailedHits;
-      if (maxFailedHits_<0 || nFailedHits <= maxFailedHits_) {
+      if (maxFailedHits_ < 0 || nFailedHits <= maxFailedHits_) {
         prevNewRefState = true;
         referenceState = nullptr;
         smoothedState = nullptr;
@@ -741,7 +732,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           tr->getPoint(i)->setSortingParameter(trackLen);
 
         if (debugLvl_ > 0) {
-          debugOut << "There was an exception, try to continue with next TrackPoint " << i+1 << " \n";
+          debugOut << "There was an exception, try to continue with next TrackPoint " << i + 1 << " \n";
         }
 
         continue;
@@ -752,7 +743,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       removeForwardBackwardInfo(tr, rep, notChangedUntil, notChangedFrom);
 
       // set sorting parameters of rest of TrackPoints and remove FitterInfos
-      for (; i<nPoints; ++i) {
+      for (; i < nPoints; ++i) {
         TrackPoint* trackPoint = tr->getPoint(i);
 
         if (setSortingParams)
@@ -802,7 +793,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
 bool
-KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& notChangedUntil, int& notChangedFrom) {
+KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& notChangedUntil, int& notChangedFrom)
+{
 
   if (debugLvl_ > 0) {
     debugOut << "KalmanFitterRefTrack::removeOutdated \n";
@@ -811,11 +803,11 @@ KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& not
   bool changedSmthg(false);
 
   unsigned int nPoints = tr->getNumPoints();
-  notChangedUntil = nPoints-1;
+  notChangedUntil = nPoints - 1;
   notChangedFrom = 0;
 
   // loop over TrackPoints
-  for (unsigned int i=0; i<nPoints; ++i) {
+  for (unsigned int i = 0; i < nPoints; ++i) {
 
     TrackPoint* trackPoint = tr->getPoint(i);
 
@@ -855,8 +847,8 @@ KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& not
 
       // calculate chi2, ignore off diagonals
       double* resArray = resM_.GetMatrixArray();
-      for (int j=0; j<smoothedState.getCov().GetNcols(); ++j)
-        chi2 += resArray[j]*resArray[j] / smoothedState.getCov()(j,j);
+      for (int j = 0; j < smoothedState.getCov().GetNcols(); ++j)
+        chi2 += resArray[j] * resArray[j] / smoothedState.getCov()(j, j);
 
       if (chi2 < deltaChi2Ref_) {
         // reference state is near smoothed state ->  do not update reference state
@@ -879,10 +871,10 @@ KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& not
     changedSmthg = true;
 
     // decided to update reference state -> set notChangedUntil (only once)
-    if (notChangedUntil == (int)nPoints-1)
-      notChangedUntil = i-1;
+    if (notChangedUntil == (int)nPoints - 1)
+      notChangedUntil = i - 1;
 
-    notChangedFrom = i+1;
+    notChangedFrom = i + 1;
 
   } // end loop over TrackPoints
 
@@ -896,7 +888,8 @@ KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& not
 
 
 void
-KalmanFitterRefTrack::removeForwardBackwardInfo(Track* tr, const AbsTrackRep* rep, int notChangedUntil, int notChangedFrom) const {
+KalmanFitterRefTrack::removeForwardBackwardInfo(Track* tr, const AbsTrackRep* rep, int notChangedUntil, int notChangedFrom) const
+{
 
   unsigned int nPoints = tr->getNumPoints();
 
@@ -907,19 +900,20 @@ KalmanFitterRefTrack::removeForwardBackwardInfo(Track* tr, const AbsTrackRep* re
   }
 
   // delete forward/backward info from/to points where reference states have changed
-  if (notChangedUntil != (int)nPoints-1) {
-    tr->deleteForwardInfo(notChangedUntil+1, -1, rep);
+  if (notChangedUntil != (int)nPoints - 1) {
+    tr->deleteForwardInfo(notChangedUntil + 1, -1, rep);
   }
   if (notChangedFrom != 0)
-    tr->deleteBackwardInfo(0, notChangedFrom-1, rep);
+    tr->deleteBackwardInfo(0, notChangedFrom - 1, rep);
 
 }
 
 
 void
-KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, const TrackPoint* tp, double& chi2, double& ndf, int direction)
+KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, const TrackPoint* tp, double& chi2,
+                                        double& ndf, int direction)
 {
-  if(squareRootFormalism_) {
+  if (squareRootFormalism_) {
     processTrackPointSqrt(fi, prevFi, tp, chi2, ndf, direction);
     return;
   }
@@ -946,28 +940,28 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
     C_ = prevFi->getUpdate(direction)->getCov();
     C_.Similarity(F);
     C_ += N;
-    fi->setPrediction(new MeasuredStateOnPlane(p_, C_, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), fi->getReferenceState()->getAuxInfo()), direction);
+    fi->setPrediction(new MeasuredStateOnPlane(p_, C_, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(),
+                                               fi->getReferenceState()->getAuxInfo()), direction);
     if (debugLvl_ > 1) {
       debugOut << "\033[31m";
       debugOut << "F (Transport Matrix) "; F.Print();
       debugOut << "p_{k,r} (reference state) "; fi->getReferenceState()->getState().Print();
       debugOut << "c (delta state) "; fi->getReferenceState()->getDeltaState(direction).Print();
-      debugOut << "F*p_{k-1,r} + c "; (F *prevFi->getReferenceState()->getState() + fi->getReferenceState()->getDeltaState(direction)).Print();
+      debugOut << "F*p_{k-1,r} + c ";
+      (F * prevFi->getReferenceState()->getState() + fi->getReferenceState()->getDeltaState(direction)).Print();
     }
-  }
-  else {
+  } else {
     if (fi->hasPrediction(direction)) {
       if (debugLvl_ > 0) {
         debugOut << "  Use prediction as start \n";
       }
       p_ = fi->getPrediction(direction)->getState();
       C_ = fi->getPrediction(direction)->getCov();
-    }
-    else {
+    } else {
       if (debugLvl_ > 0) {
         debugOut << "  Use reference state and seed cov as start \n";
       }
-      const AbsTrackRep *rep = fi->getReferenceState()->getRep();
+      const AbsTrackRep* rep = fi->getReferenceState()->getRep();
       p_ = fi->getReferenceState()->getState();
 
       // Convert from 6D covariance of the seed to whatever the trackRep wants.
@@ -996,8 +990,8 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   // update(s)
   double chi2inc = 0;
   double ndfInc = 0;
-  const std::vector<MeasurementOnPlane *> measurements = getMeasurements(fi, tp, direction);
-  for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
+  const std::vector<MeasurementOnPlane*> measurements = getMeasurements(fi, tp, direction);
+  for (std::vector<MeasurementOnPlane*>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
     const MeasurementOnPlane& m = **it;
 
     if (!canIgnoreWeights() && m.getWeight() <= 1.01E-10) {
@@ -1010,8 +1004,8 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
     const AbsHMatrix* H(m.getHMatrix());
     // (weighted) cov
     const TMatrixDSym& V((!canIgnoreWeights() && m.getWeight() < 0.99999) ?
-                          1./m.getWeight() * m.getCov() :
-                          m.getCov());
+                         1. / m.getWeight() * m.getCov() :
+                         m.getCov());
 
     covSumInv_.ResizeTo(C_);
     covSumInv_ = C_; // (V_k + H_k C_{k|k-1} H_k^T)^(-1)
@@ -1028,7 +1022,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
     if (debugLvl_ > 1) {
       debugOut << "\033[34m";
       debugOut << "m (measurement) "; m.getState().Print();
-      debugOut << "V ((weighted) measurement covariance) "; (1./m.getWeight() * m.getCov()).Print();
+      debugOut << "V ((weighted) measurement covariance) "; (1. / m.getWeight() * m.getCov()).Print();
       debugOut << "residual        "; res_.Print();
       debugOut << "\033[0m";
     }
@@ -1071,8 +1065,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
       bool couldInvert(true);
       try {
         tools::invertMatrix(Rinv_);
-      }
-      catch (Exception& e) {
+      } catch (Exception& e) {
         if (debugLvl_ > 1) {
           debugOut << e.what();
         }
@@ -1091,8 +1084,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
 
     if (!canIgnoreWeights()) {
       ndfInc += m.getWeight() * m.getState().GetNrows();
-    }
-    else
+    } else
       ndfInc += m.getState().GetNrows();
 
 
@@ -1102,7 +1094,8 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   ndf += ndfInc;
 
 
-  KalmanFittedStateOnPlane* upState = new KalmanFittedStateOnPlane(p_, C_, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), fi->getReferenceState()->getAuxInfo(), chi2inc, ndfInc);
+  KalmanFittedStateOnPlane* upState = new KalmanFittedStateOnPlane(p_, C_, fi->getReferenceState()->getPlane(),
+      fi->getReferenceState()->getRep(), fi->getReferenceState()->getAuxInfo(), chi2inc, ndfInc);
   upState->setAuxInfo(fi->getReferenceState()->getAuxInfo());
   fi->setUpdate(upState, direction);
 
@@ -1125,7 +1118,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
 
 void
 KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi,
-					    const TrackPoint* tp, double& chi2, double& ndf, int direction)
+                                            const TrackPoint* tp, double& chi2, double& ndf, int direction)
 {
   if (debugLvl_ > 0) {
     debugOut << " KalmanFitterRefTrack::processTrackPointSqrt " << fi->getTrackPoint() << "\n";
@@ -1157,16 +1150,17 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
     tools::noiseMatrixSqrt(N, Q);
     tools::kalmanPredictionCovSqrt(decompS.GetU(), F, Q, S);
 
-    fi->setPrediction(new MeasuredStateOnPlane(p_, TMatrixDSym(TMatrixDSym::kAtA, S), fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), fi->getReferenceState()->getAuxInfo()), direction);
+    fi->setPrediction(new MeasuredStateOnPlane(p_, TMatrixDSym(TMatrixDSym::kAtA, S), fi->getReferenceState()->getPlane(),
+                                               fi->getReferenceState()->getRep(), fi->getReferenceState()->getAuxInfo()), direction);
     if (debugLvl_ > 1) {
       debugOut << "\033[31m";
       debugOut << "F (Transport Matrix) "; F.Print();
       debugOut << "p_{k,r} (reference state) "; fi->getReferenceState()->getState().Print();
       debugOut << "c (delta state) "; fi->getReferenceState()->getDeltaState(direction).Print();
-      debugOut << "F*p_{k-1,r} + c "; (F *prevFi->getReferenceState()->getState() + fi->getReferenceState()->getDeltaState(direction)).Print();
+      debugOut << "F*p_{k-1,r} + c ";
+      (F * prevFi->getReferenceState()->getState() + fi->getReferenceState()->getDeltaState(direction)).Print();
     }
-  }
-  else {
+  } else {
     if (fi->hasPrediction(direction)) {
       if (debugLvl_ > 0) {
         debugOut << "  Use prediction as start \n";
@@ -1175,12 +1169,11 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
       TDecompChol decompS(fi->getPrediction(direction)->getCov());
       decompS.Decompose();
       S = decompS.GetU();
-    }
-    else {
+    } else {
       if (debugLvl_ > 0) {
         debugOut << "  Use reference state and seed cov as start \n";
       }
-      const AbsTrackRep *rep = fi->getReferenceState()->getRep();
+      const AbsTrackRep* rep = fi->getReferenceState()->getRep();
       p_ = fi->getReferenceState()->getState();
 
       // Convert from 6D covariance of the seed to whatever the trackRep wants.
@@ -1212,8 +1205,8 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
   double chi2inc = 0;
   double ndfInc = 0;
 
-  const std::vector<MeasurementOnPlane *> measurements = getMeasurements(fi, tp, direction);
-  for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
+  const std::vector<MeasurementOnPlane*> measurements = getMeasurements(fi, tp, direction);
+  for (std::vector<MeasurementOnPlane*>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
     const MeasurementOnPlane& m = **it;
 
     if (!canIgnoreWeights() && m.getWeight() <= 1.01E-10) {
@@ -1226,8 +1219,8 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
     const AbsHMatrix* H(m.getHMatrix());
     // (weighted) cov
     const TMatrixDSym& V((!canIgnoreWeights() && m.getWeight() < 0.99999) ?
-                          1./m.getWeight() * m.getCov() :
-                          m.getCov());
+                         1. / m.getWeight() * m.getCov() :
+                         m.getCov());
     TDecompChol decompR(V);
     decompR.Decompose();
     const TMatrixD& R(decompR.GetU());
@@ -1238,12 +1231,12 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
 
     TVectorD update;
     tools::kalmanUpdateSqrt(S, res_, R, H,
-			    update, S);
+                            update, S);
 
     if (debugLvl_ > 1) {
       debugOut << "\033[34m";
       debugOut << "m (measurement) "; m.getState().Print();
-      debugOut << "V ((weighted) measurement covariance) "; (1./m.getWeight() * m.getCov()).Print();
+      debugOut << "V ((weighted) measurement covariance) "; (1. / m.getWeight() * m.getCov()).Print();
       debugOut << "residual        "; res_.Print();
       debugOut << "\033[0m";
     }
@@ -1280,8 +1273,7 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
       bool couldInvert(true);
       try {
         tools::invertMatrix(Rinv_);
-      }
-      catch (Exception& e) {
+      } catch (Exception& e) {
         if (debugLvl_ > 1) {
           debugOut << e.what();
         }
@@ -1299,8 +1291,7 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
 
     if (!canIgnoreWeights()) {
       ndfInc += m.getWeight() * m.getState().GetNrows();
-    }
-    else
+    } else
       ndfInc += m.getState().GetNrows();
 
 
@@ -1312,7 +1303,8 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
   ndf += ndfInc;
 
 
-  KalmanFittedStateOnPlane* upState = new KalmanFittedStateOnPlane(p_, C_, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), fi->getReferenceState()->getAuxInfo(), chi2inc, ndfInc);
+  KalmanFittedStateOnPlane* upState = new KalmanFittedStateOnPlane(p_, C_, fi->getReferenceState()->getPlane(),
+      fi->getReferenceState()->getRep(), fi->getReferenceState()->getAuxInfo(), chi2inc, ndfInc);
   upState->setAuxInfo(fi->getReferenceState()->getAuxInfo());
   fi->setUpdate(upState, direction);
 

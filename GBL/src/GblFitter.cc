@@ -3,12 +3,12 @@
  *  Authors: Sergey Yashchenko and Tadeas Bilka
  *
  *  This is an interface to General Broken Lines
- * 
+ *
  *  Version: 6 --------------------------------------------------------------
  *  - complete rewrite to GblFitter using GblFitterInfo and GblFitStatus
- *  - mathematics should be the same except for additional iterations 
+ *  - mathematics should be the same except for additional iterations
  *    (not possible before)
- *  - track is populated with scatterers + additional points with 
+ *  - track is populated with scatterers + additional points with
  *    scatterers and no measurement (optional)
  *  - final track contains GblFitStatus and fitted states from GBL prediction
  *  - 1D/2D hits supported (pixel, single strip, combined strips(2D), wire)
@@ -87,7 +87,8 @@ using namespace genfit;
 /**
  * Destructor
  */
-GblFitter::~GblFitter() {
+GblFitter::~GblFitter()
+{
   if (m_segmentController) {
     delete m_segmentController;
     m_segmentController = nullptr;
@@ -100,16 +101,16 @@ void GblFitter::setTrackSegmentController(GblTrackSegmentController* controler)
     delete m_segmentController;
     m_segmentController = nullptr;
   }
-  m_segmentController = controler;      
+  m_segmentController = controler;
 }
 
 void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits)
 {
   cleanGblInfo(trk, rep);
-  
+
   if (resortHits)
     sortHits(trk, rep);
-  
+
   // This flag enables/disables fitting of q/p parameter in GBL
   // It is switched off automatically if no B-field at (0,0,0) is detected.
   bool fitQoverP = true;
@@ -122,7 +123,7 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
   // Chi2 after fit
   double Chi2 = 0.;
   //FIXME: d-w's not used so far...
-  double lostWeight = 0.;  
+  double lostWeight = 0.;
 
   // Preparation of points (+add reference states) for GBL fit
   // -----------------------------------------------------------------
@@ -135,9 +136,9 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
   //
   //
   gblfs->setTrackLen(
-  //
+    //
     constructGblInfo(trk, rep)
-  //
+    //
   );
   //
   //
@@ -146,7 +147,7 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
   if (m_externalIterations < 1)
     return;
   // -----------------------------------------------------------------
-  
+
   // cppcheck-suppress unreadVariable
   unsigned int nFailed = 0;
   // cppcheck-suppress unreadVariable
@@ -155,55 +156,56 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
   gblIterations.push_back(m_gblInternalIterations);
 
   // Iterations and updates of fitter infos and fit status
-  // ------------------------------------------------------------------- 
+  // -------------------------------------------------------------------
   for (unsigned int iIter = 0; iIter < m_externalIterations; iIter++) {
     // GBL refit (1st of reference, then refit of GBL trajectory itself)
     int nscat = 0, nmeas = 0, ndummy = 0;
     std::vector<gbl::GblPoint> points = collectGblPoints(trk, rep);
-    for(unsigned int ip = 0;ip<points.size(); ip++) {
-      GblPoint & p = points.at(ip);
+    for (unsigned int ip = 0; ip < points.size(); ip++) {
+      GblPoint& p = points.at(ip);
       if (p.hasScatterer())
         nscat++;
       if (p.hasMeasurement())
         nmeas++;
-      if(!p.hasMeasurement()&&!p.hasScatterer())
+      if (!p.hasMeasurement() && !p.hasScatterer())
         ndummy++;
     }
     gbl::GblTrajectory traj(points, gblfs->hasCurvature());
-    
+
     fitRes = traj.fit(Chi2, Ndf, lostWeight, (iIter == m_externalIterations - 1) ? m_gblInternalIterations : "");
-    
+
     // Update fit results in fitterinfos
     updateGblInfo(traj, trk, rep);
-    
+
     // This repropagates to get new Jacobians,
     // if planes changed, predictions are extrapolated to new planes
     if (m_recalcJacobians > iIter) {
       GblFitterInfo* prevFitterInfo = 0;
       GblFitterInfo* currFitterInfo = 0;
       for (unsigned int ip = 0; ip < trk->getNumPoints(); ip++) {
-        if (trk->getPoint(ip)->hasFitterInfo(rep) && (currFitterInfo = dynamic_cast<GblFitterInfo*>(trk->getPoint(ip)->getFitterInfo(rep)))) {
+        if (trk->getPoint(ip)->hasFitterInfo(rep)
+            && (currFitterInfo = dynamic_cast<GblFitterInfo*>(trk->getPoint(ip)->getFitterInfo(rep)))) {
 
           currFitterInfo->recalculateJacobian(prevFitterInfo);
           prevFitterInfo = currFitterInfo;
         }
       }
     }
-        
+
     gblfs->setIsFitted(true);
     gblfs->setIsFitConvergedPartially(fitRes == 0);
     nFailed = trk->getNumPointsWithMeasurement() - nmeas;
     gblfs->setNFailedPoints(nFailed);
     gblfs->setIsFitConvergedFully(fitRes == 0 && nFailed == 0);
     gblfs->setNumIterations(iIter + 1);
-    gblfs->setChi2(Chi2);    
+    gblfs->setChi2(Chi2);
     gblfs->setNdf(Ndf);
     gblfs->setCharge(trk->getFittedState().getCharge());
-    
-    #ifdef DEBUG
-    int npoints_meas = trk->getNumPointsWithMeasurement();  
+
+#ifdef DEBUG
+    int npoints_meas = trk->getNumPointsWithMeasurement();
     int npoints_all = trk->getNumPoints();
-        
+
     cout << "-------------------------------------------------------" << endl;
     cout << "               GBL processed genfit::Track            " << endl;
     cout << "-------------------------------------------------------" << endl;
@@ -214,8 +216,9 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
       cout << " (" << ndummy << " dummy) ";
     cout << endl;
     cout << " # GBL points meas    :  " << nmeas << endl;
-    cout << " # GBL points scat    :  " << nscat << endl;    
-    cout << "-------------- GBL Fit Results ----------- Iteration  " << iIter+1 << " " << ((iIter < gblIterations.size()) ? gblIterations[iIter] : "") << endl;
+    cout << " # GBL points scat    :  " << nscat << endl;
+    cout << "-------------- GBL Fit Results ----------- Iteration  " << iIter + 1 << " " << ((iIter < gblIterations.size()) ?
+         gblIterations[iIter] : "") << endl;
     cout << " Fit q/p parameter    :  " << (gblfs->hasCurvature() ? ("True") : ("False")) << endl;
     cout << " Valid trajectory     :  " << ((traj.isValid()) ? ("True") : ("False")) << endl;
     cout << " Fit result           :  " << fitRes << "    (0 for success)" << endl;
@@ -223,17 +226,18 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
     cout << " GBL track Chi2       :  " << Chi2 << endl;
     cout << " GBL track P-value    :  " << TMath::Prob(Chi2, Ndf) << endl;
     cout << "-------------------------------------------------------" << endl;
-    #endif
-    
-  }  
+#endif
+
+  }
   // -------------------------------------------------------------------
 
 }
 
-void GblFitter::cleanGblInfo(Track* trk, const AbsTrackRep* rep) const {
-  
-  for (int ip = trk->getNumPoints() - 1; ip >=0; ip--) {
-    trk->getPoint(ip)->setScatterer(nullptr); 
+void GblFitter::cleanGblInfo(Track* trk, const AbsTrackRep* rep) const
+{
+
+  for (int ip = trk->getNumPoints() - 1; ip >= 0; ip--) {
+    trk->getPoint(ip)->setScatterer(nullptr);
     trk->getPoint(ip)->deleteFitterInfo(rep);
     //TODO
     if (!trk->getPoint(ip)->hasRawMeasurements())
@@ -241,9 +245,10 @@ void GblFitter::cleanGblInfo(Track* trk, const AbsTrackRep* rep) const {
   }
 }
 
-void GblFitter::sortHits(Track* trk, const AbsTrackRep* rep) const { 
+void GblFitter::sortHits(Track* trk, const AbsTrackRep* rep) const
+{
   // All measurement points in ref. track
-  int npoints_meas = trk->getNumPointsWithMeasurement();  
+  int npoints_meas = trk->getNumPointsWithMeasurement();
   // Prepare state for extrapolation of track seed
   StateOnPlane reference(rep);
   rep->setTime(reference, trk->getTimeSeed());
@@ -253,72 +258,75 @@ void GblFitter::sortHits(Track* trk, const AbsTrackRep* rep) const {
   reference.extrapolateToPlane(firstPlane);
   //1st point is at arc-len=0
   double arcLenPos = 0;
-  
-  // Loop only between meas. points 
+
+  // Loop only between meas. points
   for (int ipoint_meas = 0; ipoint_meas < npoints_meas - 1; ipoint_meas++) {
     // current measurement point
-    TrackPoint* point_meas = trk->getPointWithMeasurement(ipoint_meas);    
+    TrackPoint* point_meas = trk->getPointWithMeasurement(ipoint_meas);
     // Current detector plane
-    SharedPlanePtr plane = point_meas->getRawMeasurement(0)->constructPlane(reference);    
+    SharedPlanePtr plane = point_meas->getRawMeasurement(0)->constructPlane(reference);
     // Get the next plane
-    SharedPlanePtr nextPlane(trk->getPointWithMeasurement(ipoint_meas + 1)->getRawMeasurement(0)->constructPlane(reference));    
-    
+    SharedPlanePtr nextPlane(trk->getPointWithMeasurement(ipoint_meas + 1)->getRawMeasurement(0)->constructPlane(reference));
+
     point_meas->setSortingParameter(arcLenPos);
     arcLenPos += reference.extrapolateToPlane(nextPlane);
-    
+
   } // end of loop over track points with measurement
   trk->getPointWithMeasurement(npoints_meas - 1)->setSortingParameter(arcLenPos);
   trk->sort();
 }
 
-std::vector<gbl::GblPoint> GblFitter::collectGblPoints(genfit::Track* trk, const genfit::AbsTrackRep* rep) {
+std::vector<gbl::GblPoint> GblFitter::collectGblPoints(genfit::Track* trk, const genfit::AbsTrackRep* rep)
+{
   //TODO store collected points in in fit status? need streamer for GblPoint (or something like that)
   std::vector<gbl::GblPoint> thePoints;
   thePoints.clear();
-  
+
   // Collect points from track and fitterInfo(rep)
-  for (unsigned int ip = 0; ip < trk->getNumPoints(); ip++) {   
-    GblFitterInfo * gblfi = dynamic_cast<GblFitterInfo*>(trk->getPoint(ip)->getFitterInfo(rep));
+  for (unsigned int ip = 0; ip < trk->getNumPoints(); ip++) {
+    GblFitterInfo* gblfi = dynamic_cast<GblFitterInfo*>(trk->getPoint(ip)->getFitterInfo(rep));
     if (!gblfi)
       continue;
-    thePoints.push_back(gblfi->constructGblPoint());      
-  }  
+    thePoints.push_back(gblfi->constructGblPoint());
+  }
   return thePoints;
 }
 
-void GblFitter::updateGblInfo(gbl::GblTrajectory& traj, genfit::Track* trk, const genfit::AbsTrackRep* rep) {
+void GblFitter::updateGblInfo(gbl::GblTrajectory& traj, genfit::Track* trk, const genfit::AbsTrackRep* rep)
+{
   //FIXME
   if (!traj.isValid())
     return;
-  
+
   // Update points in track and fitterInfo(rep)
   int igblfi = -1;
-  for (unsigned int ip = 0; ip < trk->getNumPoints(); ip++) {      
-    GblFitterInfo * gblfi = dynamic_cast<GblFitterInfo*>(trk->getPoint(ip)->getFitterInfo(rep));
+  for (unsigned int ip = 0; ip < trk->getNumPoints(); ip++) {
+    GblFitterInfo* gblfi = dynamic_cast<GblFitterInfo*>(trk->getPoint(ip)->getFitterInfo(rep));
     if (!gblfi)
       continue;
     igblfi++;
-    
+
     // The point will calculate its position on the track
     // (counting fitter infos) which hopefully
     gblfi->updateFitResults(traj);
-    
+
     // This is agains logic. User can do this if he wants and it is recommended usually
     // so that following fit could reuse the updated seed
     //if (igblfi == 0) {
     //  trk->setStateSeed( gblfi->getFittedState(true).getPos(), gblfi->getFittedState(true).getMom() );
-    //  trk->setCovSeed( gblfi->getFittedState(true).get6DCov() ); 
-    //}    
+    //  trk->setCovSeed( gblfi->getFittedState(true).get6DCov() );
+    //}
   }
 }
 
 void GblFitter::getScattererFromMatList(double& length,
-                             double& theta, double& s, double& ds,
-                             const double p, const double mass, const double charge,
-                             const std::vector<genfit::MatStep>& steps) const {
+                                        double& theta, double& s, double& ds,
+                                        const double p, const double mass, const double charge,
+                                        const std::vector<genfit::MatStep>& steps) const
+{
   theta = 0.; s = 0.; ds = 0.; length = 0;
   if (steps.empty()) return;
-  
+
   // sum of step lengths
   double len = 0.;
   // normalization
@@ -327,11 +335,11 @@ void GblFitter::getScattererFromMatList(double& length,
   double sumx2x2 = 0.;
   // (part of) second moment / variance (non-normalized)
   double sumx3x3 = 0.;
-  
+
   // cppcheck-suppress unreadVariable
   double xmin = 0.;
   double xmax = 0.;
-  
+
   for (unsigned int i = 0; i < steps.size(); i++) {
     const MatStep step = steps.at(i);
     // inverse of material radiation length ... (in 1/cm) ... "density of scattering"
@@ -340,7 +348,7 @@ void GblFitter::getScattererFromMatList(double& length,
     xmin = xmax;
     xmax = xmin + fabs(step.stepSize_);
     // Compute integrals
-    
+
     // integral of rho(x)
     sumxx   += rho * (xmax - xmin);
     // integral of x*rho(x)
@@ -356,7 +364,7 @@ void GblFitter::getScattererFromMatList(double& length,
   double beta = p / sqrt(p * p + mass * mass);
   theta = (0.0136 / p / beta) * fabs(charge) * sqrt(sumxx) * (1. + 0.038 * log(sumxx));
   //theta = (0.015 / p / beta) * fabs(charge) * sqrt(sumxx);
-  
+
   // track length
   length = len;
   // Normalization factor
@@ -367,41 +375,41 @@ void GblFitter::getScattererFromMatList(double& length,
   // integral of (x - s)*(x - s)*rho(x)
   double ds_2 = N * (sumx3x3 - 2. * sumx2x2 * s + sumxx * s * s);
   ds = sqrt(ds_2);
-  
-  #ifdef DEBUG
-  ////std::cout << "Thick scatterer parameters (dtheta, <s>, ds): " << "(" << theta << ", " << s << ", " << ds << ")" << endl;  
-  #endif
+
+#ifdef DEBUG
+  ////std::cout << "Thick scatterer parameters (dtheta, <s>, ds): " << "(" << theta << ", " << s << ", " << ds << ")" << endl;
+#endif
 }
 
 double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
-{ 
+{
   // All measurement points in ref. track
-  int npoints_meas = trk->getNumPointsWithMeasurement();  
+  int npoints_meas = trk->getNumPointsWithMeasurement();
   // Dimesion of representation/state
-  int dim = rep->getDim();  
+  int dim = rep->getDim();
   // Jacobian for point with measurement = how to propagate from previous point (scat/meas)
   TMatrixD jacPointToPoint(dim, dim);
   jacPointToPoint.UnitMatrix();
-  
+
   // Prepare state for extrapolation of track seed
   // Take the state to first plane
   StateOnPlane reference(rep);
   rep->setTime(reference, trk->getTimeSeed());
   rep->setPosMom(reference, trk->getStateSeed());
 
-  SharedPlanePtr firstPlane(trk->getPointWithMeasurement(0)->getRawMeasurement(0)->constructPlane(reference));  
+  SharedPlanePtr firstPlane(trk->getPointWithMeasurement(0)->getRawMeasurement(0)->constructPlane(reference));
   reference.extrapolateToPlane(firstPlane);
-  
+
   double sumTrackLen = 0;
   // NOT used but useful
   TMatrixDSym noise; TVectorD deltaState;
-  
-  // Loop only between meas. points 
+
+  // Loop only between meas. points
   for (int ipoint_meas = 0; ipoint_meas < npoints_meas; ipoint_meas++) {
     // current measurement point
-    TrackPoint* point_meas = trk->getPointWithMeasurement(ipoint_meas);    
+    TrackPoint* point_meas = trk->getPointWithMeasurement(ipoint_meas);
     // Current detector plane
-    SharedPlanePtr plane = point_meas->getRawMeasurement(0)->constructPlane(reference);    
+    SharedPlanePtr plane = point_meas->getRawMeasurement(0)->constructPlane(reference);
     // track direction at plane (in global coords)
     TVector3 trackDir = rep->getDir(reference);
     // track momentum direction vector at plane (in global coords)
@@ -409,7 +417,7 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
     // charge of particle
     double particleCharge = rep->getCharge(reference);
     // mass of particle
-    double particleMass = rep->getMass(reference);    
+    double particleMass = rep->getMass(reference);
     // Parameters of a thick scatterer between measurements
     double trackLen = 0., scatTheta = 0., scatSMean = 0., scatDeltaS = 0.;
     // Parameters of two equivalent thin scatterers
@@ -417,33 +425,33 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
     // jacobian from s1=0 to s2
     TMatrixD jacMeas2Scat(dim, dim);
     jacMeas2Scat.UnitMatrix();
-    
+
     // Stop here if we are at last point (do not add scatterers to last point),
     // just the fitter info
     if (ipoint_meas >= npoints_meas - 1) {
-            
+
       // Construction last measurement (no scatterer)
       // --------------------------------------------
       // Just add the fitter info of last plane
       GblFitterInfo* gblfimeas(new GblFitterInfo(point_meas, rep, reference));
       gblfimeas->setJacobian(jacPointToPoint);
-      point_meas->setFitterInfo(gblfimeas);      
+      point_meas->setFitterInfo(gblfimeas);
       // --------------------------------------------
-      
+
       break;
     }
     // Extrapolate to next measurement to get material distribution
     // Use a temp copy of the StateOnPlane to propage between measurements
     StateOnPlane refCopy(reference);
     // Get the next plane
-    SharedPlanePtr nextPlane(trk->getPointWithMeasurement(ipoint_meas + 1)->getRawMeasurement(0)->constructPlane(reference));    
-    
+    SharedPlanePtr nextPlane(trk->getPointWithMeasurement(ipoint_meas + 1)->getRawMeasurement(0)->constructPlane(reference));
+
     // Extrapolation for multiple scattering calculation
     // Extrap to point + 1, do NOT stop at boundary
     TVector3 segmentEntry = refCopy.getPos();
     rep->extrapolateToPlane(refCopy, nextPlane, false, false);
     TVector3 segmentExit = refCopy.getPos();
-    
+
     getScattererFromMatList(trackLen,
                             scatTheta,
                             scatSMean,
@@ -456,12 +464,13 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
     // (Solution from Claus Kleinwort (DESY))
     s1 = 0.; s2 = scatSMean + scatDeltaS * scatDeltaS / (scatSMean - s1);
     theta1 = sqrt(scatTheta * scatTheta * scatDeltaS * scatDeltaS / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
-    theta2 = sqrt(scatTheta * scatTheta * (scatSMean - s1) * (scatSMean - s1) / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1))); 
-    
-    // Call segment controller to set MS options:    
+    theta2 = sqrt(scatTheta * scatTheta * (scatSMean - s1) * (scatSMean - s1) / (scatDeltaS * scatDeltaS + (scatSMean - s1) *
+                  (scatSMean - s1)));
+
+    // Call segment controller to set MS options:
     if (m_segmentController)
-      m_segmentController->controlTrackSegment(segmentEntry, segmentExit, scatTheta, this);    
-    
+      m_segmentController->controlTrackSegment(segmentEntry, segmentExit, scatTheta, this);
+
     // Scattering options: OFF / THIN / THICK
     if (m_enableScatterers && !m_enableIntermediateScatterer) {
       theta1 = scatTheta;
@@ -470,27 +479,27 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
       theta1 = 0.;
       theta2 = 0.;
     }
-    
+
     // Construction of measurement (with scatterer)
     // --------------------------------------------
-    
-    if (theta1 > scatEpsilon)  
+
+    if (theta1 > scatEpsilon)
       point_meas->setScatterer(new ThinScatterer(plane, Material(theta1, 0., 0., 0., 0.)));
-    
+
     GblFitterInfo* gblfimeas(new GblFitterInfo(point_meas, rep, reference));
     gblfimeas->setJacobian(jacPointToPoint);
     point_meas->setFitterInfo(gblfimeas);
     // --------------------------------------------
-    
-    
+
+
     // If not last measurement, extrapolate and get jacobians for scattering points between this and next measurement
     if (theta2 > scatEpsilon) {
-      // First scatterer has been placed at current measurement point (see above)      
+      // First scatterer has been placed at current measurement point (see above)
       // theta2 > 0 ... we want second scatterer:
       // Extrapolate to s2 (we have s1 = 0)
-      rep->extrapolateBy(reference, s2, false, true);  
+      rep->extrapolateBy(reference, s2, false, true);
       rep->getForwardJacobianAndNoise(jacMeas2Scat, noise, deltaState);
-      
+
       // Construction of intermediate scatterer
       // --------------------------------------
       TrackPoint* scattp = new TrackPoint(trk);
@@ -505,36 +514,38 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
           break;
         }
       }
-      trk->insertPoint(scattp, pointIndex + 1);      
+      trk->insertPoint(scattp, pointIndex + 1);
       // Create and store fitter info
-      GblFitterInfo * gblfiscat(new GblFitterInfo(scattp, rep, reference));
+      GblFitterInfo* gblfiscat(new GblFitterInfo(scattp, rep, reference));
       gblfiscat->setJacobian(jacMeas2Scat);
       scattp->setFitterInfo(gblfiscat);
       // ---------------------------------------
-            
+
       // Finish extrapolation to next measurement
       double nextStep = rep->extrapolateToPlane(reference, nextPlane, false, true);
       rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
-      
+
       if (0. > nextStep) {
-        cout << " ERROR: The extrapolation to measurement point " << (ipoint_meas + 2) << " stepped back by " << nextStep << "cm !!! Track will be cut before this point." << endl;
+        cout << " ERROR: The extrapolation to measurement point " << (ipoint_meas + 2) << " stepped back by " << nextStep <<
+             "cm !!! Track will be cut before this point." << endl;
         // stop trajectory construction here
         break;
       }
-      
+
     } else {
       // No scattering: extrapolate whole distance between measurements
       double nextStep = rep->extrapolateToPlane(reference, nextPlane, false, true);
       rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
-      
+
       if (0. > nextStep) {
-        cout << " ERROR: The extrapolation to measurement point " << (ipoint_meas + 2) << " stepped back by " << nextStep << "cm !!! Track will be cut before this point." << endl;
+        cout << " ERROR: The extrapolation to measurement point " << (ipoint_meas + 2) << " stepped back by " << nextStep <<
+             "cm !!! Track will be cut before this point." << endl;
         // stop trajectory construction here
         break;
-      }          
+      }
     }
     // Track length up to next point
-    sumTrackLen += trackLen;    
+    sumTrackLen += trackLen;
 
   } // end of loop over track points with measurement
   return sumTrackLen;

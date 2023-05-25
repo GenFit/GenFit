@@ -28,35 +28,36 @@
 
 namespace genfit {
 
-/**
- * @brief Rectangular finite plane.
- */
-class RectangularFinitePlane : public AbsFinitePlane {
+  /**
+   * @brief Rectangular finite plane.
+   */
+  class RectangularFinitePlane : public AbsFinitePlane {
 
- public:
+  public:
 
-  //! give dimensions of finite rectangle: u1,u2, v1,v2
-  RectangularFinitePlane(const double&, const double&, const double&, const double&);
-  RectangularFinitePlane();
-  virtual ~RectangularFinitePlane();
+    //! give dimensions of finite rectangle: u1,u2, v1,v2
+    RectangularFinitePlane(const double&, const double&, const double&, const double&);
+    RectangularFinitePlane();
+    virtual ~RectangularFinitePlane();
 
-  //override inActive & Print methods
-  bool isInActive(double u, double v) const;
-  void Print(const Option_t* = "") const;
+    //override inActive & Print methods
+    bool isInActive(double u, double v) const;
+    void Print(const Option_t* = "") const;
 
-  RectangularFinitePlane* clone() const {
-    return new RectangularFinitePlane(*this);
-  }
+    RectangularFinitePlane* clone() const
+    {
+      return new RectangularFinitePlane(*this);
+    }
 
- private:
+  private:
 
-  double uMin_, uMax_, vMin_, vMax_;
+    double uMin_, uMax_, vMin_, vMax_;
 
- public:
+  public:
 
-  ClassDef(RectangularFinitePlane,1)
+    ClassDef(RectangularFinitePlane, 1)
 
-};
+  };
 
 } /* End of namespace genfit */
 /** @} */

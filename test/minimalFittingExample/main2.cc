@@ -25,13 +25,14 @@
 
 
 
-int main() {
+int main()
+{
 
   // init geometry and mag. field
   new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
-  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0. ,10., 0.)); // 1 T
+  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0., 10., 0.)); // 1 T
 
 
   // init event display
@@ -64,7 +65,7 @@ int main() {
   double detectorResolution(0.001); // resolution of planar detectors
   TMatrixDSym hitCov(2);
   hitCov.UnitMatrix();
-  hitCov *= detectorResolution*detectorResolution;
+  hitCov *= detectorResolution * detectorResolution;
 
 
   // add some planar hits to track with coordinates I just made up
@@ -72,19 +73,22 @@ int main() {
   hitCoords[0] = 0;
   hitCoords[1] = 0;
   genfit::PlanarMeasurement* measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, detId, ++hitId, nullptr);
-  measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(0,0,0), TVector3(1,0,0), TVector3(0,1,0))), ++planeId);
+  measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(0, 0, 0), TVector3(1, 0, 0), TVector3(0, 1, 0))),
+                        ++planeId);
   fitTrack.insertPoint(new genfit::TrackPoint(measurement, &fitTrack));
 
   hitCoords[0] = -0.15;
   hitCoords[1] = 0;
   measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, detId, ++hitId, nullptr);
-  measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(0,0,10), TVector3(1,0,0), TVector3(0,1,0))), ++planeId);
+  measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(0, 0, 10), TVector3(1, 0, 0), TVector3(0, 1, 0))),
+                        ++planeId);
   fitTrack.insertPoint(new genfit::TrackPoint(measurement, &fitTrack));
 
   hitCoords[0] = -0.4;
   hitCoords[1] = 0;
   measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, detId, ++hitId, nullptr);
-  measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(0,0,20), TVector3(1,0,0), TVector3(0,1,0))), ++planeId);
+  measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(0, 0, 20), TVector3(1, 0, 0), TVector3(0, 1, 0))),
+                        ++planeId);
   fitTrack.insertPoint(new genfit::TrackPoint(measurement, &fitTrack));
 
 

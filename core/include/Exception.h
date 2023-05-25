@@ -34,69 +34,69 @@
 
 namespace genfit {
 
-/** @brief Exception class for error handling in GENFIT (provides storage for diagnostic information)
- *
- *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
- *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
- *
- * This is the class that is used for all error handling in GENFIT.
- * It is a utility class that allows to store numbers and matrices together
- * with an error string. The exception class can then be thrown when an error
- * is detected and the C++ exception handling facilities can be used to
- * catch and process the exception.
- */
-class Exception : public std::exception {
-
- public:
-  /** @brief Initializing constructor
+  /** @brief Exception class for error handling in GENFIT (provides storage for diagnostic information)
    *
-   * @param excString error message.
-   * @param line line at which the exception is created. Can be set through __LINE__ macro.
-   * @param file sourcefile in which the exception is created. Can be set through __FILE__ macro.
+   *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
+   *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
+   *
+   * This is the class that is used for all error handling in GENFIT.
+   * It is a utility class that allows to store numbers and matrices together
+   * with an error string. The exception class can then be thrown when an error
+   * is detected and the C++ exception handling facilities can be used to
+   * catch and process the exception.
    */
-  Exception(std::string excString, int line, std::string  file);
-  virtual ~Exception() noexcept;
+  class Exception : public std::exception {
 
-  //! Set fatal flag.
-  void setFatal (bool b=true){fatal_=b;}
-  //! Get fatal flag.
-  bool isFatal (){return fatal_;}
-  //! Set list of numbers with description.
-  void setNumbers (std::string, const std::vector<double>&);
-  //! Set list of matrices with description.
-  void setMatrices(std::string, const std::vector<TMatrixD>&);
+  public:
+    /** @brief Initializing constructor
+     *
+     * @param excString error message.
+     * @param line line at which the exception is created. Can be set through __LINE__ macro.
+     * @param file sourcefile in which the exception is created. Can be set through __FILE__ macro.
+     */
+    Exception(std::string excString, int line, std::string  file);
+    virtual ~Exception() noexcept;
 
-  //! Print information in the exception object.
-  void info();
+    //! Set fatal flag.
+    void setFatal(bool b = true) {fatal_ = b;}
+    //! Get fatal flag.
+    bool isFatal() {return fatal_;}
+    //! Set list of numbers with description.
+    void setNumbers(std::string, const std::vector<double>&);
+    //! Set list of matrices with description.
+    void setMatrices(std::string, const std::vector<TMatrixD>&);
 
-  //! Standard error message handling for exceptions. use like "std::cerr << e.what();"
-  virtual const char* what() const noexcept;
+    //! Print information in the exception object.
+    void info();
 
-  std::string getExcString(){return excString_;}
+    //! Standard error message handling for exceptions. use like "std::cerr << e.what();"
+    virtual const char* what() const noexcept;
 
-  //! "std::cerr << e.what();" will not write anything.
-  static void quiet(bool b=true){quiet_=b;}
+    std::string getExcString() {return excString_;}
 
- private:
+    //! "std::cerr << e.what();" will not write anything.
+    static void quiet(bool b = true) {quiet_ = b;}
 
-  static bool quiet_;
+  private:
 
-  std::string excString_;
-  int line_;
-  std::string file_;
+    static bool quiet_;
 
-  std::string errorMessage_;
+    std::string excString_;
+    int line_;
+    std::string file_;
 
-  std::string numbersLabel_;
-  std::string matricesLabel_;
-  std::vector<double> numbers_;
-  std::vector<TMatrixD> matrices_;
+    std::string errorMessage_;
 
-  bool fatal_;
+    std::string numbersLabel_;
+    std::string matricesLabel_;
+    std::vector<double> numbers_;
+    std::vector<TMatrixD> matrices_;
 
-  //ClassDef(Exception,1)
+    bool fatal_;
 
-};
+    //ClassDef(Exception,1)
+
+  };
 
 } /* End of namespace genfit */
 /** @} */

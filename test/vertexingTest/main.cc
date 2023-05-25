@@ -34,7 +34,8 @@
 
 
 
-int main() {
+int main()
+{
 
   gRandom->SetSeed(14);
 
@@ -45,7 +46,7 @@ int main() {
   // init geometry and mag. field
   new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
-  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0., 15.)); // 15 kGauss
+  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0., 0., 15.)); // 15 kGauss
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
 
@@ -76,7 +77,7 @@ int main() {
   std::vector<genfit::GFRaveVertex*> vertices;
 
   // main loop
-  for (unsigned int iEvent=0; iEvent<10; ++iEvent){
+  for (unsigned int iEvent = 0; iEvent < 10; ++iEvent) {
 
     // clean up
     trackArray.Delete();
@@ -87,19 +88,19 @@ int main() {
 
     unsigned int nTracks = gRandom->Uniform(2, 10);
 
-    for (unsigned int iTrack=0; iTrack<nTracks; ++iTrack){
+    for (unsigned int iTrack = 0; iTrack < nTracks; ++iTrack) {
 
       // true start values
       TVector3 pos(0, 0, 0);
-      TVector3 mom(1.,0,0);
-      mom.SetPhi(gRandom->Uniform(0.,2*TMath::Pi()));
-      mom.SetTheta(gRandom->Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
+      TVector3 mom(1., 0, 0);
+      mom.SetPhi(gRandom->Uniform(0., 2 * TMath::Pi()));
+      mom.SetTheta(gRandom->Uniform(0.4 * TMath::Pi(), 0.6 * TMath::Pi()));
       mom.SetMag(gRandom->Uniform(0.2, 1.));
 
 
       // helix track model
       const int pdg = 13;               // particle pdg code
-      const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
+      const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge() / (3.);
       genfit::HelixTrackModel* helix = new genfit::HelixTrackModel(pos, mom, charge);
       measurementCreator.setTrackModel(helix);
 
@@ -110,27 +111,27 @@ int main() {
       // smeared start values
       const bool smearPosMom = true;     // init the Reps with smeared pos and mom
       const double posSmear = 0.1;     // cm
-      const double momSmear = 3. /180.*TMath::Pi();     // rad
+      const double momSmear = 3. / 180.*TMath::Pi();    // rad
       const double momMagSmear = 0.1;   // relative
 
       TVector3 posM(pos);
       TVector3 momM(mom);
       if (smearPosMom) {
-        posM.SetX(gRandom->Gaus(posM.X(),posSmear));
-        posM.SetY(gRandom->Gaus(posM.Y(),posSmear));
-        posM.SetZ(gRandom->Gaus(posM.Z(),posSmear));
+        posM.SetX(gRandom->Gaus(posM.X(), posSmear));
+        posM.SetY(gRandom->Gaus(posM.Y(), posSmear));
+        posM.SetZ(gRandom->Gaus(posM.Z(), posSmear));
 
-        momM.SetPhi(gRandom->Gaus(mom.Phi(),momSmear));
-        momM.SetTheta(gRandom->Gaus(mom.Theta(),momSmear));
-        momM.SetMag(gRandom->Gaus(mom.Mag(), momMagSmear*mom.Mag()));
+        momM.SetPhi(gRandom->Gaus(mom.Phi(), momSmear));
+        momM.SetTheta(gRandom->Gaus(mom.Theta(), momSmear));
+        momM.SetMag(gRandom->Gaus(mom.Mag(), momMagSmear * mom.Mag()));
       }
       // approximate covariance
       TMatrixDSym covM(6);
       double resolution = 0.01;
       for (int i = 0; i < 3; ++i)
-        covM(i,i) = resolution*resolution;
+        covM(i, i) = resolution * resolution;
       for (int i = 3; i < 6; ++i)
-        covM(i,i) = pow(resolution / nMeasurements / sqrt(3), 2);
+        covM(i, i) = pow(resolution / nMeasurements / sqrt(3), 2);
 
 
       // trackrep
@@ -146,7 +147,7 @@ int main() {
       TMatrixDSym seedCov(6);
       rep->get6DStateCov(stateSmeared, seedState, seedCov);
 
-      new(trackArray[iTrack]) genfit::Track(rep, seedState, seedCov);
+      new (trackArray[iTrack]) genfit::Track(rep, seedState, seedCov);
       genfit::Track* trackPtr(static_cast<genfit::Track*>(trackArray.At(iTrack)));
       tracks.push_back(trackPtr);
 
@@ -157,14 +158,13 @@ int main() {
 
 
       // create smeared measurements and add to track
-      try{
-        for (unsigned int i=1; i<measurementTypes.size(); ++i){
-          std::vector<genfit::AbsMeasurement*> measurements = measurementCreator.create(measurementTypes[i], i*5.);
+      try {
+        for (unsigned int i = 1; i < measurementTypes.size(); ++i) {
+          std::vector<genfit::AbsMeasurement*> measurements = measurementCreator.create(measurementTypes[i], i * 5.);
           trackPtr->insertPoint(new genfit::TrackPoint(measurements, trackPtr));
         }
-      }
-      catch(genfit::Exception& e){
-        std::cerr<<"Exception, next track"<<std::endl;
+      } catch (genfit::Exception& e) {
+        std::cerr << "Exception, next track" << std::endl;
         std::cerr << e.what();
         continue; // here is a memleak!
       }
@@ -173,10 +173,9 @@ int main() {
       assert(trackPtr->checkConsistency());
 
       // do the fit
-      try{
+      try {
         fitter->processTrack(trackPtr);
-      }
-      catch(genfit::Exception& e){
+      } catch (genfit::Exception& e) {
         std::cerr << e.what();
         std::cerr << "Exception, next track" << std::endl;
         continue;
@@ -192,17 +191,17 @@ int main() {
     // vertexing
     vertexFactory.findVertices(&vertices, tracks);
 
-    for (unsigned int i=0; i<vertices.size(); ++i) {
-      new(vertexArray[i]) genfit::GFRaveVertex(*(vertices[i]));
+    for (unsigned int i = 0; i < vertices.size(); ++i) {
+      new (vertexArray[i]) genfit::GFRaveVertex(*(vertices[i]));
 
       genfit::GFRaveVertex* vtx = static_cast<genfit::GFRaveVertex*>(vertices[i]);
-      for (unsigned int j=0; j<vtx->getNTracks(); ++j) {
+      for (unsigned int j = 0; j < vtx->getNTracks(); ++j) {
         std::cout << "track parameters uniqueID: " << vtx->getParameters(j)->GetUniqueID() << "\n";
       }
     }
 
 
-    for (unsigned int i=0; i<tracks.size(); ++i) {
+    for (unsigned int i = 0; i < tracks.size(); ++i) {
       genfit::Track* trk = static_cast<genfit::Track*>(tracks[i]);
       std::cout << "track uniqueID: " << trk->GetUniqueID() << "\n";
     }

@@ -24,37 +24,38 @@
 
 namespace genfit {
 
-AbsFitterInfo::AbsFitterInfo() :
-  trackPoint_(nullptr),
-  rep_(nullptr)
-{
-  ;
-}
+  AbsFitterInfo::AbsFitterInfo() :
+    trackPoint_(nullptr),
+    rep_(nullptr)
+  {
+    ;
+  }
 
-AbsFitterInfo::AbsFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep) :
-  trackPoint_(trackPoint),
-  rep_(rep)
-{
-  ;
-}
+  AbsFitterInfo::AbsFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep) :
+    trackPoint_(trackPoint),
+    rep_(rep)
+  {
+    ;
+  }
 
-void AbsFitterInfo::Streamer(TBuffer &R__b)
-{
-   // Stream an object of class genfit::AbsFitterInfo.
-   //This works around a msvc bug and should be harmless on other platforms
-   typedef ::genfit::AbsFitterInfo thisClass;
-   UInt_t R__s, R__c;
-   if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+  void AbsFitterInfo::Streamer(TBuffer& R__b)
+  {
+    // Stream an object of class genfit::AbsFitterInfo.
+    //This works around a msvc bug and should be harmless on other platforms
+    typedef ::genfit::AbsFitterInfo thisClass;
+    UInt_t R__s, R__c;
+    if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v) { }
       //TObject::Streamer(R__b);
       // See the long comment in AbsFinitePlane::Streamer.  This
       // creates a duplicate of the DetPlane.
       TClass* cl = TClass::Load(R__b);
-      DetPlane *p = (DetPlane*)(cl->New());
+      DetPlane* p = (DetPlane*)(cl->New());
       cl->Streamer(p, R__b);
       sharedPlane_.reset(p);
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
-   } else {
+    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
       //TObject::Streamer(R__b);
       // See the long comment in AbsFinitePlane::Streamer.  This
@@ -63,7 +64,7 @@ void AbsFitterInfo::Streamer(TBuffer &R__b)
       sharedPlane_->IsA()->Store(R__b);
       sharedPlane_->Streamer(R__b);
       R__b.SetByteCount(R__c, kTRUE);
-   }
-}
+    }
+  }
 
 } /* End of namespace genfit */

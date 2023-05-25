@@ -34,37 +34,37 @@
 
 namespace genfit {
 
-/**
- * @brief Abstract base class for finite detector planes.
- *
- * This is most important for avoiding fake intersection points in fitting of curlers.
- * This should be implemented for silicon detectors most importantly.
- */
-class AbsFinitePlane {
+  /**
+   * @brief Abstract base class for finite detector planes.
+   *
+   * This is most important for avoiding fake intersection points in fitting of curlers.
+   * This should be implemented for silicon detectors most importantly.
+   */
+  class AbsFinitePlane {
 
- public:
+  public:
 
-  AbsFinitePlane() {};
-  virtual ~AbsFinitePlane() {};
+    AbsFinitePlane() {};
+    virtual ~AbsFinitePlane() {};
 
-  //! Returns whether a u,v point is in the active plane or not. Needs to be implemented
-  //! in child class.
-  virtual bool isInActive(double u, double v) const = 0;
+    //! Returns whether a u,v point is in the active plane or not. Needs to be implemented
+    //! in child class.
+    virtual bool isInActive(double u, double v) const = 0;
 
-  //! Deep copy ctor for polymorphic class.
-  virtual AbsFinitePlane* clone() const = 0;
+    //! Deep copy ctor for polymorphic class.
+    virtual AbsFinitePlane* clone() const = 0;
 
-  virtual void Print(const Option_t* = "") const = 0;
+    virtual void Print(const Option_t* = "") const = 0;
 
 
- protected:
+  protected:
 
-  // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
-  AbsFinitePlane(const AbsFinitePlane&) {;}
-  AbsFinitePlane& operator=(const AbsFinitePlane&);
+    // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
+    AbsFinitePlane(const AbsFinitePlane&) {;}
+    AbsFinitePlane& operator=(const AbsFinitePlane&);
 
-  ClassDef(AbsFinitePlane, 1);
-};
+    ClassDef(AbsFinitePlane, 1);
+  };
 
 } /* End of namespace genfit */
 /** @} */

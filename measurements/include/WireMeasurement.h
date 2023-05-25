@@ -30,78 +30,78 @@
 
 namespace genfit {
 
-/** @brief Class for measurements in wire detectors (Straw tubes and drift chambers)
- *  which do not measure the coordinate along the wire.
- *
- *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
- *  @author Lia Lavezzi (INFN Pavia, original author)
- *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
- *  @author Johannes Rauch  (Technische Universit&auml;t M&uuml;nchen, original author)
- *
- * This hit class is not valid for any kind of plane orientation
- * choice: to use it you MUST choose a plane described by u
- * and v axes with v coincident with the wire (and u orthogonal
- * to it, obviously).
- * The hit will be described by 7 coordinates:
- * w_x1, w_y1, w_z1, w_x2, w_y2, w_z2, rdrift
- * where w_ji (with j = x, y, z and i = 1, 2) are the wire
- * extremities coordinates; rdrift = distance from the wire (u
- * coordinate in the plane)
- *
- */
-class WireMeasurement : public AbsMeasurement {
-
- public:
-  WireMeasurement(int nDim = 7);
-  WireMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
-
-  virtual ~WireMeasurement() {;}
-
-  virtual AbsMeasurement* clone() const override {return new WireMeasurement(*this);}
-
-  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const override;
-
-  /**  Hits with a small drift distance get a higher weight, whereas hits with
-    * big drift distances become weighted down.
-    * When these initial weights are used by the DAF, the smoothed track will be closer to the real
-    * trajectory than if both sides are weighted with 0.5 regardless of the drift distance.
-    * This helps a lot when resolving l/r ambiguities with the DAF.
-    * The idea is that for the first iteration of the DAF, the wire positions are taken.
-    * For small drift radii, the wire position does not bend the fit away from the
-    * trajectory, whereas the wire position for hits with large drift radii is further away
-    * from the trajectory and will therefore bias the fit if not weighted down.
-    */
-  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const override;
-
-  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const override;
-
-  /** Set maximum drift distance. This is used to calculate the start weights of the two
-   * measurementsOnPlane.
+  /** @brief Class for measurements in wire detectors (Straw tubes and drift chambers)
+   *  which do not measure the coordinate along the wire.
+   *
+   *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
+   *  @author Lia Lavezzi (INFN Pavia, original author)
+   *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
+   *  @author Johannes Rauch  (Technische Universit&auml;t M&uuml;nchen, original author)
+   *
+   * This hit class is not valid for any kind of plane orientation
+   * choice: to use it you MUST choose a plane described by u
+   * and v axes with v coincident with the wire (and u orthogonal
+   * to it, obviously).
+   * The hit will be described by 7 coordinates:
+   * w_x1, w_y1, w_z1, w_x2, w_y2, w_z2, rdrift
+   * where w_ji (with j = x, y, z and i = 1, 2) are the wire
+   * extremities coordinates; rdrift = distance from the wire (u
+   * coordinate in the plane)
+   *
    */
-  void setMaxDistance(double d){maxDistance_ = d;}
-  /**
-   * select how to resolve the left/right ambiguity:
-   * -1: negative (left) side on vector (track direction) x (wire direction)
-   * 0: auto select (take side with smallest distance to track)
-   * 1: positive (right) side on vector (track direction) x (wire direction)
-   */
-  void setLeftRightResolution(int lr);
+  class WireMeasurement : public AbsMeasurement {
 
-  virtual bool isLeftRightMeasurement() const override {return true;}
-  virtual int getLeftRightResolution() const override {return leftRight_;}
+  public:
+    WireMeasurement(int nDim = 7);
+    WireMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
-  double getMaxDistance(){return maxDistance_;}
+    virtual ~WireMeasurement() {;}
 
- protected:
+    virtual AbsMeasurement* clone() const override {return new WireMeasurement(*this);}
 
-  double maxDistance_;
-  signed char leftRight_;
+    virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const override;
 
- public:
+    /**  Hits with a small drift distance get a higher weight, whereas hits with
+      * big drift distances become weighted down.
+      * When these initial weights are used by the DAF, the smoothed track will be closer to the real
+      * trajectory than if both sides are weighted with 0.5 regardless of the drift distance.
+      * This helps a lot when resolving l/r ambiguities with the DAF.
+      * The idea is that for the first iteration of the DAF, the wire positions are taken.
+      * For small drift radii, the wire position does not bend the fit away from the
+      * trajectory, whereas the wire position for hits with large drift radii is further away
+      * from the trajectory and will therefore bias the fit if not weighted down.
+      */
+    virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const override;
 
-  ClassDefOverride(WireMeasurement, 2)
+    virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const override;
 
-};
+    /** Set maximum drift distance. This is used to calculate the start weights of the two
+     * measurementsOnPlane.
+     */
+    void setMaxDistance(double d) {maxDistance_ = d;}
+    /**
+     * select how to resolve the left/right ambiguity:
+     * -1: negative (left) side on vector (track direction) x (wire direction)
+     * 0: auto select (take side with smallest distance to track)
+     * 1: positive (right) side on vector (track direction) x (wire direction)
+     */
+    void setLeftRightResolution(int lr);
+
+    virtual bool isLeftRightMeasurement() const override {return true;}
+    virtual int getLeftRightResolution() const override {return leftRight_;}
+
+    double getMaxDistance() {return maxDistance_;}
+
+  protected:
+
+    double maxDistance_;
+    signed char leftRight_;
+
+  public:
+
+    ClassDefOverride(WireMeasurement, 2)
+
+  };
 
 } /* End of namespace genfit */
 /** @} */

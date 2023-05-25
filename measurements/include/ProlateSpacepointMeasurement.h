@@ -28,45 +28,46 @@
 
 namespace genfit {
 
-/** @brief Class for measurements implementing a space point hit geometry with a very prolate
- * form of the covariance matrix.
- *
- *  @author Johannes Rauch (Technische Universit&auml;t M&uuml;nchen, original author)
- *
- * Measurements from detectors measuring 3D space points with errors in one direction
- * much larger than the errors perpendicular should use this class.
- *
- * For these hits, a virtual detector plane lying in the POCA and
- * perpendicular to the track yields wrong results. Instead, the plane should contain the
- * direction of the largest error.
- *
- * The largest error direction can be set. Standard is in z.
- *
- */
-class ProlateSpacepointMeasurement : public SpacepointMeasurement {
+  /** @brief Class for measurements implementing a space point hit geometry with a very prolate
+   * form of the covariance matrix.
+   *
+   *  @author Johannes Rauch (Technische Universit&auml;t M&uuml;nchen, original author)
+   *
+   * Measurements from detectors measuring 3D space points with errors in one direction
+   * much larger than the errors perpendicular should use this class.
+   *
+   * For these hits, a virtual detector plane lying in the POCA and
+   * perpendicular to the track yields wrong results. Instead, the plane should contain the
+   * direction of the largest error.
+   *
+   * The largest error direction can be set. Standard is in z.
+   *
+   */
+  class ProlateSpacepointMeasurement : public SpacepointMeasurement {
 
- public:
-  ProlateSpacepointMeasurement(int nDim = 3);
-  ProlateSpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
+  public:
+    ProlateSpacepointMeasurement(int nDim = 3);
+    ProlateSpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId,
+                                 TrackPoint* trackPoint);
 
-  virtual ~ProlateSpacepointMeasurement() {;}
+    virtual ~ProlateSpacepointMeasurement() {;}
 
-  virtual AbsMeasurement* clone() const {return new ProlateSpacepointMeasurement(*this);}
+    virtual AbsMeasurement* clone() const {return new ProlateSpacepointMeasurement(*this);}
 
-  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
+    virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
 
 
-  const TVector3& getLargestErrorDirection(){return largestErrorDirection_;}
-  void setLargestErrorDirection(const TVector3& dir){largestErrorDirection_ = dir.Unit();}
+    const TVector3& getLargestErrorDirection() {return largestErrorDirection_;}
+    void setLargestErrorDirection(const TVector3& dir) {largestErrorDirection_ = dir.Unit();}
 
- protected:
-  TVector3 largestErrorDirection_; // direction of largest error
+  protected:
+    TVector3 largestErrorDirection_; // direction of largest error
 
- public:
+  public:
 
-  ClassDef(ProlateSpacepointMeasurement,1)
+    ClassDef(ProlateSpacepointMeasurement, 1)
 
-};
+  };
 
 } /* End of namespace genfit */
 /** @} */

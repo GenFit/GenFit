@@ -28,36 +28,36 @@
 
 namespace genfit {
 
-/**
- * @brief AbsHMatrix implementation for one-dimensional MeasurementOnPlane and RKTrackRep parameterization.
- *
- * This projects out v.
- * H = (0, 0, 0, 0, 1)
- */
-class HMatrixV : public AbsHMatrix {
+  /**
+   * @brief AbsHMatrix implementation for one-dimensional MeasurementOnPlane and RKTrackRep parameterization.
+   *
+   * This projects out v.
+   * H = (0, 0, 0, 0, 1)
+   */
+  class HMatrixV : public AbsHMatrix {
 
- public:
+  public:
 
-  HMatrixV() {;}
+    HMatrixV() {;}
 
-  const TMatrixD& getMatrix() const override;
+    const TMatrixD& getMatrix() const override;
 
-  TVectorD Hv(const TVectorD& v) const override;
+    TVectorD Hv(const TVectorD& v) const override;
 
-  TMatrixD MHt(const TMatrixDSym& M) const override;
-  TMatrixD MHt(const TMatrixD& M) const override;
+    TMatrixD MHt(const TMatrixDSym& M) const override;
+    TMatrixD MHt(const TMatrixD& M) const override;
 
-  void HMHt(TMatrixDSym& M) const override;
+    void HMHt(TMatrixDSym& M) const override;
 
-  virtual HMatrixV* clone() const override {return new HMatrixV(*this);}
+    virtual HMatrixV* clone() const override {return new HMatrixV(*this);}
 
-  virtual bool isEqual(const AbsHMatrix& other) const override {return (dynamic_cast<const HMatrixV*>(&other) != nullptr);}
+    virtual bool isEqual(const AbsHMatrix& other) const override {return (dynamic_cast<const HMatrixV*>(&other) != nullptr);}
 
-  virtual void Print(const Option_t* = "") const override;
+    virtual void Print(const Option_t* = "") const override;
 
-  ClassDefOverride(HMatrixV,1)
+    ClassDefOverride(HMatrixV, 1)
 
-};
+  };
 
 } /* End of namespace genfit */
 /** @} */

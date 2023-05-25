@@ -34,286 +34,292 @@
 
 namespace genfit {
 
-/**
- * @brief Helper for RKTrackRep
- */
-struct RKStep {
-  MatStep matStep_; // material properties and stepsize
-  M1x7 state7_; // 7D state vector
-  StepLimits limits_;
+  /**
+   * @brief Helper for RKTrackRep
+   */
+  struct RKStep {
+    MatStep matStep_; // material properties and stepsize
+    M1x7 state7_; // 7D state vector
+    StepLimits limits_;
 
-  RKStep() {
-    std::fill(state7_.begin(), state7_.end(), 0);
-  }
-};
-
-
-/**
- * @brief Helper for RKTrackRep
- */
-struct ExtrapStep {
-  M7x7 jac7_; // 5D jacobian of transport
-  M7x7 noise7_; // 5D noise matrix
-
-  ExtrapStep() {
-    std::fill(jac7_.begin(), jac7_.end(), 0);
-    std::fill(noise7_.begin(), noise7_.end(), 0);
-  }
-};
+    RKStep()
+    {
+      std::fill(state7_.begin(), state7_.end(), 0);
+    }
+  };
 
 
-/**
- * @brief AbsTrackRep with 5D track parameterization in plane coordinates: (q/p, u', v', u, v)
- *
- * q/p is charge over momentum.
- * u' and v' are direction tangents.
- * u and v are positions on a DetPlane.
- */
-class RKTrackRep : public AbsTrackRep {
+  /**
+   * @brief Helper for RKTrackRep
+   */
+  struct ExtrapStep {
+    M7x7 jac7_; // 5D jacobian of transport
+    M7x7 noise7_; // 5D noise matrix
+
+    ExtrapStep()
+    {
+      std::fill(jac7_.begin(), jac7_.end(), 0);
+      std::fill(noise7_.begin(), noise7_.end(), 0);
+    }
+  };
+
+
+  /**
+   * @brief AbsTrackRep with 5D track parameterization in plane coordinates: (q/p, u', v', u, v)
+   *
+   * q/p is charge over momentum.
+   * u' and v' are direction tangents.
+   * u and v are positions on a DetPlane.
+   */
+  class RKTrackRep : public AbsTrackRep {
     friend class RKTrackRepTests_momMag_Test;
     friend class RKTrackRepTests_calcForwardJacobianAndNoise_Test;
     friend class RKTrackRepTests_getState7_Test;
     friend class RKTrackRepTests_getState5_Test;
 
- public:
+  public:
 
-  RKTrackRep();
-  RKTrackRep(int pdgCode, char propDir = 0);
+    RKTrackRep();
+    RKTrackRep(int pdgCode, char propDir = 0);
 
-  virtual ~RKTrackRep();
+    virtual ~RKTrackRep();
 
-  virtual AbsTrackRep* clone() const override {return new RKTrackRep(*this);}
+    virtual AbsTrackRep* clone() const override {return new RKTrackRep(*this);}
 
-  virtual double extrapolateToPlane(StateOnPlane& state,
-      const SharedPlanePtr& plane,
-      bool stopAtBoundary = false,
-      bool calcJacobianNoise = false) const override;
+    virtual double extrapolateToPlane(StateOnPlane& state,
+                                      const SharedPlanePtr& plane,
+                                      bool stopAtBoundary = false,
+                                      bool calcJacobianNoise = false) const override;
 
-  using AbsTrackRep::extrapolateToLine;
+    using AbsTrackRep::extrapolateToLine;
 
-  virtual double extrapolateToLine(StateOnPlane& state,
-      const TVector3& linePoint,
-      const TVector3& lineDirection,
-      bool stopAtBoundary = false,
-      bool calcJacobianNoise = false) const override;
+    virtual double extrapolateToLine(StateOnPlane& state,
+                                     const TVector3& linePoint,
+                                     const TVector3& lineDirection,
+                                     bool stopAtBoundary = false,
+                                     bool calcJacobianNoise = false) const override;
 
-  virtual double extrapolateToPoint(StateOnPlane& state,
-      const TVector3& point,
-      bool stopAtBoundary = false,
-      bool calcJacobianNoise = false) const override {
-    return extrapToPoint(state, point, nullptr, stopAtBoundary, calcJacobianNoise);
-  }
+    virtual double extrapolateToPoint(StateOnPlane& state,
+                                      const TVector3& point,
+                                      bool stopAtBoundary = false,
+                                      bool calcJacobianNoise = false) const override
+    {
+      return extrapToPoint(state, point, nullptr, stopAtBoundary, calcJacobianNoise);
+    }
 
-  virtual double extrapolateToPoint(StateOnPlane& state,
-      const TVector3& point,
-      const TMatrixDSym& G, // weight matrix (metric)
-      bool stopAtBoundary = false,
-      bool calcJacobianNoise = false) const override {
-    return extrapToPoint(state, point, &G, stopAtBoundary, calcJacobianNoise);
-  }
+    virtual double extrapolateToPoint(StateOnPlane& state,
+                                      const TVector3& point,
+                                      const TMatrixDSym& G, // weight matrix (metric)
+                                      bool stopAtBoundary = false,
+                                      bool calcJacobianNoise = false) const override
+    {
+      return extrapToPoint(state, point, &G, stopAtBoundary, calcJacobianNoise);
+    }
 
-  virtual double extrapolateToCylinder(StateOnPlane& state,
-      double radius,
-      const TVector3& linePoint = TVector3(0.,0.,0.),
-      const TVector3& lineDirection = TVector3(0.,0.,1.),
-      bool stopAtBoundary = false,
-      bool calcJacobianNoise = false) const override;
-
-  
-  virtual double extrapolateToCone(StateOnPlane& state,
-      double radius,
-      const TVector3& linePoint = TVector3(0.,0.,0.),
-      const TVector3& lineDirection = TVector3(0.,0.,1.),
-      bool stopAtBoundary = false,
-      bool calcJacobianNoise = false) const override ;
-
-  virtual double extrapolateToSphere(StateOnPlane& state,
-      double radius,
-      const TVector3& point = TVector3(0.,0.,0.),
-      bool stopAtBoundary = false,
-      bool calcJacobianNoise = false) const override;
-
-  virtual double extrapolateBy(StateOnPlane& state,
-      double step,
-      bool stopAtBoundary = false,
-      bool calcJacobianNoise = false) const override;
+    virtual double extrapolateToCylinder(StateOnPlane& state,
+                                         double radius,
+                                         const TVector3& linePoint = TVector3(0., 0., 0.),
+                                         const TVector3& lineDirection = TVector3(0., 0., 1.),
+                                         bool stopAtBoundary = false,
+                                         bool calcJacobianNoise = false) const override;
 
 
-  unsigned int getDim() const override {return 5;}
+    virtual double extrapolateToCone(StateOnPlane& state,
+                                     double radius,
+                                     const TVector3& linePoint = TVector3(0., 0., 0.),
+                                     const TVector3& lineDirection = TVector3(0., 0., 1.),
+                                     bool stopAtBoundary = false,
+                                     bool calcJacobianNoise = false) const override ;
 
-  virtual TVector3 getPos(const StateOnPlane& state) const override;
+    virtual double extrapolateToSphere(StateOnPlane& state,
+                                       double radius,
+                                       const TVector3& point = TVector3(0., 0., 0.),
+                                       bool stopAtBoundary = false,
+                                       bool calcJacobianNoise = false) const override;
 
-  virtual TVector3 getMom(const StateOnPlane& state) const override;
-  virtual void getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const override;
+    virtual double extrapolateBy(StateOnPlane& state,
+                                 double step,
+                                 bool stopAtBoundary = false,
+                                 bool calcJacobianNoise = false) const override;
 
-  virtual double getMomMag(const StateOnPlane& state) const override;
-  virtual double getMomVar(const MeasuredStateOnPlane& state) const override;
 
-  virtual TMatrixDSym get6DCov(const MeasuredStateOnPlane& state) const override;
-  virtual void getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const override;
-  virtual double getCharge(const StateOnPlane& state) const override;
-  virtual double getQop(const StateOnPlane& state) const override {return state.getState()(0);}
-  double getSpu(const StateOnPlane& state) const;
-  double getTime(const StateOnPlane& state) const override;
+    unsigned int getDim() const override {return 5;}
 
-  virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const override;
+    virtual TVector3 getPos(const StateOnPlane& state) const override;
 
-  virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const override;
+    virtual TVector3 getMom(const StateOnPlane& state) const override;
+    virtual void getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const override;
 
-  std::vector<genfit::MatStep> getSteps() const override;
+    virtual double getMomMag(const StateOnPlane& state) const override;
+    virtual double getMomVar(const MeasuredStateOnPlane& state) const override;
 
-  virtual double getRadiationLenght() const override;
+    virtual TMatrixDSym get6DCov(const MeasuredStateOnPlane& state) const override;
+    virtual void getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const override;
+    virtual double getCharge(const StateOnPlane& state) const override;
+    virtual double getQop(const StateOnPlane& state) const override {return state.getState()(0);}
+    double getSpu(const StateOnPlane& state) const;
+    double getTime(const StateOnPlane& state) const override;
 
-  virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const override;
-  virtual void setPosMom(StateOnPlane& state, const TVectorD& state6) const override;
-  virtual void setPosMomErr(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const override;
-  virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const override;
-  virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const override;
+    virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const override;
 
-  virtual void setChargeSign(StateOnPlane& state, double charge) const override;
-  virtual void setQop(StateOnPlane& state, double qop) const override {state.getState()(0) = qop;}
+    virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const override;
 
-  void setSpu(StateOnPlane& state, double spu) const;
-  void setTime(StateOnPlane& state, double time) const override;
+    std::vector<genfit::MatStep> getSteps() const override;
 
-  //! The actual Runge Kutta propagation
-  /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).
-   *  This is a single Runge-Kutta step.
-   *  If jacobian is nullptr, only the state is propagated,
-   *  otherwise also the 7x7 jacobian is calculated.
-   *  If varField is false, the magnetic field will only be evaluated at the starting position.
-   *  The return value is an estimation on how good the extrapolation is, and it is usually fine if it is > 1.
-   *  It gives a suggestion how you must scale S so that the quality will be sufficient.
-   */
-  virtual double RKPropagate(M1x7& state7,
-                             M7x7* jacobian,
-                             M1x3& SA,
-                             double S,
-                             bool varField = true,
-                             bool calcOnlyLastRowOfJ = false) const;
+    virtual double getRadiationLenght() const override;
 
-  virtual bool isSameType(const AbsTrackRep* other) override;
-  virtual bool isSame(const AbsTrackRep* other) override;
+    virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const override;
+    virtual void setPosMom(StateOnPlane& state, const TVectorD& state6) const override;
+    virtual void setPosMomErr(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TVector3& posErr,
+                              const TVector3& momErr) const override;
+    virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom,
+                              const TMatrixDSym& cov6x6) const override;
+    virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const override;
 
- private:
+    virtual void setChargeSign(StateOnPlane& state, double charge) const override;
+    virtual void setQop(StateOnPlane& state, double qop) const override {state.getState()(0) = qop;}
 
-  void initArrays() const;
+    void setSpu(StateOnPlane& state, double spu) const;
+    void setTime(StateOnPlane& state, double time) const override;
 
-  virtual double extrapToPoint(StateOnPlane& state,
-      const TVector3& point,
-      const TMatrixDSym* G = nullptr, // weight matrix (metric)
-      bool stopAtBoundary = false,
-      bool calcJacobianNoise = false) const;
+    //! The actual Runge Kutta propagation
+    /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).
+     *  This is a single Runge-Kutta step.
+     *  If jacobian is nullptr, only the state is propagated,
+     *  otherwise also the 7x7 jacobian is calculated.
+     *  If varField is false, the magnetic field will only be evaluated at the starting position.
+     *  The return value is an estimation on how good the extrapolation is, and it is usually fine if it is > 1.
+     *  It gives a suggestion how you must scale S so that the quality will be sufficient.
+     */
+    virtual double RKPropagate(M1x7& state7,
+                               M7x7* jacobian,
+                               M1x3& SA,
+                               double S,
+                               bool varField = true,
+                               bool calcOnlyLastRowOfJ = false) const;
 
-  void getState7(const StateOnPlane& state, M1x7& state7) const;
-  void getState5(StateOnPlane& state, const M1x7& state7) const; // state7 must already lie on plane of state!
+    virtual bool isSameType(const AbsTrackRep* other) override;
+    virtual bool isSame(const AbsTrackRep* other) override;
 
-  void calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
+  private:
 
-  void transformPM6(const MeasuredStateOnPlane& state,
-                    M6x6& out6x6) const;
+    void initArrays() const;
 
-  void calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const;
+    virtual double extrapToPoint(StateOnPlane& state,
+                                 const TVector3& point,
+                                 const TMatrixDSym* G = nullptr, // weight matrix (metric)
+                                 bool stopAtBoundary = false,
+                                 bool calcJacobianNoise = false) const;
 
-  void calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
-				   const M1x7& destState7, const DetPlane& destPlane) const;
+    void getState7(const StateOnPlane& state, M1x7& state7) const;
+    void getState5(StateOnPlane& state, const M1x7& state7) const; // state7 must already lie on plane of state!
 
-  void transformM6P(const M6x6& in6x6,
-                    const M1x7& state7,
-                    MeasuredStateOnPlane& state) const; // plane and charge must already be set!
+    void calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
 
-  //! Propagates the particle through the magnetic field.
-  /** If the propagation is successful and the plane is reached, the function returns true.
-    * Propagated state and the jacobian of the extrapolation are written to state7 and jacobianT.
-    * The jacobian is only calculated if jacobianT != nullptr.
-    * In the main loop of the Runge Kutta algorithm, the estimateStep() is called
-    * and may reduce the estimated stepsize so that a maximum momentum loss will not be exceeded,
-    * and stop at material boundaries.
-    * If this is the case, RKutta() will only propagate the reduced distance and then return. This is to ensure that
-    * material effects, which are calculated after the propagation, are taken into account properly.
-    */
-  bool RKutta(const M1x4& SU,
-              const DetPlane& plane,
-              double charge,
-              double mass,
-              M1x7& state7,
-              M7x7* jacobianT,
-              M1x7* J_MMT_unprojected_lastRow,
-              double& coveredDistance, // signed
-              double& flightTime,
-              bool& checkJacProj,
-              M7x7& noiseProjection,
-              StepLimits& limits,
-              bool onlyOneStep = false,
-              bool calcOnlyLastRowOfJ = false) const;
+    void transformPM6(const MeasuredStateOnPlane& state,
+                      M6x6& out6x6) const;
 
-  double estimateStep(const M1x7& state7,
-                      const M1x4& SU,
-                      const DetPlane& plane,
-                      const double& charge,
-                      double& relMomLoss,
-                      StepLimits& limits) const;
+    void calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const;
 
-  TVector3 pocaOnLine(const TVector3& linePoint,
-                     const TVector3& lineDirection,
-                     const TVector3& point) const;
+    void calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
+                                     const M1x7& destState7, const DetPlane& destPlane) const;
 
-  //! Handles propagation and material effects
-  /** #extrapolateToPlane(), #extrapolateToPoint() and #extrapolateToLine() etc. call this function.
-    * #Extrap() needs a plane as an argument, hence #extrapolateToPoint() and #extrapolateToLine() create virtual detector planes.
-    * In this function, #RKutta() is called and the resulting points and point paths are filtered
-    * so that the direction doesn't change and tiny steps are filtered out.
-    * After the propagation the material effects are called via the MaterialEffects singleton.
-    * #Extrap() will loop until the plane is reached, unless the propagation fails or the maximum number of
-    * iterations is exceeded.
-    */
-  double Extrap(const DetPlane& startPlane, // plane where Extrap starts
-                const DetPlane& destPlane, // plane where Extrap has to extrapolate to
+    void transformM6P(const M6x6& in6x6,
+                      const M1x7& state7,
+                      MeasuredStateOnPlane& state) const; // plane and charge must already be set!
+
+    //! Propagates the particle through the magnetic field.
+    /** If the propagation is successful and the plane is reached, the function returns true.
+      * Propagated state and the jacobian of the extrapolation are written to state7 and jacobianT.
+      * The jacobian is only calculated if jacobianT != nullptr.
+      * In the main loop of the Runge Kutta algorithm, the estimateStep() is called
+      * and may reduce the estimated stepsize so that a maximum momentum loss will not be exceeded,
+      * and stop at material boundaries.
+      * If this is the case, RKutta() will only propagate the reduced distance and then return. This is to ensure that
+      * material effects, which are calculated after the propagation, are taken into account properly.
+      */
+    bool RKutta(const M1x4& SU,
+                const DetPlane& plane,
                 double charge,
                 double mass,
-                bool& isAtBoundary,
                 M1x7& state7,
+                M7x7* jacobianT,
+                M1x7* J_MMT_unprojected_lastRow,
+                double& coveredDistance, // signed
                 double& flightTime,
-                bool fillExtrapSteps,
-                TMatrixDSym* cov = nullptr,
+                bool& checkJacProj,
+                M7x7& noiseProjection,
+                StepLimits& limits,
                 bool onlyOneStep = false,
-                bool stopAtBoundary = false,
-                double maxStep = 1.E99) const;
+                bool calcOnlyLastRowOfJ = false) const;
 
-  void checkCache(const StateOnPlane& state, const SharedPlanePtr* plane) const;
+    double estimateStep(const M1x7& state7,
+                        const M1x4& SU,
+                        const DetPlane& plane,
+                        const double& charge,
+                        double& relMomLoss,
+                        StepLimits& limits) const;
 
-  double momMag(const M1x7& state7) const;
+    TVector3 pocaOnLine(const TVector3& linePoint,
+                        const TVector3& lineDirection,
+                        const TVector3& point) const;
 
- protected:
+    //! Handles propagation and material effects
+    /** #extrapolateToPlane(), #extrapolateToPoint() and #extrapolateToLine() etc. call this function.
+      * #Extrap() needs a plane as an argument, hence #extrapolateToPoint() and #extrapolateToLine() create virtual detector planes.
+      * In this function, #RKutta() is called and the resulting points and point paths are filtered
+      * so that the direction doesn't change and tiny steps are filtered out.
+      * After the propagation the material effects are called via the MaterialEffects singleton.
+      * #Extrap() will loop until the plane is reached, unless the propagation fails or the maximum number of
+      * iterations is exceeded.
+      */
+    double Extrap(const DetPlane& startPlane, // plane where Extrap starts
+                  const DetPlane& destPlane, // plane where Extrap has to extrapolate to
+                  double charge,
+                  double mass,
+                  bool& isAtBoundary,
+                  M1x7& state7,
+                  double& flightTime,
+                  bool fillExtrapSteps,
+                  TMatrixDSym* cov = nullptr,
+                  bool onlyOneStep = false,
+                  bool stopAtBoundary = false,
+                  double maxStep = 1.E99) const;
 
-  mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
-  mutable StateOnPlane lastEndState_; //! state where the last extrapolation has ended
+    void checkCache(const StateOnPlane& state, const SharedPlanePtr* plane) const;
 
- private:
+    double momMag(const M1x7& state7) const;
 
-  mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
-  mutable int RKStepsFXStart_; //!
-  mutable int RKStepsFXStop_; //!
-  mutable std::vector<ExtrapStep> ExtrapSteps_; //! steps made in Extrap during last extrapolation
+  protected:
 
-  mutable TMatrixD fJacobian_; //!
-  mutable TMatrixDSym fNoise_; //!
+    mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
+    mutable StateOnPlane lastEndState_; //! state where the last extrapolation has ended
 
-  mutable bool useCache_; //! use cached RKSteps_ for extrapolation
-  mutable unsigned int cachePos_; //!
+  private:
 
-  // auxiliary variables and arrays
-  // needed in Extrap()
-  mutable StepLimits limits_; //!
-  mutable M7x7 noiseArray_; //! noise matrix of the last extrapolation
-  mutable M7x7 noiseProjection_; //!
-  mutable M7x7 J_MMT_; //!
+    mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
+    mutable int RKStepsFXStart_; //!
+    mutable int RKStepsFXStop_; //!
+    mutable std::vector<ExtrapStep> ExtrapSteps_; //! steps made in Extrap during last extrapolation
 
- public:
+    mutable TMatrixD fJacobian_; //!
+    mutable TMatrixDSym fNoise_; //!
 
-  ClassDefOverride(RKTrackRep, 1)
+    mutable bool useCache_; //! use cached RKSteps_ for extrapolation
+    mutable unsigned int cachePos_; //!
 
-};
+    // auxiliary variables and arrays
+    // needed in Extrap()
+    mutable StepLimits limits_; //!
+    mutable M7x7 noiseArray_; //! noise matrix of the last extrapolation
+    mutable M7x7 noiseProjection_; //!
+    mutable M7x7 J_MMT_; //!
+
+  public:
+
+    ClassDefOverride(RKTrackRep, 1)
+
+  };
 
 } /* End of namespace genfit */
 /** @} */

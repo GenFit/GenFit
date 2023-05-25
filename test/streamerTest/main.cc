@@ -38,9 +38,9 @@ constexpr bool verbose = false;
 
 bool emptyTrackTest()
 {
-  TFile *f = TFile::Open(FILENAME, "RECREATE");
+  TFile* f = TFile::Open(FILENAME, "RECREATE");
   f->cd();
-  genfit::Track *t = new genfit::Track();
+  genfit::Track* t = new genfit::Track();
   try {
     t->checkConsistency();
   } catch (genfit::Exception&) {
@@ -68,14 +68,15 @@ bool emptyTrackTest()
 }
 
 
-int main() {
+int main()
+{
   if (!emptyTrackTest()) {
     std::cout << "emptyTrackTest failed." << std::endl;
     return 1;
   }
 
 
-  // prepare output tree for Tracks 
+  // prepare output tree for Tracks
   // std::unique_ptr<genfit::Track> fitTrack(new genfit::Track());
   genfit::Track* fitTrack = new genfit::Track();
   TVectorD stateFinal;
@@ -104,7 +105,7 @@ int main() {
   // init geometry and mag. field
   new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
-  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0., 15.)); // 15 kGauss
+  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0., 0., 15.)); // 15 kGauss
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
 
@@ -114,19 +115,19 @@ int main() {
   unsigned int nEvents(100);
 
   // main loop
-  for (unsigned int iEvent=0; iEvent<nEvents; ++iEvent){
+  for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
 
     // true start values
     TVector3 pos(0, 0, 0);
-    TVector3 mom(1.,0,0);
-    mom.SetPhi(gRandom->Uniform(0.,2*TMath::Pi()));
-    mom.SetTheta(gRandom->Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
+    TVector3 mom(1., 0, 0);
+    mom.SetPhi(gRandom->Uniform(0., 2 * TMath::Pi()));
+    mom.SetTheta(gRandom->Uniform(0.4 * TMath::Pi(), 0.6 * TMath::Pi()));
     mom.SetMag(gRandom->Uniform(0.2, 1.));
 
 
     // helix track model
     const int pdg = 13;               // particle pdg code
-    const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
+    const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge() / (3.);
     genfit::HelixTrackModel* helix = new genfit::HelixTrackModel(pos, mom, charge);
     measurementCreator.setTrackModel(helix);
 
@@ -137,27 +138,27 @@ int main() {
     // smeared start values
     const bool smearPosMom = true;     // init the Reps with smeared pos and mom
     const double posSmear = 0.1;     // cm
-    const double momSmear = 3. /180.*TMath::Pi();     // rad
+    const double momSmear = 3. / 180.*TMath::Pi();    // rad
     const double momMagSmear = 0.1;   // relative
 
     TVector3 posM(pos);
     TVector3 momM(mom);
     if (smearPosMom) {
-      posM.SetX(gRandom->Gaus(posM.X(),posSmear));
-      posM.SetY(gRandom->Gaus(posM.Y(),posSmear));
-      posM.SetZ(gRandom->Gaus(posM.Z(),posSmear));
+      posM.SetX(gRandom->Gaus(posM.X(), posSmear));
+      posM.SetY(gRandom->Gaus(posM.Y(), posSmear));
+      posM.SetZ(gRandom->Gaus(posM.Z(), posSmear));
 
-      momM.SetPhi(gRandom->Gaus(mom.Phi(),momSmear));
-      momM.SetTheta(gRandom->Gaus(mom.Theta(),momSmear));
-      momM.SetMag(gRandom->Gaus(mom.Mag(), momMagSmear*mom.Mag()));
+      momM.SetPhi(gRandom->Gaus(mom.Phi(), momSmear));
+      momM.SetTheta(gRandom->Gaus(mom.Theta(), momSmear));
+      momM.SetMag(gRandom->Gaus(mom.Mag(), momMagSmear * mom.Mag()));
     }
     // approximate covariance
     TMatrixDSym covM(6);
     double resolution = 0.01;
     for (int i = 0; i < 3; ++i)
-      covM(i,i) = resolution*resolution;
+      covM(i, i) = resolution * resolution;
     for (int i = 3; i < 6; ++i)
-      covM(i,i) = pow(resolution / nMeasurements / sqrt(3), 2);
+      covM(i, i) = pow(resolution / nMeasurements / sqrt(3), 2);
 
 
     // trackrep
@@ -182,20 +183,20 @@ int main() {
 
 
     // create smeared measurements and add to track
-    try{
-      for (unsigned int i=0; i<measurementTypes.size(); ++i){
-        std::vector<genfit::AbsMeasurement*> measurements = measurementCreator.create(measurementTypes[i], i*5.);
+    try {
+      for (unsigned int i = 0; i < measurementTypes.size(); ++i) {
+        std::vector<genfit::AbsMeasurement*> measurements = measurementCreator.create(measurementTypes[i], i * 5.);
         genfit::TrackPoint* tp = new genfit::TrackPoint(measurements, fitTrack);
         // test scatterers
-        genfit::ThinScatterer* sc = new genfit::ThinScatterer(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(1,1,1), TVector3(1,1,1))),
-                                                              genfit::Material(1,2,3,4,5));
+        genfit::ThinScatterer* sc = new genfit::ThinScatterer(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(1, 1, 1), TVector3(1, 1,
+                                                              1))),
+                                                              genfit::Material(1, 2, 3, 4, 5));
         tp->setScatterer(sc);
 
         fitTrack->insertPoint(tp);
       }
-    }
-    catch(genfit::Exception& e){
-      std::cerr<<"Exception, next track"<<std::endl;
+    } catch (genfit::Exception& e) {
+      std::cerr << "Exception, next track" << std::endl;
       std::cerr << e.what();
       delete fitTrack;
       fitTrack = 0;
@@ -217,20 +218,20 @@ int main() {
     planeFinal =  *(fitTrack->getFittedState().getPlane());
 
     switch (iEvent % 5) {
-    case 0:
-      break;
-    case 1:
-      fitTrack->prune("FL");
-      break;
-    case 2:
-      fitTrack->prune("W");
-      break;
-    case 3:
-      fitTrack->prune("RC");
-      break;
-    case 4:
-      fitTrack->prune("U");
-      break;
+      case 0:
+        break;
+      case 1:
+        fitTrack->prune("FL");
+        break;
+      case 2:
+        fitTrack->prune("W");
+        break;
+      case 3:
+        fitTrack->prune("RC");
+        break;
+      case 4:
+        fitTrack->prune("U");
+        break;
     }
 
     tResults->Fill();
@@ -277,8 +278,7 @@ int main() {
           *pMatrix == fitTrack->getFittedState().getCov() &&
           *plane ==  *(fitTrack->getFittedState().getPlane())) {
         // track ok
-      }
-      else {
+      } else {
         if (verbose) {
           std::cout << "stored track not equal, small differences can occur if some info has been pruned." << std::endl;
           pState->Print();
@@ -287,15 +287,14 @@ int main() {
           fitTrack->getFittedState().getCov().Print();
           plane->Print();
           fitTrack->getFittedState().getPlane()->Print();
-          }
+        }
         ++fail;
         //return 1;
       }
-    }
-    catch (genfit::Exception& e) {
-        if (verbose) {
-            std::cerr << e.what();
-        }
+    } catch (genfit::Exception& e) {
+      if (verbose) {
+        std::cerr << e.what();
+      }
       return 1;
     }
   }

@@ -26,22 +26,23 @@
 
 namespace genfit {
 
-GFRaveMagneticField *
-GFRaveMagneticField::copy() const{
-  return new GFRaveMagneticField(*this);
-}
+  GFRaveMagneticField*
+  GFRaveMagneticField::copy() const
+  {
+    return new GFRaveMagneticField(*this);
+  }
 
 
-rave::Vector3D
-GFRaveMagneticField::inTesla ( const rave::Point3D & position) const
-{
-  TVector3 pos(position.x(), position.y(), position.z());
+  rave::Vector3D
+  GFRaveMagneticField::inTesla(const rave::Point3D& position) const
+  {
+    TVector3 pos(position.x(), position.y(), position.z());
 
-  TVector3 B = FieldManager::getInstance()->getFieldVal(pos); // magnetic field in kGauss
-  B *= 1.E-1;
+    TVector3 B = FieldManager::getInstance()->getFieldVal(pos); // magnetic field in kGauss
+    B *= 1.E-1;
 
-  return rave::Vector3D (B.X(), B.Y(), B.Z());
-}
+    return rave::Vector3D(B.X(), B.Y(), B.Z());
+  }
 
 
 } /* End of namespace genfit */

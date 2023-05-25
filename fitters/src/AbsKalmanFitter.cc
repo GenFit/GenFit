@@ -38,8 +38,9 @@ using namespace genfit;
 
 
 void AbsKalmanFitter::getChiSquNdf(const Track* tr, const AbsTrackRep* rep,
-    double& bChi2, double& fChi2,
-    double& bNdf,  double& fNdf) const {
+                                   double& bChi2, double& fChi2,
+                                   double& bNdf,  double& fNdf) const
+{
 
   bChi2 = 0;
   fChi2 = 0;
@@ -48,13 +49,13 @@ void AbsKalmanFitter::getChiSquNdf(const Track* tr, const AbsTrackRep* rep,
 
   const std::vector<TrackPoint*>& pointsWM = tr->getPointsWithMeasurement();
   for (std::vector<TrackPoint*>::const_iterator tpIter = pointsWM.begin(), endIter = pointsWM.end(); tpIter != endIter; ++tpIter) {
-    if (! (*tpIter)->hasFitterInfo(rep))
+    if (!(*tpIter)->hasFitterInfo(rep))
       continue;
 
     AbsFitterInfo* afi = (*tpIter)->getFitterInfo(rep);
     KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>(afi);
     if (!fi) {
-      Exception exc("AbsKalmanFitter::getChiSqu(): fitterInfo is not a KalmanFitterInfo", __LINE__,__FILE__);
+      Exception exc("AbsKalmanFitter::getChiSqu(): fitterInfo is not a KalmanFitterInfo", __LINE__, __FILE__);
       throw exc;
     }
 
@@ -62,7 +63,7 @@ void AbsKalmanFitter::getChiSquNdf(const Track* tr, const AbsTrackRep* rep,
     KalmanFittedStateOnPlane* bup = fi->getBackwardUpdate();
 
     if (fup == nullptr || bup == nullptr) {
-      Exception exc("AbsKalmanFitter::getChiSqu(): fup == nullptr || bup == nullptr", __LINE__,__FILE__);
+      Exception exc("AbsKalmanFitter::getChiSqu(): fup == nullptr || bup == nullptr", __LINE__, __FILE__);
       throw exc;
     }
 
@@ -81,7 +82,8 @@ void AbsKalmanFitter::getChiSquNdf(const Track* tr, const AbsTrackRep* rep,
 }
 
 
-double AbsKalmanFitter::getChiSqu(const Track* tr, const AbsTrackRep* rep, int direction) const {
+double AbsKalmanFitter::getChiSqu(const Track* tr, const AbsTrackRep* rep, int direction) const
+{
   double bChi2(0), fChi2(0), bNdf(0), fNdf(0);
 
   getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
@@ -91,7 +93,8 @@ double AbsKalmanFitter::getChiSqu(const Track* tr, const AbsTrackRep* rep, int d
   return fChi2;
 }
 
-double AbsKalmanFitter::getNdf(const Track* tr, const AbsTrackRep* rep, int direction) const {
+double AbsKalmanFitter::getNdf(const Track* tr, const AbsTrackRep* rep, int direction) const
+{
   double bChi2(0), fChi2(0), bNdf(0), fNdf(0);
 
   getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
@@ -101,28 +104,31 @@ double AbsKalmanFitter::getNdf(const Track* tr, const AbsTrackRep* rep, int dire
   return fNdf;
 }
 
-double AbsKalmanFitter::getRedChiSqu(const Track* tr, const AbsTrackRep* rep, int direction) const {
+double AbsKalmanFitter::getRedChiSqu(const Track* tr, const AbsTrackRep* rep, int direction) const
+{
   double bChi2(0), fChi2(0), bNdf(0), fNdf(0);
 
   getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
 
   if (direction < 0)
-    return bChi2/bNdf;
-  return fChi2/fNdf;
+    return bChi2 / bNdf;
+  return fChi2 / fNdf;
 }
 
-double AbsKalmanFitter::getPVal(const Track* tr, const AbsTrackRep* rep, int direction) const {
+double AbsKalmanFitter::getPVal(const Track* tr, const AbsTrackRep* rep, int direction) const
+{
   double bChi2(0), fChi2(0), bNdf(0), fNdf(0);
 
   getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
 
   if (direction < 0)
-    return std::max(0.,ROOT::Math::chisquared_cdf_c(bChi2, bNdf));
-  return std::max(0.,ROOT::Math::chisquared_cdf_c(fChi2, fNdf));
+    return std::max(0., ROOT::Math::chisquared_cdf_c(bChi2, bNdf));
+  return std::max(0., ROOT::Math::chisquared_cdf_c(fChi2, fNdf));
 }
 
 
-bool AbsKalmanFitter::isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const {
+bool AbsKalmanFitter::isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const
+{
   const std::vector<TrackPoint*>& points = tr->getPointsWithMeasurement();
 
   if (points.size() == 0)
@@ -144,7 +150,8 @@ bool AbsKalmanFitter::isTrackPrepared(const Track* tr, const AbsTrackRep* rep) c
   return true;
 }
 
-bool AbsKalmanFitter::isTrackFitted(const Track* tr, const AbsTrackRep* rep) const {
+bool AbsKalmanFitter::isTrackFitted(const Track* tr, const AbsTrackRep* rep) const
+{
   if (! tr->getFitStatus(rep)->isFitted())
     return false;
 
@@ -174,7 +181,9 @@ bool AbsKalmanFitter::isTrackFitted(const Track* tr, const AbsTrackRep* rep) con
 }
 
 
-const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const KalmanFitterInfo* fi, const TrackPoint* tp, int direction) const {
+const std::vector<MeasurementOnPlane*> AbsKalmanFitter::getMeasurements(const KalmanFitterInfo* fi, const TrackPoint* tp,
+    int direction) const
+{
 
   switch (multipleMeasurementHandling_) {
     case weightedAverage :
@@ -182,70 +191,63 @@ const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const K
       return fi->getMeasurementsOnPlane();
 
     case weightedClosestToReference :
-    case unweightedClosestToReference :
-    {
+    case unweightedClosestToReference : {
       if (!fi->hasReferenceState()) {
-        Exception e("AbsKalmanFitter::getMeasurement: no ReferenceState.", __LINE__,__FILE__);
+        Exception e("AbsKalmanFitter::getMeasurement: no ReferenceState.", __LINE__, __FILE__);
         e.setFatal();
         throw e;
       }
-      std::vector<MeasurementOnPlane *> retVal;
+      std::vector<MeasurementOnPlane*> retVal;
       retVal.push_back(fi->getClosestMeasurementOnPlane(fi->getReferenceState()));
       return retVal;
     }
 
     case weightedClosestToPrediction :
-    case unweightedClosestToPrediction :
-    {
+    case unweightedClosestToPrediction : {
       if (!fi->hasPrediction(direction)) {
-        Exception e("AbsKalmanFitter::getMeasurement: no prediction.", __LINE__,__FILE__);
+        Exception e("AbsKalmanFitter::getMeasurement: no prediction.", __LINE__, __FILE__);
         e.setFatal();
         throw e;
       }
-      std::vector<MeasurementOnPlane *> retVal;
+      std::vector<MeasurementOnPlane*> retVal;
       retVal.push_back(fi->getClosestMeasurementOnPlane(fi->getPrediction(direction)));
       return retVal;
     }
 
 
     case weightedClosestToReferenceWire :
-    case unweightedClosestToReferenceWire :
-    {
+    case unweightedClosestToReferenceWire : {
       if (tp->getNumRawMeasurements() == 1 && tp->getRawMeasurement()->isLeftRightMeasurement()) {
         if (!fi->hasReferenceState()) {
-          Exception e("AbsKalmanFitter::getMeasurement: no ReferenceState.", __LINE__,__FILE__);
+          Exception e("AbsKalmanFitter::getMeasurement: no ReferenceState.", __LINE__, __FILE__);
           e.setFatal();
           throw e;
         }
-        std::vector<MeasurementOnPlane *> retVal;
+        std::vector<MeasurementOnPlane*> retVal;
         retVal.push_back(fi->getClosestMeasurementOnPlane(fi->getReferenceState()));
         return retVal;
-      }
-      else
+      } else
         return fi->getMeasurementsOnPlane();
     }
 
     case weightedClosestToPredictionWire :
-    case unweightedClosestToPredictionWire :
-    {
+    case unweightedClosestToPredictionWire : {
       if (tp->getNumRawMeasurements() == 1 && tp->getRawMeasurement()->isLeftRightMeasurement()) {
         if (!fi->hasPrediction(direction)) {
-          Exception e("AbsKalmanFitter::getMeasurement: no prediction.", __LINE__,__FILE__);
+          Exception e("AbsKalmanFitter::getMeasurement: no prediction.", __LINE__, __FILE__);
           e.setFatal();
           throw e;
         }
-        std::vector<MeasurementOnPlane *> retVal;
+        std::vector<MeasurementOnPlane*> retVal;
         retVal.push_back(fi->getClosestMeasurementOnPlane(fi->getPrediction(direction)));
         return retVal;
-      }
-      else
+      } else
         return fi->getMeasurementsOnPlane();
     }
 
 
-    default:
-    {
-      Exception e("AbsKalmanFitter::getMeasurement: choice not valid.", __LINE__,__FILE__);
+    default: {
+      Exception e("AbsKalmanFitter::getMeasurement: choice not valid.", __LINE__, __FILE__);
       e.setFatal();
       throw e;
     }
@@ -253,7 +255,8 @@ const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const K
 }
 
 
-bool AbsKalmanFitter::canIgnoreWeights() const {
+bool AbsKalmanFitter::canIgnoreWeights() const
+{
   switch (multipleMeasurementHandling_) {
     case unweightedAverage :
     case unweightedClosestToReference :
@@ -269,9 +272,8 @@ bool AbsKalmanFitter::canIgnoreWeights() const {
     case weightedClosestToPredictionWire :
       return false;
 
-    default:
-    {
-      Exception e("AbsKalmanFitter::canIgnoreWeights: choice not valid.", __LINE__,__FILE__);
+    default: {
+      Exception e("AbsKalmanFitter::canIgnoreWeights: choice not valid.", __LINE__, __FILE__);
       e.setFatal();
       throw e;
     }

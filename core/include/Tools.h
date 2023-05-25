@@ -33,68 +33,68 @@
  */
 namespace genfit {
 
-class AbsHMatrix;
+  class AbsHMatrix;
 
-namespace tools {
+  namespace tools {
 
-/** @brief Invert a matrix, throwing an Exception when inversion fails.
- * Optional calculation of determinant.
- */
-void invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* determinant = nullptr);
-/** @brief Same, replacing its argument.
- */
-void invertMatrix(TMatrixDSym& mat, double* determinant = nullptr);
+    /** @brief Invert a matrix, throwing an Exception when inversion fails.
+     * Optional calculation of determinant.
+     */
+    void invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* determinant = nullptr);
+    /** @brief Same, replacing its argument.
+     */
+    void invertMatrix(TMatrixDSym& mat, double* determinant = nullptr);
 
-/** @brief Solves R^t x = b, replacing b with the solution for x.  R is
- *  assumed to be upper diagonal.
- */
-bool transposedForwardSubstitution(const TMatrixD& R, TVectorD& b);
-/** @brief Same, for a column of the matrix b.  */
-bool transposedForwardSubstitution(const TMatrixD& R, TMatrixD& b, int nCol);
-/** @brief Inverts the transpose of the upper right matrix R into inv.  */
-bool transposedInvert(const TMatrixD& R, TMatrixD& inv);
+    /** @brief Solves R^t x = b, replacing b with the solution for x.  R is
+     *  assumed to be upper diagonal.
+     */
+    bool transposedForwardSubstitution(const TMatrixD& R, TVectorD& b);
+    /** @brief Same, for a column of the matrix b.  */
+    bool transposedForwardSubstitution(const TMatrixD& R, TMatrixD& b, int nCol);
+    /** @brief Inverts the transpose of the upper right matrix R into inv.  */
+    bool transposedInvert(const TMatrixD& R, TMatrixD& inv);
 
-/** @brief Replaces A with an upper right matrix connected to A by
- *  an orthongonal transformation.  I.e., it computes R from a QR
- *  decomposition of A = QR, replacing A.
- */
-void QR(TMatrixD& A);
+    /** @brief Replaces A with an upper right matrix connected to A by
+     *  an orthongonal transformation.  I.e., it computes R from a QR
+     *  decomposition of A = QR, replacing A.
+     */
+    void QR(TMatrixD& A);
 
-/** @brief Replaces A with an upper right matrix connected to A by
- *  an orthongonal transformation.  I.e., it computes R from a QR
- *  decomposition of A = QR, replacing A.  Also replaces b by Q'b
- *  where Q' is the transposed of Q.
- */
-void QR(TMatrixD& A, TVectorD& b);
+    /** @brief Replaces A with an upper right matrix connected to A by
+     *  an orthongonal transformation.  I.e., it computes R from a QR
+     *  decomposition of A = QR, replacing A.  Also replaces b by Q'b
+     *  where Q' is the transposed of Q.
+     */
+    void QR(TMatrixD& A, TVectorD& b);
 
-/** @brief Calculate a sqrt for the positive semidefinite noise
- *  matrix.  Rows corresponding to zero eigenvalues are omitted.
- *  This gives the transposed of the square root, i.e.
- *    noise = noiseSqrt * noiseSqrt'
- */    
-void
-noiseMatrixSqrt(const TMatrixDSym& noise,
-		TMatrixD& noiseSqrt);
+    /** @brief Calculate a sqrt for the positive semidefinite noise
+     *  matrix.  Rows corresponding to zero eigenvalues are omitted.
+     *  This gives the transposed of the square root, i.e.
+     *    noise = noiseSqrt * noiseSqrt'
+     */
+    void
+    noiseMatrixSqrt(const TMatrixDSym& noise,
+                    TMatrixD& noiseSqrt);
 
-/** @brief Calculates the square root of the covariance matrix after
- *  the Kalman prediction (i.e. extrapolation) with transport matrix F
- *  and the noise square root Q.  Gives the new covariance square
- *  root.  */
-void
-kalmanPredictionCovSqrt(const TMatrixD& S,
-			const TMatrixD& F, const TMatrixD& Q,
-			TMatrixD& Snew);
+    /** @brief Calculates the square root of the covariance matrix after
+     *  the Kalman prediction (i.e. extrapolation) with transport matrix F
+     *  and the noise square root Q.  Gives the new covariance square
+     *  root.  */
+    void
+    kalmanPredictionCovSqrt(const TMatrixD& S,
+                            const TMatrixD& F, const TMatrixD& Q,
+                            TMatrixD& Snew);
 
-/** @brief Calculate the Kalman measurement update with no transport.
- *  x, S : state prediction, covariance square root
- *  res, R, H : residual, measurement covariance square root, H matrix of the measurement
- */
-void
-kalmanUpdateSqrt(const TMatrixD& S,
-		 const TVectorD& res, const TMatrixD& R, const AbsHMatrix* H,
-		 TVectorD& update, TMatrixD& SNew);
+    /** @brief Calculate the Kalman measurement update with no transport.
+     *  x, S : state prediction, covariance square root
+     *  res, R, H : residual, measurement covariance square root, H matrix of the measurement
+     */
+    void
+    kalmanUpdateSqrt(const TMatrixD& S,
+                     const TVectorD& res, const TMatrixD& R, const AbsHMatrix* H,
+                     TVectorD& update, TMatrixD& SNew);
 
-} /* End of namespace tools */
+  } /* End of namespace tools */
 } /* End of namespace genfit */
 /** @} */
 

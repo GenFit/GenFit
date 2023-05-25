@@ -117,10 +117,11 @@ TH1I* stats;
 
 
 
-bool writeHistoDataForLabel(double label, TVectorD res, TVectorD measErr, TVectorD resErr, TVectorD downWeights, TVectorD localPar, TMatrixDSym localCov)
+bool writeHistoDataForLabel(double label, TVectorD res, TVectorD measErr, TVectorD resErr, TVectorD downWeights, TVectorD localPar,
+                            TMatrixDSym localCov)
 {
   if (label < 1.) return false;
-  
+
   unsigned int id = floor(label);
   // skip segment (5 bits)
   id = id >> 5;
@@ -136,12 +137,12 @@ bool writeHistoDataForLabel(double label, TVectorD res, TVectorD measErr, TVecto
   } else {
     label = layer + 3;
   }
-  
+
   if (label > 12.) return false;
-  
+
   int i = int(label);
-  
-  #ifdef OUTPUT
+
+#ifdef OUTPUT
   resHistosU[i - 1]->Fill(res[0]);
   resHistosV[i - 1]->Fill(res[1]);
   mhistosU[i - 1]->Fill(res[0] / measErr[0]);
@@ -155,9 +156,9 @@ bool writeHistoDataForLabel(double label, TVectorD res, TVectorD measErr, TVecto
   localPar3[i - 1]->Fill(localPar(2));
   localPar4[i - 1]->Fill(localPar(3));
   localPar5[i - 1]->Fill(localPar(4));
-  #endif
-  
-  
+#endif
+
+
   return true;
 }
 #endif
@@ -173,22 +174,22 @@ using namespace std;
 using namespace genfit;
 
 GFGbl::GFGbl() :
-AbsFitter(), m_milleFileName("millefile.dat"), m_gblInternalIterations("THC"), m_pValueCut(0.), m_minNdf(1),
-m_chi2Cut(0.),
-m_enableScatterers(true),
-m_enableIntermediateScatterer(true)
+  AbsFitter(), m_milleFileName("millefile.dat"), m_gblInternalIterations("THC"), m_pValueCut(0.), m_minNdf(1),
+  m_chi2Cut(0.),
+  m_enableScatterers(true),
+  m_enableIntermediateScatterer(true)
 {
-  
+
 }
 
 void GFGbl::beginRun()
 {
   milleFile = new MilleBinary(m_milleFileName);
-  
-  #ifdef OUTPUT
+
+#ifdef OUTPUT
   diag = new TFile(rootFileName.c_str(), "RECREATE");
   char name[20];
-  
+
   for (int i = 0; i < 12; i++) {
     sprintf(name, "res_u_%i", i + 1);
     resHistosU[i] = new TH1F(name, "Residual (U)", 1000, -0.1, 0.1);
@@ -207,7 +208,7 @@ void GFGbl::beginRun()
     sprintf(name, "downWeights_v_%i", i + 1);
     downWeightsHistosV[i] = new TH1F(name, "Down-weights (V)", 1000, 0., 1.);
     sprintf(name, "localPar1_%i", i + 1);
-    
+
     localPar1[i] = new TH1F(name, "Residual (U)", 1000, -0.1, 0.1);
     sprintf(name, "localPar2_%i", i + 1);
     localPar2[i] = new TH1F(name, "Residual (U)", 1000, -0.1, 0.1);
@@ -222,19 +223,19 @@ void GFGbl::beginRun()
   ndfHisto = new TH1I("ndf", "GBL Track NDF", 41, -1, 40);
   chi2OndfHisto = new TH1F("chi2_ndf", "Track Chi2/NDF", 100, 0., 10.);
   pValueHisto = new TH1F("p_value", "Track P-value", 100, 0., 1.);
-  
+
   stats = new TH1I("stats", "0: NDF>0 | 1: fTel&VXD | 2: all | 3: VXD | 4: SVD | 5: all - PXD | 6: fTel&SVD | 7: bTel", 10, 0, 10);
-  
-  #endif
+
+#endif
 }
 
 void GFGbl::endRun()
 {
-  #ifdef OUTPUT
+#ifdef OUTPUT
   diag->cd();
   diag->Write();
   diag->Close();
-  #endif
+#endif
   // This is needed to close the file before alignment starts
   if (milleFile)
     delete milleFile;
@@ -260,11 +261,12 @@ void GFGbl::endRun()
  * @param steps Vector of material steps from (RKTrackRep) extrapolation
  * @return void
  */
-void getScattererFromMatList(double& length, double& theta, double& s, double& ds, const double p, const double mass, const double charge, const std::vector<MatStep>& steps)
+void getScattererFromMatList(double& length, double& theta, double& s, double& ds, const double p, const double mass,
+                             const double charge, const std::vector<MatStep>& steps)
 {
   theta = 0.; s = 0.; ds = 0.;
   if (steps.empty()) return;
-  
+
   // sum of step lengths
   double len = 0.;
   // normalization
@@ -273,11 +275,11 @@ void getScattererFromMatList(double& length, double& theta, double& s, double& d
   double sumx2x2 = 0.;
   // (part of) second moment / variance (non-normalized)
   double sumx3x3 = 0.;
-  
+
   // cppcheck-suppress unreadVariable
   double xmin = 0.;
   double xmax = 0.;
-  
+
   for (unsigned int i = 0; i < steps.size(); i++) {
     const MatStep step = steps.at(i);
     // inverse of material radiation length ... (in 1/cm) ... "density of scattering"
@@ -286,7 +288,7 @@ void getScattererFromMatList(double& length, double& theta, double& s, double& d
     xmin = xmax;
     xmax = xmin + fabs(step.stepSize_);
     // Compute integrals
-    
+
     // integral of rho(x)
     sumxx   += rho * (xmax - xmin);
     // integral of x*rho(x)
@@ -302,7 +304,7 @@ void getScattererFromMatList(double& length, double& theta, double& s, double& d
   double beta = p / sqrt(p * p + mass * mass);
   theta = (0.0136 / p / beta) * fabs(charge) * sqrt(sumxx) * (1. + 0.038 * log(sumxx));
   //theta = (0.015 / p / beta) * fabs(charge) * sqrt(sumxx);
-  
+
   // track length
   length = len;
   // Normalization factor
@@ -313,14 +315,14 @@ void getScattererFromMatList(double& length, double& theta, double& s, double& d
   // integral of (x - s)*(x - s)*rho(x)
   double ds_2 = N * (sumx3x3 - 2. * sumx2x2 * s + sumxx * s * s);
   ds = sqrt(ds_2);
-  
-  #ifdef DEBUG
+
+#ifdef DEBUG
   //cout << "Thick scatterer parameters:" << endl;
   //cout << "Variance of theta: " << theta << endl;
   //cout << "Mean s           : " << s << endl;
   //cout << "Variance of s    : " << ds << endl;
-  
-  #endif
+
+#endif
 }
 
 
@@ -338,37 +340,37 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
   double Bfield = genfit::FieldManager::getInstance()->getFieldVal(TVector3(0., 0., 0.)).Mag();
   if (!(Bfield > 0.))
     fitQoverP = false;
-  
+
   // Dimesion of repository/state
   int dim = rep->getDim();
   // current measurement point
   TrackPoint* point_meas;
   // current raw measurement
   AbsMeasurement* raw_meas;
-  
+
   // We assume no initial kinks, this will be reused several times
   TVectorD scatResidual(2);
   scatResidual.Zero();
-  
+
   // All measurement points in ref. track
   int npoints_meas = trk->getNumPointsWithMeasurement();
-  
-  #ifdef DEBUG
+
+#ifdef DEBUG
   int npoints_all = trk->getNumPoints();
-  
+
   if (resortHits)
     cout << "WARNING: Hits resorting in GBL interface not supported." << endl;
-  
+
   cout << "-------------------------------------------------------" << endl;
   cout << "               GBL processing genfit::Track            " << endl;
   cout << "-------------------------------------------------------" << endl;
   cout << " # Ref. Track Points  :  " << npoints_all  << endl;
   cout << " # Meas. Points       :  " << npoints_meas << endl;
-  
-  #endif
+
+#endif
   // List of prepared GBL points for GBL trajectory construction
   std::vector<GblPoint> listOfPoints;
-  
+
   std::vector<double> listOfLayers;
   //TODO: Add internal/external seed (from CDC) option in the future
   // index of point with seed information (0 for none)
@@ -377,25 +379,25 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
   // TMatrixDSym clCov(dim);
   // Seed state
   TMatrixDSym clSeed(dim);
-  
+
   // propagation Jacobian to next point from current measurement point
   TMatrixD jacPointToPoint(dim, dim);
   jacPointToPoint.UnitMatrix();
-  
+
   int n_gbl_points = 0;
   int n_gbl_meas_points = 0;
   int Ndf = 0;
   double Chi2 = 0.;
   double lostWeight = 0.;
-  
+
   // Momentum of track at current plane
   double trackMomMag = 0.;
   // Charge of particle at current plane :-)
   double particleCharge = 1.;
-  
+
   for (int ipoint_meas = 0; ipoint_meas < npoints_meas; ipoint_meas++) {
     point_meas = trk->getPointWithMeasurement(ipoint_meas);
-    
+
     if (!point_meas->hasFitterInfo(rep)) {
       cout << " ERROR: Measurement point does not have a fitter info. Track will be skipped." << endl;
       return;
@@ -413,7 +415,8 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       return;
     }
     // Reference StateOnPlane for extrapolation
-    ReferenceStateOnPlane* reference = new ReferenceStateOnPlane(*fi->getReferenceState());//(dynamic_cast<const genfit::ReferenceStateOnPlane&>(*fi->getReferenceState()));
+    ReferenceStateOnPlane* reference = new ReferenceStateOnPlane(
+      *fi->getReferenceState());//(dynamic_cast<const genfit::ReferenceStateOnPlane&>(*fi->getReferenceState()));
     // Representation state at plane
     TVectorD state = reference->getState();
     // track direction at plane (in global coords)
@@ -424,7 +427,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
     particleCharge = rep->getCharge(*reference);
     // mass of particle
     double particleMass = rep->getMass(*reference);
-    
+
     // Parameters of a thick scatterer between measurements
     double trackLen = 0.;
     double scatTheta = 0.;
@@ -435,14 +438,14 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
     double theta2 = 0.;
     double s1 = 0.;
     double s2 = 0.;
-    
+
     TMatrixDSym noise;
     TVectorD deltaState;
     // jacobian from s2 to M2
     TMatrixD jacMeas2Scat(dim, dim);
     jacMeas2Scat.UnitMatrix();
-    
-    
+
+
     // Now get measurement. First have a look if we need to combine SVD clusters...
     // Load Jacobian from previous extrapolation
     // rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
@@ -450,48 +453,48 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
     int sensorId = 0;
     PlanarMeasurement* measPlanar = dynamic_cast<PlanarMeasurement*>(point_meas->getRawMeasurement(0));
     if (measPlanar) sensorId = measPlanar->getPlaneId();
-    
+
     //WARNING: Now we only support 2D measurements. If 2 raw measurements are stored at the track
     // point, these are checked if they correspond to "u" and "v" measurement (for SVD clusters) and these
     // measurements are combined. SLANTED SENSORS NOT YET SUPPORTED!!!
     if (point_meas->getRawMeasurement(0)->getDim() != 2
-      && trk->getPointWithMeasurement(ipoint_meas)->getNumRawMeasurements() == 2
-      && point_meas->getRawMeasurement(0)->getDim() == 1
-      && point_meas->getRawMeasurement(1)->getDim() == 1) {
+        && trk->getPointWithMeasurement(ipoint_meas)->getNumRawMeasurements() == 2
+        && point_meas->getRawMeasurement(0)->getDim() == 1
+        && point_meas->getRawMeasurement(1)->getDim() == 1) {
       AbsMeasurement* raw_measU = 0;
       AbsMeasurement* raw_measV = 0;
-    
+
       // cout << " Two 1D Measurements encountered. " << endl;
-    
+
       int sensorId2 = -1;
       PlanarMeasurement* measPlanar2 = dynamic_cast<PlanarMeasurement*>(point_meas->getRawMeasurement(0));
       if (measPlanar2) sensorId2 = measPlanar->getPlaneId();
-    
+
       // We only try to combine if at same sensor id (should be always, but who knows)
       // otherwise ignore this point
       if (sensorId != sensorId2) {
-	skipMeasurement = true;
-	cout << " ERROR: Incompatible sensorIDs at measurement point " << ipoint_meas << ". Measurement will be skipped." << endl;
+        skipMeasurement = true;
+        cout << " ERROR: Incompatible sensorIDs at measurement point " << ipoint_meas << ". Measurement will be skipped." << endl;
       }
-    
+
       // We have to combine two SVD 1D Clusters at the same plane into one 2D recohit
       AbsMeasurement* raw_meas1 = point_meas->getRawMeasurement(0);
       AbsMeasurement* raw_meas2 = point_meas->getRawMeasurement(1);
       // Decide which cluster is u and which v based on H-matrix
       if (raw_meas1->constructHMatrix(rep)->isEqual(genfit::HMatrixU())
-	  && raw_meas2->constructHMatrix(rep)->isEqual(genfit::HMatrixV())) {
-	// right order U, V
-	raw_measU = raw_meas1;
-	raw_measV = raw_meas2;
+          && raw_meas2->constructHMatrix(rep)->isEqual(genfit::HMatrixV())) {
+        // right order U, V
+        raw_measU = raw_meas1;
+        raw_measV = raw_meas2;
       } else if (raw_meas2->constructHMatrix(rep)->isEqual(genfit::HMatrixU())
-		 && raw_meas1->constructHMatrix(rep)->isEqual(genfit::HMatrixV())) {
+                 && raw_meas1->constructHMatrix(rep)->isEqual(genfit::HMatrixV())) {
         // inversed order V, U
         raw_measU = raw_meas2;
-	raw_measV = raw_meas1;
+        raw_measV = raw_meas1;
       } else {
-	// Incompatible measurements ... skip track ... I saw this once and just before a segfault ...
-	cout << " ERROR: Incompatible 1D measurements at meas. point " << ipoint_meas << ". Track will be skipped." << endl;
-	return;
+        // Incompatible measurements ... skip track ... I saw this once and just before a segfault ...
+        cout << " ERROR: Incompatible 1D measurements at meas. point " << ipoint_meas << ". Track will be skipped." << endl;
+        return;
       }
       // Combine raw measurements
       TVectorD _raw_coor(2);
@@ -511,11 +514,11 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
     //TODO: We only support 2D measurements in GBL (ot two 1D combined above)
     if (raw_meas->getRawHitCoords().GetNoElements() != 2) {
       skipMeasurement = true;
-      #ifdef DEBUG
+#ifdef DEBUG
       cout << " WARNING: Measurement " << (ipoint_meas + 1) << " is not 2D. Measurement Will be skipped. " << endl;
-      #endif
+#endif
     }
-      
+
     // Now we have all necessary information, so lets insert current measurement point
     // if we don't want to skip it (e.g. ghost SVD hit ... just 1D information)
     if (!skipMeasurement) {
@@ -529,7 +532,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       TVectorD residual = -1. * (raw_coor - HitHMatrix->Hv(state));
 
       trkChi2 += residual(0) * residual(0) / raw_cov(0, 0) + residual(1) * residual(1) / raw_cov(1, 1);
-        
+
       // Measurement point
       GblPoint measPoint(jacPointToPoint);
       // Projection from local (state) coordinates to measurement coordinates (inverted)
@@ -545,18 +548,18 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       //raw_cov *= 100.;
       //proL2m.Print();
       measPoint.addMeasurement(proL2m, residual, raw_cov.Invert());
-        
+
       //Add global derivatives to the point
-        
+
       // sensor label = sensorID * 10, then last digit is label for global derivative for the sensor
       int label = sensorId * 10;
       // values for global derivatives
       //TMatrixD derGlobal(2, 6);
       TMatrixD derGlobal(2, 12);
-        
+
       // labels for global derivatives
       std::vector<int> labGlobal;
-        
+
       // track direction in global coords
       TVector3 tDir = trackDir;
       // sensor u direction in global coords
@@ -571,17 +574,17 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       //outputVector(nDir, "Normal");
       // track direction in local sensor system
       TVector3 tLoc = TVector3(uDir.Dot(tDir), vDir.Dot(tDir), nDir.Dot(tDir));
-        
+
       // track u-slope in local sensor system
       double uSlope = tLoc[0] / tLoc[2];
       // track v-slope in local sensor system
       double vSlope = tLoc[1] / tLoc[2];
-        
+
       // Measured track u-position in local sensor system
       double uPos = raw_coor[0];
       // Measured track v-position in local sensor system
       double vPos = raw_coor[1];
-        
+
       //Global derivatives for alignment in sensor local coordinates
       derGlobal(0, 0) = 1.0;
       derGlobal(0, 1) = 0.0;
@@ -589,7 +592,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       derGlobal(0, 3) = vPos * uSlope;
       derGlobal(0, 4) = -uPos * uSlope;
       derGlobal(0, 5) = vPos;
-        
+
       derGlobal(1, 0) = 0.0;
       derGlobal(1, 1) = 1.0;
       derGlobal(1, 2) = - vSlope;
@@ -606,7 +609,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
 
       // Global derivatives for movement of whole detector system in global coordinates
       //TODO: Usage of this requires Hierarchy Constraints to be provided to MP2
-  
+
       // sensor centre position in global system
       TVector3 detPos = plane->getO();
       //cout << "detPos" << endl;
@@ -630,8 +633,8 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       TMatrixD drdm(3, 3);
       drdm.UnitMatrix();
       for (int row = 0; row < 3; row++)
-	for (int col = 0; col < 3; col++)
-	  drdm(row, col) -= tDir[row] * nDir[col] / tn;
+        for (int col = 0; col < 3; col++)
+          drdm(row, col) -= tDir[row] * nDir[col] / tn;
 
       //cout << "drdm" << endl;
       //drdm.Print();
@@ -699,9 +702,9 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       listOfLayers.push_back((unsigned int) sensorId);
       n_gbl_points++;
       skipMeasurement = false;
-      #ifdef DEBUG
+#ifdef DEBUG
       cout << " Dummy point inserted. " << endl;
-      #endif
+#endif
     }
 
 
@@ -710,46 +713,47 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
 
       // Extrapolate to next measurement to get material distribution
       if (ipoint_meas < npoints_meas - 1) {
-	// Check if fitter info is in place
-	if (!trk->getPoint(ipoint_meas + 1)->hasFitterInfo(rep)) {
-	  cout << " ERROR: Measurement point does not have a fitter info. Track will be skipped." << endl;
-	  return;
-	}
-	// Fitter of next point info which is only used now to get the plane
-	KalmanFitterInfo* fi_i_plus_1 = dynamic_cast<KalmanFitterInfo*>(trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep));
-	if (!fi_i_plus_1) {
-	  cout << " ERROR: KalmanFitterInfo (with reference state) for measurement does not exist. Track will be skipped." << endl;
-	  return;
-	}
-	StateOnPlane refCopy(*reference);
-	// Extrap to point + 1, do NOT stop at boundary
-	rep->extrapolateToPlane(refCopy, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, false);
-	getScattererFromMatList(trackLen,
-				scatTheta,
-				scatSMean,
-				scatDeltaS,
-				trackMomMag,
-				particleMass,
-				particleCharge,
-				rep->getSteps());
-	// Now calculate positions and scattering variance for equivalent scatterers
-	// (Solution from Claus Kleinwort (DESY))
-	s1 = 0.;
-	s2 = scatSMean + scatDeltaS * scatDeltaS / (scatSMean - s1);
-	theta1 = sqrt(scatTheta * scatTheta * scatDeltaS * scatDeltaS / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
-	theta2 = sqrt(scatTheta * scatTheta * (scatSMean - s1) * (scatSMean - s1) / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
+        // Check if fitter info is in place
+        if (!trk->getPoint(ipoint_meas + 1)->hasFitterInfo(rep)) {
+          cout << " ERROR: Measurement point does not have a fitter info. Track will be skipped." << endl;
+          return;
+        }
+        // Fitter of next point info which is only used now to get the plane
+        KalmanFitterInfo* fi_i_plus_1 = dynamic_cast<KalmanFitterInfo*>(trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep));
+        if (!fi_i_plus_1) {
+          cout << " ERROR: KalmanFitterInfo (with reference state) for measurement does not exist. Track will be skipped." << endl;
+          return;
+        }
+        StateOnPlane refCopy(*reference);
+        // Extrap to point + 1, do NOT stop at boundary
+        rep->extrapolateToPlane(refCopy, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, false);
+        getScattererFromMatList(trackLen,
+                                scatTheta,
+                                scatSMean,
+                                scatDeltaS,
+                                trackMomMag,
+                                particleMass,
+                                particleCharge,
+                                rep->getSteps());
+        // Now calculate positions and scattering variance for equivalent scatterers
+        // (Solution from Claus Kleinwort (DESY))
+        s1 = 0.;
+        s2 = scatSMean + scatDeltaS * scatDeltaS / (scatSMean - s1);
+        theta1 = sqrt(scatTheta * scatTheta * scatDeltaS * scatDeltaS / (scatDeltaS * scatDeltaS + (scatSMean - s1) * (scatSMean - s1)));
+        theta2 = sqrt(scatTheta * scatTheta * (scatSMean - s1) * (scatSMean - s1) / (scatDeltaS * scatDeltaS + (scatSMean - s1) *
+                      (scatSMean - s1)));
 
-	if (m_enableScatterers && !m_enableIntermediateScatterer) {
-	  theta1 = scatTheta;
-	  theta2 = 0;
-	} else if (!m_enableScatterers) {
-	  theta1 = 0.;
-	  theta2 = 0.;
-	}
+        if (m_enableScatterers && !m_enableIntermediateScatterer) {
+          theta1 = scatTheta;
+          theta2 = 0;
+        } else if (!m_enableScatterers) {
+          theta1 = 0.;
+          theta2 = 0.;
+        }
 
-	if (s2 < 1.e-4 || s2 >= trackLen - 1.e-4 || s2 <= 1.e-4) {
-	  cout << " WARNING: GBL points will be too close. GBLTrajectory construction might fail. Let's try it..." << endl;
-	}
+        if (s2 < 1.e-4 || s2 >= trackLen - 1.e-4 || s2 <= 1.e-4) {
+          cout << " WARNING: GBL points will be too close. GBLTrajectory construction might fail. Let's try it..." << endl;
+        }
 
       }
       // Return back to state on current plane
@@ -758,29 +762,30 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
 
       // If not last measurement, extrapolate and get jacobians for scattering points between this and next measurement
       if (ipoint_meas < npoints_meas - 1) {
-	if (theta2 > scatEpsilon) {
-	  // First scatterer will be placed at current measurement point (see bellow)
+        if (theta2 > scatEpsilon) {
+          // First scatterer will be placed at current measurement point (see bellow)
 
-	  // theta2 > 0 ... we want second scatterer:
-	  // Extrapolate to s2 (remember we have s1 = 0)
-	  rep->extrapolateBy(*reference, s2, false, true);
-	  rep->getForwardJacobianAndNoise(jacMeas2Scat, noise, deltaState);
-	  // Finish extrapolation to next measurement
-	  double nextStep = rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, true);
-	  if (0. > nextStep) {
-	    cout << " ERROR: The extrapolation to measurement point " << (ipoint_meas + 2) << " stepped back by " << nextStep << "cm !!! Track will be skipped." << endl;
-	    return;
-	  }
-	  rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
+          // theta2 > 0 ... we want second scatterer:
+          // Extrapolate to s2 (remember we have s1 = 0)
+          rep->extrapolateBy(*reference, s2, false, true);
+          rep->getForwardJacobianAndNoise(jacMeas2Scat, noise, deltaState);
+          // Finish extrapolation to next measurement
+          double nextStep = rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, true);
+          if (0. > nextStep) {
+            cout << " ERROR: The extrapolation to measurement point " << (ipoint_meas + 2) << " stepped back by " << nextStep <<
+                 "cm !!! Track will be skipped." << endl;
+            return;
+          }
+          rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
 
-	} else {
-	  // No scattering: extrapolate whole distance between measurements
-	  rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, true);
-	  //NOTE: we will load the jacobian from this extrapolation in next loop into measurement point
-	  //jacPointToPoint.Print();
-	  rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
-	  //jacPointToPoint.Print();
-	}
+        } else {
+          // No scattering: extrapolate whole distance between measurements
+          rep->extrapolateToPlane(*reference, trk->getPoint(ipoint_meas + 1)->getFitterInfo(rep)->getPlane(), false, true);
+          //NOTE: we will load the jacobian from this extrapolation in next loop into measurement point
+          //jacPointToPoint.Print();
+          rep->getForwardJacobianAndNoise(jacPointToPoint, noise, deltaState);
+          //jacPointToPoint.Print();
+        }
       }
     } catch (...) {
       cout << " ERROR: Extrapolation failed. Track will be skipped." << endl;
@@ -795,39 +800,39 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
     if (ipoint_meas < npoints_meas - 1) {
 
       if (theta1 > scatEpsilon) {
-	// We have to insert first scatterer at measurement point
-	// Therefore (because state is perpendicular to plane, NOT track)
-	// we have non-diaonal matrix of multiple scattering covariance
-	// We have to project scattering into plane coordinates
-	double c1 = trackDir.Dot(plane->getU());
-	double c2 = trackDir.Dot(plane->getV());
-	TMatrixDSym scatCov(2);
-	scatCov(0, 0) = 1. - c2 * c2;
-	scatCov(1, 1) = 1. - c1 * c1;
-	scatCov(0, 1) = c1 * c2;
-	scatCov(1, 0) = c1 * c2;
-	scatCov *= theta1 * theta1 / (1. - c1 * c1 - c2 * c2) / (1. - c1 * c1 - c2 * c2) ;
+        // We have to insert first scatterer at measurement point
+        // Therefore (because state is perpendicular to plane, NOT track)
+        // we have non-diaonal matrix of multiple scattering covariance
+        // We have to project scattering into plane coordinates
+        double c1 = trackDir.Dot(plane->getU());
+        double c2 = trackDir.Dot(plane->getV());
+        TMatrixDSym scatCov(2);
+        scatCov(0, 0) = 1. - c2 * c2;
+        scatCov(1, 1) = 1. - c1 * c1;
+        scatCov(0, 1) = c1 * c2;
+        scatCov(1, 0) = c1 * c2;
+        scatCov *= theta1 * theta1 / (1. - c1 * c1 - c2 * c2) / (1. - c1 * c1 - c2 * c2) ;
 
-	// last point is the just inserted measurement (or dummy point)
-	GblPoint& lastPoint = listOfPoints.at(n_gbl_points - 1);
-	lastPoint.addScatterer(scatResidual, scatCov.Invert());
+        // last point is the just inserted measurement (or dummy point)
+        GblPoint& lastPoint = listOfPoints.at(n_gbl_points - 1);
+        lastPoint.addScatterer(scatResidual, scatCov.Invert());
 
       }
 
       if (theta2 > scatEpsilon) {
-	// second scatterer is somewhere between measurements
-	// TrackRep state is perpendicular to track direction if using extrapolateBy (I asked Johannes Rauch),
-	// therefore scattering covariance is diagonal (and both elements are equal)
-	TMatrixDSym scatCov(2);
-	scatCov.Zero();
-	scatCov(0, 0) = theta2 * theta2;
-	scatCov(1, 1) = theta2 * theta2;
+        // second scatterer is somewhere between measurements
+        // TrackRep state is perpendicular to track direction if using extrapolateBy (I asked Johannes Rauch),
+        // therefore scattering covariance is diagonal (and both elements are equal)
+        TMatrixDSym scatCov(2);
+        scatCov.Zero();
+        scatCov(0, 0) = theta2 * theta2;
+        scatCov(1, 1) = theta2 * theta2;
 
-	GblPoint scatPoint(jacMeas2Scat);
-	scatPoint.addScatterer(scatResidual, scatCov.Invert());
-	listOfPoints.push_back(scatPoint);
-	listOfLayers.push_back(((unsigned int) sensorId) + 0.5);
-	n_gbl_points++;
+        GblPoint scatPoint(jacMeas2Scat);
+        scatPoint.addScatterer(scatResidual, scatCov.Invert());
+        listOfPoints.push_back(scatPoint);
+        listOfLayers.push_back(((unsigned int) sensorId) + 0.5);
+        n_gbl_points++;
       }
 
 
@@ -856,20 +861,20 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       // Gbl failed critically (usually GblPoint::getDerivatives ... singular matrix inversion)
       return;
     }
-    
+
     pvalue = TMath::Prob(Chi2, Ndf);
-    
+
     //traj->printTrajectory(100);
     //traj->printData();
     //traj->printPoints(100);
-    
-    #ifdef OUTPUT
+
+#ifdef OUTPUT
     // Fill histogram with fit result
     fitResHisto->Fill(fitRes);
     ndfHisto->Fill(Ndf);
-    #endif
-    
-    #ifdef DEBUG
+#endif
+
+#ifdef DEBUG
     cout << " Ref. Track Chi2      :  " << trkChi2 << endl;
     cout << " Ref. end momentum    :  " << trackMomMag << " GeV/c ";
     if (abs(trk->getCardinalRep()->getPDG()) == 11) {
@@ -892,24 +897,24 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       cout << " < p-value cut " << m_pValueCut;
     cout << endl;
     cout << "-------------------------------------------------------" << endl;
-    #endif
-    
-    #ifdef OUTPUT
+#endif
+
+#ifdef OUTPUT
     bool hittedLayers[12];
     for (int hl = 0; hl < 12; hl++) {
       hittedLayers[hl] = false;
     }
-    #endif
-    
+#endif
+
     // GBL fit succeded if Ndf >= 0, but Ndf = 0 is useless
     //TODO: Here should be some track quality check
     //    if (Ndf > 0 && fitRes == 0) {
     if (traj->isValid() && pvalue >= m_pValueCut && Ndf >= m_minNdf) {
-      
+
       // In case someone forgot to use beginRun and dind't reset mille file name to ""
       if (!milleFile && m_milleFileName != "")
         milleFile = new MilleBinary(m_milleFileName);
-      
+
       // Loop over all GBL points
       for (unsigned int p = 0; p < listOfPoints.size(); p++) {
         unsigned int label = p + 1;
@@ -921,8 +926,8 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
         //TODO: now we only provide info about measurements, not kinks
         if (!listOfPoints.at(p).hasMeasurement())
           continue;
-        
-        #ifdef OUTPUT
+
+#ifdef OUTPUT
         // Decode VxdId and get layer in TB setup
         unsigned int l = 0;
         unsigned int id = listOfLayers.at(p);
@@ -933,7 +938,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
         unsigned int ladder = id & 31;
         id = id >> 5;
         unsigned int layer = id & 7;
-        
+
         if (layer == 7 && ladder == 2) {
           l = sensor;
         } else if (layer == 7 && ladder == 3) {
@@ -941,9 +946,9 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
         } else {
           l = layer + 3;
         }
-        
+
         hittedLayers[l - 1] = true;
-        #endif
+#endif
         TVectorD localPar(5);
         TMatrixDSym localCov(5);
         traj->getResults(label, localPar, localCov);
@@ -952,23 +957,23 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
         if (m_chi2Cut && (fabs(residuals[0] / resErrors[0]) > m_chi2Cut || fabs(residuals[1] / resErrors[1]) > m_chi2Cut))
           return;
         // Write layer-wise data
-        #ifdef OUTPUT
+#ifdef OUTPUT
         if (!writeHistoDataForLabel(listOfLayers.at(p), residuals, measErrors, resErrors, downWeights, localPar, localCov))
           return;
-        #endif
-        
+#endif
+
       } // end for points
-      
+
       // Write binary data to mille binary
       if (milleFile && m_milleFileName != "" && pvalue >= m_pValueCut && Ndf >= m_minNdf) {
         traj->milleOut(*milleFile);
-        #ifdef DEBUG
+#ifdef DEBUG
         cout << " GBL Track written to Millepede II binary file." << endl;
         cout << "-------------------------------------------------------" << endl;
-        #endif
+#endif
       }
-      
-      #ifdef OUTPUT
+
+#ifdef OUTPUT
       // Fill histograms
       chi2OndfHisto->Fill(Chi2 / Ndf);
       pValueHisto->Fill(TMath::Prob(Chi2, Ndf));
@@ -989,7 +994,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
         // front tel + pxd + svd
         stats->Fill(1);
       }
-      
+
       if (
         hittedLayers[0] &&
         hittedLayers[1] &&
@@ -1031,7 +1036,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
         hittedLayers[0] &&
         hittedLayers[1] &&
         hittedLayers[2] &&
-        
+
         hittedLayers[5] &&
         hittedLayers[6] &&
         hittedLayers[7] &&
@@ -1047,7 +1052,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
         hittedLayers[0] &&
         hittedLayers[1] &&
         hittedLayers[2] &&
-        
+
         hittedLayers[5] &&
         hittedLayers[6] &&
         hittedLayers[7] &&
@@ -1064,9 +1069,9 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
         // backward tel
         stats->Fill(7);
       }
-      #endif
+#endif
     }
-    
+
     // Free memory
     delete traj;
   }

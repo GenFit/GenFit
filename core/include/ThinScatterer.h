@@ -32,33 +32,33 @@
 
 namespace genfit {
 
-/**
- * @brief Thin or thick scatterer
- */
-class ThinScatterer : public TObject {
+  /**
+   * @brief Thin or thick scatterer
+   */
+  class ThinScatterer : public TObject {
 
- public:
+  public:
 
-  ThinScatterer() :
-    TObject(), sharedPlane_(), material_() {;}
-  ThinScatterer(const SharedPlanePtr& sharedPlane, const Material& material) :
-    TObject(), sharedPlane_(sharedPlane), material_(material) {;}
+    ThinScatterer() :
+      TObject(), sharedPlane_(), material_() {;}
+    ThinScatterer(const SharedPlanePtr& sharedPlane, const Material& material) :
+      TObject(), sharedPlane_(sharedPlane), material_(material) {;}
 
-  SharedPlanePtr getPlane() const {return sharedPlane_;}
-  const Material& getMaterial() const {return material_;}
+    SharedPlanePtr getPlane() const {return sharedPlane_;}
+    const Material& getMaterial() const {return material_;}
 
-  void Print(const Option_t* = "") const;
+    void Print(const Option_t* = "") const;
 
- private:
+  private:
 
-  SharedPlanePtr sharedPlane_; //! Material boundary.  '!' shuts up ROOT.
-  Material material_; // Material properties
+    SharedPlanePtr sharedPlane_; //! Material boundary.  '!' shuts up ROOT.
+    Material material_; // Material properties
 
 
- public:
-  ClassDef(ThinScatterer, 2)
+  public:
+    ClassDef(ThinScatterer, 2)
 
-};
+  };
 
 } /* End of namespace genfit */
 /** @} */

@@ -43,17 +43,17 @@
 
 namespace genfit {
 
-/**
- * @brief GFRaveTrackParameters class
- * Contains a pointer to the original genfit::Track, the weight of the track in the vertex,
- * and smoothed (with the vertex information) state and covariance of the track.
- */
-class GFRaveTrackParameters : public TObject
-{
+  /**
+   * @brief GFRaveTrackParameters class
+   * Contains a pointer to the original genfit::Track, the weight of the track in the vertex,
+   * and smoothed (with the vertex information) state and covariance of the track.
+   */
+  class GFRaveTrackParameters : public TObject {
   public:
     // constructors, destructors
     GFRaveTrackParameters();
-    GFRaveTrackParameters(const Track* track, MeasuredStateOnPlane* originalState, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed);
+    GFRaveTrackParameters(const Track* track, MeasuredStateOnPlane* originalState, double weight, const TVectorD& state6,
+                          const TMatrixDSym& cov6x6, bool isSmoothed);
     GFRaveTrackParameters(const Track* track, MeasuredStateOnPlane* originalState, double weight);
 
     // Accessors
@@ -68,7 +68,7 @@ class GFRaveTrackParameters : public TObject
     TVectorD getState() const {return state_;}
     TVector3 getPos() const;
     TVector3 getMom() const;
-    const TMatrixDSym & getCov() const {return cov_;}
+    const TMatrixDSym& getCov() const {return cov_;}
 
     double getCharge() const;
     double getPdg() const;
@@ -86,7 +86,7 @@ class GFRaveTrackParameters : public TObject
 
   private:
     ClassDef(GFRaveTrackParameters, 1)
-};
+  };
 
 } /* End of namespace genfit */
 /** @} */

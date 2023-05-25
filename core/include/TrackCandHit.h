@@ -28,68 +28,70 @@
 
 namespace genfit {
 
-/**
- * @brief Hit object for use in TrackCand. Provides IDs and sorting parameters.
- */
-class TrackCandHit : public TObject {
- public:
-
-  // Constructors/Destructors ---------
-  TrackCandHit(int detId   = -1,
-               int hitId   = -1,
-               int planeId = -1,
-               double sortingParameter  =  0.);
-
-  virtual ~TrackCandHit() {;}
-
-  virtual TrackCandHit* clone() const {return new TrackCandHit(*this);}
-
-  // Accessors
-  int    getDetId() const {return detId_;}
-  int    getHitId() const {return hitId_;}
-  int    getPlaneId() const {return planeId_;}
-  double getSortingParameter() const {return sortingParameter_;}
-
-  // Modifiers
-  void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
-
-  virtual void Print(Option_t* option = "") const;
-
-
-  /** @brief Equality operator. Does not check sortingParameter.
+  /**
+   * @brief Hit object for use in TrackCand. Provides IDs and sorting parameters.
    */
-  friend bool operator== (const TrackCandHit& lhs, const TrackCandHit& rhs);
-  friend bool operator!= (const TrackCandHit& lhs, const TrackCandHit& rhs) {
-    return !(lhs == rhs);
-  }
+  class TrackCandHit : public TObject {
+  public:
 
-  /** @brief Compare sortingParameter, needed for sorting
-   */
-  friend bool operator< (const TrackCandHit& lhs, const TrackCandHit& rhs) {
-    return (lhs.sortingParameter_ < rhs.sortingParameter_);
-  }
+    // Constructors/Destructors ---------
+    TrackCandHit(int detId   = -1,
+                 int hitId   = -1,
+                 int planeId = -1,
+                 double sortingParameter  =  0.);
 
- protected:
+    virtual ~TrackCandHit() {;}
 
-  //! protect from calling copy c'tor from outside the class. Use #clone() if you want a copy!
-  TrackCandHit(const TrackCandHit& other) :
-    TObject(other), detId_(other.detId_), hitId_(other.hitId_), planeId_(other.planeId_), sortingParameter_(other.sortingParameter_) {;}
-  //! protect from calling assignment operator from outside the class. Use #clone() instead!
-  TrackCandHit& operator=(const TrackCandHit&);
+    virtual TrackCandHit* clone() const {return new TrackCandHit(*this);}
 
+    // Accessors
+    int    getDetId() const {return detId_;}
+    int    getHitId() const {return hitId_;}
+    int    getPlaneId() const {return planeId_;}
+    double getSortingParameter() const {return sortingParameter_;}
 
-  // Data Members ------------
-  int    detId_; // detId id is -1 per default
-  int    hitId_; // hitId id is -1 per default
-  int    planeId_; // planeId id is -1 per default
-  double sortingParameter_; // sorting parameter
+    // Modifiers
+    void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
+
+    virtual void Print(Option_t* option = "") const;
 
 
- public:
+    /** @brief Equality operator. Does not check sortingParameter.
+     */
+    friend bool operator== (const TrackCandHit& lhs, const TrackCandHit& rhs);
+    friend bool operator!= (const TrackCandHit& lhs, const TrackCandHit& rhs)
+    {
+      return !(lhs == rhs);
+    }
 
-  ClassDef(TrackCandHit,1)
+    /** @brief Compare sortingParameter, needed for sorting
+     */
+    friend bool operator< (const TrackCandHit& lhs, const TrackCandHit& rhs)
+    {
+      return (lhs.sortingParameter_ < rhs.sortingParameter_);
+    }
 
-};
+  protected:
+
+    //! protect from calling copy c'tor from outside the class. Use #clone() if you want a copy!
+    TrackCandHit(const TrackCandHit& other) :
+      TObject(other), detId_(other.detId_), hitId_(other.hitId_), planeId_(other.planeId_), sortingParameter_(other.sortingParameter_) {;}
+    //! protect from calling assignment operator from outside the class. Use #clone() instead!
+    TrackCandHit& operator=(const TrackCandHit&);
+
+
+    // Data Members ------------
+    int    detId_; // detId id is -1 per default
+    int    hitId_; // hitId id is -1 per default
+    int    planeId_; // planeId id is -1 per default
+    double sortingParameter_; // sorting parameter
+
+
+  public:
+
+    ClassDef(TrackCandHit, 1)
+
+  };
 
 } /* End of namespace genfit */
 /** @} */

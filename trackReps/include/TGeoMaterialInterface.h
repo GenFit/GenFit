@@ -29,39 +29,39 @@
 
 namespace genfit {
 
-/**
- * @brief AbsMaterialInterface implementation for use with ROOT's TGeoManager.
- */
-class TGeoMaterialInterface : public AbsMaterialInterface {
-
- public:
-
-  TGeoMaterialInterface() {};
-  ~TGeoMaterialInterface(){;};
-
-  /** @brief Initialize the navigator at given position and with given
-      direction.  Returns true if the volume changed.
+  /**
+   * @brief AbsMaterialInterface implementation for use with ROOT's TGeoManager.
    */
-  bool initTrack(double posX, double posY, double posZ,
-                 double dirX, double dirY, double dirZ) override;
+  class TGeoMaterialInterface : public AbsMaterialInterface {
 
-  Material getMaterialParameters() override;
+  public:
 
-  /** @brief Make a step (following the curvature) until step length
-   * sMax or the next boundary is reached.  After making a step to a
-   * boundary, the position has to be beyond the boundary, i.e. the
-   * current material has to be that beyond the boundary.  The actual
-   * step made is returned.
-   */
-  double findNextBoundary(const RKTrackRep* rep,
-                          const M1x7& state7,
-                          double sMax,
-                          bool varField = true) override;
+    TGeoMaterialInterface() {};
+    ~TGeoMaterialInterface() {;};
 
-  // ClassDefOverride(TGeoMaterialInterface, 1);
+    /** @brief Initialize the navigator at given position and with given
+        direction.  Returns true if the volume changed.
+     */
+    bool initTrack(double posX, double posY, double posZ,
+                   double dirX, double dirY, double dirZ) override;
 
- private:
-};
+    Material getMaterialParameters() override;
+
+    /** @brief Make a step (following the curvature) until step length
+     * sMax or the next boundary is reached.  After making a step to a
+     * boundary, the position has to be beyond the boundary, i.e. the
+     * current material has to be that beyond the boundary.  The actual
+     * step made is returned.
+     */
+    double findNextBoundary(const RKTrackRep* rep,
+                            const M1x7& state7,
+                            double sMax,
+                            bool varField = true) override;
+
+    // ClassDefOverride(TGeoMaterialInterface, 1);
+
+  private:
+  };
 
 } /* End of namespace genfit */
 /** @} */

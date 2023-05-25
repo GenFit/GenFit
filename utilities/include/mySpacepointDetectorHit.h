@@ -25,30 +25,30 @@
 
 namespace genfit {
 
-/** @brief Example class for a spacepoint detector hit.
- *
- *  @author Johannes Rauch  (Technische Universit&auml;t M&uuml;nchen, original author)
- *
- */
-class mySpacepointDetectorHit : public TObject {
+  /** @brief Example class for a spacepoint detector hit.
+   *
+   *  @author Johannes Rauch  (Technische Universit&auml;t M&uuml;nchen, original author)
+   *
+   */
+  class mySpacepointDetectorHit : public TObject {
 
- public:
-  mySpacepointDetectorHit() {;}
+  public:
+    mySpacepointDetectorHit() {;}
 
-  mySpacepointDetectorHit(const TVector3& pos, const TMatrixDSym cov)
-  : pos_(pos), cov_(cov) {;}
+    mySpacepointDetectorHit(const TVector3& pos, const TMatrixDSym cov)
+      : pos_(pos), cov_(cov) {;}
 
-  const TVector3 getPos() const {return pos_;}
-  const TMatrixDSym getCov() const {return cov_;}
+    const TVector3 getPos() const {return pos_;}
+    const TMatrixDSym getCov() const {return cov_;}
 
- private:
+  private:
 
-  TVector3 pos_;
-  TMatrixDSym cov_;
+    TVector3 pos_;
+    TMatrixDSym cov_;
 
-  ClassDef(mySpacepointDetectorHit,1)
-};
-/** @} */
+    ClassDef(mySpacepointDetectorHit, 1)
+  };
+  /** @} */
 
 } /* End of namespace genfit */
 

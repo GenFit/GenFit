@@ -28,60 +28,61 @@
 
 namespace genfit {
 
-/**
- * @brief Hit object for use in TrackCand. Provides additional left/right parameter.
- */
-class WireTrackCandHit : public TrackCandHit {
- public:
-
-  // Constructors/Destructors ---------
-  WireTrackCandHit(int detId   = -1,
-               int hitId   = -1,
-               int planeId = -1,
-               double sortingParameter  =  0.,
-               char leftRight = 0);
-
-  virtual ~WireTrackCandHit() {;}
-
-  virtual WireTrackCandHit* clone() const override {return new WireTrackCandHit(*this);}
-
-  // Accessors
-  int getLeftRightResolution() const {return leftRight_;}
-
-  // Modifiers
   /**
-   * select how to resolve the left/right ambiguity:
-   * -1: negative (left) side on vector (track direction) x (wire direction)
-   * 0: auto select (take side with smallest distance to track)
-   * 1: positive (right) side on vector (track direction) x (wire direction)
+   * @brief Hit object for use in TrackCand. Provides additional left/right parameter.
    */
-  void setLeftRightResolution(int leftRight){
-    if (leftRight==0) leftRight_ = 0;
-    else if (leftRight<0) leftRight_ = -1;
-    else leftRight_ = 1;
-  }
+  class WireTrackCandHit : public TrackCandHit {
+  public:
 
-  virtual void Print(Option_t* option = "") const override;
+    // Constructors/Destructors ---------
+    WireTrackCandHit(int detId   = -1,
+                     int hitId   = -1,
+                     int planeId = -1,
+                     double sortingParameter  =  0.,
+                     char leftRight = 0);
+
+    virtual ~WireTrackCandHit() {;}
+
+    virtual WireTrackCandHit* clone() const override {return new WireTrackCandHit(*this);}
+
+    // Accessors
+    int getLeftRightResolution() const {return leftRight_;}
+
+    // Modifiers
+    /**
+     * select how to resolve the left/right ambiguity:
+     * -1: negative (left) side on vector (track direction) x (wire direction)
+     * 0: auto select (take side with smallest distance to track)
+     * 1: positive (right) side on vector (track direction) x (wire direction)
+     */
+    void setLeftRightResolution(int leftRight)
+    {
+      if (leftRight == 0) leftRight_ = 0;
+      else if (leftRight < 0) leftRight_ = -1;
+      else leftRight_ = 1;
+    }
+
+    virtual void Print(Option_t* option = "") const override;
 
 
- protected:
+  protected:
 
-  //! protect from calling copy c'tor from outside the class. Use #clone() if you want a copy!
-  WireTrackCandHit(const WireTrackCandHit& other) :
-    TrackCandHit(other), leftRight_(other.leftRight_) {;}
-  //! protect from calling assignment operator from outside the class. Use #clone() instead!
-  WireTrackCandHit& operator=(const WireTrackCandHit&);
-
-
-  // Data Members ------------
-  signed char leftRight_; // left/right ambiguity handling
+    //! protect from calling copy c'tor from outside the class. Use #clone() if you want a copy!
+    WireTrackCandHit(const WireTrackCandHit& other) :
+      TrackCandHit(other), leftRight_(other.leftRight_) {;}
+    //! protect from calling assignment operator from outside the class. Use #clone() instead!
+    WireTrackCandHit& operator=(const WireTrackCandHit&);
 
 
- public:
+    // Data Members ------------
+    signed char leftRight_; // left/right ambiguity handling
 
-  ClassDefOverride(WireTrackCandHit, 2)
 
-};
+  public:
+
+    ClassDefOverride(WireTrackCandHit, 2)
+
+  };
 
 } /* End of namespace genfit */
 /** @} */

@@ -26,35 +26,35 @@
 
 namespace genfit {
 
-class Track;
-class AbsTrackRep;
-
-/**
- * @brief Abstract base class for fitters.
- */
-class AbsFitter {
- public:
-  AbsFitter() : debugLvl_(0) {}
-  virtual ~AbsFitter() {}
+  class Track;
+  class AbsTrackRep;
 
   /**
-   * Process Track with one AbsTrackRep of the Track. Optionally resort the hits if necessary (and supported by the fitter)
+   * @brief Abstract base class for fitters.
    */
-  virtual void processTrackWithRep(Track*, const AbsTrackRep*, bool resortHits = false) = 0;
+  class AbsFitter {
+  public:
+    AbsFitter() : debugLvl_(0) {}
+    virtual ~AbsFitter() {}
 
-  /**
-   * Process all reps. Start with the cardinalRep and resort the hits if necessary (and supported by the fitter)
-   */
-  void processTrack(Track*, bool resortHits = false);
+    /**
+     * Process Track with one AbsTrackRep of the Track. Optionally resort the hits if necessary (and supported by the fitter)
+     */
+    virtual void processTrackWithRep(Track*, const AbsTrackRep*, bool resortHits = false) = 0;
 
-  virtual void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
+    /**
+     * Process all reps. Start with the cardinalRep and resort the hits if necessary (and supported by the fitter)
+     */
+    void processTrack(Track*, bool resortHits = false);
+
+    virtual void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
 
 
- protected:
+  protected:
 
-  unsigned int debugLvl_;
+    unsigned int debugLvl_;
 
-};
+  };
 
 }  /* End of namespace genfit */
 /** @} */

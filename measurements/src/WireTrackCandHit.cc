@@ -23,24 +23,25 @@
 
 namespace genfit {
 
-WireTrackCandHit::WireTrackCandHit(int detId,
-                               int hitId,
-                               int planeId,
-                               double sortingParameter,
-                               char leftRight)
-  : TrackCandHit(detId, hitId, planeId, sortingParameter),
-    leftRight_(leftRight)
-{
-  ;
-}
+  WireTrackCandHit::WireTrackCandHit(int detId,
+                                     int hitId,
+                                     int planeId,
+                                     double sortingParameter,
+                                     char leftRight)
+    : TrackCandHit(detId, hitId, planeId, sortingParameter),
+      leftRight_(leftRight)
+  {
+    ;
+  }
 
 
-void WireTrackCandHit::Print(Option_t*) const {
-  printOut << "  WireTrackCandHit. DetId = " << detId_
-           << " \t HitId = " << hitId_
-           << " \t PlaneId = " << planeId_
-           << " \t SortingParameter = " << sortingParameter_
-           << " \t leftRight = " << (int)leftRight_ << "\n";
-}
+  void WireTrackCandHit::Print(Option_t*) const
+  {
+    printOut << "  WireTrackCandHit. DetId = " << detId_
+             << " \t HitId = " << hitId_
+             << " \t PlaneId = " << planeId_
+             << " \t SortingParameter = " << sortingParameter_
+             << " \t leftRight = " << (int)leftRight_ << "\n";
+  }
 
 } /* End of namespace genfit */

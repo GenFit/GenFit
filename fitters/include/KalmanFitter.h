@@ -30,52 +30,52 @@
 
 namespace genfit {
 
-class KalmanFitterInfo;
-class MeasuredStateOnPlane;
-class TrackPoint;
+  class KalmanFitterInfo;
+  class MeasuredStateOnPlane;
+  class TrackPoint;
 
-/**
- * @brief Simple Kalman filter implementation.
- */
-class KalmanFitter : public AbsKalmanFitter {
+  /**
+   * @brief Simple Kalman filter implementation.
+   */
+  class KalmanFitter : public AbsKalmanFitter {
 
- private:
+  private:
 
-  // These private functions are needed, otherwise strange things happen, no idea why!
-  KalmanFitter(const KalmanFitter&);
-  KalmanFitter& operator=(KalmanFitter const&);
+    // These private functions are needed, otherwise strange things happen, no idea why!
+    KalmanFitter(const KalmanFitter&);
+    KalmanFitter& operator=(KalmanFitter const&);
 
- public:
+  public:
 
-  KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3, bool squareRootFormalism = false)
-    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), currentState_(nullptr),
-      squareRootFormalism_(squareRootFormalism)
-  {}
+    KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3, bool squareRootFormalism = false)
+      : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), currentState_(nullptr),
+        squareRootFormalism_(squareRootFormalism)
+    {}
 
-  ~KalmanFitter() {}
+    ~KalmanFitter() {}
 
-  //! Hit resorting currently NOT supported.
-  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false) override;
+    //! Hit resorting currently NOT supported.
+    void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false) override;
 
-  //! process only a part of the track. Can also be used to process the track only in backward direction.
-  //! Does not alter the FitStatus and does not do multiple iterations.
-  void processTrackPartially(Track* tr, const AbsTrackRep* rep, int startId = 0, int endId = -1);
+    //! process only a part of the track. Can also be used to process the track only in backward direction.
+    //! Does not alter the FitStatus and does not do multiple iterations.
+    void processTrackPartially(Track* tr, const AbsTrackRep* rep, int startId = 0, int endId = -1);
 
-  void useSquareRootFormalism(bool squareRootFormalism = true) {squareRootFormalism_ = squareRootFormalism;}
+    void useSquareRootFormalism(bool squareRootFormalism = true) {squareRootFormalism_ = squareRootFormalism;}
 
- private:
-  bool fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int startId, int endId, int& nFailedHits);
-  void processTrackPoint(TrackPoint* tp,
-      const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
+  private:
+    bool fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int startId, int endId, int& nFailedHits);
+    void processTrackPoint(TrackPoint* tp,
+                           const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
 
-  std::unique_ptr<MeasuredStateOnPlane> currentState_;
+    std::unique_ptr<MeasuredStateOnPlane> currentState_;
 
-  bool squareRootFormalism_;
+    bool squareRootFormalism_;
 
- public:
-  ClassDefOverride(KalmanFitter,1)
+  public:
+    ClassDefOverride(KalmanFitter, 1)
 
-};
+  };
 
 } /* End of namespace genfit */
 /** @} */
