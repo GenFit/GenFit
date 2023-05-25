@@ -220,6 +220,7 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
 
   minIterations_ = nSteps;
   maxIterations_ = nSteps + 4;
+  minIterForPval_ = nSteps;
 
   betas_.clear();
 
@@ -229,9 +230,6 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
 
   betas_.resize(maxIterations_,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
 
-  /*for (unsigned int i=0; i<betas_.size(); ++i) {
-    debugOut<< betas_.at(i) << ", ";
-  }*/
 }
 
 void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps, unsigned int minIter, unsigned int maxIter) {
@@ -252,9 +250,6 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps, 
 
   betas_.resize(maxIterations_,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
 
-  /*for (unsigned int i=0; i<betas_.size(); ++i) {
-    debugOut<< betas_.at(i) << ", ";
-  }*/
 }
 
 
