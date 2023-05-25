@@ -38,6 +38,6 @@ jobs:
       run: |
         source root/bin/thisroot.sh
         cd ${{github.workspace}}/../build
-        ctest
+        ctest  --output-on-failure
         
 
