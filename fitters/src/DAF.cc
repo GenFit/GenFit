@@ -56,7 +56,7 @@ DAF::DAF(std::tuple<double, double, int> annealingScheme, int minIter, int maxIt
   setAnnealingScheme(std::get<0>(annealingScheme), 
                      std::get<1>(annealingScheme), 
                      std::get<2>(annealingScheme),
-                     minIter, maxIter, minIterForPval); // also sets maxIterations_
+                     minIter, maxIter); // also sets maxIterations_
   setProbCut(probCut);
 }
 

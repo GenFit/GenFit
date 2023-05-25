@@ -116,7 +116,7 @@ class DAF : public AbsKalmanFitter {
     */
   bool calcWeights(Track* trk, const AbsTrackRep* rep, double beta);
 
-  int minIterForPval_ = 1; //minimum number of iterations before checking pvalue convergence criterion
+  int minIterForPval_ = 5; //minimum number of iterations before checking pvalue convergence criterion
   double deltaWeight_; // convergence criterium
   std::vector<double> betas_;   // Temperatures, NOT inverse temperatures.
   double chi2Cuts_[7];  // '7' assumes tracks are helices with one
