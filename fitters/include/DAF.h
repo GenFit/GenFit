@@ -64,8 +64,8 @@ class DAF : public AbsKalmanFitter {
    * @param maxIter Maximum number of iterations for the annealing scheme
    * @param minIterForPval Minimum number of iterations before checking the convergence by pvalue
    * @param useRefKalman If false, use KalmanFitter as fitter.
-   * @param deltaPval Pvalue convergence criterion
-   * @param deltaWeight Weight convergence criterion
+   * @param deltaPval Threshold value for pvalue convergence criterion
+   * @param deltaWeight Threshold value for weight convergence criterion
    * @param probCut Probability cut for weight calculation
    */
   DAF(std::tuple<double, double, int> annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3);
@@ -100,7 +100,7 @@ class DAF : public AbsKalmanFitter {
   /** @brief Configure the annealing scheme.
    *
    * Set a start and end temperature and the number of steps. A logarithmic sequence of temperatures will be calculated.
-   * Also sets #minIterations_, #maxIterations_ and #minIterForPval
+   * Also sets #minIterations_, #maxIterations_ and #minIterForPval as a function of the number of steps
    */
   void setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps);
 
