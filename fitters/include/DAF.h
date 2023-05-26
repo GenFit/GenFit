@@ -56,6 +56,20 @@ class DAF : public AbsKalmanFitter {
  public:
 
   /**
+   * @brief Create DAF. Per default, use KalmanFitterRefTrack as fitter, 
+   * this constructor should be used for additional configuration of the DAF, allows to provide custom parameters
+   *
+   * @param annealingScheme Start and Final temperatures, and number of steps for the annealing scheme
+   * @param minIter Minimum number of iterations for the annealing scheme
+   * @param maxIter Maximum number of iterations for the annealing scheme
+   * @param minIterForPval Minimum number of iterations before checking the convergence by pvalue
+   * @param useRefKalman If false, use KalmanFitter as fitter.
+   * @param deltaPval Threshold value for pvalue convergence criterion
+   * @param deltaWeight Threshold value for weight convergence criterion
+   * @param probCut Probability cut for weight calculation
+   */
+  DAF(std::tuple<double, double, int> annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3);
+  /**
    * @brief Create DAF. Per default, use KalmanFitterRefTrack as fitter.
    *
    * @param useRefKalman If false, use KalmanFitter as fitter.
@@ -86,9 +100,16 @@ class DAF : public AbsKalmanFitter {
   /** @brief Configure the annealing scheme.
    *
    * Set a start and end temperature and the number of steps. A logarithmic sequence of temperatures will be calculated.
-   * Also sets #minIterations_ and #maxIterations_.
+   * Also sets #minIterations_, #maxIterations_ and #minIterForPval as a function of the number of steps
    */
   void setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps);
+
+  /** @brief Configure the annealing scheme with custom values of min and max iterations.
+   *
+   * Set a start and end temperature and the number of steps. A logarithmic sequence of temperatures will be calculated.
+   * Also sets #minIterations_ and #maxIterations_ to the values provided instead of values depending on nSteps
+   */
+  void setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps, unsigned int minIter, unsigned int  maxIter);
 
   void setMaxIterations(unsigned int n) override {maxIterations_ = n; betas_.resize(maxIterations_,betas_.back());}
 
@@ -109,7 +130,7 @@ class DAF : public AbsKalmanFitter {
     */
   bool calcWeights(Track* trk, const AbsTrackRep* rep, double beta);
 
-
+  int minIterForPval_; //minimum number of iterations before checking pvalue convergence criterion
   double deltaWeight_; // convergence criterium
   std::vector<double> betas_;   // Temperatures, NOT inverse temperatures.
   double chi2Cuts_[7];  // '7' assumes tracks are helices with one
