@@ -104,7 +104,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
 
   double lastPval = -1;
 
-  for(unsigned int iBeta = 0;; ++iBeta) {
+  for(unsigned int iBeta = 0; /* */ ; ++iBeta) {
 
     if (debugLvl_ > 0) {
       debugOut<<"DAF::processTrack, trackRep  " << rep << ", iteration " << iBeta+1 << ", beta = " << betas_.at(iBeta) << "\n";
@@ -136,7 +136,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
       break;
     }
 
-    if(iBeta >= maxIterations_-1){
+    if(iBeta >= maxIterations_ - 1){
       status->setIsFitConvergedFully(false);
       status->setIsFitConvergedPartially(false);
       if (debugLvl_ > 0) {
@@ -150,7 +150,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
     bool converged(false);
     try{
       converged = calcWeights(tr, rep, betas_.at(iBeta));
-      if (!converged && iBeta >= minIterForPval_-1 &&
+      if (!converged && iBeta >= static_cast<unsigned int>(minIterForPval_ - 1) &&
           status->getBackwardPVal() > 1e-10 && lastPval > 1e-10 && fabs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
         if (debugLvl_ > 0) {
           debugOut << "converged by Pval = " << status->getBackwardPVal() << " even though weights changed at iBeta = " << iBeta << std::endl;
