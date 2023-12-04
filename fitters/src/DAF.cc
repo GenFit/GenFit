@@ -51,7 +51,7 @@ DAF::DAF(std::tuple<double, double, int> annealingScheme, int minIter, int maxIt
     kalman_.reset(new KalmanFitter());
 
   kalman_->setMultipleMeasurementHandling(weightedAverage);
-  kalman_->setMaxIterations(maxIter);
+  kalman_->setMaxIterations(1);
 
   setAnnealingScheme(std::get<0>(annealingScheme), 
                      std::get<1>(annealingScheme), 
