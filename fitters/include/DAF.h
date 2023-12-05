@@ -25,9 +25,10 @@
 
 #include "AbsKalmanFitter.h"
 
-#include <vector>
 #include <map>
 #include <memory>
+#include <tuple>
+#include <vector>
 
 
 namespace genfit {
@@ -68,7 +69,7 @@ class DAF : public AbsKalmanFitter {
    * @param deltaWeight Threshold value for weight convergence criterion
    * @param probCut Probability cut for weight calculation
    */
-  DAF(std::tuple<double, double, int> annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3);
+  DAF(std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3);
   /**
    * @brief Create DAF. Per default, use KalmanFitterRefTrack as fitter.
    *
@@ -79,6 +80,9 @@ class DAF : public AbsKalmanFitter {
    * @brief Create DAF. Use the provided AbsKalmanFitter as fitter.
    */
   DAF(AbsKalmanFitter* kalman, double deltaPval = 1e-3, double deltaWeight = 1e-3);
+  /**
+   * @brief Destruct DAF.
+   */
   ~DAF() {};
 
   //! Process a track using the DAF.
