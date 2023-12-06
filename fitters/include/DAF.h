@@ -115,13 +115,33 @@ class DAF : public AbsKalmanFitter {
    */
   void setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps, unsigned int minIter, unsigned int  maxIter);
 
+  /**
+   * @brief Set the maximum number of iterations of the DAF.
+   */
   void setMaxIterations(unsigned int n) override {maxIterations_ = n; betas_.resize(maxIterations_,betas_.back());}
 
-  //! If all weights change less than delta between two iterations, the fit is regarded as converged.
+  /**
+   * @brief If all weights change less than delta between two iterations, the fit is regarded as converged.
+   */
   void setConvergenceDeltaWeight(double delta) {deltaWeight_ = delta;}
 
+  /**
+   * @brief Get a pointer to the internal Kalman fitter.
+   */
   AbsKalmanFitter* getKalman() const {return kalman_.get();}
 
+  /**
+   * @brief Set the maximum number of iterations of the internal Kalman fitter.
+   *
+   * Set the maximum number of iterations of the internal Kalman fitter.
+   * Note that the internal Kalman fitter can be called multiple times for each DAF iteration,
+   * up to the (maximum) number of iterations set by this method.
+   */
+  void setMaxIterationsKalman(unsigned int n) {getKalman()->setMaxIterations(n);}
+
+  /**
+   * @brief Set the maximum number of accepted failed hits by the internal Kalman fitter.
+   */
   virtual void setMaxFailedHits(int val) override {getKalman()->setMaxFailedHits(val);}
 
   virtual void setDebugLvl(unsigned int lvl = 1) override {AbsFitter::setDebugLvl(lvl); if (lvl > 1) getKalman()->setDebugLvl(lvl-1);}
@@ -142,7 +162,7 @@ class DAF : public AbsKalmanFitter {
 			// where time may be used in the fit.  Zeroth
 			// entry is not used.
 
-  std::unique_ptr<AbsKalmanFitter> kalman_;
+  std::unique_ptr<AbsKalmanFitter> kalman_; // Internal Kalman fitter.
 
  public:
 
