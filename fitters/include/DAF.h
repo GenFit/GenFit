@@ -69,7 +69,7 @@ class DAF : public AbsKalmanFitter {
    * @param deltaWeight Threshold value for weight convergence criterion
    * @param probCut Probability cut for weight calculation
    */
-  DAF(std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3);
+  DAF(const std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3);
   /**
    * @brief Create DAF. Per default, use KalmanFitterRefTrack as fitter.
    *
