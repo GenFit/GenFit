@@ -31,7 +31,7 @@
 #include <assert.h>
 #include <cmath>
 
-//root stuff
+// ROOT headers
 #include <TBuffer.h>
 #include <TMath.h>
 #include <Math/QuantFuncMathCore.h>
@@ -40,7 +40,7 @@
 
 namespace genfit {
 
-DAF::DAF(std::tuple<double, double, int> annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman, double deltaPval, double deltaWeight, double probCut)
+DAF::DAF(std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman, double deltaPval, double deltaWeight, double probCut)
   : AbsKalmanFitter(10, deltaPval), minIterForPval_(minIterForPval), deltaWeight_(deltaWeight)
 {
   if (useRefKalman) {
@@ -51,7 +51,7 @@ DAF::DAF(std::tuple<double, double, int> annealingScheme, int minIter, int maxIt
     kalman_.reset(new KalmanFitter());
 
   kalman_->setMultipleMeasurementHandling(weightedAverage);
-  kalman_->setMaxIterations(maxIter);
+  kalman_->setMaxIterations(1);
 
   setAnnealingScheme(std::get<0>(annealingScheme), 
                      std::get<1>(annealingScheme), 

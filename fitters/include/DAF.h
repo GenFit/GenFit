@@ -25,9 +25,10 @@
 
 #include "AbsKalmanFitter.h"
 
-#include <vector>
 #include <map>
 #include <memory>
+#include <tuple>
+#include <vector>
 
 
 namespace genfit {
@@ -68,7 +69,7 @@ class DAF : public AbsKalmanFitter {
    * @param deltaWeight Threshold value for weight convergence criterion
    * @param probCut Probability cut for weight calculation
    */
-  DAF(std::tuple<double, double, int> annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3);
+  DAF(std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3);
   /**
    * @brief Create DAF. Per default, use KalmanFitterRefTrack as fitter.
    *
@@ -79,6 +80,9 @@ class DAF : public AbsKalmanFitter {
    * @brief Create DAF. Use the provided AbsKalmanFitter as fitter.
    */
   DAF(AbsKalmanFitter* kalman, double deltaPval = 1e-3, double deltaWeight = 1e-3);
+  /**
+   * @brief Destruct DAF.
+   */
   ~DAF() {};
 
   //! Process a track using the DAF.
@@ -111,13 +115,33 @@ class DAF : public AbsKalmanFitter {
    */
   void setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps, unsigned int minIter, unsigned int  maxIter);
 
+  /**
+   * @brief Set the maximum number of iterations of the DAF.
+   */
   void setMaxIterations(unsigned int n) override {maxIterations_ = n; betas_.resize(maxIterations_,betas_.back());}
 
-  //! If all weights change less than delta between two iterations, the fit is regarded as converged.
+  /**
+   * @brief If all weights change less than delta between two iterations, the fit is regarded as converged.
+   */
   void setConvergenceDeltaWeight(double delta) {deltaWeight_ = delta;}
 
+  /**
+   * @brief Get a pointer to the internal Kalman fitter.
+   */
   AbsKalmanFitter* getKalman() const {return kalman_.get();}
 
+  /**
+   * @brief Set the maximum number of iterations of the internal Kalman fitter.
+   *
+   * Set the maximum number of iterations of the internal Kalman fitter.
+   * Note that the internal Kalman fitter can be called multiple times for each DAF iteration,
+   * up to the (maximum) number of iterations set by this method.
+   */
+  void setMaxIterationsKalman(unsigned int n) {getKalman()->setMaxIterations(n);}
+
+  /**
+   * @brief Set the maximum number of accepted failed hits by the internal Kalman fitter.
+   */
   virtual void setMaxFailedHits(int val) override {getKalman()->setMaxFailedHits(val);}
 
   virtual void setDebugLvl(unsigned int lvl = 1) override {AbsFitter::setDebugLvl(lvl); if (lvl > 1) getKalman()->setDebugLvl(lvl-1);}
@@ -138,7 +162,7 @@ class DAF : public AbsKalmanFitter {
 			// where time may be used in the fit.  Zeroth
 			// entry is not used.
 
-  std::unique_ptr<AbsKalmanFitter> kalman_;
+  std::unique_ptr<AbsKalmanFitter> kalman_; // Internal Kalman fitter.
 
  public:
 
