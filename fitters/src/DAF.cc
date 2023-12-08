@@ -40,7 +40,7 @@
 
 namespace genfit {
 
-DAF::DAF(std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman, double deltaPval, double deltaWeight, double probCut)
+DAF::DAF(const std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman, double deltaPval, double deltaWeight, double probCut)
   : AbsKalmanFitter(10, deltaPval), minIterForPval_(minIterForPval), deltaWeight_(deltaWeight)
 {
   if (useRefKalman) {
