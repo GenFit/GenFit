@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        ROOT_VERSION: ["${{ env.ROOT_VERSION_1 }}", "${{ env.ROOT_VERSION_2 }}"]
+        ROOT_VERSION: [env.ROOT_VERSION_1, env.ROOT_VERSION_2]
 
     steps:
     - uses: actions/checkout@v3
