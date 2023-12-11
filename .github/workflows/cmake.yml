@@ -15,7 +15,7 @@ jobs:
 
     - name: Install cmake and gtest
       run: |
-        sudo apt-get install cmake libgtest-dev libglu1-mesa
+        sudo apt-get install cmake libgtest-dev libglu1-mesa xxhash
         sudo apt install libopengl0 -y
         cd /usr/src/gtest
         sudo cmake CMakeLists.txt
