@@ -67,19 +67,21 @@ class DAF : public AbsKalmanFitter {
    * @param useRefKalman If false, use KalmanFitter as fitter.
    * @param deltaPval Threshold value for pvalue convergence criterion
    * @param deltaWeight Threshold value for weight convergence criterion
+   * @param minPval Minimum allowed pValue for pvalue convergence criterion
    * @param probCut Probability cut for weight calculation
+
    */
-  DAF(const std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3);
+  DAF(const std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3, double minPval = 1e-10);
   /**
    * @brief Create DAF. Per default, use KalmanFitterRefTrack as fitter.
    *
    * @param useRefKalman If false, use KalmanFitter as fitter.
    */
-  DAF(bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3);
+  DAF(bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double minPval = 1e-10);
   /**
    * @brief Create DAF. Use the provided AbsKalmanFitter as fitter.
    */
-  DAF(AbsKalmanFitter* kalman, double deltaPval = 1e-3, double deltaWeight = 1e-3);
+  DAF(AbsKalmanFitter* kalman, double deltaPval = 1e-3, double deltaWeight = 1e-3, double minPval = 1e-10);
   /**
    * @brief Destruct DAF.
    */
@@ -126,6 +128,11 @@ class DAF : public AbsKalmanFitter {
   void setConvergenceDeltaWeight(double delta) {deltaWeight_ = delta;}
 
   /**
+   * @brief The Pvalue of the two iterations must be greater than a minimum Pvalue, to be considered for the fit convergence
+   */
+  void setConvergenceMinimumPval(double minPval) {minPval_ = minPval;}
+
+  /**
    * @brief Get a pointer to the internal Kalman fitter.
    */
   AbsKalmanFitter* getKalman() const {return kalman_.get();}
@@ -156,6 +163,7 @@ class DAF : public AbsKalmanFitter {
 
   int minIterForPval_; //minimum number of iterations before checking pvalue convergence criterion
   double deltaWeight_; // convergence criterium
+  double minPval_;     // minimum allowed pValue for the convergence criterion
   std::vector<double> betas_;   // Temperatures, NOT inverse temperatures.
   double chi2Cuts_[7];  // '7' assumes tracks are helices with one
 			// parameter, i.e. we're living in 3D space,
@@ -166,7 +174,7 @@ class DAF : public AbsKalmanFitter {
 
  public:
 
-  ClassDefOverride(DAF,2)
+  ClassDefOverride(DAF,3)
 
 };
 
