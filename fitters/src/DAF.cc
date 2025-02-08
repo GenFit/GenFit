@@ -40,8 +40,8 @@
 
 namespace genfit {
 
-DAF::DAF(const std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman, double deltaPval, double deltaWeight, double probCut)
-  : AbsKalmanFitter(10, deltaPval), minIterForPval_(minIterForPval), deltaWeight_(deltaWeight)
+  DAF::DAF(const std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman, double deltaPval, double deltaWeight, double probCut, double minPval)
+    : AbsKalmanFitter(10, deltaPval), minIterForPval_(minIterForPval), deltaWeight_(deltaWeight), minPval_(minPval)
 {
   if (useRefKalman) {
     kalman_.reset(new KalmanFitterRefTrack());
@@ -60,8 +60,8 @@ DAF::DAF(const std::tuple<double, double, int>& annealingScheme, int minIter, in
   setProbCut(probCut);
 }
 
-DAF::DAF(bool useRefKalman, double deltaPval, double deltaWeight)
-  : AbsKalmanFitter(10, deltaPval), deltaWeight_(deltaWeight)
+DAF::DAF(bool useRefKalman, double deltaPval, double deltaWeight, double minPval)
+  : AbsKalmanFitter(10, deltaPval), deltaWeight_(deltaWeight), minPval_(minPval)
 {
   if (useRefKalman) {
     kalman_.reset(new KalmanFitterRefTrack());
@@ -77,8 +77,8 @@ DAF::DAF(bool useRefKalman, double deltaPval, double deltaWeight)
   setProbCut(0.001);
 }
 
-DAF::DAF(AbsKalmanFitter* kalman, double deltaPval, double deltaWeight)
-  : AbsKalmanFitter(10, deltaPval), deltaWeight_(deltaWeight)
+DAF::DAF(AbsKalmanFitter* kalman, double deltaPval, double deltaWeight, double minPval)
+  : AbsKalmanFitter(10, deltaPval), deltaWeight_(deltaWeight), minPval_(minPval)
 {
   kalman_.reset(kalman);
   kalman_->setMultipleMeasurementHandling(weightedAverage); // DAF makes no sense otherwise
@@ -151,7 +151,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
     try{
       converged = calcWeights(tr, rep, betas_.at(iBeta));
       if (!converged && iBeta >= static_cast<unsigned int>(minIterForPval_ - 1) &&
-          status->getBackwardPVal() > 1e-10 && lastPval > 1e-10 && fabs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
+          status->getBackwardPVal() > minPval_ && lastPval > minPval_ && fabs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
         if (debugLvl_ > 0) {
           debugOut << "converged by Pval = " << status->getBackwardPVal() << " even though weights changed at iBeta = " << iBeta << std::endl;
         }
