@@ -45,7 +45,6 @@
 #include "GFGbl.h"
 #include "GblTrajectory.h"
 #include "GblPoint.h"
-#include "MyDebugTools.h"
 
 #include "AbsMeasurement.h"
 #include "PlanarMeasurement.h"
