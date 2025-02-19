@@ -255,6 +255,10 @@ ROOT_GENERATE_DICTIONARY(
 )
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cxx" "${library_sources}")
 
+foreach( dict coreRootDict eventDisplayRootDict fittersRootDict GBLRootDict measurementsRootDict trackRepsRootDict utilitiesRootDict)
+  list(APPEND ROOT_PCM_FILES ${CMAKE_CURRENT_BINARY_DIR}/lib${dict}_rdict.pcm)
+endforeach()
+
 if(DEFINED RAVE)
 	SET(GFRAVE_DICTIONARY_SOURCES
 			${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include/GFRaveTrackParameters.h
@@ -266,12 +270,14 @@ if(DEFINED RAVE)
 			LINKDEF "${CMAKE_CURRENT_SOURCE_DIR}/GFRave/src/GFRaveLinkDef.h"
 	)
 	SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/GFRaveRootDict.cxx" "${library_sources}")
+        list(APPEND ROOT_PCM_FILES ${CMAKE_CURRENT_BINARY_DIR}/libGFRaveRootDict_rdict.pcm)
 endif()
 
 
 # install
 ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources})
 INSTALL(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${LIBRARY_OUTPUT_DIRECTORY})
+INSTALL(FILES ${ROOT_PCM_FILES} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 # link ROOT libraries
 if(DEFINED RAVE)
