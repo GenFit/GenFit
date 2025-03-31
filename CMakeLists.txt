@@ -15,7 +15,7 @@ SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 include(GNUInstallDirs)
 
 # install destinations can be passed via the command line:
-# cmake -DLIBRARY_OUTPUT_DIRECTORY:PATH=.... -DINCLUDE_OUTPUT_DIRECTORY:PATH=....
+# cmake -DCMAKE_INSTALL_LIBDIR:PATH=.... -DINCLUDE_OUTPUT_DIRECTORY:PATH=....
 # otherwise, set default install destinations
 IF(NOT DEFINED INCLUDE_OUTPUT_DIRECTORY)
 	set( INCLUDE_OUTPUT_DIRECTORY ${CMAKE_INSTALL_INCLUDEDIR} )
