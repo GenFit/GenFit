@@ -71,17 +71,17 @@ class DAF : public AbsKalmanFitter {
    * @param probCut Probability cut for weight calculation
 
    */
-  DAF(const std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3, double minPval = 1e-10);
+  DAF(const std::tuple<double, double, int>& annealingScheme, int minIter, int maxIter, int minIterForPval, bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double probCut = 1e-3, double minPval = 0.);
   /**
    * @brief Create DAF. Per default, use KalmanFitterRefTrack as fitter.
    *
    * @param useRefKalman If false, use KalmanFitter as fitter.
    */
-  DAF(bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double minPval = 1e-10);
+  DAF(bool useRefKalman = true, double deltaPval = 1e-3, double deltaWeight = 1e-3, double minPval = 0.);
   /**
    * @brief Create DAF. Use the provided AbsKalmanFitter as fitter.
    */
-  DAF(AbsKalmanFitter* kalman, double deltaPval = 1e-3, double deltaWeight = 1e-3, double minPval = 1e-10);
+  DAF(AbsKalmanFitter* kalman, double deltaPval = 1e-3, double deltaWeight = 1e-3, double minPval = 0.);
   /**
    * @brief Destruct DAF.
    */
