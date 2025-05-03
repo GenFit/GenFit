@@ -13,9 +13,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install cmake and gtest
+    - name: Install cmake, gtest and other packages
       run: |
-        sudo apt-get install cmake libgtest-dev libglu1-mesa xxhash libglew-dev libgl2ps-dev libftgl-dev libopengl0 libtbb-dev
+        sudo apt-get install cmake libgtest-dev libglu1-mesa xxhash libglew-dev libgl2ps-dev libftgl-dev libopengl0 libtbb-dev nlohmann-json3-dev
         cd /usr/src/gtest
         sudo cmake CMakeLists.txt
         sudo make
