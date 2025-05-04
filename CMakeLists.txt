@@ -5,7 +5,7 @@ if(POLICY CMP0042)
 endif(POLICY CMP0042)
 
 # declare the project name
-PROJECT(genfit2)
+PROJECT(genfit2 LANGUAGES CXX)
 
 # set project version
 SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
