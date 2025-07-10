@@ -151,7 +151,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
     try{
       converged = calcWeights(tr, rep, betas_.at(iBeta));
       if (!converged && iBeta >= static_cast<unsigned int>(minIterForPval_ - 1) &&
-          status->getBackwardPVal() > minPval_ && lastPval > minPval_ && fabs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
+          status->getBackwardPVal() > minPval_ && lastPval >= minPval_ && fabs(lastPval - status->getBackwardPVal()) < this->deltaPval_) {
         if (debugLvl_ > 0) {
           debugOut << "converged by Pval = " << status->getBackwardPVal() << " even though weights changed at iBeta = " << iBeta << std::endl;
         }
