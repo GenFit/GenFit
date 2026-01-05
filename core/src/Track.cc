@@ -691,7 +691,7 @@ bool Track::sort() {
 }
 
 
-bool Track::udpateSeed(int id, AbsTrackRep* rep, bool biased) {
+bool Track::updateSeed(int id, AbsTrackRep* rep, bool biased) {
   try {
     const MeasuredStateOnPlane& fittedState = getFittedState(id, rep, biased);
     setTimeSeed(fittedState.getTime());
@@ -739,7 +739,7 @@ void Track::switchPDGSigns(AbsTrackRep* rep) {
 
 
 void Track::reverseTrack() {
-  udpateSeed(-1); // set fitted state of last hit as new seed
+  updateSeed(-1); // set fitted state of last hit as new seed
   reverseMomSeed(); // flip momentum direction
   switchPDGSigns();
   reverseTrackPoints(); // also deletes all fitterInfos

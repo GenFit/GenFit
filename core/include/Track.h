@@ -226,7 +226,7 @@ class Track : public TObject {
 
   //! Try to set the fitted state as seed. Return if it was successfull.
   //! Adapt the sign of all TrackReps' pdg to the actual fitted charge.
-  bool udpateSeed(int id = 0, AbsTrackRep* rep = nullptr, bool biased = true);
+  bool updateSeed(int id = 0, AbsTrackRep* rep = nullptr, bool biased = true);
 
   //! Flip the ordering of the TrackPoints
   void reverseTrackPoints();
@@ -273,7 +273,7 @@ class Track : public TObject {
    * The idea is hat you can get a TrackCand for storing the hit IDs after a track has been fitted.
    * His could have been reordered, added or removed, so that the original TackCand no longer
    * represents the Track correctly.
-   * You might want to call determineCardinalRep() and/or udpateSeed() before.
+   * You might want to call determineCardinalRep() and/or updateSeed() before.
    */
   TrackCand* constructTrackCand() const;
 
