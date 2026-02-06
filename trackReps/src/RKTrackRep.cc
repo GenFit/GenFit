@@ -26,6 +26,7 @@
 #include <MeasuredStateOnPlane.h>
 #include <MeasurementOnPlane.h>
 
+#include <TMatrixDSymEigen.h>
 #include <TBuffer.h>
 #include <TDecompLU.h>
 #include <TMath.h>
@@ -971,10 +972,26 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
   if (debugLvl_ > 0) {
     debugOut << "total jacobian : "; fJacobian_.Print();
     debugOut << "total noise : "; fNoise_.Print();
+
+    TMatrixDSymEigen fNoiseEigen(fNoise_);
+    TVectorD eigenValuesF(fNoiseEigen.GetEigenValues());
+    if (eigenValuesF[4] < 0.) {
+      std::cout << " calc noise neg ev F " << std::endl;
+      eigenValuesF.Print();
+  }
   }
 
 }
 
+void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
+
+  jacobian.ResizeTo(5,5);
+  jacobian = fJacobian_;
+
+  noise.ResizeTo(5,5);
+  noise = fNoise_;
+
+}
 
 void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
 
@@ -983,6 +1000,19 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
 
   noise.ResizeTo(5,5);
   noise = fNoise_;
+
+  if (debugLvl_ > 0) {
+    // check eigenvalues
+    TMatrixDSymEigen noiseEigen(noise);
+    TVectorD eigenValues(noiseEigen.GetEigenValues());
+    if (eigenValues[4] < 0.) {
+      TVector3 lastPos(lastEndState_.getPos());
+      std::cout << " fwd noise neg ev ";
+      std::cout << eigenValues[0] << " " << eigenValues[1] << " " << eigenValues[2] << " " << eigenValues[3] << " " <<
+                  eigenValues[4];
+      std::cout << "  "  << lastPos[0] <<  " " << lastPos[1] << " " << lastPos[2] << std::endl;
+    }
+  }
 
   // lastEndState_ = jacobian * lastStartState_  + deltaState
   deltaState.ResizeTo(5);

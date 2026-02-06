@@ -126,11 +126,11 @@ class AbsTrackRep : public TObject {
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const {
     TVector3 wireDir(point2 - point1);
-    wireDir = wireDir.Unit();
+    wireDir.Unit();
     double retval = this->extrapolateToLine(state, point1, wireDir, stopAtBoundary, calcJacobianNoise);
     poca = this->getPos(state);
     dirInPoca = this->getMom(state);
-    dirInPoca = dirInPoca.Unit();
+    dirInPoca.Unit();
 
     poca_onwire = point1 + wireDir*((poca - point1)*wireDir);
     
@@ -286,6 +286,9 @@ class AbsTrackRep : public TObject {
 
   //! Get propagation direction. (-1, 0, 1) -> (backward, auto, forward).
   char getPropDir() const {return propDir_;}
+
+  //! Get the jacobian and noise matrix of the last extrapolation.
+  virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const = 0;
 
   //! Get the jacobian and noise matrix of the last extrapolation.
   virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const = 0;
