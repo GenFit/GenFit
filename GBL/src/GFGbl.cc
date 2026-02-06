@@ -918,7 +918,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
         TVectorD resErrors(2);
         TVectorD downWeights(2);
         //TODO: now we only provide info about measurements, not kinks
-        if (!listOfPoints.at(p).hasMeasurement())
+        if (!listOfPoints.at(p).numMeasurements())
           continue;
         
         #ifdef OUTPUT
