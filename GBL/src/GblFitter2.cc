@@ -235,28 +235,30 @@ void GblFitter2::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool re
     //std::cout << " gblfs " << fitRes << " " << nFailed << " " << iIter << " " << Chi2 << " " << Ndf << std::endl; 
     
 //    #ifdef
-    int npoints_meas = trk->getNumPointsWithMeasurement();  
-    int npoints_all = trk->getNumPoints();
-        
-    cout << "-------------------------------------------------------" << endl;
-    cout << "               GBL processed genfit::Track            " << endl;
-    cout << "-------------------------------------------------------" << endl;
-    cout << " # Track Points       :  " << npoints_all  << endl;
-    cout << " # Meas. Points       :  " << npoints_meas << endl;
-    cout << " # GBL points all     :  " << traj.getNumPoints();
-    if (ndummy)
-      cout << " (" << ndummy << " dummy) ";
-    cout << endl;
-    cout << " # GBL points meas    :  " << nmeas << endl;
-    cout << " # GBL points scat    :  " << nscat << endl;    
-    cout << "-------------- GBL Fit Results ----------- Iteration  " << iIter+1 << " " << ((iIter < gblIterations.size()) ? gblIterations[iIter] : "") << endl;
-    cout << " Fit q/p parameter    :  " << (gblfs->hasCurvature() ? ("True") : ("False")) << endl;
-    cout << " Valid trajectory     :  " << ((traj.isValid()) ? ("True") : ("False")) << endl;
-    cout << " Fit result           :  " << fitRes << "    (0 for success)" << endl;
-    cout << " GBL track NDF        :  " << Ndf << "    (-1 for failure)" << endl;
-    cout << " GBL track Chi2       :  " << Chi2 << endl;
-    cout << " GBL track P-value    :  " << TMath::Prob(Chi2, Ndf) << endl;
-    cout << "-------------------------------------------------------" << endl;
+    if (debugLvl_ >= 10) {
+      int npoints_meas = trk->getNumPointsWithMeasurement();  
+      int npoints_all = trk->getNumPoints();
+  
+      cout << "-------------------------------------------------------" << endl;
+      cout << "               GBL processed genfit::Track            " << endl;
+      cout << "-------------------------------------------------------" << endl;
+      cout << " # Track Points       :  " << npoints_all  << endl;
+      cout << " # Meas. Points       :  " << npoints_meas << endl;
+      cout << " # GBL points all     :  " << traj.getNumPoints();
+      if (ndummy)
+        cout << " (" << ndummy << " dummy) ";
+      cout << endl;
+      cout << " # GBL points meas    :  " << nmeas << endl;
+      cout << " # GBL points scat    :  " << nscat << endl;    
+      cout << "-------------- GBL Fit Results ----------- Iteration  " << iIter+1 << " " << ((iIter < gblIterations.size()) ? gblIterations[iIter] : "") << endl;
+      cout << " Fit q/p parameter    :  " << (gblfs->hasCurvature() ? ("True") : ("False")) << endl;
+      cout << " Valid trajectory     :  " << ((traj.isValid()) ? ("True") : ("False")) << endl;
+      cout << " Fit result           :  " << fitRes << "    (0 for success)" << endl;
+      cout << " GBL track NDF        :  " << Ndf << "    (-1 for failure)" << endl;
+      cout << " GBL track Chi2       :  " << Chi2 << endl;
+      cout << " GBL track P-value    :  " << TMath::Prob(Chi2, Ndf) << endl;
+      cout << "-------------------------------------------------------" << endl;
+    }
 //    #endif
     
   }  
