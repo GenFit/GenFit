@@ -30,7 +30,6 @@
 
 #ifndef GBLMEASUREMENT_H_
 #define GBLMEASUREMENT_H_
-// #define GBL_EIGEN_SUPPORT_ROOT
 
 #include<iostream>
 #include<vector>
