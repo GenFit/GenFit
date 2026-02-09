@@ -11,7 +11,7 @@
  *  \author Claus Kleinwort, DESY, 2011 (Claus.Kleinwort@desy.de)
  *
  *  \copyright
- *  Copyright (c) 2011 - 2016 Deutsches Elektronen-Synchroton,
+ *  Copyright (c) 2011 - 2020 Deutsches Elektronen-Synchroton,
  *  Member of the Helmholtz Association, (DESY), HAMBURG, GERMANY \n\n
  *  This library is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU Library General Public License as
@@ -36,12 +36,14 @@ namespace gbl {
 /**
  * \param [in] fileName File name
  * \param [in] doublePrec Flag for storage as double values
+ * \param [in] keepZeros Flag for keeping global derivatives with value zero
  * \param [in] aSize Buffer size
  */
-MilleBinary::MilleBinary(const std::string &fileName, bool doublePrec,
-		unsigned int aSize) :
+MilleBinary::MilleBinary(const std::string& fileName, bool doublePrec,
+		bool keepZeros, unsigned int aSize) :
 		binaryFile(fileName.c_str(), std::ios::binary | std::ios::out), intBuffer(), floatBuffer(), doubleBuffer(), doublePrecision(
-				doublePrec) {
+				doublePrec), globalDerKeepZeros(keepZeros) {
+
 	intBuffer.reserve(aSize);
 	intBuffer.push_back(0); // first word is error counter
 	if (doublePrecision) {
@@ -62,28 +64,29 @@ MilleBinary::~MilleBinary() {
 /**
  * \param [in] aMeas Value
  * \param [in] aErr Error
- * \param [in] indLocal List of labels of local parameters
- * \param [in] derLocal List of derivatives for local parameters
+ * \param [in] numLocal Number of local labels/derivatives
+ * \param [in] indLocal Array of labels of local parameters
+ * \param [in] derLocal Array of derivatives for local parameters
  * \param [in] labGlobal List of labels of global parameters
  * \param [in] derGlobal List of derivatives for global parameters
  */
-void MilleBinary::addData(double aMeas, double aErr,
-		const std::vector<unsigned int> &indLocal,
-		const std::vector<double> &derLocal, const std::vector<int> &labGlobal,
+void MilleBinary::addData(double aMeas, double aErr, unsigned int numLocal,
+		unsigned int* indLocal, double* derLocal,
+		const std::vector<int> &labGlobal,
 		const std::vector<double> &derGlobal) {
 
 	if (doublePrecision) {
 		// double values
 		intBuffer.push_back(0);
 		doubleBuffer.push_back(aMeas);
-		for (unsigned int i = 0; i < indLocal.size(); ++i) {
+		for (unsigned int i = 0; i < numLocal; ++i) {
 			intBuffer.push_back(indLocal[i]);
 			doubleBuffer.push_back(derLocal[i]);
 		}
 		intBuffer.push_back(0);
 		doubleBuffer.push_back(aErr);
 		for (unsigned int i = 0; i < labGlobal.size(); ++i) {
-			if (derGlobal[i]) {
+			if (derGlobal[i] or globalDerKeepZeros) {
 				intBuffer.push_back(labGlobal[i]);
 				doubleBuffer.push_back(derGlobal[i]);
 			}
@@ -92,14 +95,14 @@ void MilleBinary::addData(double aMeas, double aErr,
 		// float values
 		intBuffer.push_back(0);
 		floatBuffer.push_back(aMeas);
-		for (unsigned int i = 0; i < indLocal.size(); ++i) {
+		for (unsigned int i = 0; i < numLocal; ++i) {
 			intBuffer.push_back(indLocal[i]);
 			floatBuffer.push_back(derLocal[i]);
 		}
 		intBuffer.push_back(0);
 		floatBuffer.push_back(aErr);
 		for (unsigned int i = 0; i < labGlobal.size(); ++i) {
-			if (derGlobal[i]) {
+			if (derGlobal[i] or globalDerKeepZeros) {
 				intBuffer.push_back(labGlobal[i]);
 				floatBuffer.push_back(derGlobal[i]);
 			}
@@ -122,7 +125,7 @@ void MilleBinary::writeRecord() {
 				floatBuffer.size() * sizeof(floatBuffer[0]));
 	binaryFile.write(reinterpret_cast<char*>(&intBuffer[0]),
 			intBuffer.size() * sizeof(intBuffer[0]));
-// start with new record
+	// start with new record
 	intBuffer.resize(1);
 	if (doublePrecision)
 		doubleBuffer.resize(1);

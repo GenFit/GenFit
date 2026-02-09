@@ -11,7 +11,7 @@
  *  \author Claus Kleinwort, DESY, 2011 (Claus.Kleinwort@desy.de)
  *
  *  \copyright
- *  Copyright (c) 2011 - 2016 Deutsches Elektronen-Synchroton,
+ *  Copyright (c) 2011 - 2017 Deutsches Elektronen-Synchroton,
  *  Member of the Helmholtz Association, (DESY), HAMBURG, GERMANY \n\n
  *  This library is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU Library General Public License as
@@ -56,6 +56,11 @@ void VMatrix::resize(const unsigned int nRows, const unsigned int nCols) {
 	numRows = nRows;
 	numCols = nCols;
 	theVec.resize(nRows * nCols);
+}
+
+/// Set content to 0.
+void VMatrix::setZero() {
+	std::fill(theVec.begin(), theVec.end(), 0.);
 }
 
 /// Get transposed matrix.
@@ -145,7 +150,7 @@ VMatrix VMatrix::operator+(const VMatrix &aMatrix) const {
 }
 
 /// Assignment Matrix=Matrix.
-VMatrix &VMatrix::operator=(const VMatrix &aMatrix) {
+VMatrix& VMatrix::operator=(const VMatrix &aMatrix) {
 	if (this != &aMatrix) {   // Gracefully handle self assignment
 		numRows = aMatrix.getNumRows();
 		numCols = aMatrix.getNumCols();
@@ -175,6 +180,11 @@ VSymMatrix::~VSymMatrix() {
 void VSymMatrix::resize(const unsigned int nRows) {
 	numRows = nRows;
 	theVec.resize((nRows * nRows + nRows) / 2);
+}
+
+/// Set content to 0.
+void VSymMatrix::setZero() {
+	std::fill(theVec.begin(), theVec.end(), 0.);
 }
 
 /// Get number of rows (= number of colums).
@@ -264,6 +274,11 @@ void VVector::resize(const unsigned int nRows) {
 	theVec.resize(nRows);
 }
 
+/// Set content to 0.
+void VVector::setZero() {
+	std::fill(theVec.begin(), theVec.end(), 0.);
+}
+
 /// Get part of vector.
 /**
  * \param [in] len Length of part.
@@ -318,7 +333,7 @@ VVector VVector::operator-(const VVector &aVector) const {
 }
 
 /// Assignment Vector=Vector.
-VVector &VVector::operator=(const VVector &aVector) {
+VVector& VVector::operator=(const VVector &aVector) {
 	if (this != &aVector) {   // Gracefully handle self assignment
 		numRows = aVector.getNumRows();
 		theVec.resize(numRows);
@@ -362,67 +377,67 @@ unsigned int VSymMatrix::invert() {
 
 	unsigned int nrank = 0;
 	for (int i = 1; i <= nSize; ++i) { // start of loop
-		int k = 0;
+		int kp = 0;
 		double vkk = 0.0;
 
-		int j = first;
+		int jp = first;
 		int previous = 0;
 		int last = previous;
 		// look for pivot
-		while (j > 0) {
-			int jj = (j * j + j) / 2 - 1;
-			if (fabs(theVec[jj]) > std::max(fabs(vkk), eps * diag[j - 1])) {
+		while (jp > 0) {
+			int jj = (jp * jp + jp) / 2 - 1;
+			if (fabs(theVec[jj]) > std::max(fabs(vkk), eps * diag[jp - 1])) {
 				vkk = theVec[jj];
-				k = j;
+				kp = jp;
 				last = previous;
 			}
-			previous = j;
-			j = next[j - 1];
+			previous = jp;
+			jp = next[jp - 1];
 		}
 		// pivot found
-		if (k > 0) {
-			int kk = (k * k + k) / 2 - 1;
+		if (kp > 0) {
+			int kk = (kp * kp + kp) / 2 - 1;
 			if (last <= 0) {
-				first = next[k - 1];
+				first = next[kp - 1];
 			} else {
-				next[last - 1] = next[k - 1];
+				next[last - 1] = next[kp - 1];
 			}
-			next[k - 1] = 0; // index is used, reset
+			next[kp - 1] = 0; // index is used, reset
 			nrank++; // increase rank and ...
 
 			vkk = 1.0 / vkk;
 			theVec[kk] = -vkk;
-			int jk = kk - k;
+			int jk = kk - kp;
 			int jl = -1;
-			for (int m = 1; m <= nSize; ++m) { // elimination
-				if (m == k) {
+			for (int j = 1; j <= nSize; ++j) { // elimination
+				if (j == kp) {
 					jk = kk;
-					jl += m;
+					jl += j;
 				} else {
-					if (m < k) {
+					if (j < kp) {
 						++jk;
 					} else {
-						jk += m - 1;
+						jk += j - 1;
 					}
 
 					double vjk = theVec[jk];
 					theVec[jk] = vkk * vjk;
-					int lk = kk - k;
-					if (m >= k) {
-						for (int l = 1; l <= k - 1; ++l) {
+					int lk = kk - kp;
+					if (j >= kp) {
+						for (int l = 1; l <= kp - 1; ++l) {
 							++jl;
 							++lk;
 							theVec[jl] -= theVec[lk] * vjk;
 						}
 						++jl;
 						lk = kk;
-						for (int l = k + 1; l <= m; ++l) {
+						for (int l = kp + 1; l <= j; ++l) {
 							++jl;
 							lk += l - 1;
 							theVec[jl] -= theVec[lk] * vjk;
 						}
 					} else {
-						for (int l = 1; l <= m; ++l) {
+						for (int l = 1; l <= j; ++l) {
 							++jl;
 							++lk;
 							theVec[jl] -= theVec[lk] * vjk;
@@ -431,12 +446,12 @@ unsigned int VSymMatrix::invert() {
 				}
 			}
 		} else {
-			for (int m = 1; m <= nSize; ++m) {
-				if (next[m - 1] >= 0) {
-					int kk = (m * m - m) / 2 - 1;
-					for (int n = 1; n <= nSize; ++n) {
-						if (next[n - 1] >= 0) {
-							theVec[kk + n] = 0.0; // clear matrix row/col
+			for (int k = 1; k <= nSize; ++k) {
+				if (next[k - 1] >= 0) {
+					int kk = (k * k - k) / 2 - 1;
+					for (int j = 1; j <= nSize; ++j) {
+						if (next[j - 1] >= 0) {
+							theVec[kk + j] = 0.0; // clear matrix row/col
 						}
 					}
 				}

@@ -26,7 +26,13 @@ jobs:
         wget https://root.cern.ch/download/${{ matrix.ROOT_VERSION }}
         tar xzf ${{ matrix.ROOT_VERSION }}
         source root/bin/thisroot.sh
-       
+  
+    - name: Install Eigen
+      run: |
+        wget https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz -O /tmp/eigen.tar.gz
+        mkdir eigen3-src && tar -xzf /tmp/eigen.tar.gz -C eigen3-src --strip 1
+        cd eigen3-src && mkdir build && cd build && cmake .. && sudo make install && cd ../..
+  
     - name: Build GenFit
       run: |
         source root/bin/thisroot.sh

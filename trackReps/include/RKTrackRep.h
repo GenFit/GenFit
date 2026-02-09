@@ -156,6 +156,8 @@ class RKTrackRep : public AbsTrackRep {
   double getSpu(const StateOnPlane& state) const;
   double getTime(const StateOnPlane& state) const override;
 
+  virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const override;
+
   virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const override;
 
   virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const override;

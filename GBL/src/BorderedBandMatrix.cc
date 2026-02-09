@@ -11,7 +11,7 @@
  *  \author Claus Kleinwort, DESY, 2011 (Claus.Kleinwort@desy.de)
  *
  *  \copyright
- *  Copyright (c) 2011 - 2016 Deutsches Elektronen-Synchroton,
+ *  Copyright (c) 2011 - 2024 Deutsches Elektronen-Synchroton,
  *  Member of the Helmholtz Association, (DESY), HAMBURG, GERMANY \n\n
  *  This library is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU Library General Public License as
@@ -28,12 +28,14 @@
  */
 
 #include "BorderedBandMatrix.h"
+using namespace Eigen;
 
 //! Namespace for the general broken lines package
 namespace gbl {
 
 /// Create bordered band matrix.
-BorderedBandMatrix::BorderedBandMatrix() : numSize(0), numBorder(0), numBand(0), numCol(0) {
+BorderedBandMatrix::BorderedBandMatrix() :
+		numSize(0), numBorder(0), numBand(0), numCol(0) {
 }
 
 BorderedBandMatrix::~BorderedBandMatrix() {
@@ -43,7 +45,7 @@ BorderedBandMatrix::~BorderedBandMatrix() {
 /**
  * \param nSize [in] Size of matrix
  * \param nBorder [in] Size of border (=1 for q/p + additional local parameters)
- * \param nBand [in] Band width (usually = 5, for simplified jacobians = 4)
+ * \param nBand [in] Band width (usually = 5, for simplified jacobians = 4, +2 for steps)
  */
 void BorderedBandMatrix::resize(unsigned int nSize, unsigned int nBorder,
 		unsigned int nBand) {
@@ -56,6 +58,13 @@ void BorderedBandMatrix::resize(unsigned int nSize, unsigned int nBorder,
 	theBand.resize((nBand + 1), numCol);
 }
 
+/// Set content to 0.
+void BorderedBandMatrix::setZero() {
+	theBorder.setZero();
+	theMixed.setZero();
+	theBand.setZero();
+}
+
 /// Add symmetric block matrix.
 /**
  * Add (extended) block matrix defined by 'aVector * aWeight * aVector.T'
@@ -66,8 +75,8 @@ void BorderedBandMatrix::resize(unsigned int nSize, unsigned int nBorder,
  * \param aVector [in] Vector
  */
 void BorderedBandMatrix::addBlockMatrix(double aWeight,
-		const std::vector<unsigned int>* anIndex,
-		const std::vector<double>* aVector) {
+		const std::vector<unsigned int> *anIndex,
+		const std::vector<double> *aVector) {
 	int nBorder = numBorder;
 	for (unsigned int i = 0; i < anIndex->size(); ++i) {
 		int iIndex = (*anIndex)[i] - 1; // anIndex has to be sorted
@@ -89,17 +98,78 @@ void BorderedBandMatrix::addBlockMatrix(double aWeight,
 	}
 }
 
+/// Add symmetric block matrix.
+/**
+ * Add (extended) block matrix defined by 'aVector * aWeight * aVector.T'
+ * to bordered band matrix:
+ * BBmatrix(anIndex(i),anIndex(j)) += aVector(i) * aWeight * aVector(j).
+ * \param aWeight [in] Weight
+ * \param aSize [in]   Size of block matrix
+ * \param anIndex [in] List of rows/colums to be used
+ * \param aVector [in] Vector
+ */
+void BorderedBandMatrix::addBlockMatrix(double aWeight, unsigned int aSize,
+		unsigned int *anIndex, double *aVector) {
+	int nBorder = numBorder;
+	for (unsigned int i = 0; i < aSize; ++i) {
+		int iIndex = anIndex[i] - 1; // anIndex has to be sorted
+		for (unsigned int j = 0; j <= i; ++j) {
+			int jIndex = anIndex[j] - 1;
+			if (iIndex < nBorder) {
+				theBorder(iIndex, jIndex) += aVector[i] * aWeight * aVector[j];
+			} else if (jIndex < nBorder) {
+				theMixed(jIndex, iIndex - nBorder) += aVector[i] * aWeight
+						* aVector[j];
+			} else {
+				unsigned int nBand = iIndex - jIndex;
+				theBand(nBand, jIndex - nBorder) += aVector[i] * aWeight
+						* aVector[j];
+				numBand = std::max(numBand, nBand); // update band width
+			}
+		}
+	}
+}
+
 /// Retrieve symmetric block matrix.
 /**
  * Get (compressed) block from bordered band matrix: aMatrix(i,j) = BBmatrix(anIndex(i),anIndex(j)).
  * \param anIndex [in] List of rows/colums to be used
  */
-TMatrixDSym BorderedBandMatrix::getBlockMatrix(
-		const std::vector<unsigned int> &anIndex) const {
+MatrixXd BorderedBandMatrix::getBlockMatrix(
+		const std::vector<unsigned int> anIndex) const {
 
-	TMatrixDSym aMatrix(anIndex.size());
+	MatrixXd aMatrix(anIndex.size(), anIndex.size());
 	int nBorder = numBorder;
 	for (unsigned int i = 0; i < anIndex.size(); ++i) {
+		int iIndex = anIndex[i] - 1; // anIndex has to be sorted
+		for (unsigned int j = 0; j <= i; ++j) {
+			int jIndex = anIndex[j] - 1;
+			if (iIndex < nBorder) {
+				aMatrix(i, j) = theBorder(iIndex, jIndex); // border part of inverse
+			} else if (jIndex < nBorder) {
+				aMatrix(i, j) = -theMixed(jIndex, iIndex - nBorder); // mixed part of inverse
+			} else {
+				unsigned int nBand = iIndex - jIndex;
+				aMatrix(i, j) = theBand(nBand, jIndex - nBorder); // band part of inverse
+			}
+			aMatrix(j, i) = aMatrix(i, j);
+		}
+	}
+	return aMatrix;
+}
+
+/// Retrieve symmetric block matrix.
+/**
+ * Get (compressed) block from bordered band matrix: aMatrix(i,j) = BBmatrix(anIndex(i),anIndex(j)).
+ * \param aSize [in] Matrix size
+ * \param anIndex [in] Array of rows/colums to be used
+ */
+MatrixXd BorderedBandMatrix::getBlockMatrix(unsigned int aSize,
+		unsigned int *anIndex) const {
+
+	MatrixXd aMatrix(aSize, aSize);
+	int nBorder = numBorder;
+	for (unsigned int i = 0; i < aSize; ++i) {
 		int iIndex = anIndex[i] - 1; // anIndex has to be sorted
 		for (unsigned int j = 0; j <= i; ++j) {
 			int jIndex = anIndex[j] - 1;
@@ -153,23 +223,23 @@ void BorderedBandMatrix::solveAndInvertBorderedBand(
 	VMatrix inverseBand = invertBand();
 	if (numBorder > 0) { // need to use block matrix decomposition to solve
 		// solve for mixed part
-		const VMatrix auxMat = solveBand(theMixed); // = Xt
-		const VMatrix auxMatT = auxMat.transpose(); // = X
+		const VMatrix auxMat = solveBand(theMixed);			// = Xt
+		const VMatrix auxMatT = auxMat.transpose();			// = X
 		// solve for border part
 		const VVector auxVec = aRightHandSide.getVec(numBorder)
-				- auxMat * aRightHandSide.getVec(numCol, numBorder); // = b1 - Xt*b2
+				- auxMat * aRightHandSide.getVec(numCol, numBorder);// = b1 - Xt*b2
 		VSymMatrix inverseBorder = theBorder - theMixed * auxMatT;
-		inverseBorder.invert(); // = E
-		const VVector borderSolution = inverseBorder * auxVec; // = x1
+		inverseBorder.invert();			// = E
+		const VVector borderSolution = inverseBorder * auxVec;			// = x1
 		// solve for band part
 		const VVector bandSolution = solveBand(
-				aRightHandSide.getVec(numCol, numBorder)); // = x
+				aRightHandSide.getVec(numCol, numBorder));			// = x
 		aSolution.putVec(borderSolution);
-		aSolution.putVec(bandSolution - auxMatT * borderSolution, numBorder); // = x2
+		aSolution.putVec(bandSolution - auxMatT * borderSolution, numBorder);// = x2
 		// parts of inverse
-		theBorder = inverseBorder; // E
-		theMixed = inverseBorder * auxMat; // E*Xt (-mixed part of inverse) !!!
-		theBand = inverseBand + bandOfAVAT(auxMatT, inverseBorder); // band(D^-1 + X*E*Xt)
+		theBorder = inverseBorder;			// E
+		theMixed = inverseBorder * auxMat;	// E*Xt (-mixed part of inverse) !!!
+		theBand = inverseBand + bandOfAVAT(auxMatT, inverseBorder);	// band(D^-1 + X*E*Xt)
 	} else {
 		aSolution.putVec(solveBand(aRightHandSide));
 		theBand = inverseBand;
@@ -184,6 +254,18 @@ void BorderedBandMatrix::printMatrix() const {
 	theMixed.print();
 	std::cout << "Band   part " << std::endl;
 	theBand.print();
+}
+
+/// Get condition from band (decomposition)
+double BorderedBandMatrix::getBandCondition() const {
+	// get min. and max. value from diagonal matrix D
+	double diagMin = theBand(0, 0);
+	double diagMax = theBand(0, 0);
+	for (uint i = 1; i < numCol; ++i) {
+		diagMin = std::min(diagMin, theBand(0, i));
+		diagMax = std::max(diagMax, theBand(0, i));
+	}
+	return (diagMin > 0.) ? diagMax / diagMin : 0.;
 }
 
 /*============================================================================

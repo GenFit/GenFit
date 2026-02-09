@@ -34,6 +34,13 @@ IF(ROOT_VERSION VERSION_LESS 6.20.0)
 ENDIF()
 set(CMAKE_CC_FLAGS "${CMAKE_CC_FLAGS} ${ROOT_CC_FLAGS}")
 
+OPTION( SUPPORT_ROOT "Support ROOT for user I/O" True )
+IF( SUPPORT_ROOT )
+  FIND_PACKAGE(ROOT REQUIRED)
+  ADD_DEFINITIONS(-DGBL_EIGEN_SUPPORT_ROOT)
+ENDIF()
+FIND_PACKAGE(Eigen3 REQUIRED)
+
 
 # either, the environment variable RAVEPATH has to be specified, and RAVE's RaveConfig.cmake will be used to determine everything we need
 # or, Rave_LDFLAGS, Rave_INCLUDE_DIRS and Rave_CFLAGS have to be set via the command-line
@@ -194,10 +201,14 @@ SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cxx" "${library
 SET(GBL_DICTIONARY_SOURCES
 		${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GFGbl.h
 		${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblFitter.h
+		${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblFitter2.h
 		${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/ICalibrationParametersDerivatives.h
 		${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblFitterInfo.h
+		${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblFitterInfo2.h
 		${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblFitStatus.h
 		${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblData.h
+		${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblMeasurement.h
+		${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GblUtilities.h
 )
 ROOT_GENERATE_DICTIONARY(
 	    GBLRootDict

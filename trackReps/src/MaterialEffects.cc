@@ -586,7 +586,7 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
   noiseAfter[2 * 7 + 0] = -sigma2 * step2 / 3.0 * a[0]*a[2];
   noiseAfter[3 * 7 + 0] =  sigma2 * step * 0.5 * (1 - a[0]*a[0]);
   noiseAfter[4 * 7 + 0] = -sigma2 * step * 0.5 * a[0]*a[1];
-  noiseAfter[5 * 7 + 0] = -sigma2 * step * 0.5 * a[0]*a[1];
+  noiseAfter[5 * 7 + 0] = -sigma2 * step * 0.5 * a[0]*a[2];
   noiseAfter[0 * 7 + 1] = noiseAfter[1 * 7 + 0];
   noiseAfter[1 * 7 + 1] =  sigma2 * step2 / 3.0 * (1 - a[1]*a[1]);
   noiseAfter[2 * 7 + 1] = -sigma2 * step2 / 3.0 * a[1]*a[2];

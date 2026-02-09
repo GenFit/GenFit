@@ -162,11 +162,11 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
     std::vector<gbl::GblPoint> points = collectGblPoints(trk, rep);
     for(unsigned int ip = 0;ip<points.size(); ip++) {
       GblPoint & p = points.at(ip);
-      if (p.hasScatterer())
+      if (p.getScatDim())
         nscat++;
-      if (p.hasMeasurement())
+      if (p.numMeasurements())
         nmeas++;
-      if(!p.hasMeasurement()&&!p.hasScatterer())
+      if(!p.numMeasurements()&&!p.getScatDim())
         ndummy++;
     }
     gbl::GblTrajectory traj(points, gblfs->hasCurvature());

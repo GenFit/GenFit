@@ -11,7 +11,7 @@
  *  \author Claus Kleinwort, DESY, 2011 (Claus.Kleinwort@desy.de)
  *
  *  \copyright
- *  Copyright (c) 2011 - 2016 Deutsches Elektronen-Synchroton,
+ *  Copyright (c) 2011 - 2020 Deutsches Elektronen-Synchroton,
  *  Member of the Helmholtz Association, (DESY), HAMBURG, GERMANY \n\n
  *  This library is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU Library General Public License as
@@ -50,10 +50,11 @@ namespace gbl {
  *     1   RMEAS, measured value   0                            -+
  *     2   local derivative        index of local derivative     |
  *     3   local derivative        index of local derivative     |
- *     4    ...                                                  | block
+ *     4   ...                                                   | block
  *         SIGMA, error (>0)       0                             |
  *         global derivative       label of global derivative    |
- *         global derivative       label of global derivative   -+
+ *         global derivative       label of global derivative    |
+ *         ...                                                  -+
  *         RMEAS, measured value   0
  *         local derivative        index of local derivative
  *         local derivative        index of local derivative
@@ -64,15 +65,27 @@ namespace gbl {
  *         ...
  *         global derivative       label of global derivative
  *\endverbatim
+ *
+ *  Special data block (other/debug information).
+ *  Contains no local derivatives and (error) SIGMA is negative (-Number of SPecial data words).
+ *
+ *\verbatim
+ *         real array              integer array
+ *         0.0                     0                   -+
+ *         -float(NSP)             0                    |
+ *         special data            special data         | special block (2+NSP words)
+ *         special data            special data         |
+ *         ...                                         -+
+ *\endverbatim
  */
 class MilleBinary {
 public:
-	MilleBinary(const std::string &fileName = "milleBinaryISN.dat",
-			bool doublePrec = false, unsigned int aSize = 2000);
+	MilleBinary(const std::string& fileName = "milleBinaryISN.dat",
+			bool doublePrec = false, bool keepZeros = false,
+			unsigned int aSize = 2000);
 	virtual ~MilleBinary();
-	void addData(double aMeas, double aPrec,
-			const std::vector<unsigned int> &indLocal,
-			const std::vector<double> &derLocal,
+	void addData(double aMeas, double aErr, unsigned int numLocal,
+			unsigned int* indLocal, double* derLocal,
 			const std::vector<int> &labGlobal,
 			const std::vector<double> &derGlobal);
 	void writeRecord();
@@ -83,6 +96,7 @@ private:
 	std::vector<float> floatBuffer; ///< Float buffer
 	std::vector<double> doubleBuffer; ///< Double buffer
 	bool doublePrecision; ///< Flag for storage in as *double* values
+	bool globalDerKeepZeros; ///< Flag for keeping global derivatives with value zero
 };
 }
 #endif /* MILLEBINARY_H_ */

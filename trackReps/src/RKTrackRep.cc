@@ -26,6 +26,7 @@
 #include <MeasuredStateOnPlane.h>
 #include <MeasurementOnPlane.h>
 
+#include <TMatrixDSymEigen.h>
 #include <TBuffer.h>
 #include <TDecompLU.h>
 #include <TMath.h>
@@ -975,6 +976,15 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
 
 }
 
+void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
+
+  jacobian.ResizeTo(5,5);
+  jacobian = fJacobian_;
+
+  noise.ResizeTo(5,5);
+  noise = fNoise_;
+
+}
 
 void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
 
