@@ -141,6 +141,11 @@ AUX_SOURCE_DIRECTORY( ./measurements/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./trackReps/src     library_sources )
 AUX_SOURCE_DIRECTORY( ./utilities/src     library_sources )
 
+CONFIGURE_FILE(
+  "${CMAKE_CURRENT_SOURCE_DIR}/core/include/Version.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/core/include/Version.h"
+)
+
 # Dictionary generation.  For the time being, we list classes one-by-one.
 SET(CORE_DICTIONARY_SOURCES
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsFinitePlane.h
@@ -162,6 +167,7 @@ SET(CORE_DICTIONARY_SOURCES
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackCand.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackCandHit.h
 		${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackPoint.h
+		${CMAKE_CURRENT_BINARY_DIR}/core/include/Version.h
 		${CMAKE_CURRENT_SOURCE_DIR}/finitePlanes/include/RectangularFinitePlane.h
 )
 ROOT_GENERATE_DICTIONARY(
