@@ -1,0 +1,53 @@
+/* Copyright 2026, Deutsches Elektronen Synchrotron DESY,
+   Authors: Christian Wessel
+
+   This file is part of GENFIT.
+
+   GENFIT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as published
+   by the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   GENFIT is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public License
+   along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#define GENFIT_VERSION_MAJOR @genfit2_VERSION_MAJOR@
+#define GENFIT_VERSION_MINOR @genfit2_VERSION_MINOR@
+#define GENFIT_VERSION_PATCH @genfit2_VERSION_PATCH@
+
+#include <iostream>
+
+extern "C" {
+  /// Print the version number
+  void PrintVersion()
+  {
+    std::cout << "GenFit 2 Version: " << GENFIT_VERSION_MAJOR << "." << GENFIT_VERSION_MINOR << "." << GENFIT_VERSION_PATCH << std::endl;
+  };
+
+  /// @brief Get the version number as unsigned int
+  /// @return Version number as 1000 x major version + 10 x minor version + patch version
+  unsigned int GetVersion() {
+    return 1000 * GENFIT_VERSION_MAJOR + 10 * GENFIT_VERSION_MINOR + GENFIT_VERSION_PATCH;
+  };
+
+  /// Get version major number 
+  ushort GetVersionMajor() {
+    return GENFIT_VERSION_MAJOR;
+  }
+
+  /// Get version minor number
+  ushort GetVersionMinor() {
+    return GENFIT_VERSION_MINOR;
+  }
+
+  /// Get version patch number
+  ushort GetVersionPatch() {
+    return GENFIT_VERSION_PATCH;
+  }
+}
