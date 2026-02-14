@@ -21,6 +21,10 @@
 #define GENFIT_VERSION_MINOR @genfit2_VERSION_MINOR@
 #define GENFIT_VERSION_PATCH @genfit2_VERSION_PATCH@
 
+#define GENFIT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
+#define GENFIT_VERSION_CODE GENFIT_VERSION(GENFIT_VERSION_MAJOR, GENFIT_VERSION_MINOR, GENFIT_VERSION_PATCH)
+
+
 #include <iostream>
 
 extern "C" {
@@ -31,9 +35,14 @@ extern "C" {
   };
 
   /// @brief Get the version number as unsigned int
-  /// @return Version number as 1000 x major version + 10 x minor version + patch version
-  unsigned int GetVersion() {
-    return 1000 * GENFIT_VERSION_MAJOR + 10 * GENFIT_VERSION_MINOR + GENFIT_VERSION_PATCH;
+  /// @return Version number as 1000 x major version + 10 x minor version + patch version if plain is true (default).
+  ///         Version number as (major version << 16 + minor version << 8 + patch version) if plain is false.
+  unsigned int GetVersion(bool plain = true) {
+    if (plain) {
+      return 1000 * GENFIT_VERSION_MAJOR + 10 * GENFIT_VERSION_MINOR + GENFIT_VERSION_PATCH;
+    } else {
+      return GENFIT_VERSION_CODE;
+    }
   };
 
   /// Get version major number 
