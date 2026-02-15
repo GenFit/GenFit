@@ -125,12 +125,10 @@ class AbsTrackRep : public TObject {
       TVector3& poca_onwire,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const {
-    TVector3 wireDir(point2 - point1);
-    wireDir.Unit();
+    const TVector3 wireDir((point2 - point1).Unit());
     double retval = this->extrapolateToLine(state, point1, wireDir, stopAtBoundary, calcJacobianNoise);
     poca = this->getPos(state);
-    dirInPoca = this->getMom(state);
-    dirInPoca.Unit();
+    dirInPoca = this->getMom(state).Unit();
 
     poca_onwire = point1 + wireDir*((poca - point1)*wireDir);
     
