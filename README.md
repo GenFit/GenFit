@@ -1,7 +1,24 @@
+<center>
+  <font color="red" size=10><b>WARNING!</b><br/></font>
+  <font color="red" size=3>
+    GenFit is not under active development any longer!<br/>
+    It is guaranteed to compile with modern compilers and modern ROOT versions, and the unit tests and main examples are fully functional, unless stated otherwise.
+    <br/><br/>
+  </font>
+  <font size=3>
+    The current team of maintainers and admins consists mostly of members the Belle II experiment.
+    None of the original developers of GenFit is still part of this team.
+    Thus, due to the lack of person power and time, support like answering questions, implementing bug fixes or new features, etc. is very limited.<br/>
+    Most of the features and changes implemented in the past years were in the context of the Belle II experiment.
+    As an open source project, we ask the community to contribute to the project e.g. by providing bug fixes or new features via pull requests.<br/><br/>
+  </font>
+</center>
+
 # GenFit Package
 
 [![Build and Test](https://github.com/GenFit/GenFit/actions/workflows/cmake.yml/badge.svg)](https://github.com/GenFit/GenFit/actions/workflows/cmake.yml)
 [![DOI](https://zenodo.org/badge/52438924.svg)](https://zenodo.org/doi/10.5281/zenodo.10301439)
+
 
 GenFit is an experiment-independent framework for track reconstruction in particle and nuclear physics. It consists of three modular components:
 
