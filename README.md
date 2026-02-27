@@ -1,42 +1,45 @@
-<center>
-  <font color="red" size=10><b>WARNING!</b><br/></font>
-  <font color="red" size=3>
-    GenFit is not under active development any longer!<br/>
-    It is guaranteed to compile with modern compilers and modern ROOT versions, and the unit tests and main examples are fully functional, unless stated otherwise.
-    <br/><br/>
-  </font>
-  <font size=3>
-    The current team of maintainers and admins consists mostly of members the Belle II experiment.
-    None of the original developers of GenFit is still part of this team.
-    Thus, due to the lack of person power and time, support like answering questions, implementing bug fixes or new features, etc. is very limited.<br/>
-    Most of the features and changes implemented in the past years were in the context of the Belle II experiment.
-    As an open source project, we ask the community to contribute to the project e.g. by providing bug fixes or new features via pull requests.<br/><br/>
-  </font>
-</center>
-
 # GenFit Package
 
 [![Build and Test](https://github.com/GenFit/GenFit/actions/workflows/cmake.yml/badge.svg)](https://github.com/GenFit/GenFit/actions/workflows/cmake.yml)
 [![DOI](https://zenodo.org/badge/52438924.svg)](https://zenodo.org/doi/10.5281/zenodo.10301439)
 
+> [!WARNING]
+> **GenFit is not under active development any longer!**
+>
+> It is guaranteed to compile with modern compilers and modern ROOT versions, and the unit tests and main examples are fully functional, unless stated otherwise.
+>
+> The current team of maintainers and admins consists mostly of members of the Belle II experiment.
+> None of the original developers of GenFit is still part of this team.
+> Thus, due to the lack of personnel and time, support such as answering questions, implementing bug fixes, or adding new features is very limited.
+>
+> Most of the features and changes implemented in recent years were developed in the context of the Belle II experiment.
+>
+> As an open-source project, we encourage the community to contribute by providing bug fixes or new features via pull requests.
 
-GenFit is an experiment-independent framework for track reconstruction in particle and nuclear physics. It consists of three modular components:
+GenFit is an experiment-independent framework for track reconstruction in particle and nuclear physics.
+It consists of three modular components:
 
-* Track fitting algorithms
+* **Track fitting algorithms**
 
-  Currently, GenFit contains a Kalman Filter, a Deterministic Annealing Filter, and a General Broken Lines fitter. Other algorithm modules can be added easily.
+  Currently, GenFit contains a Kalman Filter, a Deterministic Annealing Filter, and a General Broken Lines fitter.
+  Other algorithm modules can be added easily.
 
-* Track representations
+* **Track representations**
 
-  These modules can perform extrapolations of track parameters through material and magnetic fields. GenFit is distributed with a well-tested track representation.
+  These modules can perform extrapolations of track parameters through material and magnetic fields.
+  GenFit is distributed with a well-tested track representation.
   Existing track extrapolation codes can be interfaced in a very straightforward way in this framework, using their native geometry and magnetic field interfaces.
 
-* Measurements
+* **Measurements**
   
-  The measurement dimensionality and the orientation of planar tracking detectors can be chosen freely. GenFit is especially useful for tracking systems which include detectors which do not measure the passage of particles on predefined planes, like TPCs or wire-based drift chambers. The concept of so-called virtual detector planes provides a simple mechanism to use these detector hits in a transparent way without any geometrical simplifications.
+  The measurement dimensionality and the orientation of planar tracking detectors can be chosen freely.
+  GenFit is especially useful for tracking systems which include detectors which do not measure the passage of particles on predefined planes, like TPCs or wire-based drift chambers.
+  The concept of so-called virtual detector planes provides a simple mechanism to use these detector hits in a transparent way without any geometrical simplifications.
 
-GenFit has been developed in the framework of the PANDA experiment at FAIR, Darmstadt, Germany. It is also used in the Belle II, Fopi, and GEM-TPC experiments.
+GenFit has been developed in the framework of the PANDA experiment at FAIR, Darmstadt, Germany.
+It is also used in the Belle II, Fopi, and GEM-TPC experiments.
 
-GenFit is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the license (LGPLv3), or (at your option) any later version. A copy of the license is distributed with GenFit in the `LICENSE.md` file.
+GenFit is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the license (LGPLv3), or (at your option) any later version.
+A copy of the license is distributed with GenFit in the [`LICENSE.md`](https://github.com/GenFit/GenFit/blob/main/LICENSE.md) file.
 
-GenFit Homepage: (https://github.com/GenFit/GenFit)
+GenFit repository: https://github.com/GenFit/GenFit
