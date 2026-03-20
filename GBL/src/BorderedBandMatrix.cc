@@ -71,7 +71,7 @@ void BorderedBandMatrix::setZero() {
  * to bordered band matrix:
  * BBmatrix(anIndex(i),anIndex(j)) += aVector(i) * aWeight * aVector(j).
  * \param aWeight [in] Weight
- * \param anIndex [in] List of rows/colums to be used
+ * \param anIndex [in] List of rows/columns to be used
  * \param aVector [in] Vector
  */
 void BorderedBandMatrix::addBlockMatrix(double aWeight,
@@ -105,7 +105,7 @@ void BorderedBandMatrix::addBlockMatrix(double aWeight,
  * BBmatrix(anIndex(i),anIndex(j)) += aVector(i) * aWeight * aVector(j).
  * \param aWeight [in] Weight
  * \param aSize [in]   Size of block matrix
- * \param anIndex [in] List of rows/colums to be used
+ * \param anIndex [in] List of rows/columns to be used
  * \param aVector [in] Vector
  */
 void BorderedBandMatrix::addBlockMatrix(double aWeight, unsigned int aSize,
@@ -133,7 +133,7 @@ void BorderedBandMatrix::addBlockMatrix(double aWeight, unsigned int aSize,
 /// Retrieve symmetric block matrix.
 /**
  * Get (compressed) block from bordered band matrix: aMatrix(i,j) = BBmatrix(anIndex(i),anIndex(j)).
- * \param anIndex [in] List of rows/colums to be used
+ * \param anIndex [in] List of rows/columns to be used
  */
 MatrixXd BorderedBandMatrix::getBlockMatrix(
 		const std::vector<unsigned int> anIndex) const {
@@ -162,7 +162,7 @@ MatrixXd BorderedBandMatrix::getBlockMatrix(
 /**
  * Get (compressed) block from bordered band matrix: aMatrix(i,j) = BBmatrix(anIndex(i),anIndex(j)).
  * \param aSize [in] Matrix size
- * \param anIndex [in] Array of rows/colums to be used
+ * \param anIndex [in] Array of rows/columns to be used
  */
 MatrixXd BorderedBandMatrix::getBlockMatrix(unsigned int aSize,
 		unsigned int *anIndex) const {

@@ -111,7 +111,7 @@ class TrackCand : public TObject {
 
   //! Get detector IDs of all hits
   std::vector<int>    getDetIDs() const;
-  //! Get sorting parameterts of all hits
+  //! Get sorting parameters of all hits
   std::vector<double> getSortingParameters() const;
   std::set<int>       getUniqueDetIDs() const;
 
@@ -174,7 +174,7 @@ class TrackCand : public TObject {
   /** @brief set the covariance matrix seed (6D).  */
   void setCovSeed(const TMatrixDSym& cov6D) {cov6D_ = cov6D; /* always 6D, no need to resize */}
 
-  /** @brief sets the state to seed the track fitting. State has to be a TVectorD(6). First 3 elements are the staring postion second 3 elements the starting momentum. Everything in global coordinates
+  /** @brief sets the state to seed the track fitting. State has to be a TVectorD(6). First 3 elements are the staring position second 3 elements the starting momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
    */
   void set6DSeed(const TVectorD& state6D, const double charge);
@@ -194,7 +194,7 @@ class TrackCand : public TObject {
 
   /** @brief sets the state to seed the track fitting and its
      time. State has to be a TVectorD(6). First 3 elements are the
-     staring postion second 3 elements the starting
+     staring position second 3 elements the starting
      momentum. Everything in global coordinates charge is the charge
      hypotheses of the particle charge.
    */

@@ -224,7 +224,7 @@ class Track : public TObject {
    */
   bool sort();
 
-  //! Try to set the fitted state as seed. Return if it was successfull.
+  //! Try to set the fitted state as seed. Return if it was successful.
   //! Adapt the sign of all TrackReps' pdg to the actual fitted charge.
   bool updateSeed(int id = 0, AbsTrackRep* rep = nullptr, bool biased = true);
 

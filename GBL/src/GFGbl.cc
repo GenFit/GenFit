@@ -10,7 +10,7 @@
  *    - Jacobians at a point before they should be (code reorganized)
  *    - Change of sign of residuals
  *  Version: 4 (Tadeas)
- *  Fixed calculation of equvivalent scatterers (solution by C. Kleinwort)
+ *  Fixed calculation of equivalent scatterers (solution by C. Kleinwort)
  *  Now a scatterer is inserted at each measurement (except last) and between each two measurements.
  *  TrueHits/Clusters. Ghost (1D) hits ignored. With or without magnetic field.
  *  Version: 3 (Tadeas)
@@ -20,7 +20,7 @@
  *  and translated into two equivalent thin GBL scatterers placed
  *  at computed positions between measurement points.
  *  Version: 2 ... never published (Tadeas)
- *  Scatterer at each boundary (tooo many scatterers). TrueHits/Clusters. Without global der.&MP2 output.
+ *  Scatterer at each boundary (too many scatterers). TrueHits/Clusters. Without global der.&MP2 output.
  *  Version: 1 (Sergey & Tadeas)
  *  Scatterers at measurement planes. TrueHits
  *  Version 0: (Sergey)
@@ -338,7 +338,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
   if (!(Bfield > 0.))
     fitQoverP = false;
   
-  // Dimesion of repository/state
+  // Dimension of repository/state
   int dim = rep->getDim();
   // current measurement point
   TrackPoint* point_meas;
@@ -507,7 +507,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       // Default behavior
       raw_meas = point_meas->getRawMeasurement(0);
     }
-    //TODO: We only support 2D measurements in GBL (ot two 1D combined above)
+    //TODO: We only support 2D measurements in GBL (or two 1D combined above)
     if (raw_meas->getRawHitCoords().GetNoElements() != 2) {
       skipMeasurement = true;
       #ifdef DEBUG
@@ -758,7 +758,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       // If not last measurement, extrapolate and get jacobians for scattering points between this and next measurement
       if (ipoint_meas < npoints_meas - 1) {
 	if (theta2 > scatEpsilon) {
-	  // First scatterer will be placed at current measurement point (see bellow)
+	  // First scatterer will be placed at current measurement point (see below)
 
 	  // theta2 > 0 ... we want second scatterer:
 	  // Extrapolate to s2 (remember we have s1 = 0)
@@ -900,7 +900,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
     }
     #endif
     
-    // GBL fit succeded if Ndf >= 0, but Ndf = 0 is useless
+    // GBL fit succeeded if Ndf >= 0, but Ndf = 0 is useless
     //TODO: Here should be some track quality check
     //    if (Ndf > 0 && fitRes == 0) {
     if (traj->isValid() && pvalue >= m_pValueCut && Ndf >= m_minNdf) {
@@ -973,7 +973,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       pValueHisto->Fill(TMath::Prob(Chi2, Ndf));
       // track counting
       stats->Fill(0);
-      // hitted sensors statistics
+      // hit sensors statistics
       if (
         hittedLayers[0] &&
         hittedLayers[1] &&

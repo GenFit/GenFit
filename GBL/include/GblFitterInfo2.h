@@ -77,8 +77,8 @@ namespace genfit {
     /**
      * @brief (Initial) reset of fitter info
      * 
-     * @param measurementDim Measurement dimesion (2)
-     * @param repDim Representation dimesion (5)
+     * @param measurementDim Measurement dimension (2)
+     * @param repDim Representation dimension (5)
      * @return void
      */
     void reset(unsigned int repDim = 5);
@@ -195,7 +195,7 @@ namespace genfit {
     MeasurementOnPlane getMeasurement(unsigned int = 0) const;
     
     /**
-     * @brief SHOULD BE USED ONLY INTERNALY!
+     * @brief SHOULD BE USED ONLY INTERNALLY!
      * Update the plane from measurement constructed with state
      * or take plane from state if there is no measurement.
      * 1st raw Measurement with highest weight is constructed and stored as matrices.
@@ -307,7 +307,7 @@ namespace genfit {
     TMatrixD hMatrix_;
 
     // allow for left/right ambiguity in CDC
-    std::vector<unsigned int> measUsed_; // list of used measurements (indices, sorted by prevoius weights)
+    std::vector<unsigned int> measUsed_; // list of used measurements (indices, sorted by previous weights)
     std::vector<double> measDownWeight_; // downweights from GBL (not normalized)
     std::vector<TVectorD> measurement_;
     std::vector<TMatrixDSym> measCov_;

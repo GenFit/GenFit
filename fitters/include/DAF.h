@@ -33,7 +33,7 @@
 
 namespace genfit {
 
-/** @brief Determinstic Annealing Filter (DAF) implementation.
+/** @brief Deterministic Annealing Filter (DAF) implementation.
  *
  * @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  * @author Karl Bicker (Technische Universit&auml;t M&uuml;nchen)

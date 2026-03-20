@@ -49,7 +49,7 @@ enum eFitterType {
  *
  *  @author Karl Bicker (Technische Universit&auml;t M&uuml;nchen, original author)
  * 
- * The EventDisplay class is a singelton used to visualize the events processed with Genfit. The
+ * The EventDisplay class is a singleton used to visualize the events processed with Genfit. The
  * event display uses the EVE event visualization package to visualize Tracks which are bundled
  * in a vector and which form one event. The information about the tracks is supplied in Track
  * objects. To use the event display, the geometry (TGeoManager)and magnetic field (FieldManager)
@@ -102,7 +102,7 @@ class EventDisplay : public TNamed {
 		 * options are available:\n
 		 * \n
 		 * 'A': Autoscale errors. The representation of hits are scaled with the error found
-		 *      their covariance matrix. This can lead to hits not being displayed beause the
+		 *      their covariance matrix. This can lead to hits not being displayed because the
 		 *      errors are too small. Autoscaling ensures that the errors are scaled up
 		 *      sufficiently to ensure all hits are displayed. However, this can lead to unwanted
 		 *      results if there are only a few hits with very small errors, as all hits are scaled

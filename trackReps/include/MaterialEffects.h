@@ -144,10 +144,10 @@ public:
   void noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare) const;
 
   //! calculation of multiple scattering
-  /**  This function first calcuates a MSC variance based on the current material and step length
-   * 2 different formulas for the MSC variance are implemeted. One can select the formula via "setMscModel".
+  /**  This function first calculates a MSC variance based on the current material and step length
+   * 2 different formulas for the MSC variance are implemented. One can select the formula via "setMscModel".
    * With the MSC variance and the current direction of the track a full 7D noise matrix is calculated.
-   * This noise matrix is the additional noise at the end of fStep in the 7D globa cooridnate system
+   * This noise matrix is the additional noise at the end of fStep in the 7D global coordinate system
    * taking even the (co)variances of the position coordinates into account.
    * 
     */

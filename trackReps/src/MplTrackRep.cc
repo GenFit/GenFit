@@ -178,7 +178,7 @@ double MplTrackRep::RKPropagate(M1x7& state7,
 
 //     if (!calcOnlyLastRowOfJ) {
 
-//       if (!varField) { // FIXME let's be honest and calculate everything everytime
+//       if (!varField) { // FIXME let's be honest and calculate everything every time
 //         // d(x, y, z)/d(x, y, z) submatrix is unit matrix
 //         J(0, 0) = 1;  J(1, 1) = 1;  J(2, 2) = 1;
 //         // d(ax, ay, az)/d(ax, ay, az) submatrix is 0

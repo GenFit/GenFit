@@ -10,7 +10,7 @@ void makeGeom()
    //TAG sollte wieder 0 werden sens flag
    mPar[0]=0.;//sensitive volume flag
    mPar[1]=1.;//magnetic field flag
-   mPar[2]=30.;//max fiel in kGauss
+   mPar[2]=30.;//max field in kGauss
    mPar[3]=0.1;//maximal angular dev. due to field
    mPar[4]=0.01;//max step allowed (in cm)
    mPar[5]=1.e-5;//max fractional energy loss

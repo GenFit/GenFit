@@ -440,7 +440,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
             sameTypes = false;
         }
         if (!sameTypes) {
-          std::cerr<<"cannot draw trackpoint containing multiple Measurements of differend types"<<std::endl;
+          std::cerr<<"cannot draw trackpoint containing multiple Measurements of different types"<<std::endl;
           continue;
         }
       }
@@ -687,7 +687,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
               TMatrixT<double> eVec = eigen_values.GetEigenVectors();
               double pseudo_res_0 = errorScale_*std::sqrt(ev(0));
               double pseudo_res_1 = errorScale_*std::sqrt(ev(1));
-              // finished calcluating, got the values -----------------------------------
+              // finished calculating, got the values -----------------------------------
 
               // do autoscaling if necessary --------------------------------------------
               if(drawAutoScale_) {
@@ -816,7 +816,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
               TMatrixT<double> eVec = eigen_values.GetEigenVectors();
               double pseudo_res_0 = errorScale_*std::sqrt(ev(0));
               double pseudo_res_1 = errorScale_*std::sqrt(ev(1));
-              // finished calcluating, got the values -----------------------------------
+              // finished calculating, got the values -----------------------------------
 
               // do autoscaling if necessary --------------------------------------------
               if(drawAutoScale_) {
