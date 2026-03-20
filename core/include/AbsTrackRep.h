@@ -279,7 +279,7 @@ class AbsTrackRep : public TObject {
   virtual double getCharge(const StateOnPlane& state) const = 0;
   //! Get charge over momentum.
   virtual double getQop(const StateOnPlane& state) const = 0;
-  //! Get tha particle mass in GeV/c^2
+  //! Get the particle mass in GeV/c^2
   double getMass(const StateOnPlane& state) const;
 
   //! Get propagation direction. (-1, 0, 1) -> (backward, auto, forward).

@@ -77,8 +77,8 @@ namespace genfit {
     /**
      * @brief (Initial) reset of fitter info
      * 
-     * @param measurementDim Measurement dimesion (2)
-     * @param repDim Representation dimesion (5)
+     * @param measurementDim Measurement dimension (2)
+     * @param repDim Representation dimension (5)
      * @return void
      */
     void reset(unsigned int measurementDim = 2, unsigned int repDim = 5);
@@ -196,7 +196,7 @@ namespace genfit {
     MeasurementOnPlane getMeasurement() const;
     
     /**
-     * @brief SHOULD BE USED ONLY INTERNALY!
+     * @brief SHOULD BE USED ONLY INTERNALLY!
      * Update the plane from measurement constructed with state
      * or take plane from state if there is no measurement.
      * 1st raw Measurement with highest weight is constructed and stored as matrices.

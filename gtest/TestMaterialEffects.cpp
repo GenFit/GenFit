@@ -17,6 +17,6 @@ namespace genfit {
     };
 
 
-    // TODO: Write a ConstMaterialInterface similiar to the ConstMagneticField for testing purposes.
+    // TODO: Write a ConstMaterialInterface similar to the ConstMagneticField for testing purposes.
     // TODO: We can easily check the formulas then! Yeah...
 }

@@ -361,7 +361,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
   double trackLen(0);
 
   bool newRefState(false); // has the current Point a new reference state?
-  bool prevNewRefState(false); // has the last successfull point a new reference state?
+  bool prevNewRefState(false); // has the last successful point a new reference state?
 
   unsigned int nPoints = tr->getNumPoints();
 
@@ -568,7 +568,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       }
 
       if (plane.get() == nullptr) {
-        Exception exc("KalmanFitterRefTrack::prepareTrack ==> construced plane is nullptr!",__LINE__,__FILE__);
+        Exception exc("KalmanFitterRefTrack::prepareTrack ==> constructed plane is nullptr!",__LINE__,__FILE__);
         exc.setFatal();
         throw exc;
       }

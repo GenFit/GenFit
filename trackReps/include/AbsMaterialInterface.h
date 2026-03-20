@@ -49,7 +49,7 @@ class AbsMaterialInterface : public TObject {
                          double dirX, double dirY, double dirZ) = 0;
 
   /***
-   * Get the material paramaters in the current material.
+   * Get the material parameters in the current material.
    * @return
    */
   virtual Material getMaterialParameters() = 0;

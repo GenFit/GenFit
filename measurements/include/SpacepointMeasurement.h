@@ -55,7 +55,7 @@ class SpacepointMeasurement : public AbsMeasurement {
   virtual AbsMeasurement* clone() const override {return new SpacepointMeasurement(*this);}
 
   /**
-   * @brief Contruct the virtual detector plane
+   * @brief Construct the virtual detector plane
    *
    * Per default, the plane will be constructed such that it contains the measurement and POCA to the measurement in cartesian space.
    * The plane is perpendicular to the track (at the POCA).

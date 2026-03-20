@@ -187,7 +187,7 @@ void VSymMatrix::setZero() {
 	std::fill(theVec.begin(), theVec.end(), 0.);
 }
 
-/// Get number of rows (= number of colums).
+/// Get number of rows (= number of columns).
 /**
  * \return Number of rows.
  */

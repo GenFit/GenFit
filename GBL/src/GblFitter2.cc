@@ -5,7 +5,7 @@
  *  This is an interface to General Broken Lines
  * 
  *  CHK Feb 2023: try to implement GBLv3 (with thick scatterers) and ambiguities (CDC)
- *  - GBL extentions:
+ *  - GBL extensions:
  *    + GblData::GblData()
  *    + std::vector<GblData> GblTrajectory::getData()
  *  - not yet working:
@@ -20,14 +20,14 @@
  *  - final track contains GblFitStatus and fitted states from GBL prediction
  *  - 1D/2D hits supported (pixel, single strip, combined strips(2D), wire)
  *  - At point: Only the very first raw measurement is used and from
- *    that, constructed MeasurementOnPlane with heighest weight
+ *    that, constructed MeasurementOnPlane with highest weight
  *  Version: 5 --------------------------------------------------------------
  *  - several bug-fixes:
  *    - Scatterers at bad points
  *    - Jacobians at a point before they should be (code reorganized)q
  *    - Change of sign of residuals
  *  Version: 4 --------------------------------------------------------------
- *    Fixed calculation of equvivalent scatterers (solution by C. Kleinwort)
+ *    Fixed calculation of equivalent scatterers (solution by C. Kleinwort)
  *    Now a scatterer is inserted at each measurement (except last) and
  *    between each two measurements.
  *    TrueHits/Clusters. Ghost (1D) hits ignored. With or
@@ -39,7 +39,7 @@
  *    and translated into two equivalent thin GBL scatterers placed
  *    at computed positions between measurement points.
  *  Version: 2 ... never published -----------------------------------------
- *    Scatterer at each boundary (tooo many scatterers). TrueHits/Clusters.
+ *    Scatterer at each boundary (too many scatterers). TrueHits/Clusters.
  *    Without global der.&MP2 output.
  *  Version: 1 --------------------------------------------------------------
  *    Scatterers at measurement planes. TrueHits

@@ -302,7 +302,7 @@ int main() {
   std::cout << nEvents - fail << " stored tracks are identical to fitted tracks, as far as tested." << std::endl;
   std::cout << fail << " tracks were not identical to fitted tracks, as far as tested." << std::endl;
   delete fitTrack;
-  std::cout << "deleteing didn't segfault" << std::endl;
+  std::cout << "deleting didn't segfault" << std::endl;
 
   return 0;
 }

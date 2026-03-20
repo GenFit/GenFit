@@ -74,7 +74,7 @@ namespace genfit {
      * 
      * @return void
      * @param internalIterations GBL down-weighting in iterations. One letter (T,H,C) per iteration.
-     *                           Seems "HH" is resonable for outliers. Default "" is OK.
+     *                           Seems "HH" is reasonable for outliers. Default "" is OK.
      *                           Separate by comma for each external iteration
      *                           (usually last), e.g., for 3 iterations: ",,HH" to down-weight at last one
      * @param externalIterations Sets number of times GblTrajectory.fit(...) will be called in processTrackWithRep(...).

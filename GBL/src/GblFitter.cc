@@ -13,14 +13,14 @@
  *  - final track contains GblFitStatus and fitted states from GBL prediction
  *  - 1D/2D hits supported (pixel, single strip, combined strips(2D), wire)
  *  - At point: Only the very first raw measurement is used and from
- *    that, constructed MeasurementOnPlane with heighest weight
+ *    that, constructed MeasurementOnPlane with highest weight
  *  Version: 5 --------------------------------------------------------------
  *  - several bug-fixes:
  *    - Scatterers at bad points
  *    - Jacobians at a point before they should be (code reorganized)
  *    - Change of sign of residuals
  *  Version: 4 --------------------------------------------------------------
- *    Fixed calculation of equvivalent scatterers (solution by C. Kleinwort)
+ *    Fixed calculation of equivalent scatterers (solution by C. Kleinwort)
  *    Now a scatterer is inserted at each measurement (except last) and
  *    between each two measurements.
  *    TrueHits/Clusters. Ghost (1D) hits ignored. With or
@@ -32,7 +32,7 @@
  *    and translated into two equivalent thin GBL scatterers placed
  *    at computed positions between measurement points.
  *  Version: 2 ... never published -----------------------------------------
- *    Scatterer at each boundary (tooo many scatterers). TrueHits/Clusters.
+ *    Scatterer at each boundary (too many scatterers). TrueHits/Clusters.
  *    Without global der.&MP2 output.
  *  Version: 1 --------------------------------------------------------------
  *    Scatterers at measurement planes. TrueHits
@@ -94,13 +94,13 @@ GblFitter::~GblFitter() {
   }
 }
 
-void GblFitter::setTrackSegmentController(GblTrackSegmentController* controler)
+void GblFitter::setTrackSegmentController(GblTrackSegmentController* controller)
 {
   if (m_segmentController) {
     delete m_segmentController;
     m_segmentController = nullptr;
   }
-  m_segmentController = controler;      
+  m_segmentController = controller;      
 }
 
 void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits)
@@ -303,7 +303,7 @@ void GblFitter::updateGblInfo(gbl::GblTrajectory& traj, genfit::Track* trk, cons
     // (counting fitter infos) which hopefully
     gblfi->updateFitResults(traj);
     
-    // This is agains logic. User can do this if he wants and it is recommended usually
+    // This is against logic. User can do this if he wants and it is recommended usually
     // so that following fit could reuse the updated seed
     //if (igblfi == 0) {
     //  trk->setStateSeed( gblfi->getFittedState(true).getPos(), gblfi->getFittedState(true).getMom() );
@@ -377,7 +377,7 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
 { 
   // All measurement points in ref. track
   int npoints_meas = trk->getNumPointsWithMeasurement();  
-  // Dimesion of representation/state
+  // Dimension of representation/state
   int dim = rep->getDim();  
   // Jacobian for point with measurement = how to propagate from previous point (scat/meas)
   TMatrixD jacPointToPoint(dim, dim);
@@ -433,7 +433,7 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
       break;
     }
     // Extrapolate to next measurement to get material distribution
-    // Use a temp copy of the StateOnPlane to propage between measurements
+    // Use a temp copy of the StateOnPlane to propagate between measurements
     StateOnPlane refCopy(reference);
     // Get the next plane
     SharedPlanePtr nextPlane(trk->getPointWithMeasurement(ipoint_meas + 1)->getRawMeasurement(0)->constructPlane(reference));    

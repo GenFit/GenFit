@@ -28,7 +28,7 @@ namespace genfit {
    * In the current implementation the states on plane are 5-d:
    * u, v, u', v', q/p
    * except that q in this case is magnetic, and the monopole
-   * has no electic charge.
+   * has no electric charge.
    */
   class MplTrackRep : public RKTrackRep {
 
