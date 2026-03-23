@@ -346,10 +346,9 @@ void DetPlane::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       //TObject::Streamer(R__b);
-      // TODO / FIXME: these Streamers
-      // o_.Streamer(R__b);
-      // u_.Streamer(R__b);
-      // v_.Streamer(R__b);
+      VectorUtils::XYZToTVector(o_).Streamer(R__b);
+      VectorUtils::XYZToTVector(u_).Streamer(R__b);
+      VectorUtils::XYZToTVector(v_).Streamer(R__b);
       finitePlane_.reset();
       char flag;
       R__b >> flag;
@@ -365,10 +364,9 @@ void DetPlane::Streamer(TBuffer &R__b)
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
       //TObject::Streamer(R__b);
-      // TODO / FIXME: these Streamers
-      // o_.Streamer(R__b);
-      // u_.Streamer(R__b);
-      // v_.Streamer(R__b);
+      VectorUtils::XYZToTVector(o_).Streamer(R__b);
+      VectorUtils::XYZToTVector(u_).Streamer(R__b);
+      VectorUtils::XYZToTVector(v_).Streamer(R__b);
       if (finitePlane_) {
         R__b << (char)1;
 
