@@ -7,6 +7,10 @@
 namespace genfit {
   namespace VectorUtils {
 
+    /// @brief Get the individual coordinates of a 3-vector by index
+    /// @param[in] a input vector
+    /// @param[in] i index
+    /// @return a[i]
     static inline double getCoord(const ROOT::Math::XYZVector& a, const size_t i) {
       switch (i) {
         case 0:
@@ -20,6 +24,11 @@ namespace genfit {
       }
     }
 
+    /**
+     * @brief Helper function to calculate an orthogonal vector, same logic as in TVector3
+     * @param[in] a vector for which to calculate the orthogonal
+     * @return vector orthognoal to a
+     */
     inline ROOT::Math::XYZVector Orthogonal(const ROOT::Math::XYZVector& a) {
       Double_t xx = a.X() < 0.0 ? -a.X() : a.X();
       Double_t yy = a.Y() < 0.0 ? -a.Y() : a.Y();
@@ -32,20 +41,26 @@ namespace genfit {
     }
 
     /**
-     * Helper function to convert XYZVector to TVector3
+     * @brief Helper function to convert XYZVector to TVector3
+     * @param[in] a XYZVector to convert to TVector3
      */
     static constexpr auto XYZToTVector = [](const ROOT::Math::XYZVector& a)
     {
       return TVector3(a.X(), a.Y(), a.Z());
     };
 
+    /**
+     * @brief Helper function to print the vector coordinates
+     * @param[in] a Vector to print
+     * @param[in] printOut stream to write to
+     */
     static constexpr auto PrintVec = [](const ROOT::Math::XYZVector& a, std::ostream& printOut) {
       printOut << "(x,y,z)=(" << a.X() << "," << a.Y() << "," << a.Z() << "), (r,theta,phi)=("
                << a.R() << "," << a.Theta() * 180. / M_PI << "," << a.Phi() * 180. / M_PI << ")";
     };
     
     /**
-     * Set vector by polar coordinates.
+     * @brief Set vector by polar coordinates.
      * @param[out] vector Vector.
      * @param[in]  mag    Magnitude.
      * @param[in]  theta  Polar angle.
@@ -63,7 +78,7 @@ namespace genfit {
     }
 
     /**
-     * Set vector magnitude mag
+     * @brief Set vector magnitude mag
      * @param[inout] vector Vector
      * @param[in]    mag    Magnitude
      */
