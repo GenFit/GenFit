@@ -72,7 +72,7 @@ class GFRaveVertexFactory {
   //! MeasuredStateOnPlanes will be used (instead of the tracks fitted states) to calculate the rave::Track parameters. takes ownership of MeasuredStateOnPlanes.
   void findVertices ( std::vector <  genfit::GFRaveVertex* > *, const std::vector < genfit::Track* > &, std::vector < genfit::MeasuredStateOnPlane* > &, bool use_beamspot=false );
 
-  void setBeamspot(const TVector3 & pos, const TMatrixDSym & cov);
+  void setBeamspot(const ROOT::Math::XYZVector & pos, const TMatrixDSym & cov);
 
   /**
    * Set the reconstruction method. See http://projects.hepforge.org/rave/trac/wiki/RaveMethods

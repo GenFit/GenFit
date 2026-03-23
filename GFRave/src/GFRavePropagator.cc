@@ -79,7 +79,7 @@ GFRavePropagator::closestTo ( const rave::Track & orig,
     throw exc;
   }
 
-  TVector3 point(Point3DToTVector3(pt));
+  ROOT::Math::XYZVector point(Point3DToXYZVector(pt));
   IdGFTrackStateMap_->at(orig.id()).state_->extrapolateToPoint(point);
 
   return GFTrackToTrack(IdGFTrackStateMap_->at(orig.id()), orig.id(), orig.tag());
