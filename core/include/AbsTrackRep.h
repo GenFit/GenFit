@@ -27,7 +27,6 @@
 //#include "MaterialInfo.h"
 #include "Material.h"
 
-#include <TVector3.h>
 #include <Math/Vector3D.h>
 #include <TObject.h>
 #include <TVectorD.h>

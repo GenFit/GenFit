@@ -29,7 +29,6 @@
 #include <assert.h>
 
 #include <TObject.h>
-#include <TVector3.h>
 #include <Math/Vector3D.h>
 #include <TVectorD.h>
 #include <TMatrixD.h>
@@ -60,7 +59,7 @@ namespace genfit {
  * In addition TrackCand offers members to store starting values for the fit.
  * The starting values (seeds) for the fit are stored as a 6D state (x,y,z,px,py,pz) and its
  * corresponding 6x6 covariance matrix. All seed getter and setter manipulate these two members
- * but the user can chose using TVector3 or TMatrixD to get/set the seed state.
+ * but the user can chose using Vector3D or TMatrixD to get/set the seed state.
  * However this information is not automatically used in genfit.
  * But a pointer to a TrackCand can be passed to the a RKTrackRep constructor
  * to make use of this information without manually extracting it from the TrackCand object.
@@ -184,7 +183,7 @@ class TrackCand : public TObject {
    */
   void set6DSeedAndPdgCode(const TVectorD& state6D, const int pdgCode);
 
-  /** @brief sets the state to seed the track fitting. State has to be a TVector3 for position and a TVector3 for momentum. Everything in global coordinates
+  /** @brief sets the state to seed the track fitting. State has to be a XYZVector for position and a XYZVector for momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
    */
   void setPosMomSeed(const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom, const double charge);
@@ -208,7 +207,7 @@ class TrackCand : public TObject {
   void setTime6DSeedAndPdgCode(double time, const TVectorD& state6D, const int pdgCode);
 
   /** @brief sets the state to seed the track fitting and its time. State has to be
-     a TVector3 for position and a TVector3 for momentum. Everything
+     a XYZVector for position and a XYZVector for momentum. Everything
      in global coordinates charge is the charge hypotheses of the
      particle charge.
    */

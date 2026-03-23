@@ -24,6 +24,7 @@
 #include <TGeoMedium.h>
 #include <TGeoMaterial.h>
 #include <TGeoManager.h>
+#include <TVector3.h>
 #include <assert.h>
 #include <math.h>
 
