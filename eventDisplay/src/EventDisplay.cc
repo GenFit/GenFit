@@ -50,7 +50,7 @@
 #include <TMatrixTSym.h>
 #include <TMatrixDSymEigen.h>
 #include <TROOT.h>
-#include <TVector2.h>
+#include <Math/Vector2D.h>
 #include <TVectorD.h>
 #include <TSystem.h>
 
@@ -540,13 +540,13 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         double_t hit_u = 0;
         double_t hit_v = 0;
         double_t plane_size = 4;
-        TVector2 stripDir(1,0);
+        ROOT::Math::XYVector stripDir(1,0);
 
         if(planar_hit) {
           if(!planar_pixel_hit) {
             if (dynamic_cast<RKTrackRep*>(rep) != nullptr) {
               const TMatrixD& H = mop->getHMatrix()->getMatrix();
-              stripDir.Set(H(0,3), H(0,4));
+              stripDir.SetXY(H(0,3), H(0,4));
             }
             hit_u = hit_coords(0);
           } else {

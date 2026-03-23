@@ -35,6 +35,7 @@
 
 #include <TObject.h>
 #include <TVector3.h>
+#include <Math/Vector2D.h>
 
 #include <memory>
 
@@ -109,19 +110,19 @@ class DetPlane : public TObject {
   void setNormal(const double& theta, const double& phi);
 
   //! projecting a direction onto the plane:
-  TVector2 project(const TVector3& x) const;
+  ROOT::Math::XYVector project(const TVector3& x) const;
 
   //! transform from Lab system into plane
-  TVector2 LabToPlane(const TVector3& x) const;
+  ROOT::Math::XYVector LabToPlane(const TVector3& x) const;
 
   //! transform from plane coordinates to lab system
-  TVector3 toLab(const TVector2& x) const;
+  TVector3 toLab(const ROOT::Math::XYVector& x) const;
 
   // get vector from point to plane (normal)
   TVector3 dist(const TVector3& point) const;
 
   //! gives u,v coordinates of the intersection point of a straight line with plane
-  TVector2 straightLineToPlane(const TVector3& point, const TVector3& dir) const;
+  ROOT::Math::XYVector straightLineToPlane(const TVector3& point, const TVector3& dir) const;
 
   //! gives u,v coordinates of the intersection point of a straight line with plane
   void straightLineToPlane(const double& posX, const double& posY, const double& posZ,
@@ -162,7 +163,7 @@ class DetPlane : public TObject {
   }
 
   //! isInActive methods refer to finite plane. C.f. AbsFinitePlane
-  bool isInActive(const TVector2& v) const{
+  bool isInActive(const ROOT::Math::XYVector& v) const{
     return isInActive(v.X(),v.Y());
   }
 

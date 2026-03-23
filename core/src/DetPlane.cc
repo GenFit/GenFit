@@ -174,19 +174,19 @@ void DetPlane::setNormal(const double& theta, const double& phi){
 }
 
 
-TVector2 DetPlane::project(const TVector3& x)const
+ROOT::Math::XYVector DetPlane::project(const TVector3& x)const
 {
-  return TVector2(u_*x, v_*x);
+  return ROOT::Math::XYVector(u_*x, v_*x);
 }
 
 
-TVector2 DetPlane::LabToPlane(const TVector3& x)const
+ROOT::Math::XYVector DetPlane::LabToPlane(const TVector3& x)const
 {
   return project(x-o_);
 }
 
 
-TVector3 DetPlane::toLab(const TVector2& x)const
+TVector3 DetPlane::toLab(const ROOT::Math::XYVector& x)const
 {
   TVector3 d(o_);
   d += x.X()*u_;
@@ -279,12 +279,12 @@ double DetPlane::distance(double x, double y, double z) const {
 }
 
 
-TVector2 DetPlane::straightLineToPlane (const TVector3& point, const TVector3& dir) const {
+ROOT::Math::XYVector DetPlane::straightLineToPlane (const TVector3& point, const TVector3& dir) const {
   TVector3 dirNorm(dir.Unit());
   TVector3 normal = getNormal();
   double dirTimesN = dirNorm*normal;
   if(fabs(dirTimesN)<1.E-6){//straight line is parallel to plane, so return infinity
-    return TVector2(1.E100,1.E100);
+    return ROOT::Math::XYVector(1.E100,1.E100);
   }
   double t = 1./dirTimesN * ((o_-point)*normal);
   return project(point - o_ + t * dirNorm);
