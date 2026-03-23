@@ -24,7 +24,7 @@
 #include <TGeoMedium.h>
 #include <TGeoMaterial.h>
 #include <TGeoManager.h>
-#include <TVector3.h>
+#include <VectorUtils.h>
 #include <assert.h>
 #include <math.h>
 
@@ -40,8 +40,8 @@ TGeoMaterialInterface::initTrack(double posX, double posY, double posZ,
                                    double dirX, double dirY, double dirZ){
   #ifdef DEBUG
   debugOut << "TGeoMaterialInterface::initTrack. \n";
-  debugOut << "Pos    "; TVector3(posX, posY, posZ).Print();
-  debugOut << "Dir    "; TVector3(dirX, dirY, dirZ).Print();
+  debugOut << "Pos    "; VectorUtils::PrintVec(ROOT::Math::XYZVector(posX, posY, posZ), debugOut);
+  debugOut << "Dir    "; VectorUtils::PrintVec(ROOT::Math::XYZVector(dirX, dirY, dirZ), debugOut);
   #endif
 
   // Move to the new point.
@@ -51,8 +51,8 @@ TGeoMaterialInterface::initTrack(double posX, double posY, double posZ,
 
   if (debugLvl_ > 0) {
     debugOut << "      TGeoMaterialInterface::initTrack at \n";
-    debugOut << "      position:  "; TVector3(posX, posY, posZ).Print();
-    debugOut << "      direction: "; TVector3(dirX, dirY, dirZ).Print();
+    debugOut << "      position:  "; VectorUtils::PrintVec(ROOT::Math::XYZVector(posX, posY, posZ), debugOut);
+    debugOut << "      direction: "; VectorUtils::PrintVec(ROOT::Math::XYZVector(dirX, dirY, dirZ), debugOut);
   }
 
   return result;
