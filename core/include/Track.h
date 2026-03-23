@@ -93,7 +93,7 @@ class Track : public TObject {
   Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMeasurement>& factory, AbsTrackRep* rep = nullptr);
 
   Track(AbsTrackRep* trackRep, const TVectorD& stateSeed);
-  Track(AbsTrackRep* trackRep, const TVector3& posSeed, const TVector3& momSeed);
+  Track(AbsTrackRep* trackRep, const ROOT::Math::XYZVector& posSeed, const ROOT::Math::XYZVector& momSeed);
   Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym& covSeed);
 
   Track(const Track&); // copy constructor
@@ -165,7 +165,7 @@ class Track : public TObject {
 
   const TVectorD& getStateSeed() const {return stateSeed_;}
   void setStateSeed(const TVectorD& s) {stateSeed_.ResizeTo(s); stateSeed_ = s;}
-  void setStateSeed(const TVector3& pos, const TVector3& mom);
+  void setStateSeed(const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom);
 
   const TMatrixDSym& getCovSeed() const {return covSeed_;}
   void setCovSeed(const TMatrixDSym& c) {covSeed_.ResizeTo(c); covSeed_ = c;}

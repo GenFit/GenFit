@@ -30,6 +30,7 @@
 
 #include <TObject.h>
 #include <TVector3.h>
+#include <Math/Vector3D.h>
 #include <TVectorD.h>
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
@@ -122,10 +123,10 @@ class TrackCand : public TObject {
   double getTimeSeed() const { return time_; }
 
   /** @brief get the seed value for track: pos. Identical to the first 3 components of getStateSeed*/
-  TVector3 getPosSeed() const {return TVector3(state6D_(0), state6D_(1), state6D_(2));}
+  ROOT::Math::XYZVector getPosSeed() const {return ROOT::Math::XYZVector(state6D_(0), state6D_(1), state6D_(2));}
 
   /** @brief get the seed value for track: mom. Identical to the last 3 components of getStateSeed*/
-  TVector3 getMomSeed() const {return TVector3(state6D_(3), state6D_(4), state6D_(5));}
+  ROOT::Math::XYZVector getMomSeed() const {return ROOT::Math::XYZVector(state6D_(3), state6D_(4), state6D_(5));}
 
   /** @brief get the covariance matrix seed (6D).  */
   const TMatrixDSym& getCovSeed() const {return cov6D_;}
@@ -186,11 +187,11 @@ class TrackCand : public TObject {
   /** @brief sets the state to seed the track fitting. State has to be a TVector3 for position and a TVector3 for momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
    */
-  void setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge);
+  void setPosMomSeed(const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom, const double charge);
 
   /** @brief This function works the same as setPosMomSeed but instead of a charge hypothesis you can set a pdg code which will set the charge automatically
    */
-  void setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode);
+  void setPosMomSeedAndPdgCode(const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom, const int pdgCode);
 
   /** @brief sets the state to seed the track fitting and its
      time. State has to be a TVectorD(6). First 3 elements are the
@@ -211,15 +212,15 @@ class TrackCand : public TObject {
      in global coordinates charge is the charge hypotheses of the
      particle charge.
    */
-  void setTimePosMomSeed(double time, const TVector3& pos, const TVector3& mom,
+  void setTimePosMomSeed(double time, const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom,
 			 const double charge);
 
   /** @brief This function works the same as setPosMomSeed but instead
       of a charge hypothesis you can set a pdg code which will set the
       charge automatically.
    */
-  void setTimePosMomSeedAndPdgCode(double time, const TVector3& pos,
-				   const TVector3& mom, const int pdgCode);
+  void setTimePosMomSeedAndPdgCode(double time, const ROOT::Math::XYZVector& pos,
+				   const ROOT::Math::XYZVector& mom, const int pdgCode);
 
 
  private:
