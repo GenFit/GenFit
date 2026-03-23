@@ -85,11 +85,10 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
     // skew layers
     if (useSkew_ && (int)((double)wireCounter_/(double)nSuperLayer_)%2 == 1) {
       ROOT::Math::XYZVector perp(wireDir_.Cross(dir));
-      // TODO / FIXME: These Rotations
-      // if ((int)((double)wireCounter_/(double)nSuperLayer_)%4 == 1){
-      //   currentWireDir.Rotate(skewAngle_*TMath::Pi()/180, wireDir_.Cross(perp));
-      // }
-      // else currentWireDir.Rotate(-skewAngle_*TMath::Pi()/180, wireDir_.Cross(perp));
+      if ((int)((double)wireCounter_/(double)nSuperLayer_)%4 == 1){
+        VectorUtils::rotate(skewAngle_*TMath::Pi()/180, wireDir_.Cross(perp), currentWireDir);
+      }
+      else VectorUtils::rotate(-skewAngle_*TMath::Pi()/180, wireDir_.Cross(perp), currentWireDir);
     }
     currentWireDir = currentWireDir.Unit();
 

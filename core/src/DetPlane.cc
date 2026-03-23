@@ -320,9 +320,8 @@ void DetPlane::straightLineToPlane(const double& posX, const double& posY, const
 
 void DetPlane::rotate(double angle) {
   ROOT::Math::XYZVector normal = getNormal();
-  // TODO / FIXME: these two rotations
-  // u_.Rotate(angle, normal);
-  // v_.Rotate(angle, normal);
+  VectorUtils::rotate(angle, normal, u_);
+  VectorUtils::rotate(angle, normal, v_);
 
   sane();
 }

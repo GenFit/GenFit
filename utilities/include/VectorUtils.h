@@ -88,7 +88,7 @@ namespace genfit {
     }
 
     /**
-     * Set vector azimuthal angle theta
+     * @brief Set vector azimuthal angle theta
      * @param[inout] vector Vector
      * @param[in]    theta  Azimuthal angle
      */
@@ -98,13 +98,28 @@ namespace genfit {
     }
 
     /**
-     * Set vector polar angle phi
+     * @brief Set vector polar angle phi
      * @param[inout] vector Vector
      * @param[in]    phi    Polar angle
      */
     inline void SetPhi(ROOT::Math::XYZVector& vector, double phi)
     {
       SetMagThetaPhi(vector, vector.R(), vector.Theta(), phi);
+    }
+
+    /**
+     * @brief Rotate a vector around an axis by a given angle
+     * @param[in]     angle Angle to rotate by
+     * @param[in]     theta Axis to rotate around
+     * @param[inout] vector Vector to rotate.
+     */
+    inline void rotate(const double angle,
+                      const ROOT::Math::XYZVector& axis,
+                      ROOT::Math::XYZVector& vec)
+    {
+      TVector3 tmp = XYZToTVector(vec);
+      tmp.Rotate(angle, XYZToTVector(axis));
+      vec = ROOT::Math::XYZVector(tmp);
     }
   }
 }
