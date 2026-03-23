@@ -65,6 +65,7 @@
 #include <TMatrixT.h>
 
 #include <TVector3.h>
+#include <Math/Vector3D.h>
 
 //#define DEBUG
 //#define OUTPUT
@@ -334,7 +335,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
   // It is switched off automatically if no B-field at (0,0,0) is detected.
   bool fitQoverP = true;
   //TODO: Use clever way to determine zero B-field
-  double Bfield = genfit::FieldManager::getInstance()->getFieldVal(TVector3(0., 0., 0.)).Mag();
+  double Bfield = genfit::FieldManager::getInstance()->getFieldVal(ROOT::Math::XYZVector(0., 0., 0.)).R();
   if (!(Bfield > 0.))
     fitQoverP = false;
   

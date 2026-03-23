@@ -23,7 +23,7 @@
 #ifndef genfit_AbsBField_h
 #define genfit_AbsBField_h
 
-#include <TVector3.h>
+#include <Math/Vector3D.h>
 
 
 namespace genfit {
@@ -43,17 +43,19 @@ public:
    * @brief Get the magneticField [kGauss] at position.
    *
    * Override this in your concrete implementation.
-   * Provided for compatibility with old genfit.  Use the other interface to avoid
-   * unnecessary TVector3 instantiations.
+   * Provided for compatibility with old genfit.
    */
-  virtual TVector3 get(const TVector3& position) const = 0;
+  virtual ROOT::Math::XYZVector get(const ROOT::Math::XYZVector& position) const = 0;
 
   /**
    * @brief Get the magneticField [kGauss] at position.
    *
    * Override this in your concrete implementation.
    */
-  virtual void get(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz) const { const TVector3& B(this->get(TVector3(posX, posY, posZ))); Bx = B.X(); By = B.Y(); Bz = B.Z(); }
+  virtual void get(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz) const
+  {
+    const ROOT::Math::XYZVector B(this->get(ROOT::Math::XYZVector(posX, posY, posZ))); Bx = B.X(); By = B.Y(); Bz = B.Z();
+  }
  
 };
 

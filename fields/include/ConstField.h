@@ -41,16 +41,16 @@ class ConstField : public AbsBField {
     : field_(b1, b2, b3)
   { ; }
 
-  ConstField(const TVector3& field)
+  ConstField(const ROOT::Math::XYZVector& field)
     : field_(field)
   { ; }
 
   //! return value at position
-  TVector3 get(const TVector3& pos) const;
+  ROOT::Math::XYZVector get(const ROOT::Math::XYZVector& pos) const;
   void get(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz) const;
 
  private:
-  TVector3 field_;
+  ROOT::Math::XYZVector field_;
 };
 
 } /* End of namespace genfit */

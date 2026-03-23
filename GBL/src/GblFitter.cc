@@ -77,6 +77,7 @@
 #include <TVectorDfwd.h>
 #include <TMatrixT.h>
 #include <TVector3.h>
+#include <Math/Vector3D.h>
 
 //#define DEBUG
 
@@ -114,7 +115,7 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
   // It is switched off automatically if no B-field at (0,0,0) is detected.
   bool fitQoverP = true;
   //TODO: Use clever way to determine zero B-field
-  double Bfield = genfit::FieldManager::getInstance()->getFieldVal(TVector3(0., 0., 0.)).Mag();
+  double Bfield = genfit::FieldManager::getInstance()->getFieldVal(ROOT::Math::XYZVector(0., 0., 0.)).R();
   if (!(Bfield > 1.e-16))
     fitQoverP = false;
   // degrees of freedom after fit

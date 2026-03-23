@@ -29,7 +29,9 @@ HelixTrackModel::HelixTrackModel(const TVector3& pos, const TVector3& mom, doubl
 
   mom_ = mom.Mag();
 
-  TVector3 B = genfit::FieldManager::getInstance()->getFieldVal(pos);
+  // TODO: Don't need to convert TVector3 to XYZVector
+  // FIXME: Don't need to convert TVector3 to XYZVector
+  const ROOT::Math::XYZVector& B = genfit::FieldManager::getInstance()->getFieldVal(ROOT::Math::XYZVector(pos));
 
   // B must point in Z direction
   assert(B.X() == 0);
