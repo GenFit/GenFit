@@ -27,6 +27,7 @@
 #include <TrackCandHit.h>
 #include <Track.h>
 #include <TrackPoint.h>
+#include <VectorUtils.h>
 #include <WireMeasurement.h>
 #include <WirePointMeasurement.h>
 
@@ -339,8 +340,7 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
   catch (genfit::Exception& e) {
     if (verbose) {
       std::cerr << "Exception in forth Extrapolation. PDG = " << pdg << "; mom: \n";
-      // TODO / FIXME: this
-      // genfit::VectorUtils::PrintVec(mom, std::cerr);
+      genfit::VectorUtils::PrintVec(mom, std::cerr);
 
       std::cerr << e.what();
     }
@@ -374,11 +374,9 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
   catch (genfit::Exception& e) {
     if (verbose) {
       std::cerr << "Exception in back Extrapolation. PDG = " << pdg << "; mom:  \n";
-      // TODO / FIXME : this:
-      // genfit::VectorUtils::PrintVec(mom, std::cerr);
+      genfit::VectorUtils::PrintVec(mom, std::cerr);
       std::cerr << "mom2:  \n";
-      // TODO / FIXME : this:
-      // genfit::VectorUtils::PrintVec(mom2, std::cerr);
+      genfit::VectorUtils::PrintVec(mom2, std::cerr);
     }
     std::cerr << e.what();
 
@@ -1047,11 +1045,9 @@ e_testStatus checkExtrapolateBy(bool writeHisto = false) {
 
         std::cout << "extrapolatedLen-step = " << extrapolatedLen - step << "\n";
         std::cout << "started extrapolation from: ";
-        // TODO / FIXME : this
-        // genfit::VectorUtils::PrintVec(posOrig, std::cout);
+        genfit::VectorUtils::PrintVec(posOrig, std::cout);
         std::cout << "extrapolated to ";
-        // TODO / FIXME : this
-        // genfit::VectorUtils::PrintVec(posExt, std::cout);
+        genfit::VectorUtils::PrintVec(posExt, std::cout);
         std::cout << "difference = " << (posOrig - posExt).R() << "; step = " << step << "; delta = "
                   << (posOrig - posExt).R() - fabs(step) << "\n";
       }

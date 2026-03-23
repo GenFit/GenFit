@@ -354,9 +354,8 @@ int main() {
 
       if (debug) {
         std::cout << "start values \n";
-        // TODO / FIXME: these:
-        // genfit::VectorUtils::PrintVec(pos, std::cout);
-        // genfit::VectorUtils::PrintVec(mom, std::cout);
+        genfit::VectorUtils::PrintVec(pos, std::cout);
+        genfit::VectorUtils::PrintVec(mom, std::cout);
       }
 
       // calc helix parameters
