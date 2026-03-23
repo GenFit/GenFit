@@ -133,7 +133,7 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool)
       static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
     if (debugLvl_ > 0)
       debugOut << "take smoothed state of cardinal rep fit as seed \n";
-    TVector3 pos, mom;
+    ROOT::Math::XYZVector pos, mom;
     TMatrixDSym cov;
     const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
     tr->getCardinalRep()->getPosMomCov(fittedState, pos, mom, cov);
@@ -342,7 +342,7 @@ KalmanFitter::processTrackPartially(Track* tr, const AbsTrackRep* rep, int start
       static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
     if (debugLvl_ > 0)
       debugOut << "take smoothed state of cardinal rep fit as seed \n";
-    TVector3 pos, mom;
+    ROOT::Math::XYZVector pos, mom;
     TMatrixDSym cov;
     const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
     tr->getCardinalRep()->getPosMomCov(fittedState, pos, mom, cov);
@@ -444,7 +444,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
   }
 
   if (debugLvl_ > 0) {
-    debugOut << "its plane is at R = " << plane->getO().Perp()
+    debugOut << "its plane is at R = " << plane->getO().Rho()
 	          << " with normal pointing along (" << plane->getNormal().X() << ", " << plane->getNormal().Y() << ", " << plane->getNormal().Z() << ")" << std::endl;
   }
 

@@ -34,7 +34,7 @@
 #include "AbsFinitePlane.h"
 
 #include <TObject.h>
-#include <TVector3.h>
+#include <Math/Vector3D.h>
 #include <Math/Vector2D.h>
 
 #include <memory>
@@ -65,13 +65,13 @@ class DetPlane : public TObject {
   // Constructors/Destructors ---------
   DetPlane(AbsFinitePlane* finite = nullptr);
 
-  DetPlane(const TVector3& o,
-             const TVector3& u,
-             const TVector3& v,
+  DetPlane(const ROOT::Math::XYZVector& o,
+             const ROOT::Math::XYZVector& u,
+             const ROOT::Math::XYZVector& v,
              AbsFinitePlane* finite = nullptr);
 
-  DetPlane(const TVector3& o,
-             const TVector3& n,
+  DetPlane(const ROOT::Math::XYZVector& o,
+             const ROOT::Math::XYZVector& n,
              AbsFinitePlane* finite = nullptr);
 
   virtual ~DetPlane();
@@ -81,22 +81,22 @@ class DetPlane : public TObject {
   void swap(DetPlane& other); // nothrow
 
   // Accessors -----------------------
-  const TVector3& getO() const {return o_;}
-  const TVector3& getU() const {return u_;}
-  const TVector3& getV() const {return v_;}
+  const ROOT::Math::XYZVector& getO() const {return o_;}
+  const ROOT::Math::XYZVector& getU() const {return u_;}
+  const ROOT::Math::XYZVector& getV() const {return v_;}
 
   // Modifiers -----------------------
-  void set(const TVector3& o,
-           const TVector3& u,
-           const TVector3& v);
-  void setO(const TVector3& o);
+  void set(const ROOT::Math::XYZVector& o,
+           const ROOT::Math::XYZVector& u,
+           const ROOT::Math::XYZVector& v);
+  void setO(const ROOT::Math::XYZVector& o);
   void setO(double, double, double);
-  void setU(const TVector3& u);
+  void setU(const ROOT::Math::XYZVector& u);
   void setU(double, double, double);
-  void setV(const TVector3& v);
+  void setV(const ROOT::Math::XYZVector& v);
   void setV(double, double, double);
-  void setUV(const TVector3& u, const TVector3& v);
-  void setON(const TVector3& o, const TVector3& n);
+  void setUV(const ROOT::Math::XYZVector& u, const ROOT::Math::XYZVector& v);
+  void setON(const ROOT::Math::XYZVector& o, const ROOT::Math::XYZVector& n);
 
   //! Optionally, set the finite plane definition. This is most important for
   //! avoiding fake intersection points in fitting of curlers. This should
@@ -104,25 +104,25 @@ class DetPlane : public TObject {
   void setFinitePlane(AbsFinitePlane* finite){finitePlane_.reset(finite);}
 
   // Operations ----------------------
-  TVector3 getNormal() const;
-  void setNormal(const TVector3& n);
+  ROOT::Math::XYZVector getNormal() const;
+  void setNormal(const ROOT::Math::XYZVector& n);
   void setNormal(double, double, double);
   void setNormal(const double& theta, const double& phi);
 
   //! projecting a direction onto the plane:
-  ROOT::Math::XYVector project(const TVector3& x) const;
+  ROOT::Math::XYVector project(const ROOT::Math::XYZVector& x) const;
 
   //! transform from Lab system into plane
-  ROOT::Math::XYVector LabToPlane(const TVector3& x) const;
+  ROOT::Math::XYVector LabToPlane(const ROOT::Math::XYZVector& x) const;
 
   //! transform from plane coordinates to lab system
-  TVector3 toLab(const ROOT::Math::XYVector& x) const;
+  ROOT::Math::XYZVector toLab(const ROOT::Math::XYVector& x) const;
 
   // get vector from point to plane (normal)
-  TVector3 dist(const TVector3& point) const;
+  ROOT::Math::XYZVector dist(const ROOT::Math::XYZVector& point) const;
 
   //! gives u,v coordinates of the intersection point of a straight line with plane
-  ROOT::Math::XYVector straightLineToPlane(const TVector3& point, const TVector3& dir) const;
+  ROOT::Math::XYVector straightLineToPlane(const ROOT::Math::XYZVector& point, const ROOT::Math::XYZVector& dir) const;
 
   //! gives u,v coordinates of the intersection point of a straight line with plane
   void straightLineToPlane(const double& posX, const double& posY, const double& posZ,
@@ -137,12 +137,12 @@ class DetPlane : public TObject {
   friend bool operator!= (const DetPlane& lhs, const DetPlane& rhs);
 
   //! absolute distance from a point to the plane
-  double distance(const TVector3& point) const;
+  double distance(const ROOT::Math::XYZVector& point) const;
   double distance(double, double, double) const;
 
 
   //! intersect in the active area? C.f. AbsFinitePlane
-  bool isInActive(const TVector3& point, const TVector3& dir) const {
+  bool isInActive(const ROOT::Math::XYZVector& point, const ROOT::Math::XYZVector& dir) const {
     if(finitePlane_.get() == nullptr) return true;
     return this->isInActive( this->straightLineToPlane(point,dir));
   }
@@ -182,9 +182,9 @@ class DetPlane : public TObject {
   //! ensures orthonormal coordinates
   void sane();
 
-  TVector3 o_;
-  TVector3 u_;
-  TVector3 v_;
+  ROOT::Math::XYZVector o_;
+  ROOT::Math::XYZVector u_;
+  ROOT::Math::XYZVector v_;
 
   std::unique_ptr<AbsFinitePlane> finitePlane_; // Ownership
 

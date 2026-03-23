@@ -57,7 +57,7 @@ class WireMeasurementNew : public AbsMeasurement {
 
  public:
   WireMeasurementNew();
-  WireMeasurementNew(double driftDistance, double driftDistanceError, const TVector3& endPoint1, const TVector3& endPoint2, int detId, int hitId, TrackPoint* trackPoint);
+  WireMeasurementNew(double driftDistance, double driftDistanceError, const ROOT::Math::XYZVector& endPoint1, const ROOT::Math::XYZVector& endPoint2, int detId, int hitId, TrackPoint* trackPoint);
 
   virtual ~WireMeasurementNew() {;}
 
@@ -81,7 +81,7 @@ class WireMeasurementNew : public AbsMeasurement {
 
   /** Reset the wire end points.
    */
-  void setWireEndPoints(const TVector3& endPoint1, const TVector3& endPoint2);
+  void setWireEndPoints(const ROOT::Math::XYZVector& endPoint1, const ROOT::Math::XYZVector& endPoint2);
 
   /** Set maximum drift distance. This is used to calculate the start weights of the two
    * measurementsOnPlane.

@@ -28,6 +28,7 @@
 #include "Material.h"
 
 #include <TVector3.h>
+#include <Math/Vector3D.h>
 #include <TObject.h>
 #include <TVectorD.h>
 #include <TMatrixD.h>
@@ -100,8 +101,8 @@ class AbsTrackRep : public TObject {
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToLine(StateOnPlane& state,
-      const TVector3& linePoint,
-      const TVector3& lineDirection,
+      const ROOT::Math::XYZVector& linePoint,
+      const ROOT::Math::XYZVector& lineDirection,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const = 0;
 
@@ -118,19 +119,19 @@ class AbsTrackRep : public TObject {
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToLine(StateOnPlane& state,
-      const TVector3& point1,
-      const TVector3& point2,
-      TVector3& poca,
-      TVector3& dirInPoca,
-      TVector3& poca_onwire,
+      const ROOT::Math::XYZVector& point1,
+      const ROOT::Math::XYZVector& point2,
+      ROOT::Math::XYZVector& poca,
+      ROOT::Math::XYZVector& dirInPoca,
+      ROOT::Math::XYZVector& poca_onwire,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const {
-    const TVector3 wireDir((point2 - point1).Unit());
+    const ROOT::Math::XYZVector wireDir((point2 - point1).Unit());
     double retval = this->extrapolateToLine(state, point1, wireDir, stopAtBoundary, calcJacobianNoise);
     poca = this->getPos(state);
     dirInPoca = this->getMom(state).Unit();
 
-    poca_onwire = point1 + wireDir*((poca - point1)*wireDir);
+    poca_onwire = point1 + wireDir*((poca - point1).Dot(wireDir));
     
     return retval;
   }
@@ -145,7 +146,7 @@ class AbsTrackRep : public TObject {
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToPoint(StateOnPlane& state,
-      const TVector3& point,
+      const ROOT::Math::XYZVector& point,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const = 0;
 
@@ -159,7 +160,7 @@ class AbsTrackRep : public TObject {
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToPoint(StateOnPlane& state,
-      const TVector3& point,
+      const ROOT::Math::XYZVector& point,
       const TMatrixDSym& G, // weight matrix (metric)
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const = 0;
@@ -175,8 +176,8 @@ class AbsTrackRep : public TObject {
    */
   virtual double extrapolateToCylinder(StateOnPlane& state,
       double radius,
-      const TVector3& linePoint = TVector3(0.,0.,0.),
-      const TVector3& lineDirection = TVector3(0.,0.,1.),
+      const ROOT::Math::XYZVector& linePoint = ROOT::Math::XYZVector(0.,0.,0.),
+      const ROOT::Math::XYZVector& lineDirection = ROOT::Math::XYZVector(0.,0.,1.),
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const = 0;
 
@@ -191,8 +192,8 @@ class AbsTrackRep : public TObject {
    */
   virtual double extrapolateToCone(StateOnPlane& state,
       double radius,
-      const TVector3& linePoint = TVector3(0.,0.,0.),
-      const TVector3& lineDirection = TVector3(0.,0.,1.),
+      const ROOT::Math::XYZVector& linePoint = ROOT::Math::XYZVector(0.,0.,0.),
+      const ROOT::Math::XYZVector& lineDirection = ROOT::Math::XYZVector(0.,0.,1.),
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const = 0;
 
@@ -207,7 +208,7 @@ class AbsTrackRep : public TObject {
    */
   virtual double extrapolateToSphere(StateOnPlane& state,
       double radius,
-      const TVector3& point = TVector3(0.,0.,0.),
+      const ROOT::Math::XYZVector& point = ROOT::Math::XYZVector(0.,0.,0.),
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const = 0;
 
@@ -235,19 +236,19 @@ class AbsTrackRep : public TObject {
   virtual unsigned int getDim() const = 0;
 
   //! Get the cartesian position of a state.
-  virtual TVector3 getPos(const StateOnPlane& state) const = 0;
+  virtual ROOT::Math::XYZVector getPos(const StateOnPlane& state) const = 0;
 
   //! Get the cartesian momentum vector of a state.
-  virtual TVector3 getMom(const StateOnPlane& state) const = 0;
+  virtual ROOT::Math::XYZVector getMom(const StateOnPlane& state) const = 0;
 
   //! Get the direction vector of a state.
-  TVector3 getDir(const StateOnPlane& state) const {return getMom(state).Unit();}
+  ROOT::Math::XYZVector getDir(const StateOnPlane& state) const {return getMom(state).Unit();}
 
   //! Get cartesian position and momentum vector of a state.
-  virtual void getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const = 0;
+  virtual void getPosMom(const StateOnPlane& state, ROOT::Math::XYZVector& pos, ROOT::Math::XYZVector& mom) const = 0;
 
   //! Get cartesian position and direction vector of a state.
-  void getPosDir(const StateOnPlane& state, TVector3& pos, TVector3& dir) const {getPosMom(state, pos, dir); dir.SetMag(1.);}
+  void getPosDir(const StateOnPlane& state, ROOT::Math::XYZVector& pos, ROOT::Math::XYZVector& dir) const {getPosMom(state, pos, dir); dir = dir.Unit();}
 
   //! Get the 6D state vector (x, y, z, p_x, p_y, p_z).
   virtual TVectorD get6DState(const StateOnPlane& state) const;
@@ -256,7 +257,7 @@ class AbsTrackRep : public TObject {
   virtual TMatrixDSym get6DCov(const MeasuredStateOnPlane& state) const = 0;
 
   //! Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance.
-  virtual void getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const = 0;
+  virtual void getPosMomCov(const MeasuredStateOnPlane& state, ROOT::Math::XYZVector& pos, ROOT::Math::XYZVector& mom, TMatrixDSym& cov) const = 0;
 
   //! Translates MeasuredStateOnPlane into 6D state vector (x, y, z, p_x, p_y, p_z) and 6x6 covariance.
   virtual void get6DStateCov(const MeasuredStateOnPlane& state, TVectorD& stateVec, TMatrixDSym& cov) const;
@@ -316,13 +317,13 @@ class AbsTrackRep : public TObject {
   bool switchPDGSign();
 
   //! Set position and momentum of state.
-  virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const = 0;
+  virtual void setPosMom(StateOnPlane& state, const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom) const = 0;
   //! Set position and momentum of state.
   virtual void setPosMom(StateOnPlane& state, const TVectorD& state6) const = 0;
   //! Set position and momentum and error of state.
-  virtual void setPosMomErr(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const = 0;
+  virtual void setPosMomErr(MeasuredStateOnPlane& state, const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom, const ROOT::Math::XYZVector& posErr, const ROOT::Math::XYZVector& momErr) const = 0;
   //! Set position, momentum and covariance of state.
-  virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const = 0;
+  virtual void setPosMomCov(MeasuredStateOnPlane& state, const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom, const TMatrixDSym& cov6x6) const = 0;
   //! Set position, momentum and covariance of state.
   virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const = 0;
 

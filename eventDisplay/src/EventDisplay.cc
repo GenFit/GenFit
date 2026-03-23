@@ -51,6 +51,8 @@
 #include <TMatrixDSymEigen.h>
 #include <TROOT.h>
 #include <Math/Vector2D.h>
+#include <Math/Vector3D.h>
+#include <Math/VectorUtil.h>
 #include <TVectorD.h>
 #include <TSystem.h>
 
@@ -500,7 +502,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         continue;
       }
 
-      TVector3 track_pos = fittedState->getPos();
+      ROOT::Math::XYZVector track_pos = fittedState->getPos();
       double charge = fittedState->getCharge();
 
       //std::cout << "trackPos: "; track_pos.Print();
@@ -533,9 +535,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         // finished getting the hit infos -----------------------------------------------------
 
         // sort hit infos into variables ------------------------------------------------------
-        TVector3 o = fittedState->getPlane()->getO();
-        TVector3 u = fittedState->getPlane()->getU();
-        TVector3 v = fittedState->getPlane()->getV();
+        ROOT::Math::XYZVector o = fittedState->getPlane()->getO();
+        ROOT::Math::XYZVector u = fittedState->getPlane()->getU();
+        ROOT::Math::XYZVector v = fittedState->getPlane()->getV();
 
         double_t hit_u = 0;
         double_t hit_v = 0;
@@ -555,7 +557,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
           }
         } else if (wire_hit) {
           hit_u = fabs(hit_coords(0));
-          hit_v = v*(track_pos-o); // move the covariance tube so that the track goes through it
+          hit_v = v.Dot(track_pos-o); // move the covariance tube so that the track goes through it
           if (wirepoint_hit) {
             hit_v = hit_coords(1);
           }
@@ -567,9 +569,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         // draw planes if corresponding option is set -----------------------------------------
         if(iMeas == 0 &&
            (drawPlanes_ || (drawDetectors_ && planar_hit))) {
-          TVector3 move(0,0,0);
+          ROOT::Math::XYZVector move(0,0,0);
           if (planar_hit) move = track_pos-o;
-          if (wire_hit) move = v*(v*(track_pos-o)); // move the plane along the wire until the track goes through it
+          if (wire_hit) move = v*(v.Dot(track_pos-o)); // move the plane along the wire until the track goes through it
           TEveBox* box = boxCreator(o + move, u, v, plane_size, plane_size, 0.01);
           if (drawDetectors_ && planar_hit) {
             box->SetMainColor(kCyan);
@@ -629,14 +631,14 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
             det_shape->IncDenyDestroy();
             det_shape->SetShape(new TGeoTube(std::max(0., (double)(hit_u-0.0105/2.)), hit_u+0.0105/2., plane_size));
 
-            TVector3 norm = u.Cross(v);
+            ROOT::Math::XYZVector norm = u.Cross(v);
             TGeoRotation det_rot("det_rot", (u.Theta()*180)/TMath::Pi(), (u.Phi()*180)/TMath::Pi(),
                 (norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi(),
                 (v.Theta()*180)/TMath::Pi(), (v.Phi()*180)/TMath::Pi()); // move the tube to the right place and rotate it correctly
-            TVector3 move = v*(v*(track_pos-o)); // move the tube along the wire until the track goes through it
-            TGeoCombiTrans det_trans(o(0) + move.X(),
-                                     o(1) + move.Y(),
-                                     o(2) + move.Z(),
+            ROOT::Math::XYZVector move = v*(v.Dot(track_pos-o)); // move the tube along the wire until the track goes through it
+            TGeoCombiTrans det_trans(o.X() + move.X(),
+                                     o.Y() + move.Y(),
+                                     o.Z() + move.Z(),
                                      &det_rot);
             det_shape->SetTransMatrix(det_trans);
             det_shape->SetMainColor(kCyan);
@@ -671,9 +673,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
           if(planar_hit) {
             if(!planar_pixel_hit) {
               TEveBox* hit_box;
-              TVector3 stripDir3 = stripDir.X()*u + stripDir.Y()*v;
-              TVector3 stripDir3perp = stripDir.Y()*u - stripDir.X()*v;
-              TVector3 move = stripDir3perp*(stripDir3perp*(track_pos-o));
+              ROOT::Math::XYZVector stripDir3 = stripDir.X()*u + stripDir.Y()*v;
+              ROOT::Math::XYZVector stripDir3perp = stripDir.Y()*u - stripDir.X()*v;
+              ROOT::Math::XYZVector move = stripDir3perp*(stripDir3perp.Dot(track_pos-o));
               hit_box = boxCreator((o + move + hit_u*stripDir3), stripDir3, stripDir3perp, errorScale_*std::sqrt(hit_cov(0,0)), plane_size, 0.0105);
               hit_box->SetMainColor(kYellow);
               hit_box->SetMainTransparency(0);
@@ -709,17 +711,17 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
               // calculate the semiaxis of the error ellipse ----------------------------
               cov_shape->SetShape(new TGeoEltu(pseudo_res_0, pseudo_res_1, 0.0105));
-              TVector3 pix_pos = o + hit_u*u + hit_v*v;
-              TVector3 u_semiaxis = (pix_pos + eVec(0,0)*u + eVec(1,0)*v)-pix_pos;
-              TVector3 v_semiaxis = (pix_pos + eVec(0,1)*u + eVec(1,1)*v)-pix_pos;
-              TVector3 norm = u.Cross(v);
+              ROOT::Math::XYZVector pix_pos = o + hit_u*u + hit_v*v;
+              ROOT::Math::XYZVector u_semiaxis = (pix_pos + eVec(0,0)*u + eVec(1,0)*v)-pix_pos;
+              ROOT::Math::XYZVector v_semiaxis = (pix_pos + eVec(0,1)*u + eVec(1,1)*v)-pix_pos;
+              ROOT::Math::XYZVector norm = u.Cross(v);
               // finished calculating ---------------------------------------------------
 
               // rotate and translate everything correctly ------------------------------
               TGeoRotation det_rot("det_rot", (u_semiaxis.Theta()*180)/TMath::Pi(), (u_semiaxis.Phi()*180)/TMath::Pi(),
                   (v_semiaxis.Theta()*180)/TMath::Pi(), (v_semiaxis.Phi()*180)/TMath::Pi(),
                   (norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi());
-              TGeoCombiTrans det_trans(pix_pos(0),pix_pos(1),pix_pos(2), &det_rot);
+              TGeoCombiTrans det_trans(pix_pos.X(),pix_pos.Y(),pix_pos.Z(), &det_rot);
               cov_shape->SetTransMatrix(det_trans);
               // finished rotating and translating --------------------------------------
 
@@ -740,10 +742,10 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
               cov_shape->SetShape(new TGeoSphere(0.,1.));
               TVectorT<double> ev = eigen_values.GetEigenValues();
               TMatrixT<double> eVec = eigen_values.GetEigenVectors();
-              TVector3 eVec1(eVec(0,0),eVec(1,0),eVec(2,0));
-              TVector3 eVec2(eVec(0,1),eVec(1,1),eVec(2,1));
-              TVector3 eVec3(eVec(0,2),eVec(1,2),eVec(2,2));
-              const TVector3 norm = u.Cross(v);
+              ROOT::Math::XYZVector eVec1(eVec(0,0),eVec(1,0),eVec(2,0));
+              ROOT::Math::XYZVector eVec2(eVec(0,1),eVec(1,1),eVec(2,1));
+              ROOT::Math::XYZVector eVec3(eVec(0,2),eVec(1,2),eVec(2,2));
+              const ROOT::Math::XYZVector norm = u.Cross(v);
               // got everything we need -----------------------------------------------------
 
               static const double radDeg(180./TMath::Pi());
@@ -753,7 +755,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
               if (! det_rot.IsValid()){
                 // hackish fix if eigenvectors are not orthonogonal
-                if (fabs(eVec2*eVec3) > 1.e-10)
+                if (fabs(eVec2.Dot(eVec3)) > 1.e-10)
                   eVec3 = eVec1.Cross(eVec2);
 
                 det_rot.SetAngles(eVec1.Theta()*radDeg, eVec1.Phi()*radDeg,
@@ -793,7 +795,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
               // finished autoscaling -------------------------------------------------------
 
               // rotate and translate -------------------------------------------------------
-              TGeoGenTrans det_trans(o(0),o(1),o(2),
+              TGeoGenTrans det_trans(o.X(),o.Y(),o.Z(),
                                      //std::sqrt(pseudo_res_0/pseudo_res_1/pseudo_res_2), std::sqrt(pseudo_res_1/pseudo_res_0/pseudo_res_2), std::sqrt(pseudo_res_2/pseudo_res_0/pseudo_res_1), // this workaround is necessary due to the "normalization" performed in  TGeoGenTrans::SetScale
                                      //1/(pseudo_res_0),1/(pseudo_res_1),1/(pseudo_res_2),
                                      pseudo_res_0, pseudo_res_1, pseudo_res_2,
@@ -838,10 +840,10 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
               // calculate the semiaxis of the error ellipse ----------------------------
               cov_shape->SetShape(new TGeoEltu(pseudo_res_0, pseudo_res_1, 0.0105));
-              TVector3 pix_pos = o + hit_u*u + hit_v*v;
-              TVector3 u_semiaxis = (pix_pos + eVec(0,0)*u + eVec(1,0)*v)-pix_pos;
-              TVector3 v_semiaxis = (pix_pos + eVec(0,1)*u + eVec(1,1)*v)-pix_pos;
-              TVector3 norm = u.Cross(v);
+              ROOT::Math::XYZVector pix_pos = o + hit_u*u + hit_v*v;
+              ROOT::Math::XYZVector u_semiaxis = (pix_pos + eVec(0,0)*u + eVec(1,0)*v)-pix_pos;
+              ROOT::Math::XYZVector v_semiaxis = (pix_pos + eVec(0,1)*u + eVec(1,1)*v)-pix_pos;
+              ROOT::Math::XYZVector norm = u.Cross(v);
               // finished calculating ---------------------------------------------------
 
               // rotate and translate everything correctly ------------------------------
@@ -854,7 +856,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
                 v_semiaxis.Print();
                 norm.Print();
               }*/
-              TGeoCombiTrans det_trans(pix_pos(0),pix_pos(1),pix_pos(2), &det_rot);
+              TGeoCombiTrans det_trans(pix_pos.X(),pix_pos.Y(),pix_pos.Z(), &det_rot);
               cov_shape->SetTransMatrix(det_trans);
               // finished rotating and translating --------------------------------------
 
@@ -902,7 +904,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
             // finished autoscaling -------------------------------------------------------
 
             TEveBox* hit_box;
-            TVector3 move = v*(v*(track_pos-o));
+            ROOT::Math::XYZVector move = v*(v.Dot(track_pos-o));
             hit_box = boxCreator((o + move + hit_u*u), u, v, errorScale_*std::sqrt(hit_cov(0,0)), pseudo_res_1, 0.0105);
             hit_box->SetMainColor(kYellow);
             hit_box->SetMainTransparency(0);
@@ -934,47 +936,47 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
 
 
-TEveBox* EventDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth) {
+TEveBox* EventDisplay::boxCreator(ROOT::Math::XYZVector o, ROOT::Math::XYZVector u, ROOT::Math::XYZVector v, float ud, float vd, float depth) {
 
   TEveBox* box = new TEveBox("detPlane_shape");
   float vertices[24];
 
-  TVector3 norm = u.Cross(v);
+  ROOT::Math::XYZVector norm = u.Cross(v);
   u *= (0.5*ud);
   v *= (0.5*vd);
   norm *= (0.5*depth);
 
-  vertices[0] = o(0) - u(0) - v(0) - norm(0);
-  vertices[1] = o(1) - u(1) - v(1) - norm(1);
-  vertices[2] = o(2) - u(2) - v(2) - norm(2);
+  vertices[0] = o.X() - u.X() - v.X() - norm.X();
+  vertices[1] = o.Y() - u.Y() - v.Y() - norm.Y();
+  vertices[2] = o.Z() - u.Z() - v.Z() - norm.Z();
 
-  vertices[3] = o(0) + u(0) - v(0) - norm(0);
-  vertices[4] = o(1) + u(1) - v(1) - norm(1);
-  vertices[5] = o(2) + u(2) - v(2) - norm(2);
+  vertices[3] = o.X() + u.X() - v.X() - norm.X();
+  vertices[4] = o.Y() + u.Y() - v.Y() - norm.Y();
+  vertices[5] = o.Z() + u.Z() - v.Z() - norm.Z();
 
-  vertices[6] = o(0) + u(0) - v(0) + norm(0);
-  vertices[7] = o(1) + u(1) - v(1) + norm(1);
-  vertices[8] = o(2) + u(2) - v(2) + norm(2);
+  vertices[6] = o.X() + u.X() - v.X() + norm.X();
+  vertices[7] = o.Y() + u.Y() - v.Y() + norm.Y();
+  vertices[8] = o.Z() + u.Z() - v.Z() + norm.Z();
 
-  vertices[9] = o(0) - u(0) - v(0) + norm(0);
-  vertices[10] = o(1) - u(1) - v(1) + norm(1);
-  vertices[11] = o(2) - u(2) - v(2) + norm(2);
+  vertices[9] = o.X() - u.X() - v.X() + norm.X();
+  vertices[10] = o.Y() - u.Y() - v.Y() + norm.Y();
+  vertices[11] = o.Z() - u.Z() - v.Z() + norm.Z();
 
-  vertices[12] = o(0) - u(0) + v(0) - norm(0);
-  vertices[13] = o(1) - u(1) + v(1) - norm(1);
-  vertices[14] = o(2) - u(2) + v(2) - norm(2);
+  vertices[12] = o.X() - u.X() + v.X() - norm.X();
+  vertices[13] = o.Y() - u.Y() + v.Y() - norm.Y();
+  vertices[14] = o.Z() - u.Z() + v.Z() - norm.Z();
 
-  vertices[15] = o(0) + u(0) + v(0) - norm(0);
-  vertices[16] = o(1) + u(1) + v(1) - norm(1);
-  vertices[17] = o(2) + u(2) + v(2) - norm(2);
+  vertices[15] = o.X() + u.X() + v.X() - norm.X();
+  vertices[16] = o.Y() + u.Y() + v.Y() - norm.Y();
+  vertices[17] = o.Z() + u.Z() + v.Z() - norm.Z();
 
-  vertices[18] = o(0) + u(0) + v(0) + norm(0);
-  vertices[19] = o(1) + u(1) + v(1) + norm(1);
-  vertices[20] = o(2) + u(2) + v(2) + norm(2);
+  vertices[18] = o.X() + u.X() + v.X() + norm.X();
+  vertices[19] = o.Y() + u.Y() + v.Y() + norm.Y();
+  vertices[20] = o.Z() + u.Z() + v.Z() + norm.Z();
 
-  vertices[21] = o(0) - u(0) + v(0) + norm(0);
-  vertices[22] = o(1) - u(1) + v(1) + norm(1);
-  vertices[23] = o(2) - u(2) + v(2) + norm(2);
+  vertices[21] = o.X() - u.X() + v.X() + norm.X();
+  vertices[22] = o.Y() - u.Y() + v.Y() + norm.Y();
+  vertices[23] = o.Z() - u.Z() + v.Z() + norm.Z();
 
 
   for(int k = 0; k < 24; k += 3) box->SetVertex((k/3), vertices[k], vertices[k+1], vertices[k+2]);
@@ -992,30 +994,30 @@ void EventDisplay::makeLines(const StateOnPlane* prevState, const StateOnPlane* 
     return;
   }
 
-  TVector3 pos, dir, oldPos, oldDir;
+  ROOT::Math::XYZVector pos, dir, oldPos, oldDir;
   rep->getPosDir(*state, pos, dir);
   rep->getPosDir(*prevState, oldPos, oldDir);
 
-  double distA = (pos-oldPos).Mag();
+  double distA = (pos-oldPos).R();
   double distB = distA;
-  if ((pos-oldPos)*oldDir < 0)
+  if ((pos-oldPos).Dot(oldDir) < 0)
     distA *= -1.;
-  if ((pos-oldPos)*dir < 0)
+  if ((pos-oldPos).Dot(dir) < 0)
     distB *= -1.;
-  TVector3 intermediate1 = oldPos + 0.3 * distA * oldDir;
-  TVector3 intermediate2 = pos - 0.3 * distB * dir;
+  ROOT::Math::XYZVector intermediate1 = oldPos + 0.3 * distA * oldDir;
+  ROOT::Math::XYZVector intermediate2 = pos - 0.3 * distB * dir;
   TEveStraightLineSet* lineSet = new TEveStraightLineSet;
-  lineSet->AddLine(oldPos(0), oldPos(1), oldPos(2), intermediate1(0), intermediate1(1), intermediate1(2));
-  lineSet->AddLine(intermediate1(0), intermediate1(1), intermediate1(2), intermediate2(0), intermediate2(1), intermediate2(2));
-  lineSet->AddLine(intermediate2(0), intermediate2(1), intermediate2(2), pos(0), pos(1), pos(2));
+  lineSet->AddLine(oldPos.X(), oldPos.Y(), oldPos.Z(), intermediate1.X(), intermediate1.Y(), intermediate1.Z());
+  lineSet->AddLine(intermediate1.X(), intermediate1.Y(), intermediate1.Z(), intermediate2.X(), intermediate2.Y(), intermediate2.Z());
+  lineSet->AddLine(intermediate2.X(), intermediate2.Y(), intermediate2.Z(), pos.X(), pos.Y(), pos.Z());
   lineSet->SetLineColor(color);
   lineSet->SetLineStyle(style);
   lineSet->SetLineWidth(lineWidth);
   if (drawMarkers) {
     if (markerPos == 0)
-      lineSet->AddMarker(oldPos(0), oldPos(1), oldPos(2));
+      lineSet->AddMarker(oldPos.X(), oldPos.Y(), oldPos.Z());
     else
-      lineSet->AddMarker(pos(0), pos(1), pos(2));
+      lineSet->AddMarker(pos.X(), pos.Y(), pos.Z());
   }
 
   if (lineWidth > 0)
@@ -1032,7 +1034,7 @@ void EventDisplay::makeLines(const StateOnPlane* prevState, const StateOnPlane* 
     if (measuredState != nullptr) {
 
       // step for evaluate at a distance from the original plane
-      TVector3 eval;
+      ROOT::Math::XYZVector eval;
       if (markerPos == 0) {
         if (fabs(distA) < 1.) {
           distA < 0 ? distA = -1 : distA = 1;
@@ -1049,14 +1051,14 @@ void EventDisplay::makeLines(const StateOnPlane* prevState, const StateOnPlane* 
 
       // get cov at first plane
       TMatrixDSym cov;
-      TVector3 position, direction;
+      ROOT::Math::XYZVector position, direction;
       rep->getPosMomCov(*measuredState, position, direction, cov);
 
       // get eigenvalues & -vectors
       TMatrixDSymEigen eigen_values(cov.GetSub(0,2, 0,2));
       TVectorT<double> ev = eigen_values.GetEigenValues();
       TMatrixT<double> eVec = eigen_values.GetEigenVectors();
-      TVector3 eVec1, eVec2;
+      ROOT::Math::XYZVector eVec1, eVec2;
       // limit
       static const double maxErr = 1000.;
       double ev0 = std::min(ev(0), maxErr);
@@ -1083,15 +1085,15 @@ void EventDisplay::makeLines(const StateOnPlane* prevState, const StateOnPlane* 
         eVec2 *= sqrt(ev1);
       }
 
-      if (eVec1.Cross(eVec2)*eval < 0)
+      if (eVec1.Cross(eVec2).Dot(eval) < 0)
         eVec2 *= -1;
       //assert(eVec1.Cross(eVec2)*eval > 0);
 
-      const TVector3 oldEVec1(eVec1);
-      const TVector3 oldEVec2(eVec2);
+      const ROOT::Math::XYZVector oldEVec1(eVec1);
+      const ROOT::Math::XYZVector oldEVec2(eVec2);
 
       const int nEdges = 24;
-      std::vector<TVector3> vertices;
+      std::vector<ROOT::Math::XYZVector> vertices;
 
       vertices.push_back(position);
 
@@ -1147,18 +1149,18 @@ void EventDisplay::makeLines(const StateOnPlane* prevState, const StateOnPlane* 
         eVec2 *= sqrt(ev1);
       }
 
-      if (eVec1.Cross(eVec2)*eval < 0)
+      if (eVec1.Cross(eVec2).Dot(eval) < 0)
         eVec2 *= -1;
       //assert(eVec1.Cross(eVec2)*eval > 0);
 
-      if (oldEVec1*eVec1 < 0) {
+      if (oldEVec1.Dot(eVec1) < 0) {
         eVec1 *= -1;
         eVec2 *= -1;
       }
 
       // vertices at 2nd plane
-      double angle0 = eVec1.Angle(oldEVec1);
-      if (eVec1*(eval.Cross(oldEVec1)) < 0)
+      double angle0 = ROOT::Math::VectorUtil::Angle(eVec1, oldEVec1);
+      if (eVec1.Dot(eval.Cross(oldEVec1)) < 0)
         angle0 *= -1;
       for (int i=0; i<nEdges; ++i) {
         const double angle = 2*TMath::Pi()/nEdges * i - angle0;

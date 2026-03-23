@@ -50,6 +50,8 @@
 #include "PlanarMeasurement.h"
 #include "KalmanFitterInfo.h"
 
+#include <VectorUtils.h>
+
 #include "Track.h"
 #include <TFile.h>
 #include <TH1F.h>
@@ -417,7 +419,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
     // Representation state at plane
     TVectorD state = reference->getState();
     // track direction at plane (in global coords)
-    TVector3 trackDir = rep->getDir(*reference);
+    ROOT::Math::XYZVector trackDir = rep->getDir(*reference);
     // track momentum vector at plane (in global coords)
     trackMomMag = rep->getMomMag(*reference);
     // charge of particle
@@ -558,24 +560,24 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       std::vector<int> labGlobal;
         
       // track direction in global coords
-      TVector3 tDir = trackDir;
+      ROOT::Math::XYZVector tDir = trackDir;
       // sensor u direction in global coords
-      TVector3 uDir = plane->getU();
+      ROOT::Math::XYZVector uDir = plane->getU();
       // sensor v direction in global coords
-      TVector3 vDir = plane->getV();
+      ROOT::Math::XYZVector vDir = plane->getV();
       // sensor normal direction in global coords
-      TVector3 nDir = plane->getNormal();
+      ROOT::Math::XYZVector nDir = plane->getNormal();
       //file << sensorId << endl;
       //outputVector(uDir, "U");
       //outputVector(vDir, "V");
       //outputVector(nDir, "Normal");
       // track direction in local sensor system
-      TVector3 tLoc = TVector3(uDir.Dot(tDir), vDir.Dot(tDir), nDir.Dot(tDir));
+      ROOT::Math::XYZVector tLoc = ROOT::Math::XYZVector(uDir.Dot(tDir), vDir.Dot(tDir), nDir.Dot(tDir));
         
       // track u-slope in local sensor system
-      double uSlope = tLoc[0] / tLoc[2];
+      double uSlope = tLoc.X() / tLoc.Z();
       // track v-slope in local sensor system
-      double vSlope = tLoc[1] / tLoc[2];
+      double vSlope = tLoc.Y() / tLoc.Z();
         
       // Measured track u-position in local sensor system
       double uPos = raw_coor[0];
@@ -608,18 +610,18 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       //TODO: Usage of this requires Hierarchy Constraints to be provided to MP2
   
       // sensor centre position in global system
-      TVector3 detPos = plane->getO();
+      ROOT::Math::XYZVector detPos = plane->getO();
       //cout << "detPos" << endl;
       //detPos.Print();
 
       // global prediction from raw measurement
-      TVector3 pred = detPos + uPos * uDir + vPos * vDir;
+      ROOT::Math::XYZVector pred = detPos + uPos * uDir + vPos * vDir;
       //cout << "pred" << endl;
       //pred.Print();
 
-      double xPred = pred[0];
-      double yPred = pred[1];
-      double zPred = pred[2];
+      double xPred = pred.X();
+      double yPred = pred.Y();
+      double zPred = pred.Z();
 
       // scalar product of sensor normal and track direction
       double tn = tDir.Dot(nDir);
@@ -629,9 +631,15 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       // derivatives of local residuals versus measurements
       TMatrixD drdm(3, 3);
       drdm.UnitMatrix();
-      for (int row = 0; row < 3; row++)
-	for (int col = 0; col < 3; col++)
-	  drdm(row, col) -= tDir[row] * nDir[col] / tn;
+      for (int row = 0; row < 3; row++) {
+	      for (int col = 0; col < 3; col++) {
+	        // drdm(row, col) -= tDir[row] * nDir[col] / tn;
+          // drdm(row, col) -= VectorUtils::getCoord<row>(tDir) * VectorUtils::getCoord<col>(nDir) / tn;
+          drdm(row, col) -= VectorUtils::getCoord(tDir, row) * VectorUtils::getCoord(nDir, col) / tn;
+        }
+      }
+
+      
 
       //cout << "drdm" << endl;
       //drdm.Print();
@@ -649,8 +657,8 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
       // derivatives of local residuals versus global alignment parameters
       TMatrixD drldrg(3, 3);
       drldrg.Zero();
-      drldrg(0, 0) = uDir[0]; drldrg(0, 1) = uDir[1]; drldrg(0, 2) = uDir[2];
-      drldrg(1, 0) = vDir[0]; drldrg(1, 1) = vDir[1]; drldrg(1, 2) = vDir[2];
+      drldrg(0, 0) = uDir.X(); drldrg(0, 1) = uDir.Y(); drldrg(0, 2) = uDir.Z();
+      drldrg(1, 0) = vDir.X(); drldrg(1, 1) = vDir.Y(); drldrg(1, 2) = vDir.Z();
 
       //cout << "drldrg" << endl;
       //drldrg.Print();

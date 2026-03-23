@@ -22,6 +22,7 @@
 #include <Exception.h>
 #include <RKTrackRep.h>
 #include <HMatrixUV.h>
+#include <Math/VectorUtil.h>
 
 #include <cassert>
 #include <algorithm>
@@ -47,29 +48,27 @@ SharedPlanePtr WirePointMeasurement::constructPlane(const StateOnPlane& state) c
   // copy state. Neglect covariance.
   StateOnPlane st(state);
 
-  TVector3 wire1(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
-  TVector3 wire2(rawHitCoords_(3), rawHitCoords_(4), rawHitCoords_(5));
+  ROOT::Math::XYZVector wire1(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
+  ROOT::Math::XYZVector wire2(rawHitCoords_(3), rawHitCoords_(4), rawHitCoords_(5));
 
   // unit vector along the wire (V)
-  TVector3 wireDirection = wire2 - wire1;
-  wireDirection.SetMag(1.);
+  const ROOT::Math::XYZVector wireDirection = (wire2 - wire1).Unit();
 
   // point of closest approach
   const AbsTrackRep* rep = state.getRep();
   rep->extrapolateToLine(st, wire1, wireDirection);
-  //const TVector3& poca = rep->getPos(st);
-  TVector3 dirInPoca = rep->getMom(st);
-  dirInPoca.SetMag(1.);
-  //const TVector3& pocaOnWire = wire1 + wireDirection.Dot(poca - wire1)*wireDirection;
+  //const ROOT::Math::XYZVector& poca = rep->getPos(st);
+  const ROOT::Math::XYZVector dirInPoca = rep->getMom(st).Unit();
+  //const ROOT::Math::XYZVector& pocaOnWire = wire1 + wireDirection.Dot(poca - wire1)*wireDirection;
 
   // check if direction is parallel to wire
-  if (fabs(wireDirection.Angle(dirInPoca)) < 0.01){
+  if (fabs(ROOT::Math::VectorUtil::Angle(wireDirection, dirInPoca)) < 0.01){
     Exception exc("WireMeasurement::detPlane(): Cannot construct detector plane, direction is parallel to wire", __LINE__,__FILE__);
     throw exc;
   }
 
   // construct orthogonal vector
-  TVector3 U = dirInPoca.Cross(wireDirection);
+  ROOT::Math::XYZVector U = dirInPoca.Cross(wireDirection);
   // U.SetMag(1.); automatically assured
 
   return SharedPlanePtr(new DetPlane(wire1, U, wireDirection));

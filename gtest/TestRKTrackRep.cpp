@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <TVector3.h>
+#include <Math/Vector3D.h>
 
 #include <Exception.h>
 #include <RKTrackRep.h>
@@ -243,7 +243,7 @@ namespace genfit {
         myState5[2] = 1;
         myState5[3] = 0.1;
         myState5[4] = 0.1;
-        genfit::SharedPlanePtr mySharedPlanePtr(new genfit::DetPlane(TVector3(0, 0, 1), TVector3(0, 0, 1), nullptr));
+        genfit::SharedPlanePtr mySharedPlanePtr(new genfit::DetPlane(ROOT::Math::XYZVector(0, 0, 1), ROOT::Math::XYZVector(0, 0, 1), nullptr));
         genfit::StateOnPlane myStateOnPlane(myState5, mySharedPlanePtr, &myRKTrackRep);
         EXPECT_NO_THROW(myRKTrackRep.getState7(myStateOnPlane, myState7));
         EXPECT_FLOAT_EQ(-0.1, myState7[0]);
@@ -270,7 +270,7 @@ namespace genfit {
         myState7[5] = 0.57735;
         myState7[6] = -1;
         TVectorD myState5(5);
-        genfit::SharedPlanePtr mySharedPlanePtr(new genfit::DetPlane(TVector3(0, 0, 1), TVector3(0, 0, 1), nullptr));
+        genfit::SharedPlanePtr mySharedPlanePtr(new genfit::DetPlane(ROOT::Math::XYZVector(0, 0, 1), ROOT::Math::XYZVector(0, 0, 1), nullptr));
         genfit::StateOnPlane myStateOnPlane(myState5, mySharedPlanePtr, &myRKTrackRep);
         EXPECT_NO_THROW(myRKTrackRep.getState5(myStateOnPlane, myState7));
         EXPECT_FLOAT_EQ(-0.1, myState7[0]);
@@ -305,10 +305,10 @@ namespace genfit {
 
     /// White-Box-Test
     TEST_F (RKTrackRepTests, calcForwardJacobianAndNoise) {
-        const TVector3 startPlaneO(0, 0, 1);
-        const TVector3 startPlaneN(0, 0, 1);
-        const TVector3 destPlaneO(0, 0, -1);
-        const TVector3 destPlaneN(0, 0, 1);
+        const ROOT::Math::XYZVector startPlaneO(0, 0, 1);
+        const ROOT::Math::XYZVector startPlaneN(0, 0, 1);
+        const ROOT::Math::XYZVector destPlaneO(0, 0, -1);
+        const ROOT::Math::XYZVector destPlaneN(0, 0, 1);
 
         genfit::RKTrackRep myRKTrackRep;
         genfit::DetPlane myStartPlane(startPlaneO, startPlaneN);
