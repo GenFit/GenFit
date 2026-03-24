@@ -20,6 +20,7 @@
 
 #include "GFRaveVertex.h"
 #include "GFRaveConverters.h"
+#include <VectorUtils.h>
 #include <Exception.h>
 
 #include <iostream>
@@ -117,7 +118,7 @@ GFRaveVertex::~GFRaveVertex(){
 void
 GFRaveVertex::Print(const Option_t*) const {
   std::cout << "GFRaveVertex\n";
-  std::cout << "Position: "; getPos().Print();
+  std::cout << "Position: "; VectorUtils::PrintVec(getPos(), std::cout);
   std::cout << "Covariance: "; getCov().Print();
   std::cout << "Ndf: " << getNdf() << ", Chi2: " << getChi2() << ", Id: " << getId() << "\n";
   std::cout << "Number of tracks: " << getNTracks() << "\n";
