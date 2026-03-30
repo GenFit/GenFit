@@ -39,14 +39,14 @@ void PruneFlags::setFlags(Option_t* option) {
   TString opt = option;
   opt.ToUpper();
 
-  value |= opt.Contains("C") ? C : 0;
-  value |= opt.Contains("F") ? F : 0;
-  value |= opt.Contains("L") ? L : 0;
-  value |= opt.Contains("W") ? W : 0;
-  value |= opt.Contains("R") ? R : 0;
-  value |= opt.Contains("M") ? M : 0;
-  value |= opt.Contains("I") ? I : 0;
-  value |= opt.Contains("U") ? U : 0;
+  value |= opt.Contains("C") ? static_cast<int>(EFields::C) : 0;
+  value |= opt.Contains("F") ? static_cast<int>(EFields::F) : 0;
+  value |= opt.Contains("L") ? static_cast<int>(EFields::L) : 0;
+  value |= opt.Contains("W") ? static_cast<int>(EFields::W) : 0;
+  value |= opt.Contains("R") ? static_cast<int>(EFields::R) : 0;
+  value |= opt.Contains("M") ? static_cast<int>(EFields::M) : 0;
+  value |= opt.Contains("I") ? static_cast<int>(EFields::I) : 0;
+  value |= opt.Contains("U") ? static_cast<int>(EFields::U) : 0;
 }
 
 
@@ -54,14 +54,14 @@ bool PruneFlags::hasFlags(Option_t* option) const {
   TString opt = option;
   opt.ToUpper();
 
-  return !((!(value & C) && opt.Contains("C"))
-	   || (!(value & F) && opt.Contains("F"))
-	   || (!(value & L) && opt.Contains("L"))
-	   || (!(value & W) && opt.Contains("W"))
-	   || (!(value & R) && opt.Contains("R"))
-	   || (!(value & M) && opt.Contains("M"))
-	   || (!(value & I) && opt.Contains("I"))
-	   || (!(value & U) && opt.Contains("U")));
+  return !((!(value & static_cast<int>(EFields::C)) && opt.Contains("C"))
+	   || (!(value & static_cast<int>(EFields::F)) && opt.Contains("F"))
+	   || (!(value & static_cast<int>(EFields::L)) && opt.Contains("L"))
+	   || (!(value & static_cast<int>(EFields::W)) && opt.Contains("W"))
+	   || (!(value & static_cast<int>(EFields::R)) && opt.Contains("R"))
+	   || (!(value & static_cast<int>(EFields::M)) && opt.Contains("M"))
+	   || (!(value & static_cast<int>(EFields::I)) && opt.Contains("I"))
+	   || (!(value & static_cast<int>(EFields::U)) && opt.Contains("U")));
 }
 
 
@@ -72,14 +72,14 @@ bool PruneFlags::isPruned() const {
 
 void PruneFlags::Print(const Option_t*) const {
   printOut << "PruneFlags: ";
-  if (value & C) printOut << "C";
-  if (value & F) printOut << "F";
-  if (value & L) printOut << "L";
-  if (value & W) printOut << "W";
-  if (value & R) printOut << "R";
-  if (value & M) printOut << "M";
-  if (value & I) printOut << "I";
-  if (value & U) printOut << "U";
+  if (value & static_cast<int>(EFields::C)) printOut << "C";
+  if (value & static_cast<int>(EFields::F)) printOut << "F";
+  if (value & static_cast<int>(EFields::L)) printOut << "L";
+  if (value & static_cast<int>(EFields::W)) printOut << "W";
+  if (value & static_cast<int>(EFields::R)) printOut << "R";
+  if (value & static_cast<int>(EFields::M)) printOut << "M";
+  if (value & static_cast<int>(EFields::I)) printOut << "I";
+  if (value & static_cast<int>(EFields::U)) printOut << "U";
   printOut << "\n";
 }
 
