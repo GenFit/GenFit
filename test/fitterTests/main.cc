@@ -201,9 +201,9 @@ int main() {
   const bool debug = false;
   const bool onlyDisplayFailed = false; // only load non-converged tracks into the display
 
-  std::vector<genfit::eMeasurementType> measurementTypes;
+  std::vector<genfit::EMeasurementType> measurementTypes;
   for (unsigned int i = 0; i<nMeasurements; ++i) {
-    measurementTypes.push_back(genfit::eMeasurementType(i%8));
+    measurementTypes.push_back(genfit::EMeasurementType(i%8));
   }
 
   signal(SIGSEGV, handler);   // install our handler

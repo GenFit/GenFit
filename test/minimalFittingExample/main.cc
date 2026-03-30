@@ -113,9 +113,9 @@ int main() {
 
 
     // create random measurement types
-    std::vector<genfit::eMeasurementType> measurementTypes;
+    std::vector<genfit::EMeasurementType> measurementTypes;
     for (unsigned int i = 0; i < nMeasurements; ++i)
-      measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(8)));
+      measurementTypes.push_back(genfit::EMeasurementType(gRandom->Uniform(8)));
 
 
     // create smeared measurements and add to track
