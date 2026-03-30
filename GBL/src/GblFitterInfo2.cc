@@ -36,7 +36,7 @@ namespace genfit {
   
   void GblFitterInfo2::reset(unsigned int repDim) {
     label_ = 0;
-    measType_ = _noMeas;
+    measType_ = EMeasurementType::noMeas;
     refPrediction_.ResizeTo(repDim);
     refPrediction_.Zero();
     
@@ -91,19 +91,19 @@ namespace genfit {
     }
     
     // (implemented type of) Measurement
-    if (measType_ != _noMeas) {
+    if (measType_ != EMeasurementType::noMeas) {
       unsigned int numMeasAllowed = allowAmbiguities ? measUsed_.size() : 1;
       for (unsigned int iMeas = 0; iMeas < numMeasAllowed; iMeas++) {
         TVectorD aRes(measurement_.at(iMeas) - hMatrix_ * fwdPrediction_);
         TMatrixDSym aCov(measCov_.at(iMeas));
-        if (measType_ < _uvMeas) {
+        if (measType_ < EMeasurementType::uvMeas) {
           // (1D) U or V measurement
           TVectorD aResidual(2);
-          aResidual(measType_) = aRes(0);
-          aResidual(1-measType_) = 0.;
+          aResidual(static_cast<int>(measType_)) = aRes(0);
+          aResidual(1-static_cast<int>(measType_)) = 0.;
           TVectorD aPrecision(2);
-          aPrecision(measType_) = 1. / aCov(0,0);
-          aPrecision(1-measType_) = 0.; // disable other measurement
+          aPrecision(static_cast<int>(measType_)) = 1. / aCov(0,0);
+          aPrecision(1-static_cast<int>(measType_)) = 0.; // disable other measurement
           thePoint.addMeasurement(aResidual, aPrecision);
         } else {
           // (at least 2D) U,V measurement, arbitrary precision matrix
@@ -171,9 +171,9 @@ namespace genfit {
     hMatrix_.ResizeTo(allMeas.at(imop)->getHMatrix()->getMatrix());
     hMatrix_ = allMeas.at(imop)->getHMatrix()->getMatrix();
     // (implemented) measurement type(s)
-    if (HMatrixU().getMatrix() == hMatrix_) { measType_ = _uMeas; }
-    else if (HMatrixV().getMatrix() == hMatrix_) { measType_ = _vMeas; }
-    else if (HMatrixUV().getMatrix() == hMatrix_) { measType_ = _uvMeas; }
+    if (HMatrixU().getMatrix() == hMatrix_) { measType_ = EMeasurementType::uMeas; }
+    else if (HMatrixV().getMatrix() == hMatrix_) { measType_ = EMeasurementType::vMeas; }
+    else if (HMatrixUV().getMatrix() == hMatrix_) { measType_ = EMeasurementType::uvMeas; }
     else {
       //no implemented measurement type, plane is supposed to come from state (is perpendicular)
       #ifdef DEBUG    
@@ -186,7 +186,7 @@ namespace genfit {
     // check for ambiguities    
     if (initial) {  
       // ambiguity (CDC) ?
-      if ((allMeas.size() == 2) && (measType_ == _uMeas)) { 
+      if ((allMeas.size() == 2) && (measType_ == EMeasurementType::uMeas)) { 
         // use that too
         measUsed_.push_back(1-imop);
       } 
@@ -219,7 +219,7 @@ namespace genfit {
     // Implemented: one or two u or v measurement (-> max 2 meas. -> size of mResiduals etc)
     
     // (1 or 2) 1D u or v measurement
-    if (measType_ < _uvMeas) {
+    if (measType_ < EMeasurementType::uvMeas) {
       unsigned int numMRes = 0;        
       TVectorD mResiduals(2), mMeasErrors(2), mResErrors(2), mDownWeights(2);    
       if (0 != traj.getMeasResults(label_, numMRes, mResiduals, mMeasErrors, mResErrors, mDownWeights))
@@ -257,7 +257,7 @@ namespace genfit {
       throw genfit::Exception(" NO measurement results ", __LINE__, __FILE__);
     
     // (1 or 2) 1D u or v measurement
-    if (measType_ < _uvMeas) {
+    if (measType_ < EMeasurementType::uvMeas) {
       for (unsigned int i = 0; i < numMRes; ++i) {
         measDownWeight_.at(measUsed_.at(i)) = mDownWeights(i);
       }
@@ -267,7 +267,7 @@ namespace genfit {
       }
     }
     // (single) 2D uv measurement (2 downweights, use product)
-    if (measType_ == _uvMeas && numMRes == 2) {
+    if (measType_ == EMeasurementType::uvMeas && numMRes == 2) {
       measDownWeight_.at(measUsed_.at(0)) = mDownWeights(0)*mDownWeights(1);
     }
   }
@@ -504,7 +504,7 @@ namespace genfit {
     << std::endl;
     
     std::cout << "=============================================================================================" << std::endl;
-    std::cout << "Measurement type (u,v,uv,none): " << measType_ << std::endl;
+    std::cout << "Measurement type (u,v,uv,none): " << static_cast<int>(measType_) << std::endl;
     for (unsigned int iMeas = 0; iMeas < measurement_.size(); iMeas++) {
       std::cout << "Measurement : "; measurement_.at(iMeas).Print();
       std::cout << "H Matrix : "; hMatrix_.Print();
