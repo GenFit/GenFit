@@ -1901,7 +1901,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
     if (onlyOneStep) return(true);
 
     // if stepsize has been limited by material, break the loop and return. No linear extrapolation!
-    if (limits.getLowestLimit().first == stp_momLoss) {
+    if (limits.getLowestLimit().first == EStepLimitType::stp_momLoss) {
       if (debugLvl_ > 0) {
         debugOut<<" momLossExceeded -> return(true); \n";
       }
@@ -1909,7 +1909,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
     }
 
     // if stepsize has been limited by material boundary, break the loop and return. No linear extrapolation!
-    if (limits.getLowestLimit().first == stp_boundary) {
+    if (limits.getLowestLimit().first == EStepLimitType::stp_boundary) {
       if (debugLvl_ > 0) {
         debugOut<<" at boundary -> return(true); \n";
       }
@@ -1919,20 +1919,20 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
     // estimate Step for next loop or linear extrapolation
     Sl = S; // last S used
-    limits.removeLimit(stp_fieldCurv);
-    limits.removeLimit(stp_momLoss);
-    limits.removeLimit(stp_boundary);
-    limits.removeLimit(stp_plane);
+    limits.removeLimit(EStepLimitType::stp_fieldCurv);
+    limits.removeLimit(EStepLimitType::stp_momLoss);
+    limits.removeLimit(EStepLimitType::stp_boundary);
+    limits.removeLimit(EStepLimitType::stp_plane);
     S = estimateStep(state7, SU, plane, charge, relMomLoss, limits);
 
-    if (limits.getLowestLimit().first == stp_plane &&
+    if (limits.getLowestLimit().first == EStepLimitType::stp_plane &&
         fabs(S) < MINSTEP) {
       if (debugLvl_ > 0) {
         debugOut<<" (at Plane && fabs(S) < MINSTEP) -> break and do linear extrapolation \n";
       }
       break;
     }
-    if (limits.getLowestLimit().first == stp_momLoss &&
+    if (limits.getLowestLimit().first == EStepLimitType::stp_momLoss &&
         fabs(S) < MINSTEP) {
       if (debugLvl_ > 0) {
         debugOut<<" (momLossExceeded && fabs(S) < MINSTEP) -> return(true), no linear extrapolation; \n";
@@ -1972,7 +1972,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
   //
   // linear extrapolation to plane
   //
-  if (limits.getLowestLimit().first == stp_plane) {
+  if (limits.getLowestLimit().first == EStepLimitType::stp_plane) {
 
     if (fabs(Sl) > 0.001*MINSTEP){
       if (debugLvl_ > 0) {
@@ -2096,7 +2096,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
       useCache_ = false;
     }
     else {
-      if (RKSteps_.at(cachePos_).limits_.getLowestLimit().first == stp_plane) {
+      if (RKSteps_.at(cachePos_).limits_.getLowestLimit().first == EStepLimitType::stp_plane) {
         // we need to step exactly to the plane, so don't use the cache!
         useCache_ = false;
         RKSteps_.erase(RKSteps_.begin() + cachePos_, RKSteps_.end());
@@ -2113,7 +2113,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
     }
   }
 
-  limits.setLimit(stp_sMax, 25.); // max. step allowed [cm]
+  limits.setLimit(EStepLimitType::stp_sMax, 25.); // max. step allowed [cm]
 
   if (debugLvl_ > 0) {
     debugOut << " RKTrackRep::estimateStep \n";
@@ -2137,7 +2137,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
     if (An<0) SLDist *= -1.;
   }
 
-  limits.setLimit(stp_plane, SLDist);
+  limits.setLimit(EStepLimitType::stp_plane, SLDist);
   limits.setStepSign(SLDist);
 
   if (debugLvl_ > 0) {
@@ -2208,15 +2208,15 @@ double RKTrackRep::estimateStep(const M1x7& state7,
       break;
   }
   if (fabs(fieldCurvLimit) < MINSTEP)
-    limits.setLimit(stp_fieldCurv, MINSTEP);
+    limits.setLimit(EStepLimitType::stp_fieldCurv, MINSTEP);
   else
-    limits.setLimit(stp_fieldCurv, fieldCurvLimit);
+    limits.setLimit(EStepLimitType::stp_fieldCurv, fieldCurvLimit);
 
-  double stepToPlane(limits.getLimitSigned(stp_plane));
+  double stepToPlane(limits.getLimitSigned(EStepLimitType::stp_plane));
   if (fabs(distVsStep.first) < 8.E99) {
     stepToPlane = distVsStep.first + distVsStep.second;
   }
-  limits.setLimit(stp_plane, stepToPlane);
+  limits.setLimit(EStepLimitType::stp_plane, stepToPlane);
 
 
   //
@@ -2231,7 +2231,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
     }
   }
   // see if straight line approximation is ok
-  else if ( limits.getLimit(stp_plane) < 0.2*limits.getLimit(stp_fieldCurv) ){
+  else if ( limits.getLimit(EStepLimitType::stp_plane) < 0.2*limits.getLimit(EStepLimitType::stp_fieldCurv) ){
     if (debugLvl_ > 0) {
       debugOut << "  straight line approximation is fine.\n";
     }
@@ -2244,7 +2244,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
     }
     // if we are near the plane, but not pointing to the active area, make a big step!
     else {
-      limits.removeLimit(stp_plane);
+      limits.removeLimit(EStepLimitType::stp_plane);
       limits.setStepSign(propDir_);
       if (debugLvl_ > 0) {
         debugOut << "  we are near the plane, but not pointing to the active area. make a big step! \n";
@@ -2254,7 +2254,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   // propDir_ is set and we are not pointing to an active part of a plane -> propDir_ decides!
   else {
     if (limits.getStepSign() * propDir_ < 0){
-      limits.removeLimit(stp_plane);
+      limits.removeLimit(EStepLimitType::stp_plane);
       limits.setStepSign(propDir_);
       if (debugLvl_ > 0) {
         debugOut << "  invert Step according to propDir_ and make a big step. \n";
@@ -2376,7 +2376,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     // propagation
     bool checkJacProj = false;
     limits_.reset();
-    limits_.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
+    limits_.setLimit(EStepLimitType::stp_sMaxArg, maxStep-fabs(coveredDistance));
 
     M1x7 J_MMT_unprojected_lastRow = {{0, 0, 0, 0, 0, 0, 1}};
 
@@ -2388,8 +2388,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       throw exc;
     }
 
-    bool atPlane(limits_.getLowestLimit().first == stp_plane);
-    if (limits_.getLowestLimit().first == stp_boundary)
+    bool atPlane(limits_.getLowestLimit().first == EStepLimitType::stp_plane);
+    if (limits_.getLowestLimit().first == EStepLimitType::stp_boundary)
       isAtBoundary = true;
 
 
