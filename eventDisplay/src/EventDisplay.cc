@@ -82,7 +82,7 @@ EventDisplay::EventDisplay() :
   trackId_(0),
   refit_(false),
   debugLvl_(0),
-  fitterId_(SimpleKalman),
+  fitterId_(EFitterType::SimpleKalman),
   mmHandling_(weightedAverage),
   squareRootFormalism_(false),
   dPVal_(1.E-3),
@@ -313,23 +313,23 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
       std::unique_ptr<AbsKalmanFitter> fitter;
       switch (fitterId_) {
-        case SimpleKalman:
+        case EFitterType::SimpleKalman:
           fitter.reset(new KalmanFitter(nMaxIter_, dPVal_));
           fitter->setMultipleMeasurementHandling(mmHandling_);
           (static_cast<KalmanFitter*>(fitter.get()))->useSquareRootFormalism(squareRootFormalism_);
           break;
 
-        case RefKalman:
+        case EFitterType::RefKalman:
           fitter.reset(new KalmanFitterRefTrack(nMaxIter_, dPVal_));
           fitter->setMultipleMeasurementHandling(mmHandling_);
           static_cast<KalmanFitterRefTrack*>(fitter.get())->setDeltaChi2Ref(dChi2Ref_);
           break;
 
-        case DafSimple:
+        case EFitterType::DafSimple:
           fitter.reset(new DAF(false));
           ( static_cast<KalmanFitter*>( (static_cast<DAF*>(fitter.get()))->getKalman() ) )->useSquareRootFormalism(squareRootFormalism_);
           break;
-        case DafRef:
+        case EFitterType::DafRef:
           fitter.reset(new DAF());
           ( static_cast<KalmanFitterRefTrack*>( (static_cast<DAF*>(fitter.get()))->getKalman() ) )->setDeltaChi2Ref(dChi2Ref_);
           break;
@@ -1639,7 +1639,7 @@ void EventDisplay::guiSetDrawParams(){
 
 
 void EventDisplay::guiSelectFitterId(int val){
-  fitterId_ = eFitterType(val-1);
+  fitterId_ = EFitterType(val-1);
   gotoEvent(eventId_);
 }
 

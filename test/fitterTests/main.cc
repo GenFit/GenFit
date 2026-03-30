@@ -162,10 +162,10 @@ int main() {
   const int splitTrack = -5; //nMeasurements/2; // for track merging testing.
   const bool fullMeasurement = false; // put fit result of first tracklet as FullMeasurement into second tracklet, don't merge
 
-  //const genfit::eFitterType fitterId = genfit::SimpleKalman;
-  const genfit::eFitterType fitterId = genfit::RefKalman;
-  //const genfit::eFitterType fitterId = genfit::DafRef;
-  //const genfit::eFitterType fitterId = genfit::DafSimple;
+  //const genfit::EFitterType fitterId = genfit::SimpleKalman;
+  const genfit::EFitterType fitterId = genfit::EFitterType::RefKalman;
+  //const genfit::EFitterType fitterId = genfit::DafRef;
+  //const genfit::EFitterType fitterId = genfit::DafSimple;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
@@ -211,20 +211,20 @@ int main() {
   // init fitter
   genfit::AbsKalmanFitter* fitter = 0;
   switch (fitterId) {
-    case genfit::SimpleKalman:
+    case genfit::EFitterType::SimpleKalman:
       fitter = new genfit::KalmanFitter(nIter, dPVal);
       fitter->setMultipleMeasurementHandling(mmHandling);
       break;
 
-    case genfit::RefKalman:
+    case genfit::EFitterType::RefKalman:
       fitter = new genfit::KalmanFitterRefTrack(nIter, dPVal);
       fitter->setMultipleMeasurementHandling(mmHandling);
       break;
 
-    case genfit::DafSimple:
+    case genfit::EFitterType::DafSimple:
       fitter = new genfit::DAF(false);
       break;
-    case genfit::DafRef:
+    case genfit::EFitterType::DafRef:
       fitter = new genfit::DAF();
       break;
   }
