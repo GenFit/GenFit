@@ -166,15 +166,15 @@ int main() {
   const genfit::EFitterType fitterId = genfit::EFitterType::RefKalman;
   //const genfit::EFitterType fitterId = genfit::DafRef;
   //const genfit::EFitterType fitterId = genfit::DafSimple;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToReference;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToPrediction;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReferenceWire;
-  const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPredictionWire;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToReferenceWire;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToPredictionWire;
+  //const genfit::EMultipleMeasurementHandling mmHandling = genfit::EMultipleMeasurementHandling::weightedAverage;
+  //const genfit::EMultipleMeasurementHandling mmHandling = genfit::EMultipleMeasurementHandling::unweightedClosestToReference;
+  //const genfit::EMultipleMeasurementHandling mmHandling = genfit::EMultipleMeasurementHandling::unweightedClosestToPrediction;
+  //const genfit::EMultipleMeasurementHandling mmHandling = genfit::EMultipleMeasurementHandling::weightedClosestToReference;
+  //const genfit::EMultipleMeasurementHandling mmHandling = genfit::EMultipleMeasurementHandling::weightedClosestToPrediction;
+  //const genfit::EMultipleMeasurementHandling mmHandling = genfit::EMultipleMeasurementHandling::unweightedClosestToReferenceWire;
+  const genfit::EMultipleMeasurementHandling mmHandling = genfit::EMultipleMeasurementHandling::unweightedClosestToPredictionWire;
+  //const genfit::EMultipleMeasurementHandling mmHandling = genfit::EMultipleMeasurementHandling::weightedClosestToReferenceWire;
+  //const genfit::EMultipleMeasurementHandling mmHandling = genfit::EMultipleMeasurementHandling::weightedClosestToPredictionWire;
   const int nIter = 20; // max number of iterations
   const double dPVal = 1.E-3; // convergence criterion
 
@@ -482,7 +482,7 @@ int main() {
 
         if (prefit) {
           genfit::KalmanFitter prefitter(1, dPVal);
-          prefitter.setMultipleMeasurementHandling(genfit::weightedClosestToPrediction);
+          prefitter.setMultipleMeasurementHandling(genfit::EMultipleMeasurementHandling::weightedClosestToPrediction);
           prefitter.processTrackWithRep(fitTrack, fitTrack->getCardinalRep());
         }
 

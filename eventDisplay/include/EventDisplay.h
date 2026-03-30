@@ -222,7 +222,7 @@ class EventDisplay : public TNamed {
     TGButtonGroup* guiFitterId_;
     EFitterType fitterId_;
     TGButtonGroup* guiMmHandling_;
-    eMultipleMeasurementHandling mmHandling_;
+    EMultipleMeasurementHandling mmHandling_;
 
     TGCheckButton* guiSquareRootFormalism_;
     bool squareRootFormalism_;

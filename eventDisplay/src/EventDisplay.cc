@@ -83,7 +83,7 @@ EventDisplay::EventDisplay() :
   refit_(false),
   debugLvl_(0),
   fitterId_(EFitterType::SimpleKalman),
-  mmHandling_(weightedAverage),
+  mmHandling_(EMultipleMeasurementHandling::weightedAverage),
   squareRootFormalism_(false),
   dPVal_(1.E-3),
   dRelChi2_(0.2),
@@ -1644,7 +1644,7 @@ void EventDisplay::guiSelectFitterId(int val){
 }
 
 void EventDisplay::guiSelectMmHandling(int val){
-  mmHandling_ = eMultipleMeasurementHandling(val-1);
+  mmHandling_ = EMultipleMeasurementHandling(val-1);
   gotoEvent(eventId_);
 }
 

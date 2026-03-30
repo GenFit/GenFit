@@ -50,7 +50,7 @@ namespace genfit {
   else
     kalman_.reset(new KalmanFitter());
 
-  kalman_->setMultipleMeasurementHandling(weightedAverage);
+  kalman_->setMultipleMeasurementHandling(EMultipleMeasurementHandling::weightedAverage);
   kalman_->setMaxIterations(1);
 
   setAnnealingScheme(std::get<0>(annealingScheme), 
@@ -70,7 +70,7 @@ DAF::DAF(bool useRefKalman, double deltaPval, double deltaWeight, double minPval
   else
     kalman_.reset(new KalmanFitter());
 
-  kalman_->setMultipleMeasurementHandling(weightedAverage);
+  kalman_->setMultipleMeasurementHandling(EMultipleMeasurementHandling::weightedAverage);
   kalman_->setMaxIterations(1);
 
   setAnnealingScheme(100, 0.1, 5); // also sets maxIterations_
@@ -81,7 +81,7 @@ DAF::DAF(AbsKalmanFitter* kalman, double deltaPval, double deltaWeight, double m
   : AbsKalmanFitter(10, deltaPval), deltaWeight_(deltaWeight), minPval_(minPval)
 {
   kalman_.reset(kalman);
-  kalman_->setMultipleMeasurementHandling(weightedAverage); // DAF makes no sense otherwise
+  kalman_->setMultipleMeasurementHandling(EMultipleMeasurementHandling::weightedAverage); // DAF makes no sense otherwise
   kalman_->setMaxIterations(1);
 
   if (dynamic_cast<KalmanFitterRefTrack*>(kalman_.get()) != nullptr) {
