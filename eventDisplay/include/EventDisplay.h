@@ -38,7 +38,7 @@
 
 namespace genfit {
 
-enum eFitterType {
+enum class EFitterType {
   SimpleKalman,
   RefKalman,
   DafSimple,
@@ -220,9 +220,9 @@ class EventDisplay : public TNamed {
     TGNumberEntry* guiDebugLvl_;
     unsigned int debugLvl_;
     TGButtonGroup* guiFitterId_;
-    eFitterType fitterId_;
+    EFitterType fitterId_;
     TGButtonGroup* guiMmHandling_;
-    eMultipleMeasurementHandling mmHandling_;
+    EMultipleMeasurementHandling mmHandling_;
 
     TGCheckButton* guiSquareRootFormalism_;
     bool squareRootFormalism_;

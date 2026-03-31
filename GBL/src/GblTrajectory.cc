@@ -1298,7 +1298,7 @@ void GblTrajectory::buildLinearEquationSystem() {
 	for (itData = theData.begin(); itData < theData.end(); ++itData) {
 		// skipped (internal) measurement ?
 		if (itData->getLabel() == skippedMeasLabel
-				&& itData->getType() == InternalMeasurement)
+				&& itData->getType() == EDataBlockType::InternalMeasurement)
 			continue;
 
 		itData->getLocalData(aValue, aWeight, numLocal, indLocal, derLocal);
@@ -1468,7 +1468,7 @@ void GblTrajectory::prepare() {
 						}
 						for (unsigned int i = iOff; i < 5; ++i) {
 							if (aPrec(i) > minPrecision) {
-								GblData aData(nLabel, InternalMeasurement,
+								GblData aData(nLabel, EDataBlockType::InternalMeasurement,
 										aMeas(i), aPrec(i), iTraj,
 										itPoint - thePoints[iTraj].begin(),
 										itMeas - itPoint->getMeasBegin());
@@ -1569,7 +1569,7 @@ void GblTrajectory::prepare() {
 					// loop over kinks and steps (if any)
 					for (unsigned int i = 0; i < scatDim; ++i) {
 						if (aPrec(i) > 0.) {
-							GblData aData(nLabel, InternalKink, aMeas(i),
+							GblData aData(nLabel, EDataBlockType::InternalKink, aMeas(i),
 									aPrec(i), iTraj,
 									itPoint - thePoints[iTraj].begin());
 							aData.addDerivatives(i, numDer, labDer, matTDer,
@@ -1600,7 +1600,7 @@ void GblTrajectory::prepare() {
 				for (int j = 0; j < externalSeed.cols(); ++j) {
 					externalSeedDerivatives[j] = vecEigen(i, j);
 				}
-				GblData aData(externalPoint, ExternalSeed, 0., valEigen(i));
+				GblData aData(externalPoint, EDataBlockType::ExternalSeed, 0., valEigen(i));
 				aData.addDerivatives(externalSeedIndex,
 						externalSeedDerivatives);
 				theData.emplace_back(std::move(aData));
@@ -1627,7 +1627,7 @@ void GblTrajectory::prepare() {
 				index[iCol] = numLocals + iCol + 1;
 				derivatives[iCol] = externalDerivatives(iExt, iCol);
 			}
-			GblData aData(1U, ExternalMeasurement, externalMeasurements(iExt),
+			GblData aData(1U, EDataBlockType::ExternalMeasurement, externalMeasurements(iExt),
 					externalPrecisions(iExt));
 			aData.addDerivatives(index, derivatives);
 			theData.emplace_back(std::move(aData));
@@ -1709,7 +1709,7 @@ unsigned int GblTrajectory::fit(double &Chi2, int &Ndf, double &lostWeight,
 		for (unsigned int i = 0; i < theData.size(); ++i) {
 			// skipped (internal) measurement ?
 			if (theData[i].getLabel() == skippedMeasLabel
-					&& theData[i].getType() == InternalMeasurement)
+					&& theData[i].getType() == EDataBlockType::InternalMeasurement)
 				continue;
 			Chi2 += theData[i].getChi2();
 			Ndf++;
@@ -1751,7 +1751,7 @@ void GblTrajectory::milleOut(MilleBinary &aMille) {
 	for (itData = theData.begin(); itData != theData.end(); ++itData) {
 		itData->getAllData(aValue, aErr, numLocal, labLocal, derLocal, aTraj,
 				aPoint, aMeas, aRow);
-		if (itData->getType() == InternalMeasurement)
+		if (itData->getType() == EDataBlockType::InternalMeasurement)
 			thePoints[aTraj][aPoint].getGlobalLabelsAndDerivatives(aMeas, aRow,
 					labGlobal, derGlobal);
 		else

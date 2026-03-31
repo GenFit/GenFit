@@ -39,7 +39,8 @@
 namespace genfit {
 
 
-enum eMeasurementType { Pixel = 0,
+enum class EMeasurementType {
+        Pixel = 0,
         Spacepoint,
         ProlateSpacepoint,
         StripU,
@@ -48,7 +49,7 @@ enum eMeasurementType { Pixel = 0,
 	Wire,
 	WirePoint,
 	nMeasurementTypes
-        };
+};
 
 
 /**
@@ -82,8 +83,8 @@ class MeasurementCreator : public TObject {
   void setDebug(bool debug) {debug_ = debug;}
 
 
-  std::vector<genfit::AbsMeasurement*> create(eMeasurementType, double tracklength, bool& outlier, int& lr);
-  std::vector<genfit::AbsMeasurement*> create(eMeasurementType type, double tracklength) {
+  std::vector<genfit::AbsMeasurement*> create(EMeasurementType, double tracklength, bool& outlier, int& lr);
+  std::vector<genfit::AbsMeasurement*> create(EMeasurementType type, double tracklength) {
     bool dummy1;
     int dummy2;
     return create(type, tracklength, dummy1, dummy2);

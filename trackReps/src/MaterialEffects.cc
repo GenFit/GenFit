@@ -250,7 +250,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   }
 
   if (relMomLoss > maxRelMomLoss) {
-    limits.setLimit(stp_momLoss, 0);
+    limits.setLimit(EStepLimitType::stp_momLoss, 0);
     return;
   }
 
@@ -295,7 +295,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   }
 
   double maxStepMomLoss = fabs((maxRelMomLoss - fabs(relMomLoss)) / relMomLossPer_cm); // >= 0
-  limits.setLimit(stp_momLoss, maxStepMomLoss);
+  limits.setLimit(EStepLimitType::stp_momLoss, maxStepMomLoss);
 
   if (debugLvl_ > 0) {
     debugOut << "     momLoss exceeded after a step of " <<  maxStepMomLoss
@@ -356,7 +356,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
       break;
   }
 
-  limits.setLimit(stp_boundary, stepSize_);
+  limits.setLimit(EStepLimitType::stp_boundary, stepSize_);
 
 
   relMomLoss += relMomLossPer_cm * limits.getLowestLimitVal();

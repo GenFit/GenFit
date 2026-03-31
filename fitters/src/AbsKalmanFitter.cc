@@ -177,12 +177,12 @@ bool AbsKalmanFitter::isTrackFitted(const Track* tr, const AbsTrackRep* rep) con
 const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const KalmanFitterInfo* fi, const TrackPoint* tp, int direction) const {
 
   switch (multipleMeasurementHandling_) {
-    case weightedAverage :
-    case unweightedAverage :
+    case EMultipleMeasurementHandling::weightedAverage :
+    case EMultipleMeasurementHandling::unweightedAverage :
       return fi->getMeasurementsOnPlane();
 
-    case weightedClosestToReference :
-    case unweightedClosestToReference :
+    case EMultipleMeasurementHandling::weightedClosestToReference :
+    case EMultipleMeasurementHandling::unweightedClosestToReference :
     {
       if (!fi->hasReferenceState()) {
         Exception e("AbsKalmanFitter::getMeasurement: no ReferenceState.", __LINE__,__FILE__);
@@ -194,8 +194,8 @@ const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const K
       return retVal;
     }
 
-    case weightedClosestToPrediction :
-    case unweightedClosestToPrediction :
+    case EMultipleMeasurementHandling::weightedClosestToPrediction :
+    case EMultipleMeasurementHandling::unweightedClosestToPrediction :
     {
       if (!fi->hasPrediction(direction)) {
         Exception e("AbsKalmanFitter::getMeasurement: no prediction.", __LINE__,__FILE__);
@@ -208,8 +208,8 @@ const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const K
     }
 
 
-    case weightedClosestToReferenceWire :
-    case unweightedClosestToReferenceWire :
+    case EMultipleMeasurementHandling::weightedClosestToReferenceWire :
+    case EMultipleMeasurementHandling::unweightedClosestToReferenceWire :
     {
       if (tp->getNumRawMeasurements() == 1 && tp->getRawMeasurement()->isLeftRightMeasurement()) {
         if (!fi->hasReferenceState()) {
@@ -225,8 +225,8 @@ const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const K
         return fi->getMeasurementsOnPlane();
     }
 
-    case weightedClosestToPredictionWire :
-    case unweightedClosestToPredictionWire :
+    case EMultipleMeasurementHandling::weightedClosestToPredictionWire :
+    case EMultipleMeasurementHandling::unweightedClosestToPredictionWire :
     {
       if (tp->getNumRawMeasurements() == 1 && tp->getRawMeasurement()->isLeftRightMeasurement()) {
         if (!fi->hasPrediction(direction)) {
@@ -255,18 +255,18 @@ const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const K
 
 bool AbsKalmanFitter::canIgnoreWeights() const {
   switch (multipleMeasurementHandling_) {
-    case unweightedAverage :
-    case unweightedClosestToReference :
-    case unweightedClosestToPrediction :
-    case unweightedClosestToReferenceWire :
-    case unweightedClosestToPredictionWire :
+    case EMultipleMeasurementHandling::unweightedAverage :
+    case EMultipleMeasurementHandling::unweightedClosestToReference :
+    case EMultipleMeasurementHandling::unweightedClosestToPrediction :
+    case EMultipleMeasurementHandling::unweightedClosestToReferenceWire :
+    case EMultipleMeasurementHandling::unweightedClosestToPredictionWire :
       return true;
 
-    case weightedAverage :
-    case weightedClosestToReference :
-    case weightedClosestToPrediction :
-    case weightedClosestToReferenceWire :
-    case weightedClosestToPredictionWire :
+    case EMultipleMeasurementHandling::weightedAverage :
+    case EMultipleMeasurementHandling::weightedClosestToReference :
+    case EMultipleMeasurementHandling::weightedClosestToPrediction :
+    case EMultipleMeasurementHandling::weightedClosestToReferenceWire :
+    case EMultipleMeasurementHandling::weightedClosestToPredictionWire :
       return false;
 
     default:

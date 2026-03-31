@@ -32,7 +32,7 @@ namespace genfit {
 
 class KalmanFitterInfo;
 
-enum eMultipleMeasurementHandling {
+enum class EMultipleMeasurementHandling {
   weightedAverage, /**<  weighted average between measurements; used by DAF */
   unweightedAverage, /**<  average between measurements, all weighted with 1 */
   weightedClosestToReference, /**<  closest to reference, weighted with its weight_ */
@@ -55,7 +55,7 @@ class AbsKalmanFitter : public AbsFitter {
   AbsKalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
     : AbsFitter(), minIterations_(2), maxIterations_(maxIterations), deltaPval_(deltaPval), relChi2Change_(0.2),
       blowUpFactor_(blowUpFactor), resetOffDiagonals_(true), blowUpMaxVal_(1.E6),
-      multipleMeasurementHandling_(unweightedClosestToPredictionWire),
+      multipleMeasurementHandling_(EMultipleMeasurementHandling::unweightedClosestToPredictionWire),
       maxFailedHits_(-1) {
     if (minIterations_ > maxIterations_)
       minIterations_ = maxIterations_;
@@ -78,7 +78,7 @@ class AbsKalmanFitter : public AbsFitter {
   double getBlowUpFactor() const {return blowUpFactor_;}
   bool getResetOffDiagonals() const {return resetOffDiagonals_;}
   double getBlowUpMaxVal() const {return blowUpMaxVal_;}
-  eMultipleMeasurementHandling getMultipleMeasurementHandling() const {return multipleMeasurementHandling_;}
+  EMultipleMeasurementHandling getMultipleMeasurementHandling() const {return multipleMeasurementHandling_;}
   int getMaxFailedHits() const {return maxFailedHits_;}
 
   //! Set the minimum number of iterations
@@ -119,7 +119,7 @@ class AbsKalmanFitter : public AbsFitter {
   void setBlowUpMaxVal(double blowUpMaxVal) {blowUpMaxVal_= blowUpMaxVal;}
 
   //! How should multiple measurements be handled?
-  void setMultipleMeasurementHandling(eMultipleMeasurementHandling mmh) {multipleMeasurementHandling_ = mmh;}
+  void setMultipleMeasurementHandling(EMultipleMeasurementHandling mmh) {multipleMeasurementHandling_ = mmh;}
 
   virtual void setMaxFailedHits(int val) {maxFailedHits_ = val;}
 
@@ -165,7 +165,7 @@ class AbsKalmanFitter : public AbsFitter {
   double blowUpMaxVal_;
 
   //! How to handle if there are multiple MeasurementsOnPlane
-  eMultipleMeasurementHandling multipleMeasurementHandling_;
+  EMultipleMeasurementHandling multipleMeasurementHandling_;
 
   //! after how many failed hits (exception during construction of plane, extrapolation etc.) should the fit be cancelled.
   //! -1 means don't cancel

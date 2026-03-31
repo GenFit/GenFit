@@ -46,7 +46,7 @@ namespace gbl {
 typedef Eigen::Matrix<double, 5, 5> Matrix5d;
 typedef Eigen::Matrix<double, 4, 9> Matrix49d;
 
-enum dataBlockType {
+enum class EDataBlockType {
 	None, InternalMeasurement, InternalKink, ExternalSeed, ExternalMeasurement
 };
 
@@ -58,7 +58,7 @@ enum dataBlockType {
 class GblData {
 public:
 	GblData() : theLabel(0), theValue(0.), thePrecision(-1.), theDownWeight(0.), thePrediction(0.) {}; // not part of original GBL
-	GblData(unsigned int aLabel, dataBlockType aType, double aValue,
+	GblData(unsigned int aLabel, EDataBlockType aType, double aValue,
 			double aPrec, unsigned int aTraj = 0, unsigned int aPoint = 0,
 			unsigned int aMeas = 0);
 	GblData(const GblData&) = default;
@@ -113,7 +113,7 @@ public:
 	double getChi2() const;
 	void printData() const;
 	unsigned int getLabel() const;
-	dataBlockType getType() const;
+	EDataBlockType getType() const;
 	void getLocalData(double &aValue, double &aWeight, unsigned int &numLocal,
 			unsigned int *&indLocal, double *&derLocal);
 	void getAllData(double &aValue, double &aErr, unsigned int &numLocal,
@@ -126,7 +126,7 @@ public:
 private:
 	unsigned int theLabel; ///< Label (of corresponding point)
 	unsigned int theRow; ///< Row number (of measurement)
-	dataBlockType theType; ///< Type (None, InternalMeasurement, InternalKink, ExternalSeed, ExternalMeasurement)
+	EDataBlockType theType; ///< Type (None, InternalMeasurement, InternalKink, ExternalSeed, ExternalMeasurement)
 	double theValue; ///< Value (residual)
 	double thePrecision; ///< Precision (1/sigma**2)
 	unsigned int theTrajectory; ///< Trajectory number

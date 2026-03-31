@@ -57,7 +57,7 @@ struct PruneFlags {
   void Print(const Option_t* = "") const;
 
 private:
-  enum fields { C = 1 << 0,
+  enum class EFields { C = 1 << 0,
 		F = 1 << 1,
 		L = 1 << 2,
 		W = 1 << 3,

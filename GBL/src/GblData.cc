@@ -43,7 +43,7 @@ namespace gbl {
  * \param [in] aPoint Point number
  * \param [in] aMeas measurement number
  */
-GblData::GblData(unsigned int aLabel, dataBlockType aType, double aValue,
+GblData::GblData(unsigned int aLabel, EDataBlockType aType, double aValue,
 		double aPrec, unsigned int aTraj, unsigned int aPoint,
 		unsigned int aMeas) :
 		theLabel(aLabel), theRow(0), theType(aType), theValue(aValue), thePrecision(
@@ -151,14 +151,14 @@ double GblData::getChi2() const {
 /// Print data block.
 void GblData::printData() const {
 
-	if (theType == InternalMeasurement) {
+	if (theType == EDataBlockType::InternalMeasurement) {
 		std::cout << " measurement at label " << theLabel << " of type "
 				<< static_cast<int>(theType) << " from meas, row " << theMeas
 				<< ", " << theRow << ": " << theValue << ", " << thePrecision
 				<< std::endl;
 	} else {
 		std::cout << " measurement at label " << theLabel << " of type "
-				<< theType << " from row " << theRow << ": " << theValue << ", "
+				<< static_cast<int>(theType) << " from row " << theRow << ": " << theValue << ", "
 				<< thePrecision << std::endl;
 	}
 	std::cout << "  param " << moreParameters.size() + theNumLocal << ":";
@@ -191,7 +191,7 @@ unsigned int GblData::getLabel() const {
 /**
  * \return type
  */
-dataBlockType GblData::getType() const {
+EDataBlockType GblData::getType() const {
 	return theType;
 }
 
