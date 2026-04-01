@@ -55,7 +55,7 @@ SharedPlanePtr SpacepointMeasurement::constructPlane(const StateOnPlane& state) 
   // copy state. Neglect covariance.
   StateOnPlane st(state);
 
-  const TVector3 point(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
+  const ROOT::Math::XYZVector point(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
 
   if (weightedPlaneContruction_)
     st.extrapolateToPoint(point, G_);
@@ -75,9 +75,9 @@ std::vector<MeasurementOnPlane*> SpacepointMeasurement::constructMeasurementsOnP
   TVectorD& m = mop->getState();
   TMatrixDSym& V = mop->getCov();
 
-  const TVector3& o(state.getPlane()->getO());
-  const TVector3& u(state.getPlane()->getU());
-  const TVector3& v(state.getPlane()->getV());
+  const ROOT::Math::XYZVector& o(state.getPlane()->getO());
+  const ROOT::Math::XYZVector& u(state.getPlane()->getU());
+  const ROOT::Math::XYZVector& v(state.getPlane()->getV());
 
   // m
   m(0) = (rawHitCoords_(0)-o.X()) * u.X() +

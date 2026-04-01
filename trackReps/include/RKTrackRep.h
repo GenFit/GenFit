@@ -92,20 +92,20 @@ class RKTrackRep : public AbsTrackRep {
   using AbsTrackRep::extrapolateToLine;
 
   virtual double extrapolateToLine(StateOnPlane& state,
-      const TVector3& linePoint,
-      const TVector3& lineDirection,
+      const ROOT::Math::XYZVector& linePoint,
+      const ROOT::Math::XYZVector& lineDirection,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const override;
 
   virtual double extrapolateToPoint(StateOnPlane& state,
-      const TVector3& point,
+      const ROOT::Math::XYZVector& point,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const override {
     return extrapToPoint(state, point, nullptr, stopAtBoundary, calcJacobianNoise);
   }
 
   virtual double extrapolateToPoint(StateOnPlane& state,
-      const TVector3& point,
+      const ROOT::Math::XYZVector& point,
       const TMatrixDSym& G, // weight matrix (metric)
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const override {
@@ -114,22 +114,22 @@ class RKTrackRep : public AbsTrackRep {
 
   virtual double extrapolateToCylinder(StateOnPlane& state,
       double radius,
-      const TVector3& linePoint = TVector3(0.,0.,0.),
-      const TVector3& lineDirection = TVector3(0.,0.,1.),
+      const ROOT::Math::XYZVector& linePoint = ROOT::Math::XYZVector(0.,0.,0.),
+      const ROOT::Math::XYZVector& lineDirection = ROOT::Math::XYZVector(0.,0.,1.),
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const override;
 
   
   virtual double extrapolateToCone(StateOnPlane& state,
       double radius,
-      const TVector3& linePoint = TVector3(0.,0.,0.),
-      const TVector3& lineDirection = TVector3(0.,0.,1.),
+      const ROOT::Math::XYZVector& linePoint = ROOT::Math::XYZVector(0.,0.,0.),
+      const ROOT::Math::XYZVector& lineDirection = ROOT::Math::XYZVector(0.,0.,1.),
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const override ;
 
   virtual double extrapolateToSphere(StateOnPlane& state,
       double radius,
-      const TVector3& point = TVector3(0.,0.,0.),
+      const ROOT::Math::XYZVector& point = ROOT::Math::XYZVector(0.,0.,0.),
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const override;
 
@@ -141,16 +141,16 @@ class RKTrackRep : public AbsTrackRep {
 
   unsigned int getDim() const override {return 5;}
 
-  virtual TVector3 getPos(const StateOnPlane& state) const override;
+  virtual ROOT::Math::XYZVector getPos(const StateOnPlane& state) const override;
 
-  virtual TVector3 getMom(const StateOnPlane& state) const override;
-  virtual void getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const override;
+  virtual ROOT::Math::XYZVector getMom(const StateOnPlane& state) const override;
+  virtual void getPosMom(const StateOnPlane& state, ROOT::Math::XYZVector& pos, ROOT::Math::XYZVector& mom) const override;
 
   virtual double getMomMag(const StateOnPlane& state) const override;
   virtual double getMomVar(const MeasuredStateOnPlane& state) const override;
 
   virtual TMatrixDSym get6DCov(const MeasuredStateOnPlane& state) const override;
-  virtual void getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const override;
+  virtual void getPosMomCov(const MeasuredStateOnPlane& state, ROOT::Math::XYZVector& pos, ROOT::Math::XYZVector& mom, TMatrixDSym& cov) const override;
   virtual double getCharge(const StateOnPlane& state) const override;
   virtual double getQop(const StateOnPlane& state) const override {return state.getState()(0);}
   double getSpu(const StateOnPlane& state) const;
@@ -166,10 +166,10 @@ class RKTrackRep : public AbsTrackRep {
 
   virtual double getRadiationLenght() const override;
 
-  virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const override;
+  virtual void setPosMom(StateOnPlane& state, const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom) const override;
   virtual void setPosMom(StateOnPlane& state, const TVectorD& state6) const override;
-  virtual void setPosMomErr(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const override;
-  virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const override;
+  virtual void setPosMomErr(MeasuredStateOnPlane& state, const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom, const ROOT::Math::XYZVector& posErr, const ROOT::Math::XYZVector& momErr) const override;
+  virtual void setPosMomCov(MeasuredStateOnPlane& state, const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom, const TMatrixDSym& cov6x6) const override;
   virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const override;
 
   virtual void setChargeSign(StateOnPlane& state, double charge) const override;
@@ -202,7 +202,7 @@ class RKTrackRep : public AbsTrackRep {
   void initArrays() const;
 
   virtual double extrapToPoint(StateOnPlane& state,
-      const TVector3& point,
+      const ROOT::Math::XYZVector& point,
       const TMatrixDSym* G = nullptr, // weight matrix (metric)
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const;
@@ -210,12 +210,12 @@ class RKTrackRep : public AbsTrackRep {
   void getState7(const StateOnPlane& state, M1x7& state7) const;
   void getState5(StateOnPlane& state, const M1x7& state7) const; // state7 must already lie on plane of state!
 
-  void calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
+  void calcJ_pM_5x7(M5x7& J_pM, const ROOT::Math::XYZVector& U, const ROOT::Math::XYZVector& V, const M1x3& pTilde, double spu) const;
 
   void transformPM6(const MeasuredStateOnPlane& state,
                     M6x6& out6x6) const;
 
-  void calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const;
+  void calcJ_Mp_7x5(M7x5& J_Mp, const ROOT::Math::XYZVector& U, const ROOT::Math::XYZVector& V, const ROOT::Math::XYZVector& W, const M1x3& A) const;
 
   void calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
 				   const M1x7& destState7, const DetPlane& destPlane) const;
@@ -256,9 +256,9 @@ class RKTrackRep : public AbsTrackRep {
                       double& relMomLoss,
                       StepLimits& limits) const;
 
-  TVector3 pocaOnLine(const TVector3& linePoint,
-                     const TVector3& lineDirection,
-                     const TVector3& point) const;
+  ROOT::Math::XYZVector pocaOnLine(const ROOT::Math::XYZVector& linePoint,
+                     const ROOT::Math::XYZVector& lineDirection,
+                     const ROOT::Math::XYZVector& point) const;
 
   //! Handles propagation and material effects
   /** #extrapolateToPlane(), #extrapolateToPoint() and #extrapolateToLine() etc. call this function.

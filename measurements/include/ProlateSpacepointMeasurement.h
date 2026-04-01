@@ -56,11 +56,11 @@ class ProlateSpacepointMeasurement : public SpacepointMeasurement {
   virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
 
 
-  const TVector3& getLargestErrorDirection(){return largestErrorDirection_;}
-  void setLargestErrorDirection(const TVector3& dir){largestErrorDirection_ = dir.Unit();}
+  const ROOT::Math::XYZVector& getLargestErrorDirection(){return largestErrorDirection_;}
+  void setLargestErrorDirection(const ROOT::Math::XYZVector& dir){largestErrorDirection_ = dir.Unit();}
 
  protected:
-  TVector3 largestErrorDirection_; // direction of largest error
+  ROOT::Math::XYZVector largestErrorDirection_; // direction of largest error
 
  public:
 

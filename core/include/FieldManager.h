@@ -60,7 +60,7 @@ class FieldManager {
   }
 
   //! This does NOT use the cache!
-  TVector3 getFieldVal(const TVector3& position){
+  ROOT::Math::XYZVector getFieldVal(const ROOT::Math::XYZVector& position){
     checkInitialized();
     return field_->get(position);
   }

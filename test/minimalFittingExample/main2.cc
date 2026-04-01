@@ -16,7 +16,7 @@
 
 #include <TEveManager.h>
 #include <TGeoManager.h>
-#include <TVector3.h>
+#include <Math/Vector3D.h>
 #include <vector>
 
 #include "TDatabasePDG.h"
@@ -46,8 +46,8 @@ int main() {
   const int pdg = 211;
 
   // start values for the fit, e.g. from pattern recognition
-  TVector3 pos(0, 0, 0);
-  TVector3 mom(0, 0, 3);
+  ROOT::Math::XYZVector pos(0, 0, 0);
+  ROOT::Math::XYZVector mom(0, 0, 3);
 
 
   // trackrep
@@ -72,19 +72,19 @@ int main() {
   hitCoords[0] = 0;
   hitCoords[1] = 0;
   genfit::PlanarMeasurement* measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, detId, ++hitId, nullptr);
-  measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(0,0,0), TVector3(1,0,0), TVector3(0,1,0))), ++planeId);
+  measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(ROOT::Math::XYZVector(0,0,0), ROOT::Math::XYZVector(1,0,0), ROOT::Math::XYZVector(0,1,0))), ++planeId);
   fitTrack.insertPoint(new genfit::TrackPoint(measurement, &fitTrack));
 
   hitCoords[0] = -0.15;
   hitCoords[1] = 0;
   measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, detId, ++hitId, nullptr);
-  measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(0,0,10), TVector3(1,0,0), TVector3(0,1,0))), ++planeId);
+  measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(ROOT::Math::XYZVector(0,0,10), ROOT::Math::XYZVector(1,0,0), ROOT::Math::XYZVector(0,1,0))), ++planeId);
   fitTrack.insertPoint(new genfit::TrackPoint(measurement, &fitTrack));
 
   hitCoords[0] = -0.4;
   hitCoords[1] = 0;
   measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, detId, ++hitId, nullptr);
-  measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(0,0,20), TVector3(1,0,0), TVector3(0,1,0))), ++planeId);
+  measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(ROOT::Math::XYZVector(0,0,20), ROOT::Math::XYZVector(1,0,0), ROOT::Math::XYZVector(0,1,0))), ++planeId);
   fitTrack.insertPoint(new genfit::TrackPoint(measurement, &fitTrack));
 
 

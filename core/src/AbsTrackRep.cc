@@ -57,7 +57,7 @@ double AbsTrackRep::extrapolateToMeasurement(StateOnPlane& state,
 
 
 TVectorD AbsTrackRep::get6DState(const StateOnPlane& state) const {
-  TVector3 pos, mom;
+  ROOT::Math::XYZVector pos, mom;
   getPosMom(state, pos, mom);
 
   TVectorD stateVec(6);
@@ -75,7 +75,7 @@ TVectorD AbsTrackRep::get6DState(const StateOnPlane& state) const {
 
 
 void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane& state, TVectorD& stateVec, TMatrixDSym& cov) const {
-  TVector3 pos, mom;
+  ROOT::Math::XYZVector pos, mom;
   getPosMomCov(state, pos, mom, cov);
 
   stateVec.ResizeTo(6);

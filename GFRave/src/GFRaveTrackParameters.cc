@@ -69,15 +69,15 @@ GFRaveTrackParameters::GFRaveTrackParameters(const Track* track, MeasuredStateOn
 }
 
 
-TVector3
+ROOT::Math::XYZVector
 GFRaveTrackParameters::getPos() const {
-  return TVector3(state_[0], state_[1], state_[2]);
+  return ROOT::Math::XYZVector(state_[0], state_[1], state_[2]);
 }
 
 
-TVector3
+ROOT::Math::XYZVector
 GFRaveTrackParameters::getMom() const {
-  return TVector3(state_[3], state_[4], state_[5]);
+  return ROOT::Math::XYZVector(state_[3], state_[4], state_[5]);
 }
 
 

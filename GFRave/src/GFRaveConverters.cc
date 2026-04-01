@@ -92,7 +92,7 @@ GFTrackToTrack(trackAndState trackAndState, int id, std::string tag){
     throw exc;
   }
 
-  TVector3 pos, mom;
+  ROOT::Math::XYZVector pos, mom;
   TMatrixDSym cov;
 
   trackAndState.track_->getFittedState().getPosMomCov(pos, mom, cov);
@@ -111,8 +111,8 @@ GFTrackToTrack(trackAndState trackAndState, int id, std::string tag){
                              cov(4,4), cov(5,4), cov(5,5));
 
   //std::cerr<<"create rave track with id " << id << std::endl;
-  //std::cerr<<"  pos: "; Point3DToTVector3(ravestate.position()).Print();
-  //std::cerr<<"  mom: "; Vector3DToTVector3(ravestate.momentum()).Print();
+  //std::cerr<<"  pos: "; Point3DToXYZVector(ravestate.position()).Print();
+  //std::cerr<<"  mom: "; Vector3DToXYZVector(ravestate.momentum()).Print();
 
   rave::Track ret(id, ravestate, ravecov,
       trackAndState.track_->getFitStatus()->getCharge(),
@@ -130,8 +130,8 @@ GFTrackToTrack(trackAndState trackAndState, int id, std::string tag){
 void
 setData(const rave::Track& orig, MeasuredStateOnPlane* state){
 
-  state->setPosMomCov(TVector3(orig.state().x(), orig.state().y(), orig.state().z()),
-                      TVector3(orig.state().px(), orig.state().py(), orig.state().pz()),
+  state->setPosMomCov(ROOT::Math::XYZVector(orig.state().x(), orig.state().y(), orig.state().z()),
+                      ROOT::Math::XYZVector(orig.state().px(), orig.state().py(), orig.state().pz()),
                       Covariance6DToTMatrixDSym(orig.error()));
 
 }
@@ -200,7 +200,7 @@ RaveToGFVertex(const rave::Vertex & raveVertex,
     trackParameters.push_back(trackparams);
   }
 
-  return new GFRaveVertex(Point3DToTVector3(raveVertex.position()),
+  return new GFRaveVertex(Point3DToXYZVector(raveVertex.position()),
                           Covariance3DToTMatrixDSym(raveVertex.error()),
                           trackParameters,
                           raveVertex.ndf(), raveVertex.chiSquared(), raveVertex.id());
@@ -223,19 +223,19 @@ RaveToGFVertices(std::vector<GFRaveVertex*> * GFVertices,
 
 SharedPlanePtr
 PlaneToGFDetPlane(const ravesurf::Plane& rplane) {
-  return SharedPlanePtr(new DetPlane(Point3DToTVector3(rplane.position()),
-                    Vector3DToTVector3(rplane.normalVector()) ));
+  return SharedPlanePtr(new DetPlane(Point3DToXYZVector(rplane.position()),
+                    Vector3DToXYZVector(rplane.normalVector()) ));
 }
 
 
-TVector3
-Point3DToTVector3(const rave::Point3D& v) {
-  return TVector3(v.x(), v.y(), v.z());
+ROOT::Math::XYZVector
+Point3DToXYZVector(const rave::Point3D& v) {
+  return ROOT::Math::XYZVector(v.x(), v.y(), v.z());
 }
 
-TVector3
-Vector3DToTVector3(const rave::Vector3D& v) {
-  return TVector3(v.x(), v.y(), v.z());
+ROOT::Math::XYZVector
+Vector3DToXYZVector(const rave::Vector3D& v) {
+  return ROOT::Math::XYZVector(v.x(), v.y(), v.z());
 }
 
 
@@ -326,7 +326,7 @@ Covariance6DToTMatrixDSym(const rave::Covariance6D& ravecov){
 
 
 rave::Point3D
-TVector3ToPoint3D(const TVector3 & vec){
+XYZVectorToPoint3D(const ROOT::Math::XYZVector & vec){
   return rave::Point3D(vec.X(), vec.Y(), vec.Z());
 }
 

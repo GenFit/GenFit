@@ -261,6 +261,7 @@ SET(UTILITIES_DICTIONARY_SOURCES
 		${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/MeasurementCreator.h
 		${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/mySpacepointDetectorHit.h
 		${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/mySpacepointMeasurement.h
+		${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/VectorUtils.h
 )
 ROOT_GENERATE_DICTIONARY(
 	    utilitiesRootDict

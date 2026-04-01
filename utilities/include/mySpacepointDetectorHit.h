@@ -35,15 +35,15 @@ class mySpacepointDetectorHit : public TObject {
  public:
   mySpacepointDetectorHit() {;}
 
-  mySpacepointDetectorHit(const TVector3& pos, const TMatrixDSym cov)
+  mySpacepointDetectorHit(const ROOT::Math::XYZVector& pos, const TMatrixDSym cov)
   : pos_(pos), cov_(cov) {;}
 
-  const TVector3 getPos() const {return pos_;}
+  const ROOT::Math::XYZVector getPos() const {return pos_;}
   const TMatrixDSym getCov() const {return cov_;}
 
  private:
 
-  TVector3 pos_;
+  ROOT::Math::XYZVector pos_;
   TMatrixDSym cov_;
 
   ClassDef(mySpacepointDetectorHit,1)

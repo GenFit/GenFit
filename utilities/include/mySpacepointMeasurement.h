@@ -44,9 +44,9 @@ class mySpacepointMeasurement : public SpacepointMeasurement {
   mySpacepointMeasurement(const mySpacepointDetectorHit* detHit, const TrackCandHit* hit) :
     SpacepointMeasurement()
   {
-    rawHitCoords_(0) = detHit->getPos()(0);
-    rawHitCoords_(1) = detHit->getPos()(1);
-    rawHitCoords_(2) = detHit->getPos()(2);
+    rawHitCoords_(0) = detHit->getPos().X();
+    rawHitCoords_(1) = detHit->getPos().Y();
+    rawHitCoords_(2) = detHit->getPos().Z();
     rawHitCov_ = detHit->getCov();
     detId_ = hit->getDetId();
     hitId_ = hit->getHitId();

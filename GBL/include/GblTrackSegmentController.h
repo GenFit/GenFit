@@ -29,7 +29,7 @@
 #include <Math/ProbFunc.h>
 #include "GblTrajectory.h"
 #include "GblFitter.h"
-#include <TVector3.h>
+#include <Math/Vector3D.h>
 
 namespace genfit {
   
@@ -53,7 +53,7 @@ namespace genfit {
     * @param scatTheta Total MS variance accumulated in this segment
     * @param fitter Pointer to the fitter - so you can set the MS options
     */
-    virtual void controlTrackSegment(TVector3 entry, TVector3 exit, double scatTheta, GblFitter * fitter) = 0;
+    virtual void controlTrackSegment(ROOT::Math::XYZVector entry, ROOT::Math::XYZVector exit, double scatTheta, GblFitter * fitter) = 0;
     
     virtual void Print(const Option_t* = "") const {;}
     

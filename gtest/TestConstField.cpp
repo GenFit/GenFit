@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <TVector3.h>
+#include <Math/Vector3D.h>
 
 #include <Exception.h>
 #include <ConstField.h>
@@ -16,7 +16,7 @@ namespace genfit {
         EXPECT_EQ(false, genfit::FieldManager::getInstance()->isInitialized());
         EXPECT_THROW(genfit::FieldManager::getInstance()->getField(), std::runtime_error);
         EXPECT_THROW(genfit::FieldManager::getInstance()->checkInitialized(), std::runtime_error);
-        EXPECT_THROW(genfit::FieldManager::getInstance()->getFieldVal(TVector3(1, 1, 1)), std::runtime_error);
+        EXPECT_THROW(genfit::FieldManager::getInstance()->getFieldVal(ROOT::Math::XYZVector(1, 1, 1)), std::runtime_error);
     }
 
 
@@ -38,7 +38,7 @@ namespace genfit {
         EXPECT_EQ(true, genfit::FieldManager::getInstance()->isInitialized());
         EXPECT_NO_THROW(genfit::FieldManager::getInstance()->checkInstanciated());
         EXPECT_NO_THROW(genfit::FieldManager::getInstance()->checkInitialized());
-        EXPECT_EQ(TVector3(0, 0, 20), genfit::FieldManager::getInstance()->getFieldVal(TVector3(1, 1, 1)));
+        EXPECT_EQ(ROOT::Math::XYZVector(0, 0, 20), genfit::FieldManager::getInstance()->getFieldVal(ROOT::Math::XYZVector(1, 1, 1)));
     }
 
 }

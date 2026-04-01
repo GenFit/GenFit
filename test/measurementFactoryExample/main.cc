@@ -21,12 +21,13 @@
 
 #include <HelixTrackModel.h>
 #include <MeasurementCreator.h>
+#include <VectorUtils.h>
 
 #include <TDatabasePDG.h>
 #include <TEveManager.h>
 #include <TGeoManager.h>
 #include <TRandom.h>
-#include <TVector3.h>
+#include <Math/Vector3D.h>
 #include <vector>
 
 #include "TDatabasePDG.h"
@@ -76,11 +77,11 @@ int main() {
     genfit::TrackCand myCand;
 
     // true start values
-    TVector3 pos(0, 0, 0);
-    TVector3 mom(1.,0,0);
-    mom.SetPhi(gRandom->Uniform(0.,2*TMath::Pi()));
-    mom.SetTheta(gRandom->Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
-    mom.SetMag(gRandom->Uniform(0.2, 1.));
+    ROOT::Math::XYZVector pos(0, 0, 0);
+    ROOT::Math::XYZVector mom(1.,0,0);
+    genfit::VectorUtils::SetPhi(mom, gRandom->Uniform(0.,2*TMath::Pi()));
+    genfit::VectorUtils::SetTheta(mom, gRandom->Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
+    mom *= (gRandom->Uniform(0.2, 1.)) / mom.R();
 
 
     // helix track model
@@ -100,7 +101,7 @@ int main() {
 
     for (unsigned int i=0; i<nMeasurements; ++i) {
       // "simulate" the detector
-      TVector3 currentPos = helix->getPos(i*2.);
+      ROOT::Math::XYZVector currentPos = helix->getPos(i*2.);
       currentPos.SetX(gRandom->Gaus(currentPos.X(), resolution));
       currentPos.SetY(gRandom->Gaus(currentPos.Y(), resolution));
       currentPos.SetZ(gRandom->Gaus(currentPos.Z(), resolution));
@@ -119,16 +120,16 @@ int main() {
     const double momSmear = 3. /180.*TMath::Pi();     // rad
     const double momMagSmear = 0.1;   // relative
 
-    TVector3 posM(pos);
-    TVector3 momM(mom);
+    ROOT::Math::XYZVector posM(pos);
+    ROOT::Math::XYZVector momM(mom);
     if (smearPosMom) {
       posM.SetX(gRandom->Gaus(posM.X(),posSmear));
       posM.SetY(gRandom->Gaus(posM.Y(),posSmear));
       posM.SetZ(gRandom->Gaus(posM.Z(),posSmear));
 
-      momM.SetPhi(gRandom->Gaus(mom.Phi(),momSmear));
-      momM.SetTheta(gRandom->Gaus(mom.Theta(),momSmear));
-      momM.SetMag(gRandom->Gaus(mom.Mag(), momMagSmear*mom.Mag()));
+      genfit::VectorUtils::SetPhi(momM, gRandom->Gaus(mom.Phi(),momSmear));
+      genfit::VectorUtils::SetTheta(momM, gRandom->Gaus(mom.Theta(),momSmear));
+      momM *= (gRandom->Gaus(mom.R(), momMagSmear*mom.R())) / momM.R();
     }
 
     // initial guess for cov

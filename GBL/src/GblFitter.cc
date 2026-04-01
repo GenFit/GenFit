@@ -76,7 +76,7 @@
 #include <TMatrixD.h>
 #include <TVectorDfwd.h>
 #include <TMatrixT.h>
-#include <TVector3.h>
+#include <Math/Vector3D.h>
 
 //#define DEBUG
 
@@ -114,7 +114,7 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
   // It is switched off automatically if no B-field at (0,0,0) is detected.
   bool fitQoverP = true;
   //TODO: Use clever way to determine zero B-field
-  double Bfield = genfit::FieldManager::getInstance()->getFieldVal(TVector3(0., 0., 0.)).Mag();
+  double Bfield = genfit::FieldManager::getInstance()->getFieldVal(ROOT::Math::XYZVector(0., 0., 0.)).R();
   if (!(Bfield > 1.e-16))
     fitQoverP = false;
   // degrees of freedom after fit
@@ -403,7 +403,7 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
     // Current detector plane
     SharedPlanePtr plane = point_meas->getRawMeasurement(0)->constructPlane(reference);    
     // track direction at plane (in global coords)
-    TVector3 trackDir = rep->getDir(reference);
+    ROOT::Math::XYZVector trackDir = rep->getDir(reference);
     // track momentum direction vector at plane (in global coords)
     double trackMomMag = rep->getMomMag(reference);
     // charge of particle
@@ -440,9 +440,9 @@ double GblFitter::constructGblInfo(Track* trk, const AbsTrackRep* rep)
     
     // Extrapolation for multiple scattering calculation
     // Extrap to point + 1, do NOT stop at boundary
-    TVector3 segmentEntry = refCopy.getPos();
+    ROOT::Math::XYZVector segmentEntry = refCopy.getPos();
     rep->extrapolateToPlane(refCopy, nextPlane, false, false);
-    TVector3 segmentExit = refCopy.getPos();
+    ROOT::Math::XYZVector segmentExit = refCopy.getPos();
     
     getScattererFromMatList(trackLen,
                             scatTheta,

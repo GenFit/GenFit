@@ -20,6 +20,7 @@
 #include "StateOnPlane.h"
 #include "AbsTrackRep.h"
 #include "IO.h"
+#include <VectorUtils.h>
 
 #include <cassert>
 #include <TBuffer.h>
@@ -32,10 +33,11 @@ void StateOnPlane::Print(Option_t*) const {
   printOut << " state vector: "; state_.Print();
   if (sharedPlane_ != nullptr) {
     printOut << " defined in plane "; sharedPlane_->Print();
-    TVector3 pos(0,0,0), mom(0,0,0);
+    ROOT::Math::XYZVector pos(0,0,0), mom(0,0,0);
     getRep()->getPosMom(*this, pos, mom);
-    printOut << " 3D position: "; pos.Print();
-    printOut << " 3D momentum: "; mom.Print();
+
+    printOut << " 3D position: "; VectorUtils::PrintVec(pos, printOut);
+    printOut << " 3D momentum: "; VectorUtils::PrintVec(mom, printOut);
   }
 }
 

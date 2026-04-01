@@ -20,6 +20,7 @@
 
 #include "GFRaveVertex.h"
 #include "GFRaveConverters.h"
+#include <VectorUtils.h>
 #include <Exception.h>
 
 #include <iostream>
@@ -44,7 +45,7 @@ GFRaveVertex::GFRaveVertex() :
 }
 
 
-GFRaveVertex::GFRaveVertex(const TVector3 & pos, const TMatrixDSym& cov,
+GFRaveVertex::GFRaveVertex(const ROOT::Math::XYZVector & pos, const TMatrixDSym& cov,
                            const std::vector < GFRaveTrackParameters* > & smoothedTracks,
                            double ndf, double chi2, int id) :
   pos_(pos),
@@ -117,7 +118,7 @@ GFRaveVertex::~GFRaveVertex(){
 void
 GFRaveVertex::Print(const Option_t*) const {
   std::cout << "GFRaveVertex\n";
-  std::cout << "Position: "; getPos().Print();
+  std::cout << "Position: "; VectorUtils::PrintVec(getPos(), std::cout);
   std::cout << "Covariance: "; getCov().Print();
   std::cout << "Ndf: " << getNdf() << ", Chi2: " << getChi2() << ", Id: " << getId() << "\n";
   std::cout << "Number of tracks: " << getNTracks() << "\n";

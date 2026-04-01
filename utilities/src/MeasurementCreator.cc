@@ -26,6 +26,7 @@
 #include <SpacepointMeasurement.h>
 #include <WireMeasurement.h>
 #include <WirePointMeasurement.h>
+#include <VectorUtils.h>
 
 #include <TRandom.h>
 #include <TMath.h>
@@ -65,32 +66,31 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
   std::vector<AbsMeasurement*> retVal;
   genfit::AbsMeasurement* measurement;
 
-  TVector3 point, dir;
+  ROOT::Math::XYZVector point, dir;
   trackModel_->getPosDir(tracklength, point, dir);
 
 
-  TVector3 planeNorm(dir);
-  planeNorm.SetTheta(thetaDetPlane_*TMath::Pi()/180);
-  planeNorm.SetPhi(planeNorm.Phi()+phiDetPlane_);
-  static const TVector3 z(0,0,1);
-  static const TVector3 x(1,0,0);
+  ROOT::Math::XYZVector planeNorm(dir);
+  VectorUtils::SetMagThetaPhi(planeNorm, planeNorm.R(), (thetaDetPlane_*TMath::Pi()/180), (planeNorm.Phi()+phiDetPlane_));
+  static const ROOT::Math::XYZVector z(0,0,1);
+  static const ROOT::Math::XYZVector x(1,0,0);
 
 
-  TVector3 currentWireDir(wireDir_);
-  TVector3 wirePerp;
+  ROOT::Math::XYZVector currentWireDir(wireDir_);
+  ROOT::Math::XYZVector wirePerp;
 
   if (type == EMeasurementType::Wire ||
       type == EMeasurementType::WirePoint){
 
     // skew layers
     if (useSkew_ && (int)((double)wireCounter_/(double)nSuperLayer_)%2 == 1) {
-      TVector3 perp(wireDir_.Cross(dir));
+      ROOT::Math::XYZVector perp(wireDir_.Cross(dir));
       if ((int)((double)wireCounter_/(double)nSuperLayer_)%4 == 1){
-        currentWireDir.Rotate(skewAngle_*TMath::Pi()/180, wireDir_.Cross(perp));
+        VectorUtils::rotate(skewAngle_*TMath::Pi()/180, wireDir_.Cross(perp), currentWireDir);
       }
-      else currentWireDir.Rotate(-skewAngle_*TMath::Pi()/180, wireDir_.Cross(perp));
+      else VectorUtils::rotate(-skewAngle_*TMath::Pi()/180, wireDir_.Cross(perp), currentWireDir);
     }
-    currentWireDir.SetMag(1.);
+    currentWireDir = currentWireDir.Unit();
 
     // left/right
     lr = 1;
@@ -99,7 +99,7 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
       wirePerp *= -1.;
       lr = -1;
     }
-    wirePerp.SetMag(gRandom->Uniform(minDrift_, maxDrift_));
+    wirePerp *= (gRandom->Uniform(minDrift_, maxDrift_)) / wirePerp.R();
   }
 
   if (outlierProb_ > gRandom->Uniform(1.)) {
@@ -180,10 +180,8 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
       hitCov(2,2) = resolutionWire_*resolutionWire_;
 
       // rotation matrix
-      TVector3 xp = currentWireDir.Orthogonal();
-      xp.SetMag(1);
-      TVector3 yp = currentWireDir.Cross(xp);
-      yp.SetMag(1);
+      ROOT::Math::XYZVector xp = VectorUtils::Orthogonal(currentWireDir).Unit();
+      ROOT::Math::XYZVector yp = currentWireDir.Cross(xp).Unit();
 
       TMatrixD rot(3,3);
 
@@ -216,7 +214,7 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
     case EMeasurementType::StripU: case EMeasurementType::StripV: case EMeasurementType::StripUV : {
       if (debug_) std::cerr << "create StripHit" << std::endl;
 
-      TVector3 vU, vV;
+      ROOT::Math::XYZVector vU, vV;
       vU = planeNorm.Cross(z);
       vV = (planeNorm.Cross(z)).Cross(planeNorm);
       genfit::SharedPlanePtr plane(new genfit::DetPlane(point, vU, vV));
@@ -257,7 +255,7 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
       if (debug_) std::cerr << "create WireHit" << std::endl;
 
       if (outlier) {
-        wirePerp.SetMag(gRandom->Uniform(outlierRange_));
+        wirePerp *= (gRandom->Uniform(outlierRange_)) / wirePerp.R();
       }
 
       TVectorD hitCoords(7);
@@ -272,7 +270,7 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
       if (outlier)
         hitCoords(6) = gRandom->Uniform(outlierRange_);
       else
-        hitCoords(6) = gRandom->Gaus(wirePerp.Mag(), resolution_);
+        hitCoords(6) = gRandom->Gaus(wirePerp.R(), resolution_);
 
       TMatrixDSym hitCov(7);
       hitCov(6,6) = resolution_*resolution_;
@@ -291,7 +289,7 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
       if (debug_) std::cerr << "create WirePointHit" << std::endl;
 
       if (outlier) {
-        wirePerp.SetMag(gRandom->Uniform(outlierRange_));
+        wirePerp *= (gRandom->Uniform(outlierRange_)) / wirePerp.R();
       }
 
       TVectorD hitCoords(8);
@@ -305,11 +303,11 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
 
       if (outlier) {
         hitCoords(6) = gRandom->Uniform(outlierRange_);
-        hitCoords(7) = gRandom->Uniform(currentWireDir.Mag()-outlierRange_, currentWireDir.Mag()+outlierRange_);
+        hitCoords(7) = gRandom->Uniform(currentWireDir.R()-outlierRange_, currentWireDir.R()+outlierRange_);
       }
       else {
-        hitCoords(6) = gRandom->Gaus(wirePerp.Mag(), resolution_);
-        hitCoords(7) = gRandom->Gaus(currentWireDir.Mag(), resolutionWire_);
+        hitCoords(6) = gRandom->Gaus(wirePerp.R(), resolution_);
+        hitCoords(7) = gRandom->Gaus(currentWireDir.R(), resolutionWire_);
       }
 
 
