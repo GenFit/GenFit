@@ -1,8 +1,4 @@
-CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
-if(POLICY CMP0042)
-   # policies not known to CMake 2.8 ...
-   cmake_policy(SET CMP0042 NEW) # Mac OS -rpath behavior
-endif(POLICY CMP0042)
+CMAKE_MINIMUM_REQUIRED( VERSION 3.10 )
 
 # declare the project name
 PROJECT(genfit2 LANGUAGES CXX)
