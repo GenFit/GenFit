@@ -563,7 +563,7 @@ bool KalmanFitterInfo::checkConsistency(const genfit::PruneFlags* flags) const {
   }
 
   // cppcheck-suppress unreadVariable
-  TVector3 oTest = plane->getO(); // see if the plane object is there
+  ROOT::Math::XYZVector oTest = plane->getO(); // see if the plane object is there
   // cppcheck-suppress unreadVariable
   oTest *= 47.11;
 

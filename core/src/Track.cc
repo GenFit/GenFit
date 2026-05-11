@@ -100,7 +100,7 @@ Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
 }
 
 
-Track::Track(AbsTrackRep* trackRep, const TVector3& posSeed, const TVector3& momSeed) :
+Track::Track(AbsTrackRep* trackRep, const ROOT::Math::XYZVector& posSeed, const ROOT::Math::XYZVector& momSeed) :
   cardinalRep_(0), fitStatuses_(), mcTrackId_(-1), timeSeed_(0), stateSeed_(6),
   covSeed_(TMatrixDSym::kUnit, TMatrixDSym(6))
 {
@@ -343,7 +343,7 @@ void Track::setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep) {
 }
 
 
-void Track::setStateSeed(const TVector3& pos, const TVector3& mom) {
+void Track::setStateSeed(const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom) {
   stateSeed_.ResizeTo(6);
 
   stateSeed_(0) = pos.X();

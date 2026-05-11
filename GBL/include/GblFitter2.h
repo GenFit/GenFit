@@ -37,7 +37,6 @@
 #include <sstream>
 
 #include <TMath.h>
-#include <TVector3.h>
 
 
 namespace genfit {

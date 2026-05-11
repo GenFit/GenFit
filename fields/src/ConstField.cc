@@ -20,7 +20,7 @@
 
 namespace genfit {
 
-TVector3 ConstField::get(const TVector3&) const {
+ROOT::Math::XYZVector ConstField::get(const ROOT::Math::XYZVector&) const {
   return field_;
 }
 

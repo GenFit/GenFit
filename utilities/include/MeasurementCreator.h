@@ -33,7 +33,7 @@
 #include "HelixTrackModel.h"
 
 #include <TObject.h>
-#include <TVector3.h>
+#include <Math/Vector3D.h>
 
 
 namespace genfit {
@@ -73,7 +73,7 @@ class MeasurementCreator : public TObject {
   void setOutlierRange(double outlierRange) {outlierRange_ = outlierRange;}
   void setThetaDetPlane(double thetaDetPlane) {thetaDetPlane_ = thetaDetPlane;}
   void setPhiDetPlane(double phiDetPlane) {phiDetPlane_ = phiDetPlane;}
-  void setWireDir(const TVector3 wireDir) {wireDir_ = wireDir; wireDir_.SetMag(1.);}
+  void setWireDir(const ROOT::Math::XYZVector wireDir) {wireDir_ = wireDir.Unit();}
   void setMinDrift(double minDrift) {minDrift_ = minDrift;}
   void setMaxDrift(double maxDrift) {maxDrift_ = maxDrift;}
   void setIdealLRResolution(bool idealLRResolution) {idealLRResolution_ = idealLRResolution;}
@@ -108,7 +108,7 @@ class MeasurementCreator : public TObject {
 
   // WireMeasurement specific
   int wireCounter_;
-  TVector3 wireDir_;
+  ROOT::Math::XYZVector wireDir_;
   double minDrift_;
   double maxDrift_;
   bool idealLRResolution_; // resolve the l/r ambiguities of the wire measurements

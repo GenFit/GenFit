@@ -550,7 +550,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         if (debugLvl_ > 0) {
           debugOut << "construct plane with smoothed state of cardinal rep fit \n";
         }
-        TVector3 pos, mom;
+        ROOT::Math::XYZVector pos, mom;
         const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
         tr->getCardinalRep()->getPosMom(fittedState, pos, mom);
         StateOnPlane cardinalState(rep);
@@ -600,7 +600,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           if (debugLvl_ > 0) {
             debugOut << "extrapolate smoothed state of cardinal rep fit to plane\n";
           }
-          TVector3 pos, mom;
+          ROOT::Math::XYZVector pos, mom;
           const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
           stateToExtrapolate.reset(new StateOnPlane(fittedState));
           stateToExtrapolate->setRep(rep);
@@ -973,7 +973,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
       // Convert from 6D covariance of the seed to whatever the trackRep wants.
       TMatrixDSym dummy(p_.GetNrows());
       MeasuredStateOnPlane mop(p_, dummy, fi->getReferenceState()->getPlane(), rep, fi->getReferenceState()->getAuxInfo());
-      TVector3 pos, mom;
+      ROOT::Math::XYZVector pos, mom;
       rep->getPosMom(mop, pos, mom);
       rep->setPosMomCov(mop, pos, mom, fi->getTrackPoint()->getTrack()->getCovSeed());
       // Blow up, set.
@@ -1186,7 +1186,7 @@ KalmanFitterRefTrack::processTrackPointSqrt(KalmanFitterInfo* fi, const KalmanFi
       // Convert from 6D covariance of the seed to whatever the trackRep wants.
       TMatrixDSym dummy(p_.GetNrows());
       MeasuredStateOnPlane mop(p_, dummy, fi->getReferenceState()->getPlane(), rep, fi->getReferenceState()->getAuxInfo());
-      TVector3 pos, mom;
+      ROOT::Math::XYZVector pos, mom;
       rep->getPosMom(mop, pos, mom);
       rep->setPosMomCov(mop, pos, mom, fi->getTrackPoint()->getTrack()->getCovSeed());
       // Blow up, set.

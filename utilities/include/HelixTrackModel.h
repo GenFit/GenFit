@@ -30,7 +30,7 @@
 #define genfit_HelixTrackModel_h
 
 #include <TObject.h>
-#include <TVector3.h>
+#include <Math/Vector3D.h>
 
 
 namespace genfit {
@@ -43,13 +43,13 @@ class HelixTrackModel : public TObject {
  public:
 
   // Constructors/Destructors ---------
-  HelixTrackModel(const TVector3& pos, const TVector3& mom, double charge);
+  HelixTrackModel(const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom, double charge);
 
-  TVector3 getPos(double tracklength) const;
-  void getPosMom(double tracklength, TVector3& pos, TVector3& mom) const;
-  void getPosDir(double tracklength, TVector3& pos, TVector3& dir) const {
+  ROOT::Math::XYZVector getPos(double tracklength) const;
+  void getPosMom(double tracklength, ROOT::Math::XYZVector& pos, ROOT::Math::XYZVector& mom) const;
+  void getPosDir(double tracklength, ROOT::Math::XYZVector& pos, ROOT::Math::XYZVector& dir) const {
     getPosMom(tracklength, pos, dir);
-    dir.SetMag(1);
+    dir = dir.Unit();
   }
 
 
@@ -58,7 +58,7 @@ class HelixTrackModel : public TObject {
   double sgn_;
   double mom_;
   double R_; // radius
-  TVector3 center_;
+  ROOT::Math::XYZVector center_;
   double alpha0_;
   double theta_;
 

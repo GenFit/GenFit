@@ -93,7 +93,7 @@ namespace genfit {
     jacobian_ = jacobian; 
   }
   
-  TMatrixDSym GblFitterInfo::getCovariance(double variance, TVector3 trackDirection, SharedPlanePtr measurementPlane) const {
+  TMatrixDSym GblFitterInfo::getCovariance(double variance, ROOT::Math::XYZVector trackDirection, SharedPlanePtr measurementPlane) const {
     
     double c1 = trackDirection.Dot(measurementPlane->getU());
     double c2 = trackDirection.Dot(measurementPlane->getV());

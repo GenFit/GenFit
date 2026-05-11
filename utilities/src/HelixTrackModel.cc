@@ -19,17 +19,18 @@
 
 #include "HelixTrackModel.h"
 #include <FieldManager.h>
+#include <VectorUtils.h>
 
 #include <assert.h>
 #include <math.h>
 
 namespace genfit {
 
-HelixTrackModel::HelixTrackModel(const TVector3& pos, const TVector3& mom, double charge) {
+HelixTrackModel::HelixTrackModel(const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom, double charge) {
 
-  mom_ = mom.Mag();
+  mom_ = mom.R();
 
-  TVector3 B = genfit::FieldManager::getInstance()->getFieldVal(pos);
+  const ROOT::Math::XYZVector& B = genfit::FieldManager::getInstance()->getFieldVal(pos);
 
   // B must point in Z direction
   assert(B.X() == 0);
@@ -38,13 +39,13 @@ HelixTrackModel::HelixTrackModel(const TVector3& pos, const TVector3& mom, doubl
   double Bz = B.Z();
 
   // calc helix parameters
-  TVector3 dir2D(mom);
+  ROOT::Math::XYZVector dir2D(mom);
   dir2D.SetZ(0);
-  dir2D.SetMag(1.);
-  R_ = 100.*mom.Perp()/(0.0299792458*Bz) / fabs(charge);
+  dir2D = dir2D.Unit();
+  R_ = 100.*mom.Rho()/(0.0299792458*Bz) / fabs(charge);
   sgn_ = 1;
   if (charge<0) sgn_=-1.;
-  center_ = pos + sgn_ * R_ * dir2D.Orthogonal();
+  center_ = pos + sgn_ * R_ * VectorUtils::Orthogonal(dir2D);
   alpha0_ = (pos-center_).Phi();
 
   theta_ = mom.Theta();
@@ -55,33 +56,33 @@ HelixTrackModel::HelixTrackModel(const TVector3& pos, const TVector3& mom, doubl
 }
 
 
-TVector3 HelixTrackModel::getPos(double tracklength) const {
+ROOT::Math::XYZVector HelixTrackModel::getPos(double tracklength) const {
 
-  TVector3 pos;
+  ROOT::Math::XYZVector pos;
 
   double angle = alpha0_ - sgn_ * tracklength / R_ * sin(theta_);
 
-  TVector3 radius(R_,0,0);
-  radius.SetPhi(angle);
+  ROOT::Math::XYZVector radius(R_,0,0);
+  VectorUtils::SetPhi(radius, angle);
   pos = center_ + radius;
   pos.SetZ(center_.Z() - sgn_ * ((alpha0_-angle)*R_ * tan(theta_-M_PI/2.)) );
 
   return pos;
 }
 
-void HelixTrackModel::getPosMom(double tracklength, TVector3& pos, TVector3& mom) const {
+void HelixTrackModel::getPosMom(double tracklength, ROOT::Math::XYZVector& pos, ROOT::Math::XYZVector& mom) const {
 
   double angle = alpha0_ - sgn_ * tracklength / R_ * sin(theta_);
 
-  TVector3 radius(R_,0,0);
-  radius.SetPhi(angle);
+  ROOT::Math::XYZVector radius(R_,0,0);
+  VectorUtils::SetPhi(radius, angle);
   pos = center_ + radius;
   pos.SetZ(center_.Z() - sgn_ * ((alpha0_-angle)*R_ * tan(theta_-M_PI/2.)) );
 
   mom.SetXYZ(1,1,1);
-  mom.SetTheta(theta_);
-  mom.SetPhi(angle - sgn_*M_PI/2.);
-  mom.SetMag(mom_);
+  VectorUtils::SetTheta(mom, theta_);
+  VectorUtils::SetPhi(mom, angle - sgn_*M_PI/2.);
+  VectorUtils::SetMag(mom, mom_);
 
   /*std::cout<<"tracklength " << tracklength << "\n";
   std::cout<<"angle " << angle << "\n";

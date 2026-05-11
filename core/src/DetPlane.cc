@@ -19,6 +19,7 @@
 
 #include "DetPlane.h"
 #include "IO.h"
+#include <VectorUtils.h>
 
 #include <cassert>
 #include <cmath>
@@ -40,17 +41,17 @@ DetPlane::DetPlane(AbsFinitePlane* finite)
 }
 
 
-DetPlane::DetPlane(const TVector3& o,
-                       const TVector3& u,
-                       const TVector3& v,
+DetPlane::DetPlane(const ROOT::Math::XYZVector& o,
+                       const ROOT::Math::XYZVector& u,
+                       const ROOT::Math::XYZVector& v,
                        AbsFinitePlane* finite)
   :o_(o), u_(u), v_(v), finitePlane_(finite)
 {
   sane();
 }
 
-DetPlane::DetPlane(const TVector3& o,
-                       const TVector3& n,
+DetPlane::DetPlane(const ROOT::Math::XYZVector& o,
+                       const ROOT::Math::XYZVector& n,
                        AbsFinitePlane* finite)
   :o_(o), finitePlane_(finite)
 {
@@ -91,9 +92,9 @@ void DetPlane::swap(DetPlane& other) {
 }
 
 
-void DetPlane::set(const TVector3& o,
-                const TVector3& u,
-                const TVector3& v)
+void DetPlane::set(const ROOT::Math::XYZVector& o,
+                const ROOT::Math::XYZVector& u,
+                const ROOT::Math::XYZVector& v)
 {
   o_ = o;
   u_ = u;
@@ -102,7 +103,7 @@ void DetPlane::set(const TVector3& o,
 }
 
 
-void DetPlane::setO(const TVector3& o)
+void DetPlane::setO(const ROOT::Math::XYZVector& o)
 {
   o_ = o;
 }
@@ -112,7 +113,7 @@ void DetPlane::setO(double X,double Y,double Z)
   o_.SetXYZ(X,Y,Z);
 }
 
-void DetPlane::setU(const TVector3& u)
+void DetPlane::setU(const ROOT::Math::XYZVector& u)
 {
   u_ = u;
   sane(); // sets v_ perpendicular to u_
@@ -124,7 +125,7 @@ void DetPlane::setU(double X,double Y,double Z)
   sane(); // sets v_ perpendicular to u_
 }
 
-void DetPlane::setV(const TVector3& v)
+void DetPlane::setV(const ROOT::Math::XYZVector& v)
 {
   v_ = v;
   u_ = getNormal().Cross(v_);
@@ -140,62 +141,63 @@ void DetPlane::setV(double X,double Y,double Z)
   sane();
 }
 
-void DetPlane::setUV(const TVector3& u,const TVector3& v)
+void DetPlane::setUV(const ROOT::Math::XYZVector& u,const ROOT::Math::XYZVector& v)
 {
   u_ = u;
   v_ = v;
   sane();
 }
 
-void DetPlane::setON(const TVector3& o,const TVector3& n){
+void DetPlane::setON(const ROOT::Math::XYZVector& o,const ROOT::Math::XYZVector& n){
   o_ = o;
   setNormal(n);
 }
 
 
-TVector3 DetPlane::getNormal() const
+ROOT::Math::XYZVector DetPlane::getNormal() const
 {
   return u_.Cross(v_);
 }
 
 void DetPlane::setNormal(double X,double Y,double Z){
-  setNormal( TVector3(X,Y,Z) );
+  setNormal( ROOT::Math::XYZVector(X,Y,Z) );
 }
 
-void DetPlane::setNormal(const TVector3& n){
-  u_ = n.Orthogonal();
+void DetPlane::setNormal(const ROOT::Math::XYZVector& n){
+  // u_ = n.Orthogonal();
+  u_ = VectorUtils::Orthogonal(n);
   v_ = n.Cross(u_);
-  u_.SetMag(1.);
-  v_.SetMag(1.);
+  u_ = u_.Unit();
+  v_ = v_.Unit();
 }
 
 void DetPlane::setNormal(const double& theta, const double& phi){
-  setNormal( TVector3(TMath::Sin(theta)*TMath::Cos(phi),TMath::Sin(theta)*TMath::Sin(phi),TMath::Cos(theta)) );
+  setNormal( ROOT::Math::XYZVector(TMath::Sin(theta)*TMath::Cos(phi),TMath::Sin(theta)*TMath::Sin(phi),TMath::Cos(theta)) );
 }
 
 
-TVector2 DetPlane::project(const TVector3& x)const
+ROOT::Math::XYVector DetPlane::project(const ROOT::Math::XYZVector& x)const
 {
-  return TVector2(u_*x, v_*x);
+  return ROOT::Math::XYVector(u_.Dot(x), v_.Dot(x));
 }
 
 
-TVector2 DetPlane::LabToPlane(const TVector3& x)const
+ROOT::Math::XYVector DetPlane::LabToPlane(const ROOT::Math::XYZVector& x)const
 {
   return project(x-o_);
 }
 
 
-TVector3 DetPlane::toLab(const TVector2& x)const
+ROOT::Math::XYZVector DetPlane::toLab(const ROOT::Math::XYVector& x)const
 {
-  TVector3 d(o_);
+  ROOT::Math::XYZVector d(o_);
   d += x.X()*u_;
   d += x.Y()*v_;
   return d;
 }
 
 
-TVector3 DetPlane::dist(const TVector3& x)const
+ROOT::Math::XYZVector DetPlane::dist(const ROOT::Math::XYZVector& x)const
 {
   return toLab(LabToPlane(x)) - x;
 }
@@ -205,8 +207,8 @@ void DetPlane::sane(){
   assert(u_!=v_);
 
   // ensure unit vectors
-  u_.SetMag(1.);
-  v_.SetMag(1.);
+  u_ = u_.Unit();
+  v_ = v_.Unit();
 
   // check if already orthogonal
   if (u_.Dot(v_) < 1.E-5) return;
@@ -264,7 +266,7 @@ bool operator!= (const DetPlane& lhs, const DetPlane& rhs){
 }
 
 
-double DetPlane::distance(const TVector3& point) const {
+double DetPlane::distance(const ROOT::Math::XYZVector& point) const {
   // |(point - o_)*(u_ x v_)|
   return fabs( (point.X()-o_.X()) * (u_.Y()*v_.Z() - u_.Z()*v_.Y()) +
                (point.Y()-o_.Y()) * (u_.Z()*v_.X() - u_.X()*v_.Z()) +
@@ -279,14 +281,14 @@ double DetPlane::distance(double x, double y, double z) const {
 }
 
 
-TVector2 DetPlane::straightLineToPlane (const TVector3& point, const TVector3& dir) const {
-  TVector3 dirNorm(dir.Unit());
-  TVector3 normal = getNormal();
-  double dirTimesN = dirNorm*normal;
+ROOT::Math::XYVector DetPlane::straightLineToPlane (const ROOT::Math::XYZVector& point, const ROOT::Math::XYZVector& dir) const {
+  ROOT::Math::XYZVector dirNorm(dir.Unit());
+  ROOT::Math::XYZVector normal = getNormal();
+  double dirTimesN = dirNorm.Dot(normal);
   if(fabs(dirTimesN)<1.E-6){//straight line is parallel to plane, so return infinity
-    return TVector2(1.E100,1.E100);
+    return ROOT::Math::XYVector(1.E100,1.E100);
   }
-  double t = 1./dirTimesN * ((o_-point)*normal);
+  double t = 1./dirTimesN * ((o_-point).Dot(normal));
   return project(point - o_ + t * dirNorm);
 }
 
@@ -296,7 +298,7 @@ void DetPlane::straightLineToPlane(const double& posX, const double& posY, const
                                    const double& dirX, const double& dirY, const double& dirZ,
                                    double& u, double& v) const {
 
-  TVector3 W = getNormal();
+  ROOT::Math::XYZVector W = getNormal();
   double dirTimesN = dirX*W.X() + dirY*W.Y() + dirZ*W.Z();
   if(fabs(dirTimesN)<1.E-6){//straight line is parallel to plane, so return infinity
     u = 1.E100;
@@ -317,9 +319,9 @@ void DetPlane::straightLineToPlane(const double& posX, const double& posY, const
 
 
 void DetPlane::rotate(double angle) {
-  TVector3 normal = getNormal();
-  u_.Rotate(angle, normal);
-  v_.Rotate(angle, normal);
+  ROOT::Math::XYZVector normal = getNormal();
+  VectorUtils::rotate(angle, normal, u_);
+  VectorUtils::rotate(angle, normal, v_);
 
   sane();
 }
@@ -344,9 +346,9 @@ void DetPlane::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       //TObject::Streamer(R__b);
-      o_.Streamer(R__b);
-      u_.Streamer(R__b);
-      v_.Streamer(R__b);
+      VectorUtils::XYZToTVector(o_).Streamer(R__b);
+      VectorUtils::XYZToTVector(u_).Streamer(R__b);
+      VectorUtils::XYZToTVector(v_).Streamer(R__b);
       finitePlane_.reset();
       char flag;
       R__b >> flag;
@@ -362,9 +364,9 @@ void DetPlane::Streamer(TBuffer &R__b)
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
       //TObject::Streamer(R__b);
-      o_.Streamer(R__b);
-      u_.Streamer(R__b);
-      v_.Streamer(R__b);
+      VectorUtils::XYZToTVector(o_).Streamer(R__b);
+      VectorUtils::XYZToTVector(u_).Streamer(R__b);
+      VectorUtils::XYZToTVector(v_).Streamer(R__b);
       if (finitePlane_) {
         R__b << (char)1;
 

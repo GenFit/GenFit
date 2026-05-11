@@ -24,6 +24,7 @@
 #pragma link C++ nestedtypedef;
 
 #pragma link C++ namespace genfit;
+#pragma link C++ namespace genfit::VectorUtils;
 
 #pragma link C++ class genfit::HelixTrackModel+;
 #pragma link C++ class genfit::MeasurementCreator+;

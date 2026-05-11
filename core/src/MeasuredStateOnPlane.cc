@@ -22,6 +22,7 @@
 #include "Exception.h"
 #include "Tools.h"
 #include "IO.h"
+#include <VectorUtils.h>
 
 #include <cassert>
 
@@ -36,11 +37,11 @@ void MeasuredStateOnPlane::Print(Option_t*) const {
   printOut << " covariance matrix: "; cov_.Print();
   if (sharedPlane_ != nullptr) {
     printOut << " defined in plane "; sharedPlane_->Print();
-    TVector3 pos, mom;
+    ROOT::Math::XYZVector pos, mom;
     TMatrixDSym cov(6,6);
     getRep()->getPosMomCov(*this, pos, mom, cov);
-    printOut << " 3D position: "; pos.Print();
-    printOut << " 3D momentum: "; mom.Print();
+    printOut << " 3D position: "; VectorUtils::PrintVec(pos, printOut);
+    printOut << " 3D momentum: "; VectorUtils::PrintVec(mom, printOut);
     //printOut << " 6D covariance: "; cov.Print();
   }
 }

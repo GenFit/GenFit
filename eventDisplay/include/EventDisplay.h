@@ -27,7 +27,7 @@
 #include "AbsKalmanFitter.h"
 
 #include <TEveBox.h>
-#include <TVector3.h>
+#include <Math/Vector3D.h>
 #include <string>
 #include <vector>
 
@@ -159,7 +159,7 @@ class EventDisplay : public TNamed {
     /** @brief Create a box around o, oriented along u and v with widths ud, vd and depth and
      *  return a pointer to the box object.
      */
-    TEveBox* boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth);
+    TEveBox* boxCreator(ROOT::Math::XYZVector o, ROOT::Math::XYZVector u, ROOT::Math::XYZVector v, float ud, float vd, float depth);
 
     void makeLines(const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
                      const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth = 2, int markerPos = 1);

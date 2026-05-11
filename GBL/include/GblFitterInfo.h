@@ -114,7 +114,7 @@ namespace genfit {
      * @param measurementPlane The plane with measurement to which MS shall be projected
      * @return TMatrixDSym
      */
-    TMatrixDSym getCovariance(double variance, TVector3 trackDirection, SharedPlanePtr measurementPlane) const;
+    TMatrixDSym getCovariance(double variance, ROOT::Math::XYZVector trackDirection, SharedPlanePtr measurementPlane) const;
     
     /**
      * @brief Collect all data and create a GblPoint

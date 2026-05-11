@@ -78,29 +78,29 @@ class StateOnPlane {
   double extrapolateToPlane(const SharedPlanePtr& plane,
         bool stopAtBoundary = false,
         bool calcJacobianNoise = false) {return rep_->extrapolateToPlane(*this, plane, stopAtBoundary, calcJacobianNoise);}
-  double extrapolateToLine(const TVector3& linePoint,
-        const TVector3& lineDirection,
+  double extrapolateToLine(const ROOT::Math::XYZVector& linePoint,
+        const ROOT::Math::XYZVector& lineDirection,
         bool stopAtBoundary = false,
         bool calcJacobianNoise = false) {return rep_->extrapolateToLine(*this, linePoint, lineDirection, stopAtBoundary, calcJacobianNoise);}
-  double extrapolateToPoint(const TVector3& point,
+  double extrapolateToPoint(const ROOT::Math::XYZVector& point,
         bool stopAtBoundary = false,
         bool calcJacobianNoise = false) {return rep_->extrapolateToPoint(*this, point, stopAtBoundary, calcJacobianNoise);}
-  double extrapolateToPoint(const TVector3& point,
+  double extrapolateToPoint(const ROOT::Math::XYZVector& point,
         const TMatrixDSym& G, // weight matrix (metric)
         bool stopAtBoundary = false,
         bool calcJacobianNoise = false) {return rep_->extrapolateToPoint(*this, point, G, stopAtBoundary, calcJacobianNoise);}
   double extrapolateToCylinder(double radius,
-        const TVector3& linePoint = TVector3(0.,0.,0.),
-        const TVector3& lineDirection = TVector3(0.,0.,1.),
+        const ROOT::Math::XYZVector& linePoint = ROOT::Math::XYZVector(0.,0.,0.),
+        const ROOT::Math::XYZVector& lineDirection = ROOT::Math::XYZVector(0.,0.,1.),
         bool stopAtBoundary = false,
         bool calcJacobianNoise = false) {return rep_->extrapolateToCylinder(*this, radius, linePoint, lineDirection, stopAtBoundary, calcJacobianNoise);}
   double extrapolateToCone(double openingAngle,
-        const TVector3& conePoint = TVector3(0.,0.,0.),
-        const TVector3& coneDirection = TVector3(0.,0.,1.),
+        const ROOT::Math::XYZVector& conePoint = ROOT::Math::XYZVector(0.,0.,0.),
+        const ROOT::Math::XYZVector& coneDirection = ROOT::Math::XYZVector(0.,0.,1.),
         bool stopAtBoundary = false,
         bool calcJacobianNoise = false) {return rep_->extrapolateToCone(*this, openingAngle, conePoint, coneDirection, stopAtBoundary, calcJacobianNoise);}
   double extrapolateToSphere(double radius,
-        const TVector3& point = TVector3(0.,0.,0.),
+        const ROOT::Math::XYZVector& point = ROOT::Math::XYZVector(0.,0.,0.),
         bool stopAtBoundary = false,
         bool calcJacobianNoise = false) {return rep_->extrapolateToSphere(*this, radius, point, stopAtBoundary, calcJacobianNoise);}
   double extrapolateBy(double step,
@@ -111,11 +111,11 @@ class StateOnPlane {
         bool calcJacobianNoise = false) {return rep_->extrapolateToMeasurement(*this, measurement, stopAtBoundary, calcJacobianNoise);}
 
 
-  TVector3 getPos() const {return rep_->getPos(*this);}
-  TVector3 getMom() const {return rep_->getMom(*this);}
-  TVector3 getDir() const {return rep_->getDir(*this);}
-  void getPosMom(TVector3& pos, TVector3& mom) const {rep_->getPosMom(*this, pos, mom);}
-  void getPosDir(TVector3& pos, TVector3& dir) const {rep_->getPosDir(*this, pos, dir);}
+  ROOT::Math::XYZVector getPos() const {return rep_->getPos(*this);}
+  ROOT::Math::XYZVector getMom() const {return rep_->getMom(*this);}
+  ROOT::Math::XYZVector getDir() const {return rep_->getDir(*this);}
+  void getPosMom(ROOT::Math::XYZVector& pos, ROOT::Math::XYZVector& mom) const {rep_->getPosMom(*this, pos, mom);}
+  void getPosDir(ROOT::Math::XYZVector& pos, ROOT::Math::XYZVector& dir) const {rep_->getPosDir(*this, pos, dir);}
   TVectorD get6DState() const {return rep_->get6DState(*this);}
   double getMomMag() const {return rep_->getMomMag(*this);}
   int getPDG() const {return rep_->getPDG();}
@@ -124,7 +124,7 @@ class StateOnPlane {
   double getMass() const {return rep_->getMass(*this);}
   double getTime() const {return rep_->getTime(*this);}
 
-  void setPosMom(const TVector3& pos, const TVector3& mom) {rep_->setPosMom(*this, pos, mom);}
+  void setPosMom(const ROOT::Math::XYZVector& pos, const ROOT::Math::XYZVector& mom) {rep_->setPosMom(*this, pos, mom);}
   void setPosMom(const TVectorD& state6) {rep_->setPosMom(*this, state6);}
   void setChargeSign(double charge) {rep_->setChargeSign(*this, charge);}
   void setQop(double qop) {rep_->setQop(*this, qop);}
