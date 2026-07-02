@@ -17,7 +17,12 @@
 > As an open-source project, we encourage the community to contribute by providing bug fixes or new features via pull requests.
 
 GenFit is an experiment-independent framework for track reconstruction in particle and nuclear physics.
-It consists of three modular components:
+
+There are **two** main branches.
+The first one, called `main`, is the default GenFit, using `TVector2` and `TVector3` internally and in the API.
+The second one, called `main_noTVector`, does no longer use the depcrecated `TVector2` and `TVector3` vector classes, but used the `ROOT::Math::GenVector` instead, namely `ROOT::Math::XYVector` from `Math/Vector2D.h` and `ROOT::MathXYZVector` from `Math/Vector3D.h`, respectively.
+
+GenFit consists of three modular components:
 
 * **Track fitting algorithms**
 
