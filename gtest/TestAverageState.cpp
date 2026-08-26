@@ -1,17 +1,10 @@
 // Tests for genfit::tools::averageState, the numerical kernel of
 // genfit::calcAverageState().
 //
-// calcAverageState used to build two ROOT TDecompChol objects to Cholesky-
-// factor the covariances.  tools::averageState inlines that factorisation
-// (dropping the per-call TDecompChol object) and reuses the optimized
-// QR / transposedInvert.  The inlined Cholesky scales each row by a reciprocal
-// (1/ujj) instead of dividing by ujj as ROOT does, so it is not bit-identical
-// to the original; these tests assert that
-//   * it agrees with the real ROOT TDecompChol code path to a tight relative
-//     tolerance, and
-//   * it reproduces the textbook inverse-variance weighted average,
-// across a range of covariance dimensions, and that a non-positive-definite
-// covariance is rejected.
+// The checks are that, across a range of covariance dimensions, averageState
+//   * agrees with a reference built on ROOT's TDecompChol,
+//   * reproduces the textbook inverse-variance weighted average,
+// and that a non-positive-definite covariance is rejected.
 
 #include <gtest/gtest.h>
 
@@ -29,8 +22,8 @@ namespace genfit {
 
 namespace {
 
-// The original calcAverageState() numerical body, verbatim, driven by the real
-// ROOT TDecompChol.  Golden reference for the agreement test.
+// Reference implementation of the same average, driven by ROOT's TDecompChol.
+// Cross-check for tools::averageState().
 bool refROOT(const TVectorD& x1, const TMatrixDSym& C1,
              const TVectorD& x2, const TMatrixDSym& C2,
              TVectorD& avgState, TMatrixD& inv)
@@ -100,25 +93,16 @@ void makeSPD(TMatrixDSym& C, TVectorD& x, int n, std::mt19937_64& rng)
     x(i) = d(rng);
 }
 
-double maxAbs(const TMatrixD& M)
-{
-  double m = 0;
-  const int N = M.GetNrows() * M.GetNcols();
-  const double* p = M.GetMatrixArray();
-  for (int i = 0; i < N; ++i) m = std::max(m, std::fabs(p[i]));
-  return m;
-}
-
 } // anonymous namespace
 
-// Agreement with the real ROOT TDecompChol code path, to a tight relative
-// tolerance (the reciprocal-multiply Cholesky is not bit-identical to ROOT's
-// division, but differs only by ~1 ulp per element).
+// Agreement with a reference that Cholesky-factors the covariances with ROOT's
+// TDecompChol.  Both paths share tools::QR and tools::transposedInvert, which
+// TestTools.cpp pins separately, so this isolates the inline factorisation.
+// It follows TDecompChol's operation order, so the averaged state and the
+// covariance factor have to come out exactly equal, not merely close.
 TEST(AverageState, AgreesWithRootTDecompChol)
 {
   std::mt19937_64 rng(20240629);
-  const double tol = 1e-10;
-  double worstState = 0.0, worstCov = 0.0;
 
   for (int n : {1, 2, 3, 4, 5, 6, 7, 10, 15, 25}) {
     for (int t = 0; t < 200; ++t) {
@@ -127,23 +111,19 @@ TEST(AverageState, AgreesWithRootTDecompChol)
       makeSPD(C2, x2, n, rng);
 
       TVectorD sRef, sOpt;
-      TMatrixD covRef, covOpt;
-      ASSERT_TRUE(refROOT(x1, C1, x2, C2, sRef, covRef));
-      ASSERT_TRUE(tools::averageState(x1, C1, x2, C2, sOpt, covOpt));
+      TMatrixD factorRef, factorOpt;
+      ASSERT_TRUE(refROOT(x1, C1, x2, C2, sRef, factorRef));
+      ASSERT_TRUE(tools::averageState(x1, C1, x2, C2, sOpt, factorOpt));
 
-      double scaleS = 1e-300, devS = 0.0;
-      for (int i = 0; i < n; ++i) scaleS = std::max(scaleS, std::fabs(sRef(i)));
-      for (int i = 0; i < n; ++i) devS = std::max(devS, std::fabs(sOpt(i) - sRef(i)));
-      worstState = std::max(worstState, devS / scaleS);
+      for (int i = 0; i < n; ++i)
+        ASSERT_EQ(sOpt(i), sRef(i)) << "state entry " << i << ", n = " << n;
 
-      double scaleC = std::max(1e-300, maxAbs(covRef));
-      TMatrixD diff(covOpt); diff -= covRef;
-      worstCov = std::max(worstCov, maxAbs(diff) / scaleC);
+      for (int i = 0; i < n; ++i)
+        for (int j = 0; j < n; ++j)
+          ASSERT_EQ(factorOpt(i, j), factorRef(i, j))
+              << "covariance factor entry (" << i << ", " << j << "), n = " << n;
     }
   }
-
-  EXPECT_LT(worstState, tol) << "worst relative state deviation vs ROOT";
-  EXPECT_LT(worstCov,   tol) << "worst relative cov deviation vs ROOT";
 }
 
 // Reproduces the textbook inverse-variance weighted average, checked with

@@ -1,20 +1,9 @@
 // Tests for genfit::tools::QR and genfit::tools::transposedInvert.
 //
-// Two kinds of checks live here:
-//
-//   * "Reference" tests (active): run QR / transposedInvert on fixed inputs and
-//     compare against hard-coded expected outputs.  The expected numbers were
-//     produced by the ORIGINAL (pre-optimization) implementations of these
-//     functions, so these tests pin down the exact result the optimized code
-//     must keep reproducing.  (Generated once, offline, from the reference
-//     implementations in tests/reference_orig.h.)
-//
-//   * "Equivalence" tests (COMMENTED OUT): compare the current QR /
-//     transposedInvert against an *_old variant over random inputs, asserting
-//     bit-for-bit equality.  They are disabled because no *_old symbols exist in
-//     the tree right now; enable them during an optimization migration when both
-//     the new and the previous implementation are available side by side (e.g.
-//     keep the previous code as genfit::tools::QR_old / transposedInvert_old).
+// Each case runs the function on a fixed input and compares against hard-coded
+// expected values, so any change in the numerical result shows up here.  The QR
+// cases cover both of its internal loop orders, nRows <= 2*nCols and
+// nRows > 2*nCols.
 
 #include <gtest/gtest.h>
 
@@ -23,17 +12,14 @@
 #include <TMatrixD.h>
 #include <TVectorD.h>
 
-#include <cmath>
-#include <random>
 
 namespace genfit {
 
 namespace {
 
-// Tolerance for the comparison against the hard-coded reference values.  The
-// optimized functions are designed to reproduce the original results bit-for-
-// bit, so any healthy implementation clears this comfortably; the small slack
-// only guards against irrelevant last-bit/compiler noise.
+// Tolerance for the comparison against the hard-coded expected values.  The
+// slack only absorbs last-bit differences between compilers; a correct
+// implementation matches far more closely.
 const double kTol = 1e-12;
 
 TMatrixD makeMatrix(int nRows, int nCols, const double* v)
@@ -70,7 +56,6 @@ void expectVectorNear(const TVectorD& got, const double* expected, double tol)
 
 // ============================================================================
 // transposedInvert -- inv is the inverse of the transpose of upper-right R.
-// Expected values come from the original implementation.
 // ============================================================================
 
 TEST(ToolsTransposedInvert, Matches3x3Reference)
@@ -78,7 +63,7 @@ TEST(ToolsTransposedInvert, Matches3x3Reference)
   const double in[9] = { 2, -1, 0.5,
                          0,  3, 1,
                          0,  0, 4 };
-  // expected (original implementation)
+  // expected
   const double kInvExpected3[9] = {
      0.5,                   0,                    0,
      0.16666666666666666,   0.33333333333333331,  0,
@@ -99,7 +84,7 @@ TEST(ToolsTransposedInvert, Matches4x4Reference)
                           0,   2.0,  0.5, -0.4,
                           0,   0,    0.8,  0.25,
                           0,   0,    0,    1.25 };
-  // expected (original implementation)
+  // expected
   const double kInvExpected4[16] = {
      0.66666666666666663,   0,       0,     0,
     -0.066666666666666666,  0.5,     0,     0,
@@ -130,9 +115,8 @@ TEST(ToolsTransposedInvert, RejectsSingular)
 
 // ============================================================================
 // QR -- replaces A by R (upper triangular) and b by Q'b.
-// Two shapes exercise both internal paths of the optimized QR
+// Two shapes exercise both internal loop orders of QR
 // (nRows <= 2*nCols "wide", and nRows > 2*nCols "tall").
-// Expected values come from the original implementation.
 // ============================================================================
 
 TEST(ToolsQR, MatchesWideReference)
@@ -142,7 +126,7 @@ TEST(ToolsQR, MatchesWideReference)
                            7, 8, 10,
                            1, 0, 1 };
   const double inB[4]  = { 1, 2, 3, 4 };
-  // expected (original implementation)
+  // expected
   const double kRwide[12] = {
     -8.1853527718724521, -9.5292166597918087, -11.972605546917913,
      0,                   1.4812257933030573,   1.2897748404271523,
@@ -162,8 +146,9 @@ TEST(ToolsQR, MatchesWideReference)
   // R must be upper triangular (exact zeros below the diagonal).
   for (int i = 0; i < A.GetNrows(); ++i)
     for (int j = 0; j < A.GetNcols(); ++j)
-      if (i > j)
+      if (i > j) {
         EXPECT_DOUBLE_EQ(A(i, j), 0.0);
+      }
 }
 
 TEST(ToolsQR, MatchesTallReference)
@@ -176,7 +161,7 @@ TEST(ToolsQR, MatchesTallReference)
                            0, 3,
                            1, 1 };
   const double inB[7]  = { 1, 2, 3, 4, 5, 6, 7 };
-  // expected (original implementation)
+  // expected
   const double kRtall[14] = {
     -9.4339811320566032, -10.917978164065509,
      0,                   -3.4347857005916342,
@@ -199,96 +184,9 @@ TEST(ToolsQR, MatchesTallReference)
 
   for (int i = 0; i < A.GetNrows(); ++i)
     for (int j = 0; j < A.GetNcols(); ++j)
-      if (i > j)
+      if (i > j) {
         EXPECT_DOUBLE_EQ(A(i, j), 0.0);
-}
-
-
-// ============================================================================
-// COMMENTED OUT: equivalence of the current functions against an *_old variant.
-//
-// These compare the optimized QR / transposedInvert against the previous
-// implementation, bit-for-bit, over many random inputs.  They require the old
-// implementations to be available as genfit::tools::QR_old(...) and
-// genfit::tools::transposedInvert_old(...).  When you keep the previous code
-// side-by-side during an optimization (e.g. rename it with an _old suffix and
-// declare it in Tools.h), drop the comment markers to enable them.
-// ============================================================================
-
-/*
-namespace {
-
-bool bitIdentical(const TMatrixD& a, const TMatrixD& b)
-{
-  if (a.GetNrows() != b.GetNrows() || a.GetNcols() != b.GetNcols())
-    return false;
-  const int N = a.GetNrows() * a.GetNcols();
-  return std::memcmp(a.GetMatrixArray(), b.GetMatrixArray(),
-                     sizeof(double) * N) == 0;
-}
-
-bool bitIdentical(const TVectorD& a, const TVectorD& b)
-{
-  if (a.GetNrows() != b.GetNrows())
-    return false;
-  return std::memcmp(a.GetMatrixArray(), b.GetMatrixArray(),
-                     sizeof(double) * a.GetNrows()) == 0;
-}
-
-} // anonymous namespace
-
-TEST(ToolsQR, EqualsOldImplementation)
-{
-  std::mt19937_64 rng(20240629);
-  std::uniform_real_distribution<double> d(-1.0, 1.0);
-
-  // square, wide and tall-skinny shapes (both QR code paths)
-  const std::pair<int,int> shapes[] = {
-    {5,5}, {6,6}, {12,6}, {25,6}, {50,6}, {50,25}
-  };
-  for (auto [nR, nC] : shapes) {
-    for (int t = 0; t < 200; ++t) {
-      TMatrixD A0(nR, nC); TVectorD b0(nR);
-      for (int i = 0; i < nR; ++i) {
-        for (int j = 0; j < nC; ++j) A0(i, j) = d(rng);
-        b0(i) = d(rng);
       }
-      TMatrixD Anew = A0, Aold = A0;
-      TVectorD bnew = b0, bold = b0;
-
-      tools::QR(Anew, bnew);
-      tools::QR_old(Aold, bold);          // <-- requires the old implementation
-
-      EXPECT_TRUE(bitIdentical(Anew, Aold)) << "R differs at " << nR << "x" << nC;
-      EXPECT_TRUE(bitIdentical(bnew, bold)) << "Q'b differs at " << nR << "x" << nC;
-    }
-  }
 }
-
-TEST(ToolsTransposedInvert, EqualsOldImplementation)
-{
-  std::mt19937_64 rng(123456);
-  std::uniform_real_distribution<double> d(-1.0, 1.0);
-
-  for (int n = 1; n <= 60; ++n) {
-    for (int t = 0; t < 100; ++t) {
-      TMatrixD R(n, n);                   // well-conditioned upper-triangular
-      for (int i = 0; i < n; ++i)
-        for (int j = 0; j < n; ++j)
-          R(i, j) = (j >= i) ? d(rng) : 0.0;
-      for (int i = 0; i < n; ++i)
-        R(i, i) += (R(i, i) >= 0 ? 1.0 : -1.0) * (2.0 + n);
-
-      TMatrixD invNew, invOld;
-      bool okNew = tools::transposedInvert(R, invNew);
-      bool okOld = tools::transposedInvert_old(R, invOld);   // <-- requires the old implementation
-
-      EXPECT_EQ(okNew, okOld);
-      if (okNew)
-        EXPECT_TRUE(bitIdentical(invNew, invOld)) << "inv differs at n=" << n;
-    }
-  }
-}
-*/
 
 } // namespace genfit

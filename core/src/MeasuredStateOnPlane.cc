@@ -137,11 +137,8 @@ MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, 
   // Num. Math. 7, 206 (1965) to the least-squares problem underlying
   // averaging.
   //
-  // The whole computation lives in tools::averageState(): it performs the two
-  // Cholesky factorisations inline (so the per-call TDecompChol objects -- with
-  // their matrix copy, 1-norm, virtual dispatch and lower-triangle zeroing --
-  // are gone) and reuses the optimized tools::QR / tools::transposedInvert.
-  // The result is bit-for-bit identical to the previous TDecompChol-based code.
+  // tools::averageState() carries this out, returning the averaged state and
+  // the lower-triangular factor L of the averaged covariance.
   TVectorD avgState;
   TMatrixD avgCovFactor;  // lower-triangular L with avgCov = L^T L
   if (!tools::averageState(forwardState.getState(), forwardState.getCov(),

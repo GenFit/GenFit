@@ -195,22 +195,18 @@ bool tools::transposedInvert(const TMatrixD& R, TMatrixD& inv)
   const double* const Rk = R.GetMatrixArray();
   double* const invk = inv.GetMatrixArray();
 
-  // The result is lower triangular (it is the transpose of the inverse of the
-  // upper-right matrix R).  Initialise to the identity, exactly as before: the
-  // loop below overwrites the lower triangle (including the diagonal) on
-  // success, and on failure the untouched entries keep the identity values the
-  // previous implementation also left behind.
+  // inv is lower triangular (it is the transpose of the inverse of the
+  // upper-right R).  Start from the identity: the substitution below overwrites
+  // the lower triangle including the diagonal, so the strict upper triangle
+  // keeps its zeros, and on a singular R the entries never reached stay as the
+  // identity.
   std::memset(invk, 0, sizeof(double) * n * n);
   for (int i = 0; i < n; ++i)
     invk[i*n + i] = 1.;
 
-  // Solve R^T inv = I column by column.  This is the forward substitution that
-  // used to be delegated to transposedForwardSubstitution(), inlined here.  For
-  // column c only rows i >= c are non-zero, and within a row only j in [c, i)
-  // contribute (the leading entries of the column are zero), so we start both
-  // loops at c.  The previous implementation initialised inv to the identity
-  // and summed j from 0, multiplying in those leading zeros; skipping them is
-  // numerically identical and roughly halves the inner-loop work.
+  // Forward substitution solving R^T inv = I, one column at a time.  Column c
+  // vanishes above row c, and within row i only j in [c, i) contributes, so
+  // both loops start at c and no structural zero is ever multiplied in.
   bool result = true;
   for (int c = 0; c < n && result; ++c) {
     const double* const invc = invk + c;        // inv(j,c) == invc[j*n]
@@ -240,16 +236,10 @@ namespace {
 // the strictly-lower triangle is left as-is (the sole consumer here,
 // transposedInvert(), reads only the upper triangle).
 //
-// This follows ROOT's TDecompChol::Decompose() (same summation order), with one
-// deliberate change: the off-diagonal entries of each row are scaled by the
-// reciprocal 1/ujj computed once per row, instead of dividing each entry by ujj.
-// That replaces n-1 divisions per row with one division and n-1 multiplies,
-// which is faster.  It is NOT bit-identical to ROOT's division (the reciprocal
-// rounds once more), but the difference is bounded by ~1 ulp; test_calcAverage
-// checks that the resulting averaged state/covariance stay well within a tight
-// relative tolerance of the original ROOT-TDecompChol code path.  This also
-// avoids the per-call TDecompChol object (matrix copy, norm, virtual dispatch,
-// lower-triangle zeroing).  Returns false if C is not positive definite.
+// The summation order, and the per-row reciprocal 1/ujj that scales the
+// off-diagonal entries, are those of ROOT's TDecompChol::Decompose(), so U is
+// bit-for-bit the factor TDecompChol produces.  Returns false if C is not
+// positive definite.
 bool choleskyUpper(const double* C, double* U, int n)
 {
   for (int icol = 0; icol < n; ++icol) {
@@ -340,9 +330,7 @@ bool tools::averageState(const TVectorD& state1, const TMatrixDSym& cov1,
   // avgCovFactor = (R')^-1 (lower triangular); avgCov = avgCovFactor' avgCovFactor.
   transposedInvert(A, avgCovFactor);
 
-  // averaged state = R^-1 . (top of Q'b), i.e. avgCovFactor' . (Q'b).  Reading
-  // the result into avgState (rather than overwriting b in place) is identical
-  // because each output entry only depends on not-yet-overwritten inputs.
+  // Averaged state = R^-1 . (top of Q'b), i.e. avgCovFactor' . (Q'b).
   const double* const invk = avgCovFactor.GetMatrixArray();
   avgState.ResizeTo(nRows);
   double* const sk = avgState.GetMatrixArray();
@@ -435,19 +423,16 @@ void tools::QR(TMatrixD& A, TVectorD& b)
 
   double *const ak = A.GetMatrixArray();
   double *const bk = b.GetMatrixArray();
-  // No variable-length arrays in C++, alloca does the exact same thing.  (This
-  // replaces a fixed-size "double u[500]" stack buffer that silently limited
-  // nRows and wasted stack for small matrices.)
+  // No variable-length arrays in C++; alloca gives the nRows-long scratch
+  // vector holding the Householder reflector.
   double *const u = (double *)alloca(sizeof(double)*nRows);
 
-  // The Householder transformation applied to the trailing submatrix,
-  // (I - beta u u') A, can be evaluated either column by column (long inner
-  // loop over rows, but with a column stride into the row-major storage) or as
-  // a rank-1 update with the inner loop running contiguously across the
-  // remaining columns.  The latter is cache friendly and vectorises well when
-  // there are enough columns; for tall-skinny matrices the column count is too
-  // small for it to pay off and the column-by-column form pipelines better.
-  // Pick per shape; both produce bitwise-identical results.
+  // The Householder update of the trailing submatrix, (I - beta u u') A, is
+  // applied in one of two loop orders.  The rank-1 form runs its inner loop
+  // contiguously across the remaining columns, which is cache friendly and
+  // vectorises, but it needs enough columns to pay off; the column-by-column
+  // form strides down the rows and pipelines better on tall-skinny shapes.
+  // The two orders accumulate in the same sequence and give identical results.
   const bool wide = (nRows <= 2*nCols);
   double *const w = wide ? (double *)alloca(sizeof(double)*nCols) : nullptr;
 
