@@ -42,21 +42,21 @@ bool refROOT(const TVectorD& x1, const TMatrixDSym& C1,
 
   TMatrixD A(2*nRows, nRows);
   TVectorD b(2*nRows);
-  double *const bk = b.GetMatrixArray();
-  double *const Ak = A.GetMatrixArray();
-  const double* S1invk = S1inv.GetMatrixArray();
-  const double* S2invk = S2inv.GetMatrixArray();
+  double *const bData = b.GetMatrixArray();
+  double *const AData = A.GetMatrixArray();
+  const double* S1invData = S1inv.GetMatrixArray();
+  const double* S2invData = S2inv.GetMatrixArray();
   for (int i = 0; i < nRows; ++i) {
     double sum1 = 0;
     double sum2 = 0;
     for (int j = 0; j <= i; ++j) {
-      Ak[i*nRows + j] = S1invk[i*nRows + j];
-      Ak[(i + nRows)*nRows + j] = S2invk[i*nRows + j];
-      sum1 += S1invk[i*nRows + j]*x1.GetMatrixArray()[j];
-      sum2 += S2invk[i*nRows + j]*x2.GetMatrixArray()[j];
+      AData[i*nRows + j] = S1invData[i*nRows + j];
+      AData[(i + nRows)*nRows + j] = S2invData[i*nRows + j];
+      sum1 += S1invData[i*nRows + j]*x1.GetMatrixArray()[j];
+      sum2 += S2invData[i*nRows + j]*x2.GetMatrixArray()[j];
     }
-    bk[i] = sum1;
-    bk[i + nRows] = sum2;
+    bData[i] = sum1;
+    bData[i + nRows] = sum2;
   }
 
   tools::QR(A, b);
@@ -76,8 +76,9 @@ bool refROOT(const TVectorD& x1, const TMatrixDSym& C1,
   return true;
 }
 
-// Random SPD covariance C = M^T M + (n+1) I and random state x.
-void makeSPD(TMatrixDSym& C, TVectorD& x, int n, std::mt19937_64& rng)
+// Random symmetric positive definite covariance C = M^T M + (n+1) I, and a
+// random state x.
+void makeSymPosDef(TMatrixDSym& C, TVectorD& x, int n, std::mt19937_64& rng)
 {
   std::uniform_real_distribution<double> d(-1.0, 1.0);
   TMatrixD M(n, n);
@@ -107,8 +108,8 @@ TEST(AverageState, AgreesWithRootTDecompChol)
   for (int n : {1, 2, 3, 4, 5, 6, 7, 10, 15, 25}) {
     for (int t = 0; t < 200; ++t) {
       TMatrixDSym C1, C2; TVectorD x1, x2;
-      makeSPD(C1, x1, n, rng);
-      makeSPD(C2, x2, n, rng);
+      makeSymPosDef(C1, x1, n, rng);
+      makeSymPosDef(C2, x2, n, rng);
 
       TVectorD sRef, sOpt;
       TMatrixD factorRef, factorOpt;
@@ -138,8 +139,8 @@ TEST(AverageState, MatchesTextbookAverage)
   for (int n : {1, 2, 3, 5, 6, 7, 12}) {
     for (int t = 0; t < 200; ++t) {
       TMatrixDSym C1, C2; TVectorD x1, x2;
-      makeSPD(C1, x1, n, rng);
-      makeSPD(C2, x2, n, rng);
+      makeSymPosDef(C1, x1, n, rng);
+      makeSymPosDef(C2, x2, n, rng);
 
       TVectorD sOpt; TMatrixD covFactor;
       ASSERT_TRUE(tools::averageState(x1, C1, x2, C2, sOpt, covFactor));
@@ -170,14 +171,14 @@ TEST(AverageState, MatchesTextbookAverage)
   EXPECT_LT(worst, tol) << "worst relative averaging residual";
 }
 
-// A non-positive-definite covariance must be rejected (return false).
+// A covariance that is not positive definite must be rejected (return false).
 TEST(AverageState, RejectsNonPositiveDefinite)
 {
   std::mt19937_64 rng(13);
   const int n = 5;
   TMatrixDSym C1, C2; TVectorD x1, x2;
-  makeSPD(C1, x1, n, rng);
-  makeSPD(C2, x2, n, rng);
+  makeSymPosDef(C1, x1, n, rng);
+  makeSymPosDef(C2, x2, n, rng);
   C1(2, 2) = -1.0;   // break positive-definiteness
 
   TVectorD s; TMatrixD cov;
