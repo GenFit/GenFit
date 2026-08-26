@@ -292,7 +292,7 @@ void GblFitter::updateGblInfo(gbl::GblTrajectory& traj, genfit::Track* trk, cons
     return;
   
   // Update points in track and fitterInfo(rep)
-  int igblfi = -1;
+  [[maybe_unused]] int igblfi = -1; // variable is used, but compiler doesn't understand
   for (unsigned int ip = 0; ip < trk->getNumPoints(); ip++) {      
     GblFitterInfo * gblfi = dynamic_cast<GblFitterInfo*>(trk->getPoint(ip)->getFitterInfo(rep));
     if (!gblfi)
