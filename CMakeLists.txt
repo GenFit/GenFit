@@ -338,6 +338,9 @@ IF(BUILD_TESTING)
 			gtest/TestMaterialEffects.cpp
 			gtest/TestRKTrackRep.cpp
 			gtest/TestMaterial.cpp
+			gtest/TestTools.cpp
+			gtest/TestAverageState.cpp
+			gtest/TestSimilarity.cpp
 			)
 	# ROOT::Math is needed for older ROOT versions like 6.26
 	if(ROOT_VERSION VERSION_LESS 6.30)

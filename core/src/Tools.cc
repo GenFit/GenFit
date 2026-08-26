@@ -23,6 +23,9 @@
 #include <memory>
 #include <typeinfo>
 #include <cassert>
+#include <cstring>
+#include <algorithm>
+#include <vector>
 
 #include <TDecompChol.h>
 #include <TMatrixDSymEigen.h>
@@ -33,7 +36,153 @@
 #include "Exception.h"
 
 
+namespace {
+
+  /** Largest dimension for which a similarity result is assembled on the stack. */
+  const int c_maxSimilarityDim = 7;
+
+  /** Similarity transform out = b * sym * b^T for dimensions known at compile
+   * time, with b of size N x M and sym of size M x M.
+   *
+   * The two matrix products are accumulated in the order TMatrixDSym::Similarity()
+   * uses, and as it does only the upper triangle of the result is computed and
+   * then mirrored, so the result is bit for bit the one ROOT produces.
+   */
+  template<int N, int M>
+  void similarityFixed(const double* b, const double* sym, double* out)
+  {
+    double ba[N * M];
+    for (int i = 0; i < N; ++i) {
+      for (int j = 0; j < M; ++j) {
+        double element = 0;
+        for (int k = 0; k < M; ++k) element += b[i * M + k] * sym[k * M + j];
+        ba[i * M + j] = element;
+      }
+    }
+    for (int i = 0; i < N; ++i) {
+      for (int j = i; j < N; ++j) {
+        double element = 0;
+        for (int k = 0; k < M; ++k) element += ba[i * M + k] * b[j * M + k];
+        out[i * N + j] = element;
+        out[j * N + i] = element;
+      }
+    }
+  }
+
+  /** Same, for dimensions only known at run time. */
+  void similarityDynamic(const double* b, int nRows, int nCols, const double* sym, double* out)
+  {
+    std::vector<double> ba(nRows * nCols);
+    for (int i = 0; i < nRows; ++i) {
+      for (int j = 0; j < nCols; ++j) {
+        double element = 0;
+        for (int k = 0; k < nCols; ++k) element += b[i * nCols + k] * sym[k * nCols + j];
+        ba[i * nCols + j] = element;
+      }
+    }
+    for (int i = 0; i < nRows; ++i) {
+      for (int j = i; j < nRows; ++j) {
+        double element = 0;
+        for (int k = 0; k < nCols; ++k) element += ba[i * nCols + k] * b[j * nCols + k];
+        out[i * nRows + j] = element;
+        out[j * nRows + i] = element;
+      }
+    }
+  }
+
+  /** Pick the implementation matching the given dimensions.  The shapes that
+   * occur in the Kalman fitters and the track representations are worth
+   * unrolling; everything else falls back to the run-time loops.
+   */
+  void similarityInto(const double* b, int nRows, int nCols, const double* sym, double* out)
+  {
+    if (nRows == 5 && nCols == 5) similarityFixed<5, 5>(b, sym, out);
+    else if (nRows == 7 && nCols == 7) similarityFixed<7, 7>(b, sym, out);
+    else if (nRows == 5 && nCols == 1) similarityFixed<5, 1>(b, sym, out);
+    else if (nRows == 5 && nCols == 2) similarityFixed<5, 2>(b, sym, out);
+    else similarityDynamic(b, nRows, nCols, sym, out);
+  }
+
+} // anonymous namespace
+
 namespace genfit {
+
+void tools::similarity(const TMatrixD& b, const TMatrixDSym& sym, TMatrixDSym& out)
+{
+  const int nRows = b.GetNrows();
+  const int nCols = b.GetNcols();
+
+  if (nCols != sym.GetNrows()) {
+    Exception e("Tools::similarity() - matrix dimensions do not match", __LINE__, __FILE__);
+    e.setFatal();
+    throw e;
+  }
+
+  out.ResizeTo(nRows, nRows);
+  similarityInto(b.GetMatrixArray(), nRows, nCols, sym.GetMatrixArray(), out.GetMatrixArray());
+}
+
+
+void tools::similarity(const TMatrixD& b, TMatrixDSym& sym)
+{
+  const int nRows = b.GetNrows();
+  const int nCols = b.GetNcols();
+
+  if (nCols != sym.GetNrows()) {
+    Exception e("Tools::similarity() - matrix dimensions do not match", __LINE__, __FILE__);
+    e.setFatal();
+    throw e;
+  }
+
+  // The result is nRows x nRows while sym is nCols x nCols, so it is assembled
+  // elsewhere before sym can be overwritten.
+  if (nRows <= c_maxSimilarityDim) {
+    double result[c_maxSimilarityDim * c_maxSimilarityDim];
+    similarityInto(b.GetMatrixArray(), nRows, nCols, sym.GetMatrixArray(), result);
+    sym.ResizeTo(nRows, nRows);
+    std::copy(result, result + nRows * nRows, sym.GetMatrixArray());
+  } else {
+    TMatrixDSym result;
+    tools::similarity(b, sym, result);
+    sym.ResizeTo(result);
+    sym = result;
+  }
+}
+
+
+double tools::similarity(const TVectorD& v, const TMatrixDSym& sym)
+{
+  const int n = v.GetNrows();
+
+  if (n != sym.GetNrows()) {
+    Exception e("Tools::similarity() - vector and matrix dimensions do not match", __LINE__, __FILE__);
+    e.setFatal();
+    throw e;
+  }
+
+  const double* const vData = v.GetMatrixArray();
+  const double* const symData = sym.GetMatrixArray();
+
+  // Order of operations as in TMatrixDSym::Similarity(const TVectorD&): first
+  // sym * v, then the scalar product with v.
+  std::vector<double> heapWork;
+  double stackWork[c_maxSimilarityDim];
+  double* work = stackWork;
+  if (n > c_maxSimilarityDim) {
+    heapWork.resize(n);
+    work = heapWork.data();
+  }
+  for (int i = 0; i < n; ++i) {
+    double element = 0;
+    for (int k = 0; k < n; ++k) element += symData[i * n + k] * vData[k];
+    work[i] = element;
+  }
+
+  double sum = 0;
+  for (int i = 0; i < n; ++i) sum += work[i] * vData[i];
+  return sum;
+}
+
 
 void tools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* determinant){
   inv.ResizeTo(mat);
@@ -165,8 +314,8 @@ bool tools::transposedForwardSubstitution(const TMatrixD& R, TVectorD& b)
 }
 
 
-// Same, but for one column of the matrix b.  Used by transposedInvert below
-// assumes b(i,j) == (i == j)
+// Same, but for one column of the matrix b; assumes b(i,j) == (i == j).
+// Part of the public tools API, currently unused inside GenFit.
 bool tools::transposedForwardSubstitution(const TMatrixD& R, TMatrixD& b, int nCol)
 {
   size_t n = R.GetNrows();
@@ -188,19 +337,159 @@ bool tools::transposedForwardSubstitution(const TMatrixD& R, TMatrixD& b, int nC
 // inv will be the inverse of the transposed of the upper-right matrix R
 bool tools::transposedInvert(const TMatrixD& R, TMatrixD& inv)
 {
-  bool result = true;
-
   inv.ResizeTo(R);
-  double *const invk = inv.GetMatrixArray();
-  int nRows = inv.GetNrows();
-  for (int i = 0; i < nRows; ++i)
-    for (int j = 0; j < nRows; ++j)
-      invk[i*nRows + j] = (i == j);
 
-  for (int i = 0; i < inv.GetNcols(); ++i)
-    result = result && transposedForwardSubstitution(R, inv, i);
+  const int nRows = R.GetNrows();
+  const double* const RData = R.GetMatrixArray();
+  double* const invData = inv.GetMatrixArray();
+
+  // inv is lower triangular (it is the transpose of the inverse of the
+  // upper-right R).  Start from the identity: the substitution below overwrites
+  // the lower triangle including the diagonal, so the strict upper triangle
+  // keeps its zeros, and on a singular R the entries never reached stay as the
+  // identity.
+  std::memset(invData, 0, sizeof(double) * nRows * nRows);
+  for (int i = 0; i < nRows; ++i)
+    invData[i*nRows + i] = 1.;
+
+  // Forward substitution solving R^T inv = I, one column at a time.  Column c
+  // vanishes above row c, and within row i only j in [c, i) contributes, so
+  // both loops start at c and no structural zero is ever multiplied in.
+  bool result = true;
+  for (int c = 0; c < nRows && result; ++c) {
+    const double* const invColumn = invData + c;   // inv(j,c) == invColumn[j*nRows]
+    for (int i = c; i < nRows; ++i) {
+      const double* const RColumn = RData + i;     // R(j,i) == RColumn[j*nRows]
+      double sum = (i == c);
+      for (int j = c; j < i; ++j)
+        sum -= invColumn[j*nRows] * RColumn[j*nRows];
+      const double Rii = RData[i*nRows + i];
+      if (Rii == 0) {
+        result = false;
+        break;
+      }
+      invData[i*nRows + c] = sum / Rii;
+    }
+  }
 
   return result;
+}
+
+namespace {
+
+// Upper-triangular Cholesky factorisation of a symmetric positive-definite
+// matrix C (n x n, full row-major storage as kept by TMatrixDSym), writing the
+// upper-triangular factor U (with C = U^T U) into the upper triangle of the
+// n x n buffer U.  Only the upper triangle and the diagonal of U are written;
+// the strictly-lower triangle is left as-is (the sole consumer here,
+// transposedInvert(), reads only the upper triangle).
+//
+// The summation order, and the per-row reciprocal 1/uii that scales the
+// off-diagonal entries, are those of ROOT's TDecompChol::Decompose(), so U is
+// bit-for-bit the factor TDecompChol produces.  Returns false if C is not
+// positive definite.
+bool choleskyUpper(const double* C, double* U, int n)
+{
+  for (int icol = 0; icol < n; ++icol) {
+    const int rowOff = icol*n;
+
+    // Diagonal element U(icol,icol); test for non-positive-definiteness.
+    double uii = C[rowOff + icol];
+    for (int irow = 0; irow < icol; ++irow) {
+      const double u = U[irow*n + icol];
+      uii -= u*u;
+    }
+    if (uii <= 0)
+      return false;
+    uii = sqrt(uii);
+    U[rowOff + icol] = uii;
+    const double invUii = 1.0 / uii;
+
+    // Off-diagonal elements of this row.
+    for (int j = icol + 1; j < n; ++j) {
+      double s = C[rowOff + j];
+      for (int i = 0; i < icol; ++i)
+        s -= U[i*n + j]*U[i*n + icol];
+      U[rowOff + j] = s * invUii;
+    }
+  }
+  return true;
+}
+
+} // anonymous namespace
+
+bool tools::averageState(const TVectorD& state1, const TMatrixDSym& cov1,
+                         const TVectorD& state2, const TMatrixDSym& cov2,
+                         TVectorD& avgState, TMatrixD& avgCovFactor)
+{
+  // See genfit::calcAverageState() for the derivation.  In short: with the
+  // upper Cholesky factors S1, S2 (cov1 = S1' S1, cov2 = S2' S2) the combined
+  // information is (S1inv', S2inv').(S1inv; S2inv) where Sinv = (S')^-1.  A QR
+  // decomposition of A = (S1inv; S2inv) gives an upper triangular R with
+  // R'R = cov1^-1 + cov2^-1, hence avgCov = R^-1 R'^-1 and the averaged state
+  // follows from the same orthogonal transformation applied to
+  // (S1inv.state1; S2inv.state2).
+  const int nRows = cov1.GetNrows();
+  assert(cov2.GetNrows() == nRows);
+
+  // Upper Cholesky factors S1, S2 of the two covariance matrices.
+  TMatrixD S1(nRows, nRows), S2(nRows, nRows);
+  if (!choleskyUpper(cov1.GetMatrixArray(), S1.GetMatrixArray(), nRows))
+    return false;
+  if (!choleskyUpper(cov2.GetMatrixArray(), S2.GetMatrixArray(), nRows))
+    return false;
+
+  // S1inv = (S1')^-1, S2inv = (S2')^-1 -- both lower triangular.
+  TMatrixD S1inv, S2inv;
+  transposedInvert(S1, S1inv);
+  transposedInvert(S2, S2inv);
+
+  // Assemble A = (S1inv; S2inv) and b = (S1inv.state1; S2inv.state2).  A is zero-filled
+  // by its constructor, so the strictly-upper-triangular halves of the two
+  // lower-triangular blocks stay zero and only j <= i is written.
+  TMatrixD A(2*nRows, nRows);
+  TVectorD b(2*nRows);
+  double *const AData = A.GetMatrixArray();
+  double *const bData = b.GetMatrixArray();
+  const double* const S1invData = S1inv.GetMatrixArray();
+  const double* const S2invData = S2inv.GetMatrixArray();
+  const double* const state1Data = state1.GetMatrixArray();
+  const double* const state2Data = state2.GetMatrixArray();
+  for (int i = 0; i < nRows; ++i) {
+    double sum1 = 0;
+    double sum2 = 0;
+    for (int j = 0; j <= i; ++j) {
+      const double s1 = S1invData[i*nRows + j];
+      const double s2 = S2invData[i*nRows + j];
+      AData[i*nRows + j]           = s1;
+      AData[(i + nRows)*nRows + j] = s2;
+      sum1 += s1*state1Data[j];
+      sum2 += s2*state2Data[j];
+    }
+    bData[i]         = sum1;
+    bData[i + nRows] = sum2;
+  }
+
+  // QR decomposition: R (upper triangular) ends up in the top nRows rows of A,
+  // and Q'b in b (only its first nRows entries are needed below).
+  QR(A, b);
+  A.ResizeTo(nRows, nRows);
+
+  // avgCovFactor = (R')^-1 (lower triangular); avgCov = avgCovFactor' avgCovFactor.
+  transposedInvert(A, avgCovFactor);
+
+  // Averaged state = R^-1 . (top of Q'b), i.e. avgCovFactor' . (Q'b).
+  const double* const invData = avgCovFactor.GetMatrixArray();
+  avgState.ResizeTo(nRows);
+  double* const sData = avgState.GetMatrixArray();
+  for (int i = 0; i < nRows; ++i) {
+    double sum = 0;
+    for (int j = i; j < nRows; ++j)
+      sum += invData[j*nRows + i] * bData[j];
+    sData[i] = sum;
+  }
+
+  return true;
 }
 
 // This replaces A with an upper right matrix connected to A by a
@@ -232,7 +521,7 @@ void tools::QR(TMatrixD& A)
     }
     double sigma = sqrt(sum);
     double beta = 1/(sum + sigma*fabs(akk));
-    // The algorithm uses only the uk[i] for i >= k.
+    // The algorithm uses only the u[i] for i >= k.
     u[k] = copysign(sigma + fabs(akk), akk);
 
     // Calculate y (again taking into account zero entries).  This
@@ -280,57 +569,88 @@ void tools::QR(TMatrixD& A, TVectorD& b)
   // explicitly in Businger et al.
   // Also in Numer. Math. 7, 269-276 (1965)
 
-  double *const ak = A.GetMatrixArray();
-  double *const bk = b.GetMatrixArray();
-  // No variable-length arrays in C++, alloca does the exact same thing ...
-  //double * u = (double *)alloca(sizeof(double)*nRows);
-  double u[500];
+  double *const aData = A.GetMatrixArray();
+  double *const bData = b.GetMatrixArray();
+  // No variable-length arrays in C++; alloca gives u, the nRows-long scratch
+  // vector holding the Householder reflector.
+  double *const u = (double *)alloca(sizeof(double)*nRows);
+
+  // The Householder update of the trailing submatrix, (I - beta u u') A, is
+  // applied in one of two loop orders.  The rank-1 form runs its inner loop
+  // contiguously across the remaining columns, which is cache friendly and
+  // vectorises, but it needs enough columns to pay off; the column-by-column
+  // form strides down the rows and pipelines better on tall-skinny shapes.
+  // The two orders accumulate in the same sequence and give identical results.
+  const bool wide = (nRows <= 2*nCols);
+  double *const w = wide ? (double *)alloca(sizeof(double)*nCols) : nullptr;
 
   // Main loop over matrix columns.
   for (int k = 0; k < nCols; ++k) {
-    double akk = ak[k*nCols + k];
+    double akk = aData[k*nCols + k];
 
     double sum = akk*akk;
     // Put together a housholder transformation.
     for (int i = k + 1; i < nRows; ++i) {
-      sum += ak[i*nCols + k]*ak[i*nCols + k];
-      u[i] = ak[i*nCols + k];
+      double aik = aData[i*nCols + k];
+      sum += aik*aik;
+      u[i] = aik;
     }
     double sigma = sqrt(sum);
     double beta = 1/(sum + sigma*fabs(akk));
-    // The algorithm uses only the uk[i] for i >= k.
+    // The algorithm uses only the u[i] for i >= k.
     u[k] = copysign(sigma + fabs(akk), akk);
 
-    // Calculate b (again taking into account zero entries).  This
-    // encodes how the (sub)vector changes by the householder transformation.
-    double yb = 0;
-    for (int j = k; j < nRows; ++j)
-      yb += u[j]*bk[j];
-    yb *= beta;
-    // ... and apply the changes.
-    for (int j = k; j < nRows; ++j)
-      bk[j] -= u[j]*yb;
+    if (wide) {
+      // First pass: accumulate w[i] = sum_j u[j] A[j][i] for the trailing
+      // columns (contiguous inner loop) and yb = sum_j u[j] b[j].
+      for (int i = k; i < nCols; ++i)
+        w[i] = 0;
+      double yb = 0;
+      for (int j = k; j < nRows; ++j) {
+        const double uj = u[j];
+        const double* aRow = aData + j*nCols;
+        for (int i = k; i < nCols; ++i)
+          w[i] += uj*aRow[i];
+        yb += uj*bData[j];
+      }
+      for (int i = k; i < nCols; ++i)
+        w[i] *= beta;
+      yb *= beta;
+      // Second pass: rank-1 update A[j][i] -= u[j] w[i] and b[j] -= u[j] yb.
+      for (int j = k; j < nRows; ++j) {
+        const double uj = u[j];
+        double* aRow = aData + j*nCols;
+        for (int i = k; i < nCols; ++i)
+          aRow[i] -= uj*w[i];
+        bData[j] -= uj*yb;
+      }
+    } else {
+      // Tall-skinny: apply the transformation to b, then column by column to A.
+      double yb = 0;
+      for (int j = k; j < nRows; ++j)
+        yb += u[j]*bData[j];
+      yb *= beta;
+      for (int j = k; j < nRows; ++j)
+        bData[j] -= u[j]*yb;
 
-    // Calculate y (again taking into account zero entries).  This
-    // encodes how the (sub)matrix changes by the householder transformation.
-    for (int i = k; i < nCols; ++i) {
-      double y = 0;
-      for (int j = k; j < nRows; ++j)
-	y += u[j]*ak[j*nCols + i];
-      y *= beta;
-      // ... and apply the changes.
-      for (int j = k; j < nRows; ++j)
-	ak[j*nCols + i] -= u[j]*y;
+      for (int i = k; i < nCols; ++i) {
+        double y = 0;
+        for (int j = k; j < nRows; ++j)
+          y += u[j]*aData[j*nCols + i];
+        y *= beta;
+        for (int j = k; j < nRows; ++j)
+          aData[j*nCols + i] -= u[j]*y;
+      }
     }
   }
 
   // Zero below diagonal
   for (int i = 1; i < nCols; ++i)
     for (int j = 0; j < i; ++j)
-      ak[i*nCols + j] = 0.;
+      aData[i*nCols + j] = 0.;
   for (int i = nCols; i < nRows; ++i)
     for (int j = 0; j < nCols; ++j)
-      ak[i*nCols + j] = 0.;
+      aData[i*nCols + j] = 0.;
 }
 
 

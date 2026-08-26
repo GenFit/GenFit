@@ -20,6 +20,7 @@
 #include "RKTrackRep.h"
 #include "IO.h"
 #include "MathHelpers.h"
+#include "Tools.h"
 
 #include <Exception.h>
 #include <FieldManager.h>
@@ -949,9 +950,19 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
   // The Jacobians returned from RKutta are transposed.
   TMatrixD jac(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_.back().jac7_.begin()));
   TMatrixDSym noise(7, ExtrapSteps_.back().noise7_.begin());
-  for (int i = ExtrapSteps_.size() - 2; i >= 0; --i) {
-    noise += TMatrixDSym(7, ExtrapSteps_[i].noise7_.begin()).Similarity(jac);
-    jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_[i].jac7_.begin()));
+  if (ExtrapSteps_.size() > 1) {
+    // The 7x7 buffers are allocated once and refilled inside the loop.
+    TMatrixDSym stepNoise(7);
+    TMatrixDSym transportedNoise(7);
+    TMatrixD stepJac(7, 7);
+    for (int i = ExtrapSteps_.size() - 2; i >= 0; --i) {
+      stepNoise.SetMatrixArray(ExtrapSteps_[i].noise7_.begin());
+      tools::similarity(jac, stepNoise, transportedNoise);
+      noise += transportedNoise;
+      stepJac.SetMatrixArray(ExtrapSteps_[i].jac7_.begin());
+      stepJac.T();
+      jac *= stepJac;
+    }
   }
 
   // Project into 5x5 space.
@@ -1045,7 +1056,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 
   noise.ResizeTo(5,5);
   noise = fNoise_;
-  noise.Similarity(jacobian);
+  tools::similarity(jacobian, noise);
 
   // lastStartState_ = jacobian * lastEndState_  + deltaState
   deltaState.ResizeTo(5);
