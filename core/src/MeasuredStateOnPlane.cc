@@ -23,10 +23,6 @@
 #include "Tools.h"
 #include "IO.h"
 
-#include <cassert>
-
-#include "TDecompChol.h"
-
 namespace genfit {
 
 void MeasuredStateOnPlane::Print(Option_t*) const {
@@ -140,57 +136,20 @@ MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, 
   // This is an application of the technique of Golub, G.,
   // Num. Math. 7, 206 (1965) to the least-squares problem underlying
   // averaging.
-  TDecompChol d1(forwardState.getCov());
-  bool success = d1.Decompose();
-  TDecompChol d2(backwardState.getCov());
-  success &= d2.Decompose();
-
-  if (!success) {
+  //
+  // tools::averageState() carries this out, returning the averaged state and
+  // the lower-triangular factor L of the averaged covariance.
+  TVectorD avgState;
+  TMatrixD avgCovFactor;  // lower-triangular L with avgCov = L^T L
+  if (!tools::averageState(forwardState.getState(), forwardState.getCov(),
+                           backwardState.getState(), backwardState.getCov(),
+                           avgState, avgCovFactor)) {
     Exception e("KalmanFitterInfo::calcAverageState: ill-conditioned covariance matrix.", __LINE__,__FILE__);
     throw e;
   }
 
-  int nRows = d1.GetU().GetNrows();
-  assert(nRows == d2.GetU().GetNrows());
-  TMatrixD S1inv, S2inv;
-  tools::transposedInvert(d1.GetU(), S1inv);
-  tools::transposedInvert(d2.GetU(), S2inv);
-
-  TMatrixD A(2*nRows, nRows);
-  TVectorD b(2 * nRows);
-  double *const bk = b.GetMatrixArray();
-  double *const Ak = A.GetMatrixArray();
-  const double* S1invk = S1inv.GetMatrixArray();
-  const double* S2invk = S2inv.GetMatrixArray();
-  // S1inv and S2inv are lower triangular.
-  for (int i = 0; i < nRows; ++i) {
-    double sum1 = 0;
-    double sum2 = 0;
-    for (int j = 0; j <= i; ++j) {
-      Ak[i*nRows + j] = S1invk[i*nRows + j];
-      Ak[(i + nRows)*nRows + j] = S2invk[i*nRows + j];
-      sum1 += S1invk[i*nRows + j]*forwardState.getState().GetMatrixArray()[j];
-      sum2 += S2invk[i*nRows + j]*backwardState.getState().GetMatrixArray()[j];
-    }
-    bk[i] = sum1;
-    bk[i + nRows] = sum2;
-  }
-
-  tools::QR(A, b);
-  A.ResizeTo(nRows, nRows);
-
-  TMatrixD inv;
-  tools::transposedInvert(A, inv);
-  b.ResizeTo(nRows);
-  for (int i = 0; i < nRows; ++i) {
-    double sum = 0;
-    for (int j = i; j < nRows; ++j) {
-      sum += inv.GetMatrixArray()[j*nRows+i] * b[j];
-    }
-    b.GetMatrixArray()[i] = sum;
-  }
-  return MeasuredStateOnPlane(b,
-			      TMatrixDSym(TMatrixDSym::kAtA, inv),
+  return MeasuredStateOnPlane(avgState,
+			      TMatrixDSym(TMatrixDSym::kAtA, avgCovFactor),
 			      forwardState.getPlane(),
 			      forwardState.getRep(),
 			      forwardState.getAuxInfo());

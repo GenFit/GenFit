@@ -53,6 +53,48 @@ bool transposedForwardSubstitution(const TMatrixD& R, TMatrixD& b, int nCol);
 /** @brief Inverts the transpose of the upper right matrix R into inv.  */
 bool transposedInvert(const TMatrixD& R, TMatrixD& inv);
 
+/** @brief Calculate the similarity transform b * sym * b^T.
+ *
+ *  Same result as TMatrixDSym::Similarity(const TMatrixD&): the two matrix
+ *  products are accumulated in the order ROOT uses, so the result is bit for
+ *  bit the same, but without the temporaries and generic loops of the ROOT
+ *  implementation.
+ *
+ *  @param b    the transformation matrix, n x m
+ *  @param sym  the symmetric matrix to be transformed, m x m
+ *  @param out  the result, resized to n x n.  Must not alias @p sym.
+ */
+void similarity(const TMatrixD& b, const TMatrixDSym& sym, TMatrixDSym& out);
+
+/** @brief Same, replacing its argument: sym = b * sym * b^T. */
+void similarity(const TMatrixD& b, TMatrixDSym& sym);
+
+/** @brief Calculate the similarity transform v^T * sym * v.
+ *
+ *  Same result as TMatrixDSym::Similarity(const TVectorD&), bit for bit.
+ */
+double similarity(const TVectorD& v, const TMatrixDSym& sym);
+
+/** @brief Inverse-variance weighted average of two Gaussian estimates.
+ *
+ *  Given states @p state1, @p state2 with covariances @p cov1, @p cov2 this
+ *  computes the combined estimate
+ *      avgCov   = (cov1^-1 + cov2^-1)^-1
+ *      avgState = avgCov (cov1^-1 state1 + cov2^-1 state2)
+ *  using the numerically-stable square-root (QR) formulation, i.e. without
+ *  ever forming cov1^-1 or cov2^-1 explicitly.
+ *
+ *  @p avgState receives the averaged state.  @p avgCovFactor receives the
+ *  lower-triangular factor L of the averaged covariance, so that
+ *      avgCov = L^T L = TMatrixDSym(TMatrixDSym::kAtA, avgCovFactor).
+ *
+ *  Returns false (leaving the outputs unspecified) if either covariance is
+ *  not positive definite.
+ */
+bool averageState(const TVectorD& state1, const TMatrixDSym& cov1,
+                  const TVectorD& state2, const TMatrixDSym& cov2,
+                  TVectorD& avgState, TMatrixD& avgCovFactor);
+
 /** @brief Replaces A with an upper right matrix connected to A by
  *  an orthongonal transformation.  I.e., it computes R from a QR
  *  decomposition of A = QR, replacing A.
