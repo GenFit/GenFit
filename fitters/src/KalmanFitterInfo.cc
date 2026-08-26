@@ -353,7 +353,7 @@ double KalmanFitterInfo::getSmoothedChi2(unsigned int iMeasurement) const {
 
   TMatrixDSym Rinv;
   tools::invertMatrix(res.getCov(), Rinv);
-  return Rinv.Similarity(res.getState());
+  return tools::similarity(res.getState(), Rinv);
 }
 
 

@@ -24,6 +24,8 @@
 #include <typeinfo>
 #include <cassert>
 #include <cstring>
+#include <algorithm>
+#include <vector>
 
 #include <TDecompChol.h>
 #include <TMatrixDSymEigen.h>
@@ -34,7 +36,153 @@
 #include "Exception.h"
 
 
+namespace {
+
+  /** Largest dimension for which a similarity result is assembled on the stack. */
+  const int c_maxSimilarityDim = 7;
+
+  /** Similarity transform out = b * sym * b^T for dimensions known at compile
+   * time, with b of size N x M and sym of size M x M.
+   *
+   * The two matrix products are accumulated in the order TMatrixDSym::Similarity()
+   * uses, and as it does only the upper triangle of the result is computed and
+   * then mirrored, so the result is bit for bit the one ROOT produces.
+   */
+  template<int N, int M>
+  void similarityFixed(const double* b, const double* sym, double* out)
+  {
+    double ba[N * M];
+    for (int i = 0; i < N; ++i) {
+      for (int j = 0; j < M; ++j) {
+        double element = 0;
+        for (int k = 0; k < M; ++k) element += b[i * M + k] * sym[k * M + j];
+        ba[i * M + j] = element;
+      }
+    }
+    for (int i = 0; i < N; ++i) {
+      for (int j = i; j < N; ++j) {
+        double element = 0;
+        for (int k = 0; k < M; ++k) element += ba[i * M + k] * b[j * M + k];
+        out[i * N + j] = element;
+        out[j * N + i] = element;
+      }
+    }
+  }
+
+  /** Same, for dimensions only known at run time. */
+  void similarityDynamic(const double* b, int nRows, int nCols, const double* sym, double* out)
+  {
+    std::vector<double> ba(nRows * nCols);
+    for (int i = 0; i < nRows; ++i) {
+      for (int j = 0; j < nCols; ++j) {
+        double element = 0;
+        for (int k = 0; k < nCols; ++k) element += b[i * nCols + k] * sym[k * nCols + j];
+        ba[i * nCols + j] = element;
+      }
+    }
+    for (int i = 0; i < nRows; ++i) {
+      for (int j = i; j < nRows; ++j) {
+        double element = 0;
+        for (int k = 0; k < nCols; ++k) element += ba[i * nCols + k] * b[j * nCols + k];
+        out[i * nRows + j] = element;
+        out[j * nRows + i] = element;
+      }
+    }
+  }
+
+  /** Pick the implementation matching the given dimensions.  The shapes that
+   * occur in the Kalman fitters and the track representations are worth
+   * unrolling; everything else falls back to the run-time loops.
+   */
+  void similarityInto(const double* b, int nRows, int nCols, const double* sym, double* out)
+  {
+    if (nRows == 5 && nCols == 5) similarityFixed<5, 5>(b, sym, out);
+    else if (nRows == 7 && nCols == 7) similarityFixed<7, 7>(b, sym, out);
+    else if (nRows == 5 && nCols == 1) similarityFixed<5, 1>(b, sym, out);
+    else if (nRows == 5 && nCols == 2) similarityFixed<5, 2>(b, sym, out);
+    else similarityDynamic(b, nRows, nCols, sym, out);
+  }
+
+} // anonymous namespace
+
 namespace genfit {
+
+void tools::similarity(const TMatrixD& b, const TMatrixDSym& sym, TMatrixDSym& out)
+{
+  const int nRows = b.GetNrows();
+  const int nCols = b.GetNcols();
+
+  if (nCols != sym.GetNrows()) {
+    Exception e("Tools::similarity() - matrix dimensions do not match", __LINE__, __FILE__);
+    e.setFatal();
+    throw e;
+  }
+
+  out.ResizeTo(nRows, nRows);
+  similarityInto(b.GetMatrixArray(), nRows, nCols, sym.GetMatrixArray(), out.GetMatrixArray());
+}
+
+
+void tools::similarity(const TMatrixD& b, TMatrixDSym& sym)
+{
+  const int nRows = b.GetNrows();
+  const int nCols = b.GetNcols();
+
+  if (nCols != sym.GetNrows()) {
+    Exception e("Tools::similarity() - matrix dimensions do not match", __LINE__, __FILE__);
+    e.setFatal();
+    throw e;
+  }
+
+  // The result is n x n while sym is m x m, so it is assembled elsewhere before
+  // sym can be overwritten.
+  if (nRows <= c_maxSimilarityDim) {
+    double result[c_maxSimilarityDim * c_maxSimilarityDim];
+    similarityInto(b.GetMatrixArray(), nRows, nCols, sym.GetMatrixArray(), result);
+    sym.ResizeTo(nRows, nRows);
+    std::copy(result, result + nRows * nRows, sym.GetMatrixArray());
+  } else {
+    TMatrixDSym result;
+    tools::similarity(b, sym, result);
+    sym.ResizeTo(result);
+    sym = result;
+  }
+}
+
+
+double tools::similarity(const TVectorD& v, const TMatrixDSym& sym)
+{
+  const int n = v.GetNrows();
+
+  if (n != sym.GetNrows()) {
+    Exception e("Tools::similarity() - vector and matrix dimensions do not match", __LINE__, __FILE__);
+    e.setFatal();
+    throw e;
+  }
+
+  const double* const vArray = v.GetMatrixArray();
+  const double* const symArray = sym.GetMatrixArray();
+
+  // Order of operations as in TMatrixDSym::Similarity(const TVectorD&): first
+  // sym * v, then the scalar product with v.
+  std::vector<double> heapWork;
+  double stackWork[c_maxSimilarityDim];
+  double* work = stackWork;
+  if (n > c_maxSimilarityDim) {
+    heapWork.resize(n);
+    work = heapWork.data();
+  }
+  for (int i = 0; i < n; ++i) {
+    double element = 0;
+    for (int k = 0; k < n; ++k) element += symArray[i * n + k] * vArray[k];
+    work[i] = element;
+  }
+
+  double sum = 0;
+  for (int i = 0; i < n; ++i) sum += work[i] * vArray[i];
+  return sum;
+}
+
 
 void tools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* determinant){
   inv.ResizeTo(mat);

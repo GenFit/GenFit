@@ -305,7 +305,7 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
         else if (hitDim > 2)
           twoPiN = powN(twoPiN, hitDim);
 
-        double chi2 = Vinv.Similarity(resid);
+        double chi2 = tools::similarity(resid, Vinv);
         if (debugLvl_ > 1) {
           debugOut<<"chi2 = " << chi2 << "\n";
         }

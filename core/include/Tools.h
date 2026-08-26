@@ -54,6 +54,28 @@ bool transposedForwardSubstitution(const TMatrixD& R, TMatrixD& b, int nCol);
 /** @brief Inverts the transpose of the upper right matrix R into inv.  */
 bool transposedInvert(const TMatrixD& R, TMatrixD& inv);
 
+/** @brief Calculate the similarity transform b * sym * b^T.
+ *
+ *  Same result as TMatrixDSym::Similarity(const TMatrixD&): the two matrix
+ *  products are accumulated in the order ROOT uses, so the result is bit for
+ *  bit the same, but without the temporaries and generic loops of the ROOT
+ *  implementation.
+ *
+ *  @param b    the transformation matrix, n x m
+ *  @param sym  the symmetric matrix to be transformed, m x m
+ *  @param out  the result, resized to n x n.  Must not alias @p sym.
+ */
+void similarity(const TMatrixD& b, const TMatrixDSym& sym, TMatrixDSym& out);
+
+/** @brief Same, replacing its argument: sym = b * sym * b^T. */
+void similarity(const TMatrixD& b, TMatrixDSym& sym);
+
+/** @brief Calculate the similarity transform v^T * sym * v.
+ *
+ *  Same result as TMatrixDSym::Similarity(const TVectorD&), bit for bit.
+ */
+double similarity(const TVectorD& v, const TMatrixDSym& sym);
+
 /** @brief Inverse-variance weighted average of two Gaussian estimates.
  *
  *  Given states @p state1, @p state2 with covariances @p cov1, @p cov2 this

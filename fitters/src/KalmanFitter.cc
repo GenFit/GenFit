@@ -521,7 +521,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
         }
 
         stateVector += update;
-        covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
+        tools::similarity(CHt, covSumInv); // with (C H^T)^T = H C^T = H C  (C is symmetric)
         cov -= covSumInv;
       }
 
@@ -549,7 +549,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
 
       tools::invertMatrix(HCHt);
 
-      chi2inc += HCHt.Similarity(resNew);
+      chi2inc += tools::similarity(resNew, HCHt);
 
       if (!canIgnoreWeights()) {
         ndfInc += weight * measurement.GetNrows();
@@ -656,7 +656,7 @@ KalmanFitter::processTrackPoint(TrackPoint* tp,
 
       tools::invertMatrix(HCHt);
 
-      chi2inc += HCHt.Similarity(res);
+      chi2inc += tools::similarity(res, HCHt);
 
       if (!canIgnoreWeights()) {
         ndfInc += weight * measurement.GetNrows();
