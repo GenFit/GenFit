@@ -329,7 +329,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool /*resor
   // measurement won't be considered, but scattering yes
   bool skipMeasurement = false;
   // Chi2 of Reference Track
-  double trkChi2 = 0.;
+  [[maybe_unused]] double trkChi2 = 0.; // variable is used, but compiler doesn't understand
   // This flag enables/disables fitting of q/p parameter in GBL
   // It is switched off automatically if no B-field at (0,0,0) is detected.
   bool fitQoverP = true;
