@@ -158,7 +158,7 @@ void GblFitter::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool res
   // ------------------------------------------------------------------- 
   for (unsigned int iIter = 0; iIter < m_externalIterations; iIter++) {
     // GBL refit (1st of reference, then refit of GBL trajectory itself)
-    int nscat = 0, nmeas = 0, ndummy = 0;
+    [[maybe_unused]] int nscat = 0, nmeas = 0, ndummy = 0; // variables are all used, but compiler doesn't understand
     std::vector<gbl::GblPoint> points = collectGblPoints(trk, rep);
     for(unsigned int ip = 0;ip<points.size(); ip++) {
       GblPoint & p = points.at(ip);
@@ -292,7 +292,7 @@ void GblFitter::updateGblInfo(gbl::GblTrajectory& traj, genfit::Track* trk, cons
     return;
   
   // Update points in track and fitterInfo(rep)
-  int igblfi = -1;
+  [[maybe_unused]] int igblfi = -1; // variable is used, but compiler doesn't understand
   for (unsigned int ip = 0; ip < trk->getNumPoints(); ip++) {      
     GblFitterInfo * gblfi = dynamic_cast<GblFitterInfo*>(trk->getPoint(ip)->getFitterInfo(rep));
     if (!gblfi)
