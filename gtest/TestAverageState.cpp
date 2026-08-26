@@ -10,6 +10,7 @@
 
 #include <Tools.h>
 
+#include <RVersion.h>
 #include <TDecompChol.h>
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
@@ -101,8 +102,19 @@ void makeSymPosDef(TMatrixDSym& C, TVectorD& x, int n, std::mt19937_64& rng)
 // TestTools.cpp pins separately, so this isolates the inline factorisation.
 // It follows TDecompChol's operation order, so the averaged state and the
 // covariance factor have to come out exactly equal, not merely close.
+//
+// Only from ROOT 6.32 on: up to 6.30 TDecompChol::Decompose() divided the
+// off-diagonal entries of a row by the diagonal, where it now multiplies them
+// by the precomputed reciprocal that choleskyUpper() uses.  The two round a
+// handful of entries one bit apart, which leaves nothing exact to compare
+// against, so on those releases the test is skipped rather than loosened.
 TEST(AverageState, AgreesWithRootTDecompChol)
 {
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 32, 0)
+  GTEST_SKIP() << "TDecompChol::Decompose() divides instead of multiplying by "
+                  "the reciprocal before ROOT 6.32, so it rounds differently";
+#endif
+
   std::mt19937_64 rng(20240629);
 
   for (int n : {1, 2, 3, 4, 5, 6, 7, 10, 15, 25}) {
