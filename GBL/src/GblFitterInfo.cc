@@ -389,8 +389,8 @@ namespace genfit {
     rep_->extrapolateToPlane(oldBwdState, sharedPlane_);
     fwdPrediction_ = oldFwdState.getState();
     bwdPrediction_ = oldBwdState.getState();
-    fittedStateBwd_.reset(new MeasuredStateOnPlane(fwdPrediction_, fwdCov_, sharedPlane_, rep_, getFittedState(true).getAuxInfo()));
-    fittedStateFwd_.reset(new MeasuredStateOnPlane(bwdPrediction_, bwdCov_, sharedPlane_, rep_, getFittedState(true).getAuxInfo()));
+    fittedStateFwd_.reset(new MeasuredStateOnPlane(fwdPrediction_, fwdCov_, sharedPlane_, rep_, getFittedState(true).getAuxInfo()));
+    fittedStateBwd_.reset(new MeasuredStateOnPlane(bwdPrediction_, bwdCov_, sharedPlane_, rep_, getFittedState(true).getAuxInfo()));
     //
   }
 
