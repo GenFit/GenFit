@@ -20,6 +20,7 @@
 #include "MplTrackRep.h"
 
 #include <FieldManager.h>
+#include <PDGGuard.h>
 #include <TDatabasePDG.h>
 #include <MeasurementOnPlane.h>
 #include <Exception.h>
@@ -30,10 +31,18 @@
 
 using namespace genfit;
 
+namespace {
+//! Guarded TDatabasePDG lookup (see PDGGuard.h) for const-member initialization.
+double pdgMass(int pdgCode) {
+  std::lock_guard<std::mutex> lock(genfit::pdgSingletonMutex());
+  return TDatabasePDG::Instance()->GetParticle(pdgCode)->Mass();
+}
+}
+
 MplTrackRep::MplTrackRep(int pdgCode, float magCharge, char propDir) :
   RKTrackRep(pdgCode, propDir),
   m_magCharge(magCharge),
-  m_mass(TDatabasePDG::Instance()->GetParticle(pdgCode)->Mass()) // We could ofc use AbsTrackRep::getMass(state) but we have no state here to call on
+  m_mass(pdgMass(pdgCode)) // We could ofc use AbsTrackRep::getMass(state) but we have no state here to call on
 {
 }
 

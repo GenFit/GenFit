@@ -27,6 +27,7 @@
 #include "AbsMaterialInterface.h"
 
 #include <iostream>
+#include <mutex>
 #include <vector>
 
 #include <TVector3.h>
@@ -51,9 +52,22 @@ class MaterialEffects {
  private:
 
   MaterialEffects();
+  //! Copies the configuration (not the per-fit runtime state) of another instance.
+  MaterialEffects(const MaterialEffects& cfg);
   virtual ~MaterialEffects();
 
-  static MaterialEffects* instance_;
+  // One instance per thread: the per-fit runtime state (particle parameters, dEdx
+  // caches, the no-effects flag, ...) is never shared between threads. The
+  // configuration set through the setters below is kept in a template which every
+  // instance created later copies, so the public API (getInstance()) is unchanged.
+  static thread_local MaterialEffects* instance_;
+  static MaterialEffects* configTemplate_;
+  static std::mutex configMutex_;
+
+  //! Copy the configuration fields to the template (thread-safe).
+  void recordConfig();
+  //! Apply a configuration template to this (freshly created) instance.
+  void applyConfig(const MaterialEffects& cfg);
 
 
 public:
@@ -65,15 +79,17 @@ public:
   void init(AbsMaterialInterface* matIfc);
   bool isInitialized() { return materialInterface_ != nullptr; }
 
+  //! Per-fit flag (NOT propagated to other threads): turn material effects off for
+  //! the fits running on the calling thread only.
   void setNoEffects(bool opt = true) {noEffects_ = opt;}
 
-  void setEnergyLossBetheBloch(bool opt = true) {energyLossBetheBloch_ = opt; noEffects_ = false;}
-  void setNoiseBetheBloch(bool opt = true) {noiseBetheBloch_ = opt; noEffects_ = false;}
-  void setNoiseCoulomb(bool opt = true) {noiseCoulomb_ = opt; noEffects_ = false;}
-  void setEnergyLossBrems(bool opt = true) {energyLossBrems_ = opt; noEffects_ = false;}
-  void setNoiseBrems(bool opt = true) {noiseBrems_ = opt; noEffects_ = false;}
-  void ignoreBoundariesBetweenEqualMaterials(bool opt = true) {ignoreBoundariesBetweenEqualMaterials_ = opt;}
-  void setMagCharge(double magCharge) {mag_charge_ = magCharge;} 
+  void setEnergyLossBetheBloch(bool opt = true) {energyLossBetheBloch_ = opt; noEffects_ = false; recordConfig();}
+  void setNoiseBetheBloch(bool opt = true) {noiseBetheBloch_ = opt; noEffects_ = false; recordConfig();}
+  void setNoiseCoulomb(bool opt = true) {noiseCoulomb_ = opt; noEffects_ = false; recordConfig();}
+  void setEnergyLossBrems(bool opt = true) {energyLossBrems_ = opt; noEffects_ = false; recordConfig();}
+  void setNoiseBrems(bool opt = true) {noiseBrems_ = opt; noEffects_ = false; recordConfig();}
+  void ignoreBoundariesBetweenEqualMaterials(bool opt = true) {ignoreBoundariesBetweenEqualMaterials_ = opt; recordConfig();}
+  void setMagCharge(double magCharge) {mag_charge_ = magCharge; recordConfig();}
 
   /** @brief Select the multiple scattering model that will be used during track fit.
    *
@@ -198,6 +214,9 @@ public:
   int mscModelCode_; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
 
   AbsMaterialInterface* materialInterface_;
+  //! Only the instance on which init() was called owns the interface; per-thread
+  //! copies share it and must not delete it.
+  bool ownsMaterialInterface_;
 
   unsigned int debugLvl_;
 

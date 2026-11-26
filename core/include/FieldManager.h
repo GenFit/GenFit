@@ -25,6 +25,7 @@
 #include "AbsBField.h"
 #include "IO.h"
 
+#include <mutex>
 #include <stdexcept>
 #include <string>
 
@@ -75,13 +76,17 @@ class FieldManager {
   //! set the magnetic field here. Magnetic field classes must be derived from AbsBField.
   void init(AbsBField* b) {
     field_=b;
+    recordConfig();
   }
 
   void destruct() {
-    if (instance_ != nullptr) {
-      delete instance_;
-      instance_ = nullptr;
+    {
+      std::lock_guard<std::mutex> lock(configMutex_);
+      delete configTemplate_;
+      configTemplate_ = nullptr;
     }
+    delete instance_;
+    instance_ = nullptr;
   }
 
   bool isInitialized() { return field_ != nullptr; }
@@ -113,10 +118,14 @@ class FieldManager {
   }
 #endif
 
-  //! Get singleton instance.
+  //! Get the calling thread's instance. One instance per thread: the field pointer and
+  //! the cache settings are configuration, shared through a template; the lookup cache
+  //! itself is per instance (per thread) and therefore never shared.
   static FieldManager* getInstance(){
     if(instance_ == nullptr) {
-      instance_ = new FieldManager();
+      std::lock_guard<std::mutex> lock(configMutex_);
+      if (configTemplate_ == nullptr) configTemplate_ = new FieldManager();
+      instance_ = new FieldManager(*configTemplate_);
     }
     return instance_;
   }
@@ -125,18 +134,29 @@ class FieldManager {
  private:
 
   FieldManager() {}
+  //! Copies the configuration and allocates a fresh lookup cache.
+  FieldManager(const FieldManager& cfg);
 #ifdef CACHE
   ~FieldManager() { delete cache_; }
 #else
   ~FieldManager() { }
 #endif
-  static FieldManager* instance_;
-  static AbsBField* field_;
+
+  //! Copy the configuration fields to the template (thread-safe).
+  void recordConfig();
+
+  static thread_local FieldManager* instance_;
+  static FieldManager* configTemplate_;
+  static std::mutex configMutex_;
+  AbsBField* field_ = nullptr;
 
 #ifdef CACHE
-  static bool useCache_;
-  static unsigned int n_buckets_;
-  static fieldCache* cache_;
+  bool useCache_ = false;
+  unsigned int n_buckets_ = 8;
+  fieldCache* cache_ = nullptr;
+  // cache sweep indices (previously function-local statics, i.e. shared state)
+  int last_read_i_ = 0;
+  int last_written_i_ = 0;
 #endif
 
 };
