@@ -67,8 +67,9 @@ Matrix5d gblSimpleJacobian(double ds, double cosl, double bfac) {
 
 ///  unit normal distribution, Box-Muller method, polar form
 double unrm() {
-	static double unrm2 = 0.0;
-	static bool cached = false;
+	// Per-thread cache: the paired value must not be shared between threads.
+	thread_local double unrm2 = 0.0;
+	thread_local bool cached = false;
 	if (!cached) {
 		double x, y, r;
 		do {

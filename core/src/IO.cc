@@ -23,6 +23,6 @@
 
 #include <iostream>
 
-std::ostream genfit::debugOut(std::cout.rdbuf());
-std::ostream genfit::errorOut(std::cerr.rdbuf());
-std::ostream genfit::printOut(std::cout.rdbuf());
+genfit::SyncStream genfit::debugOut(std::cout.rdbuf());
+genfit::SyncStream genfit::errorOut(std::cerr.rdbuf());
+genfit::SyncStream genfit::printOut(std::cout.rdbuf());

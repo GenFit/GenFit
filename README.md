@@ -48,3 +48,12 @@ GenFit is free software: you can redistribute it and/or modify it under the term
 A copy of the license is distributed with GenFit in the [`LICENSE.md`](https://github.com/GenFit/GenFit/blob/main/LICENSE.md) file.
 
 GenFit repository: https://github.com/GenFit/GenFit
+
+Thread safety
+-------------
+
+GenFit supports track-level multithreading: several threads may run fits concurrently, provided each thread works on its own `Track` objects (including their track representations, measurements and fitters).
+
+- All shared state is synchronized or immutable: `MaterialEffects` and `FieldManager` keep one instance per thread (configuration is shared through a template), `TDatabasePDG` lookups are guarded and cached per thread, and the diagnostic streams (`debugOut`, `errorOut`, `printOut`) serialize their output. The material interface is shared between the per-thread `MaterialEffects` instances and released when the last one is destroyed. `TGeoMaterialInterface` serializes its usage sequences: TGeo navigation is not safe for concurrent use (reproducible with a pure-ROOT stress test on 6.40.04, even with `TGeoManager::SetMaxThreads`), so material evaluation is serialized per transport step while the rest of the fit scales.
+- Configure (`FieldManager::init()`, `MaterialEffects::init()` and the configuration setters) and tear down (`destruct()`) at quiescent points, not concurrently with running fits. A thread's instance keeps the configuration it was created with.
+- Not thread-safe by design: sharing a `Track`, `AbsTrackRep` or fitter between threads at the same time (a fit is a sequence of state mutations on those objects); the `EventDisplay`/EVE GUI (single GUI thread); user implementations of `AbsBField` and `AbsMaterialInterface` must be safe for concurrent read-only calls.

@@ -26,6 +26,8 @@
 #include "RKTrackRep.h"
 #include "Material.h"
 
+#include <mutex>
+
 #include <TObject.h>
 #include <TVector3.h>
 
@@ -63,6 +65,15 @@ class AbsMaterialInterface : public TObject {
                                   const M1x7& state7,
                                   double sMax,
                                   bool varField = true) = 0;
+
+  /** @brief Mutex serializing the usage sequences of this interface, or nullptr if
+   * the implementation supports concurrent usage.
+   *
+   * A usage sequence is an initTrack() call followed by the getMaterialParameters()
+   * and findNextBoundary() calls made from the same transport step; the navigator
+   * state persists between them. Callers hold the mutex for the whole sequence.
+   */
+  virtual std::mutex* usageMutex() { return nullptr; }
 
   virtual void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
 

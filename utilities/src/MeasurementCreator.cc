@@ -52,7 +52,8 @@ MeasurementCreator::MeasurementCreator() :
     skewAngle_(5),
     nSuperLayer_(5),
     measurementCounter_(0),
-    debug_(false)
+    debug_(false),
+    rand_(gRandom->GetSeed())
 {
   ;
 }
@@ -95,14 +96,14 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
     // left/right
     lr = 1;
     wirePerp = dir.Cross(currentWireDir);
-    if (gRandom->Uniform(-1,1) >= 0) {
+    if (rand_.Uniform(-1,1) >= 0) {
       wirePerp *= -1.;
       lr = -1;
     }
-    wirePerp.SetMag(gRandom->Uniform(minDrift_, maxDrift_));
+    wirePerp.SetMag(rand_.Uniform(minDrift_, maxDrift_));
   }
 
-  if (outlierProb_ > gRandom->Uniform(1.)) {
+  if (outlierProb_ > rand_.Uniform(1.)) {
     outlier = true;
     if(debug_)  std::cerr << "create outlier" << std::endl;
   }
@@ -116,12 +117,12 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
 
       TVectorD hitCoords(2);
       if (outlier) {
-        hitCoords(0) = gRandom->Uniform(-outlierRange_, outlierRange_);
-        hitCoords(1) = gRandom->Uniform(-outlierRange_, outlierRange_);
+        hitCoords(0) = rand_.Uniform(-outlierRange_, outlierRange_);
+        hitCoords(1) = rand_.Uniform(-outlierRange_, outlierRange_);
       }
       else {
-        hitCoords(0) = gRandom->Gaus(0,resolution_);
-        hitCoords(1) = gRandom->Gaus(0,resolution_);
+        hitCoords(0) = rand_.Gaus(0,resolution_);
+        hitCoords(1) = rand_.Gaus(0,resolution_);
       }
 
       TMatrixDSym hitCov(2);
@@ -139,14 +140,14 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
 
       TVectorD hitCoords(3);
       if (outlier) {
-        hitCoords(0) = gRandom->Uniform(point.X()-outlierRange_, point.X()+outlierRange_);
-        hitCoords(1) = gRandom->Uniform(point.Y()-outlierRange_, point.Y()+outlierRange_);
-        hitCoords(2) = gRandom->Uniform(point.Z()-outlierRange_, point.Z()+outlierRange_);
+        hitCoords(0) = rand_.Uniform(point.X()-outlierRange_, point.X()+outlierRange_);
+        hitCoords(1) = rand_.Uniform(point.Y()-outlierRange_, point.Y()+outlierRange_);
+        hitCoords(2) = rand_.Uniform(point.Z()-outlierRange_, point.Z()+outlierRange_);
       }
       else {
-        hitCoords(0) = gRandom->Gaus(point.X(),resolution_);
-        hitCoords(1) = gRandom->Gaus(point.Y(),resolution_);
-        hitCoords(2) = gRandom->Gaus(point.Z(),resolution_);
+        hitCoords(0) = rand_.Gaus(point.X(),resolution_);
+        hitCoords(1) = rand_.Gaus(point.Y(),resolution_);
+        hitCoords(2) = rand_.Gaus(point.Z(),resolution_);
       }
 
       TMatrixDSym hitCov(3);
@@ -164,9 +165,9 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
 
       TVectorD hitCoords(3);
       if (outlier) {
-        hitCoords(0) = gRandom->Uniform(point.X()-outlierRange_, point.X()+outlierRange_);
-        hitCoords(1) = gRandom->Uniform(point.Y()-outlierRange_, point.Y()+outlierRange_);
-        hitCoords(2) = gRandom->Uniform(point.Z()-outlierRange_, point.Z()+outlierRange_);
+        hitCoords(0) = rand_.Uniform(point.X()-outlierRange_, point.X()+outlierRange_);
+        hitCoords(1) = rand_.Uniform(point.Y()-outlierRange_, point.Y()+outlierRange_);
+        hitCoords(2) = rand_.Uniform(point.Z()-outlierRange_, point.Z()+outlierRange_);
       }
       else {
         hitCoords(0) = point.X();
@@ -198,9 +199,9 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
       smearVec(2) = resolutionWire_;
       smearVec *= rot;
       if (!outlier) {
-        hitCoords(0) += gRandom->Gaus(0, smearVec(0));
-        hitCoords(1) += gRandom->Gaus(0, smearVec(1));
-        hitCoords(2) += gRandom->Gaus(0, smearVec(2));
+        hitCoords(0) += rand_.Gaus(0, smearVec(0));
+        hitCoords(1) += rand_.Gaus(0, smearVec(1));
+        hitCoords(2) += rand_.Gaus(0, smearVec(2));
       }
 
 
@@ -223,9 +224,9 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
 
       TVectorD hitCoords(1);
       if (outlier)
-        hitCoords(0) = gRandom->Uniform(-outlierRange_, outlierRange_);
+        hitCoords(0) = rand_.Uniform(-outlierRange_, outlierRange_);
       else
-        hitCoords(0) = gRandom->Gaus(0,resolution_);
+        hitCoords(0) = rand_.Gaus(0,resolution_);
 
       TMatrixDSym hitCov(1);
       hitCov(0,0) = resolution_*resolution_;
@@ -239,9 +240,9 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
 
       if (type == EMeasurementType::StripUV) {
         if (outlier)
-          hitCoords(0) = gRandom->Uniform(-outlierRange_, outlierRange_);
+          hitCoords(0) = rand_.Uniform(-outlierRange_, outlierRange_);
         else
-          hitCoords(0) = gRandom->Gaus(0,resolution_);
+          hitCoords(0) = rand_.Gaus(0,resolution_);
 
         hitCov(0,0) = resolution_*resolution_;
 
@@ -257,7 +258,7 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
       if (debug_) std::cerr << "create WireHit" << std::endl;
 
       if (outlier) {
-        wirePerp.SetMag(gRandom->Uniform(outlierRange_));
+        wirePerp.SetMag(rand_.Uniform(outlierRange_));
       }
 
       TVectorD hitCoords(7);
@@ -270,9 +271,9 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
       hitCoords(5) = (point-wirePerp+currentWireDir).Z();
 
       if (outlier)
-        hitCoords(6) = gRandom->Uniform(outlierRange_);
+        hitCoords(6) = rand_.Uniform(outlierRange_);
       else
-        hitCoords(6) = gRandom->Gaus(wirePerp.Mag(), resolution_);
+        hitCoords(6) = rand_.Gaus(wirePerp.Mag(), resolution_);
 
       TMatrixDSym hitCov(7);
       hitCov(6,6) = resolution_*resolution_;
@@ -291,7 +292,7 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
       if (debug_) std::cerr << "create WirePointHit" << std::endl;
 
       if (outlier) {
-        wirePerp.SetMag(gRandom->Uniform(outlierRange_));
+        wirePerp.SetMag(rand_.Uniform(outlierRange_));
       }
 
       TVectorD hitCoords(8);
@@ -304,12 +305,12 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(EMeasurementType
       hitCoords(5) = (point-wirePerp+currentWireDir).Z();
 
       if (outlier) {
-        hitCoords(6) = gRandom->Uniform(outlierRange_);
-        hitCoords(7) = gRandom->Uniform(currentWireDir.Mag()-outlierRange_, currentWireDir.Mag()+outlierRange_);
+        hitCoords(6) = rand_.Uniform(outlierRange_);
+        hitCoords(7) = rand_.Uniform(currentWireDir.Mag()-outlierRange_, currentWireDir.Mag()+outlierRange_);
       }
       else {
-        hitCoords(6) = gRandom->Gaus(wirePerp.Mag(), resolution_);
-        hitCoords(7) = gRandom->Gaus(currentWireDir.Mag(), resolutionWire_);
+        hitCoords(6) = rand_.Gaus(wirePerp.Mag(), resolution_);
+        hitCoords(7) = rand_.Gaus(currentWireDir.Mag(), resolutionWire_);
       }
 
 

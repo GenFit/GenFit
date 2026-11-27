@@ -22,7 +22,7 @@
 
 namespace genfit {
 
-bool Exception::quiet_ = false;
+std::atomic<bool> Exception::quiet_ = false;
 
 Exception::Exception(std::string excString, int line, std::string  file) :
     excString_(excString), line_(line), file_(file), fatal_(false) {

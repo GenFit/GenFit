@@ -1,6 +1,8 @@
 
 #include "EventDisplay.h"
 
+#include <mutex>
+
 #include <assert.h>
 #include <algorithm>
 #include <cmath>
@@ -135,6 +137,10 @@ void EventDisplay::setErrScale(double errScale) { errorScale_ = errScale; }
 double EventDisplay::getErrScale() { return errorScale_; }
 
 EventDisplay* EventDisplay::getInstance() {
+  // EVE itself is single-threaded (use from the GUI thread only), but creation is
+  // serialized so a race cannot produce two instances.
+  static std::mutex mutex;
+  std::lock_guard<std::mutex> lock(mutex);
 
   if(eventDisplay_ == nullptr) {
     eventDisplay_ = new EventDisplay();
