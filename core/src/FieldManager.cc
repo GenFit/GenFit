@@ -23,14 +23,39 @@
 
 namespace genfit {
 
-FieldManager* FieldManager::instance_ = nullptr;
-AbsBField* FieldManager::field_ = nullptr;
+thread_local FieldManager* FieldManager::instance_ = nullptr;
+FieldManager* FieldManager::configTemplate_ = nullptr;
+std::mutex FieldManager::configMutex_;
 
+FieldManager::FieldManager(const FieldManager& cfg) :
+  field_(cfg.field_)
+{
 #ifdef CACHE
-bool FieldManager::useCache_ = false;
-unsigned int FieldManager::n_buckets_ = 8;
-fieldCache* FieldManager::cache_ = nullptr;
+  useCache_ = cfg.useCache_;
+  n_buckets_ = cfg.n_buckets_;
+  cache_ = nullptr;
+  last_read_i_ = 0;
+  last_written_i_ = 0;
+  if (useCache_) {
+    cache_ = new fieldCache[n_buckets_];
+    for (size_t i = 0; i < n_buckets_; ++i) {
+      cache_[i].posX = cache_[i].posY = cache_[i].posZ = 2.4e24 / sqrt(3);
+      cache_[i].Bx = cache_[i].By = cache_[i].Bz = 1e30;
+    }
+  }
 #endif
+}
+
+void FieldManager::recordConfig()
+{
+  std::lock_guard<std::mutex> lock(configMutex_);
+  if (configTemplate_ == nullptr) configTemplate_ = new FieldManager();
+  configTemplate_->field_ = field_;
+#ifdef CACHE
+  configTemplate_->useCache_ = useCache_;
+  configTemplate_->n_buckets_ = n_buckets_;
+#endif
+}
 
 //#define DEBUG
 
@@ -41,9 +66,7 @@ void FieldManager::getFieldVal(const double& posX, const double& posY, const dou
   if (useCache_) {
 
     // cache code copied from http://en.wikibooks.org/wiki/Optimizing_C%2B%2B/General_optimization_techniques/Memoization
-    static int last_read_i = 0;
-    static int last_written_i = 0;
-    int i = last_read_i;
+    int i = last_read_i_;
 
     static const double epsilon = 0.001;
 
@@ -66,19 +89,19 @@ void FieldManager::getFieldVal(const double& posX, const double& posY, const dou
         return;
       }
       i = (i + 1) % n_buckets_;
-    } while (i != last_read_i);
+    } while (i != last_read_i_);
 
-    last_read_i = last_written_i = (last_written_i + 1) % n_buckets_;
+    last_read_i_ = last_written_i_ = (last_written_i_ + 1) % n_buckets_;
 
-    cache_[last_written_i].posX = posX;
-    cache_[last_written_i].posY = posY;
-    cache_[last_written_i].posZ = posZ;
+    cache_[last_written_i_].posX = posX;
+    cache_[last_written_i_].posY = posY;
+    cache_[last_written_i_].posZ = posZ;
 
-    field_->get(posX, posY, posZ, cache_[last_written_i].Bx, cache_[last_written_i].By, cache_[last_written_i].Bz);
+    field_->get(posX, posY, posZ, cache_[last_written_i_].Bx, cache_[last_written_i_].By, cache_[last_written_i_].Bz);
 
-    Bx = cache_[last_written_i].Bx;
-    By = cache_[last_written_i].By;
-    Bz = cache_[last_written_i].Bz;
+    Bx = cache_[last_written_i_].Bx;
+    By = cache_[last_written_i_].By;
+    Bz = cache_[last_written_i_].Bz;
     #ifdef DEBUG
     ++notUsed;
     debugOut<<"did NOT use the cache! \n";
@@ -104,6 +127,7 @@ void FieldManager::useCache(bool opt, unsigned int nBuckets) {
       cache_[i].Bx = cache_[i].By = cache_[i].Bz = 1e30;      
     }      
   }
+  recordConfig();
 }
 #endif
 

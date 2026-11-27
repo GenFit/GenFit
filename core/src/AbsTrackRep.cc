@@ -21,6 +21,7 @@
 #include "StateOnPlane.h"
 #include "AbsMeasurement.h"
 #include "IO.h"
+#include "PDGGuard.h"
 
 #include <TDatabasePDG.h>
 
@@ -91,13 +92,18 @@ void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane& state, TVectorD& sta
 
 
 double AbsTrackRep::getPDGCharge() const {
-  TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(pdgCode_);
+  TParticlePDG* particle = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(pdgSingletonMutex());
+    particle = TDatabasePDG::Instance()->GetParticle(pdgCode_);
+  }
   assert(particle != nullptr);
   return particle->Charge()/(3.);
 }
 
 
 double AbsTrackRep::getMass(const StateOnPlane& /*state*/) const {
+  std::lock_guard<std::mutex> lock(pdgSingletonMutex());
   return TDatabasePDG::Instance()->GetParticle(pdgCode_)->Mass();
 }
 

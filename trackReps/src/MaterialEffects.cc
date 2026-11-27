@@ -29,6 +29,7 @@
 #include <assert.h>
 
 #include <TDatabasePDG.h>
+#include <PDGGuard.h>
 #include "MonopoleConstants.h"
 #include <TMath.h>
 
@@ -38,51 +39,71 @@
 
 namespace genfit {
 
-MaterialEffects* MaterialEffects::instance_ = nullptr;
+thread_local MaterialEffects* MaterialEffects::instance_ = nullptr;
+MaterialEffects* MaterialEffects::configTemplate_ = nullptr;
+std::mutex MaterialEffects::configMutex_;
 
 
-MaterialEffects::MaterialEffects():
-  noEffects_(false),
-  energyLossBetheBloch_(true), noiseBetheBloch_(true),
-  noiseCoulomb_(true),
-  energyLossBrems_(true), noiseBrems_(true),
-  ignoreBoundariesBetweenEqualMaterials_(true),
-  me_(0.510998910E-3),
-  stepSize_(0),
-  dEdx_(0),
-  E_(0),
-  matDensity_(0),
-  matZ_(0),
-  matA_(0),
-  radiationLength_(0),
-  mEE_(0),
-  pdg_(0),
-  charge_(0),
-  mag_charge_(0),
-  mass_(0),
-  mscModelCode_(0),
-  materialInterface_(nullptr),
-  debugLvl_(0)
+MaterialEffects::MaterialEffects()
+{
+}
+
+MaterialEffects::MaterialEffects(const MaterialEffects& cfg):
+  energyLossBetheBloch_(cfg.energyLossBetheBloch_), noiseBetheBloch_(cfg.noiseBetheBloch_),
+  noiseCoulomb_(cfg.noiseCoulomb_),
+  energyLossBrems_(cfg.energyLossBrems_), noiseBrems_(cfg.noiseBrems_),
+  ignoreBoundariesBetweenEqualMaterials_(cfg.ignoreBoundariesBetweenEqualMaterials_),
+  mag_charge_(cfg.mag_charge_),
+  mscModelCode_(cfg.mscModelCode_),
+  materialInterface_(cfg.materialInterface_),
+  debugLvl_(cfg.debugLvl_)
 {
 }
 
 MaterialEffects::~MaterialEffects()
 {
-  if (materialInterface_ != nullptr) delete materialInterface_;
+  if (ownsMaterialInterface_ && materialInterface_ != nullptr) delete materialInterface_;
+}
+
+void MaterialEffects::recordConfig()
+{
+  std::lock_guard<std::mutex> lock(configMutex_);
+  if (configTemplate_ == nullptr) configTemplate_ = new MaterialEffects();
+  configTemplate_->energyLossBetheBloch_ = energyLossBetheBloch_;
+  configTemplate_->noiseBetheBloch_ = noiseBetheBloch_;
+  configTemplate_->noiseCoulomb_ = noiseCoulomb_;
+  configTemplate_->energyLossBrems_ = energyLossBrems_;
+  configTemplate_->noiseBrems_ = noiseBrems_;
+  configTemplate_->ignoreBoundariesBetweenEqualMaterials_ = ignoreBoundariesBetweenEqualMaterials_;
+  configTemplate_->mag_charge_ = mag_charge_;
+  configTemplate_->mscModelCode_ = mscModelCode_;
+  configTemplate_->materialInterface_ = materialInterface_;
+  configTemplate_->debugLvl_ = debugLvl_;
 }
 
 MaterialEffects* MaterialEffects::getInstance()
 {
-  if (instance_ == nullptr) instance_ = new MaterialEffects();
+  if (instance_ == nullptr) {
+    std::lock_guard<std::mutex> lock(configMutex_);
+    if (configTemplate_ == nullptr) configTemplate_ = new MaterialEffects();
+    instance_ = new MaterialEffects(*configTemplate_);
+  }
   return instance_;
 }
 
 void MaterialEffects::destruct()
 {
-  if (instance_ != nullptr) {
-    delete instance_;
-    instance_ = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(configMutex_);
+    if (configTemplate_ != nullptr) {
+      // the template never owns the material interface
+      configTemplate_->materialInterface_ = nullptr;
+      delete configTemplate_;
+      configTemplate_ = nullptr;
+    }
   }
+  delete instance_;
+  instance_ = nullptr;
 }
 
 void MaterialEffects::init(AbsMaterialInterface* matIfc)
@@ -92,6 +113,8 @@ void MaterialEffects::init(AbsMaterialInterface* matIfc)
     std::runtime_error err(msg);
   }
   materialInterface_ = matIfc;
+  ownsMaterialInterface_ = true;
+  recordConfig();
 }
 
 
@@ -109,6 +132,7 @@ void MaterialEffects::setMscModel(const std::string& modelName)
     errorOut << exc.what();
     throw exc;
   }
+  recordConfig();
 }
 
 
@@ -366,7 +390,12 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
 void MaterialEffects::getParticleParameters()
 {
-  TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg_);
+  // TDatabasePDG is a ROOT singleton whose lookup may lazily add entries: guard it.
+  TParticlePDG* part = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(pdgSingletonMutex());
+    part = TDatabasePDG::Instance()->GetParticle(pdg_);
+  }
   charge_ = part->Charge() / 3.;  // We only ever use the square
   mass_ = part->Mass(); // GeV
 }
@@ -825,6 +854,7 @@ void MaterialEffects::setDebugLvl(unsigned int lvl) {
   debugLvl_ = lvl;
   if (materialInterface_ and debugLvl_ > 1)
     materialInterface_->setDebugLvl(debugLvl_-1);
+  recordConfig();
 }
 
 
