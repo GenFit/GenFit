@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROOT_VERSION: [root_v6.26.16.Linux-ubuntu22-x86_64-gcc11.4.tar.gz, root_v6.30.08.Linux-ubuntu22.04-x86_64-gcc11.4.tar.gz, root_v6.34.08.Linux-ubuntu22.04-x86_64-gcc11.4.tar.gz]
+        ROOT_VERSION: [root_v6.26.16.Linux-ubuntu22-x86_64-gcc11.4.tar.gz, root_v6.30.08.Linux-ubuntu22.04-x86_64-gcc11.4.tar.gz, root_v6.34.08.Linux-ubuntu22.04-x86_64-gcc11.4.tar.gz, root_v6.36.14.Linux-ubuntu22.04-x86_64-gcc11.4.tar.gz, root_v6.40.04.Linux-ubuntu22.04-x86_64-gcc11.4.tar.gz]
 
     steps:
     - uses: actions/checkout@v3
