@@ -44,54 +44,18 @@ MaterialEffects* MaterialEffects::configTemplate_ = nullptr;
 std::mutex MaterialEffects::configMutex_;
 
 
-MaterialEffects::MaterialEffects():
-  noEffects_(false),
-  energyLossBetheBloch_(true), noiseBetheBloch_(true),
-  noiseCoulomb_(true),
-  energyLossBrems_(true), noiseBrems_(true),
-  ignoreBoundariesBetweenEqualMaterials_(true),
-  me_(0.510998910E-3),
-  stepSize_(0),
-  dEdx_(0),
-  E_(0),
-  matDensity_(0),
-  matZ_(0),
-  matA_(0),
-  radiationLength_(0),
-  mEE_(0),
-  pdg_(0),
-  charge_(0),
-  mag_charge_(0),
-  mass_(0),
-  mscModelCode_(0),
-  materialInterface_(nullptr),
-  ownsMaterialInterface_(false),
-  debugLvl_(0)
+MaterialEffects::MaterialEffects()
 {
 }
 
 MaterialEffects::MaterialEffects(const MaterialEffects& cfg):
-  noEffects_(false),
   energyLossBetheBloch_(cfg.energyLossBetheBloch_), noiseBetheBloch_(cfg.noiseBetheBloch_),
   noiseCoulomb_(cfg.noiseCoulomb_),
   energyLossBrems_(cfg.energyLossBrems_), noiseBrems_(cfg.noiseBrems_),
   ignoreBoundariesBetweenEqualMaterials_(cfg.ignoreBoundariesBetweenEqualMaterials_),
-  me_(0.510998910E-3),
-  stepSize_(0),
-  dEdx_(0),
-  E_(0),
-  matDensity_(0),
-  matZ_(0),
-  matA_(0),
-  radiationLength_(0),
-  mEE_(0),
-  pdg_(0),
-  charge_(0),
   mag_charge_(cfg.mag_charge_),
-  mass_(0),
   mscModelCode_(cfg.mscModelCode_),
   materialInterface_(cfg.materialInterface_),
-  ownsMaterialInterface_(false),
   debugLvl_(cfg.debugLvl_)
 {
 }

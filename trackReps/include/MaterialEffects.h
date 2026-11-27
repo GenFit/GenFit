@@ -66,8 +66,6 @@ class MaterialEffects {
 
   //! Copy the configuration fields to the template (thread-safe).
   void recordConfig();
-  //! Apply a configuration template to this (freshly created) instance.
-  void applyConfig(const MaterialEffects& cfg);
 
 
 public:
@@ -183,42 +181,42 @@ public:
 
 
 
-  bool noEffects_;
+  bool noEffects_ = false;
 
-  bool energyLossBetheBloch_;
-  bool noiseBetheBloch_;
-  bool noiseCoulomb_;
-  bool energyLossBrems_;
-  bool noiseBrems_;
+  bool energyLossBetheBloch_ = true;
+  bool noiseBetheBloch_ = true;
+  bool noiseCoulomb_ = true;
+  bool energyLossBrems_ = true;
+  bool noiseBrems_ = true;
 
-  bool ignoreBoundariesBetweenEqualMaterials_;
+  bool ignoreBoundariesBetweenEqualMaterials_ = true;
 
-  const double me_; // electron mass (GeV)
+  const double me_ = 0.510998910E-3; // electron mass (GeV)
 
-  double stepSize_; // stepsize
+  double stepSize_ = 0; // stepsize
 
   // cached values for energy loss and noise calculations
-  double dEdx_; // Runkge Kutta dEdx
-  double E_; // Runge Kutta Energy
-  double matDensity_;
-  double matZ_;
-  double matA_;
-  double radiationLength_;
-  double mEE_; // mean excitation energy
+  double dEdx_ = 0; // Runkge Kutta dEdx
+  double E_ = 0; // Runge Kutta Energy
+  double matDensity_ = 0;
+  double matZ_ = 0;
+  double matA_ = 0;
+  double radiationLength_ = 0;
+  double mEE_ = 0; // mean excitation energy
 
-  int pdg_;
-  double charge_;
-  double mag_charge_; // in units of e+
-  double mass_;
+  int pdg_ = 0;
+  double charge_ = 0;
+  double mag_charge_ = 0; // in units of e+
+  double mass_ = 0;
 
-  int mscModelCode_; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
+  int mscModelCode_ = 0; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
 
-  AbsMaterialInterface* materialInterface_;
+  AbsMaterialInterface* materialInterface_ = nullptr;
   //! Only the instance on which init() was called owns the interface; per-thread
   //! copies share it and must not delete it.
-  bool ownsMaterialInterface_;
+  bool ownsMaterialInterface_ = false;
 
-  unsigned int debugLvl_;
+  unsigned int debugLvl_ = 0;
 
   // ClassDef(MaterialEffects, 1);
 

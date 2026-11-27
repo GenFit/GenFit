@@ -145,6 +145,10 @@ class FieldManager {
   //! Copy the configuration fields to the template (thread-safe).
   void recordConfig();
 
+  // One instance per thread: the field-lookup cache is per instance (per thread) and
+  // therefore never shared between threads. The configuration set through init() and
+  // useCache() is kept in a template which every instance created later copies, so the
+  // public API (getInstance()) is unchanged.
   static thread_local FieldManager* instance_;
   static FieldManager* configTemplate_;
   static std::mutex configMutex_;
