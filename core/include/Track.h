@@ -297,8 +297,8 @@ class Track : public TObject {
   void prune(const Option_t* = "CFLWRMIU");
 
   void Print(const Option_t* = "") const;
-
-  void checkConsistency() const;
+  
+  bool checkConsistency() const;
 
  private:
 

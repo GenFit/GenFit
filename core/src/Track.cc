@@ -1283,7 +1283,7 @@ void Track::Print(const Option_t* option) const {
 }
 
 
-void Track::checkConsistency() const {
+bool Track::checkConsistency() const {
 
   // cppcheck-suppress unreadVariable
   bool consistent = true;
@@ -1462,6 +1462,8 @@ void Track::checkConsistency() const {
   if (not consistent) {
     throw genfit::Exception(failures.str(), __LINE__, __FILE__);
   }
+  
+  return consistent;
 }
 
 
