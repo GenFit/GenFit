@@ -92,19 +92,15 @@ void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane& state, TVectorD& sta
 
 
 double AbsTrackRep::getPDGCharge() const {
-  TParticlePDG* particle = nullptr;
-  {
-    std::lock_guard<std::mutex> lock(pdgSingletonMutex());
-    particle = TDatabasePDG::Instance()->GetParticle(pdgCode_);
-  }
+  // Per-thread cached lookup (see PDGGuard.h): no lock on the fit hot path.
+  const TParticlePDG* particle = pdgParticle(pdgCode_);
   assert(particle != nullptr);
   return particle->Charge()/(3.);
 }
 
 
 double AbsTrackRep::getMass(const StateOnPlane& /*state*/) const {
-  std::lock_guard<std::mutex> lock(pdgSingletonMutex());
-  return TDatabasePDG::Instance()->GetParticle(pdgCode_)->Mass();
+  return pdgParticle(pdgCode_)->Mass();
 }
 
 
@@ -187,8 +183,7 @@ void AbsTrackRep::calcJacobianNumerically(const genfit::StateOnPlane& origState,
 
 
 bool AbsTrackRep::switchPDGSign() {
-  TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(-pdgCode_);
-  if(particle != nullptr) {
+  if(pdgParticle(-pdgCode_) != nullptr) {
     pdgCode_ *= -1;
     return true;
   }

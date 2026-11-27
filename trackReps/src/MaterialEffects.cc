@@ -390,12 +390,9 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
 void MaterialEffects::getParticleParameters()
 {
-  // TDatabasePDG is a ROOT singleton whose lookup may lazily add entries: guard it.
-  TParticlePDG* part = nullptr;
-  {
-    std::lock_guard<std::mutex> lock(pdgSingletonMutex());
-    part = TDatabasePDG::Instance()->GetParticle(pdg_);
-  }
+  // Per-thread cached lookup (see PDGGuard.h): no lock on the transport hot path,
+  // where this runs on every Runge Kutta step.
+  const TParticlePDG* part = pdgParticle(pdg_);
   charge_ = part->Charge() / 3.;  // We only ever use the square
   mass_ = part->Mass(); // GeV
 }
