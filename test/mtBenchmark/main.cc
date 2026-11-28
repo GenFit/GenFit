@@ -16,7 +16,6 @@
 //
 // The events and their measurements are generated deterministically per event
 // index, so the checksum is identical for every thread count within a mode.
-#include <atomic>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -324,7 +323,7 @@ int main(int argc, char** argv) {
     creators[i] = new genfit::MeasurementCreator();
   }
 
-  std::atomic<double> checksum(0.);
+  std::vector<double> partial(nThreads, 0.); // one slot per worker: no shared writes
   const int perThread = (totalFits + nThreads - 1) / nThreads;
   // TDatabasePDG is a ROOT singleton: look it up once, on the main thread.
   const double charge = TDatabasePDG::Instance()->GetParticle(13)->Charge() / (3.);
@@ -332,7 +331,7 @@ int main(int argc, char** argv) {
   auto t0 = std::chrono::steady_clock::now();
   std::vector<std::thread> threads;
   for (int k = 0; k < nThreads; ++k) {
-    threads.emplace_back([k, perThread, totalFits, charge, mode, &checksum, &creators]() {
+    threads.emplace_back([k, perThread, totalFits, charge, mode, &partial, &creators]() {
       // setNoEffects is per-thread (per-thread MaterialEffects instances)
       if (mode == "noEffects") genfit::MaterialEffects::getInstance()->setNoEffects(true);
       genfit::AbsKalmanFitter* fitter = new genfit::KalmanFitterRefTrack();
@@ -342,15 +341,18 @@ int main(int argc, char** argv) {
         if (idx >= totalFits) break;
         sum += fitEvent(idx, charge, *creators[idx], fitter);
       }
-      checksum += sum;
+      partial[k] = sum;
       delete fitter;
     });
   }
   for (auto& t : threads) t.join();
   auto t1 = std::chrono::steady_clock::now();
 
+  double checksum = 0.;
+  for (double p : partial) checksum += p;
+
   const double wall = std::chrono::duration<double>(t1 - t0).count();
   printf("threads=%2d fits=%4d wall=%7.3f s  rate=%8.1f fits/s  checksum=%.6f\n",
-         nThreads, totalFits, wall, totalFits / wall, checksum.load());
+         nThreads, totalFits, wall, totalFits / wall, checksum);
   return 0;
 }
