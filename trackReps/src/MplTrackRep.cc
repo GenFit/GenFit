@@ -43,6 +43,7 @@ MplTrackRep::~MplTrackRep()
 }
 
 double MplTrackRep::getCharge(const StateOnPlane& state) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   if (dynamic_cast<const MeasurementOnPlane*>(&state) != nullptr) {
     Exception exc("RKTrackRep::getCharge - cannot get charge from MeasurementOnPlane",__LINE__,__FILE__);
@@ -66,6 +67,7 @@ double MplTrackRep::RKPropagate(M1x7& state7,
                                 bool varField,
                                 bool /*calcOnlyLastRowOfJ*/) const
 {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   // The algorithm is
   //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
   //  "Track parameter propagation through the application of a new adaptive Runge-Kutta-Nyström method in the ATLAS experiment"

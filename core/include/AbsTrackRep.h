@@ -32,6 +32,8 @@
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
 
+#include <mutex>
+
 
 namespace genfit {
 
@@ -70,6 +72,9 @@ class AbsTrackRep : public TObject {
   AbsTrackRep(int pdgCode, char propDir = 0);
 
   virtual ~AbsTrackRep() {;}
+
+  //! Per-object operation lock: serializes concurrent calls on this object.
+  std::recursive_mutex& usageMutex() const { return usageMutex_; }
 
   //! Clone the trackRep.
   virtual AbsTrackRep* clone() const = 0;
@@ -124,6 +129,7 @@ class AbsTrackRep : public TObject {
       TVector3& poca_onwire,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
     const TVector3 wireDir((point2 - point1).Unit());
     double retval = this->extrapolateToLine(state, point1, wireDir, stopAtBoundary, calcJacobianNoise);
     poca = this->getPos(state);
@@ -240,13 +246,13 @@ class AbsTrackRep : public TObject {
   virtual TVector3 getMom(const StateOnPlane& state) const = 0;
 
   //! Get the direction vector of a state.
-  TVector3 getDir(const StateOnPlane& state) const {return getMom(state).Unit();}
+  TVector3 getDir(const StateOnPlane& state) const {std::lock_guard<std::recursive_mutex> lock(usageMutex_); return getMom(state).Unit();}
 
   //! Get cartesian position and momentum vector of a state.
   virtual void getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const = 0;
 
   //! Get cartesian position and direction vector of a state.
-  void getPosDir(const StateOnPlane& state, TVector3& pos, TVector3& dir) const {getPosMom(state, pos, dir); dir.SetMag(1.);}
+  void getPosDir(const StateOnPlane& state, TVector3& pos, TVector3& dir) const {std::lock_guard<std::recursive_mutex> lock(usageMutex_); getPosMom(state, pos, dir); dir.SetMag(1.);}
 
   //! Get the 6D state vector (x, y, z, p_x, p_y, p_z).
   virtual TVectorD get6DState(const StateOnPlane& state) const;
@@ -266,7 +272,7 @@ class AbsTrackRep : public TObject {
   virtual double getMomVar(const MeasuredStateOnPlane& state) const = 0;
 
   //! Get the pdg code.
-  int getPDG() const {return pdgCode_;}
+  int getPDG() const {std::lock_guard<std::recursive_mutex> lock(usageMutex_); return pdgCode_;}
 
   //! Get the charge of the particle of the pdg code
   double getPDGCharge() const;
@@ -282,7 +288,7 @@ class AbsTrackRep : public TObject {
   double getMass(const StateOnPlane& state) const;
 
   //! Get propagation direction. (-1, 0, 1) -> (backward, auto, forward).
-  char getPropDir() const {return propDir_;}
+  char getPropDir() const {std::lock_guard<std::recursive_mutex> lock(usageMutex_); return propDir_;}
 
   //! Get the jacobian and noise matrix of the last extrapolation.
   virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const = 0;
@@ -334,13 +340,14 @@ class AbsTrackRep : public TObject {
 
   //! Set propagation direction. (-1, 0, 1) -> (backward, auto, forward).
   void setPropDir(int dir) {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
     if (dir>0) propDir_ = 1;
     else if (dir<0) propDir_ = -1;
     else propDir_ = 0;
   };
 
   //! Switch propagation direction. Has no effect if propDir_ is set to 0.
-  void switchPropDir(){propDir_ = -1*propDir_;}
+  void switchPropDir(){std::lock_guard<std::recursive_mutex> lock(usageMutex_); propDir_ = -1*propDir_;}
 
   //! check if other is of same type (e.g. RKTrackRep).
   virtual bool isSameType(const AbsTrackRep* other) = 0;
@@ -348,7 +355,7 @@ class AbsTrackRep : public TObject {
   //! check if other is of same type (e.g. RKTrackRep) and has same pdg code.
   virtual bool isSame(const AbsTrackRep* other) = 0;
 
-  virtual void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
+  virtual void setDebugLvl(unsigned int lvl = 1) {std::lock_guard<std::recursive_mutex> lock(usageMutex_); debugLvl_ = lvl;}
 
   virtual void Print(const Option_t* = "") const;
 
@@ -366,6 +373,9 @@ class AbsTrackRep : public TObject {
   char propDir_;
 
   unsigned int debugLvl_;
+
+  //! Per-object operation lock (transient; must not enter the ROOT schema).
+  mutable std::recursive_mutex usageMutex_; //!
 
  public:
   ClassDef(AbsTrackRep,1)

@@ -29,6 +29,7 @@
 #include "TrackCand.h"
 #include "TrackPoint.h"
 
+#include <mutex>
 #include <vector>
 #include <TObject.h>
 #include <TVectorD.h>
@@ -71,6 +72,11 @@ class Track : public TObject {
 
  public:
 
+  //! Per-object operation lock: serializes concurrent calls on this object.
+  //! Hold it around a *sequence* of calls, and around any use of references or
+  //! pointers returned by getters (those escape the per-call locking).
+  std::recursive_mutex& usageMutex() const { return usageMutex_; }
+
   Track();
 
   /**
@@ -105,12 +111,24 @@ class Track : public TObject {
   void createMeasurements(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMeasurement>& factory);
 
   TrackPoint* getPoint(int id) const;
-  const std::vector< genfit::TrackPoint* > & getPoints() const {return trackPoints_;}
-  unsigned int getNumPoints() const {return trackPoints_.size();}
+  const std::vector< genfit::TrackPoint* > & getPoints() const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return trackPoints_;
+  }
+  unsigned int getNumPoints() const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return trackPoints_.size();
+  }
 
   TrackPoint* getPointWithMeasurement(int id) const;
-  const std::vector< genfit::TrackPoint* > & getPointsWithMeasurement() const  {return trackPointsWithMeasurement_;}
-  unsigned int getNumPointsWithMeasurement() const {return trackPointsWithMeasurement_.size();}
+  const std::vector< genfit::TrackPoint* > & getPointsWithMeasurement() const  {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return trackPointsWithMeasurement_;
+  }
+  unsigned int getNumPointsWithMeasurement() const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return trackPointsWithMeasurement_.size();
+  }
 
   TrackPoint* getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRep* rep = nullptr) const;
   TrackPoint* getPointWithFitterInfo(int id, const AbsTrackRep* rep = nullptr) const;
@@ -126,10 +144,19 @@ class Track : public TObject {
    */
   const MeasuredStateOnPlane& getFittedState(int id = 0, const AbsTrackRep* rep = nullptr, bool biased = true) const;
 
-  AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id);}
+  AbsTrackRep* getTrackRep(int id) const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return trackReps_.at(id);
+  }
   /// Return the track representations as a list of pointers.
-  const std::vector<genfit::AbsTrackRep*>& getTrackReps() const {return trackReps_;}
-  unsigned int getNumReps() const {return trackReps_.size();}
+  const std::vector<genfit::AbsTrackRep*>& getTrackReps() const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return trackReps_;
+  }
+  unsigned int getNumReps() const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return trackReps_.size();
+  }
 
   //! This is used when streaming TrackPoints.
   int getIdForRep(const AbsTrackRep* rep) const;
@@ -141,16 +168,29 @@ class Track : public TObject {
    * smallest chi2 could be chosen. By default the first in the list is returned.
    * @sa #determineCardinalRep()
    */
-  AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_);}
-  unsigned int getCardinalRepId() const {return cardinalRep_;}
+  AbsTrackRep* getCardinalRep() const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return trackReps_.at(cardinalRep_);
+  }
+  unsigned int getCardinalRepId() const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return cardinalRep_;
+  }
 
   //! Get the MCT track id, for MC simulations - default value = -1
-  int getMcTrackId() const {return mcTrackId_;}
+  int getMcTrackId() const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return mcTrackId_;
+  }
 
   //! Check if track has a FitStatus for given AbsTrackRep. Per default, check for cardinal rep.
   bool hasFitStatus(const AbsTrackRep* rep = nullptr) const;
   //! Get FitStatus for a AbsTrackRep. Per default, return FitStatus for cardinalRep.
-  FitStatus* getFitStatus(const AbsTrackRep* rep = nullptr) const {if (rep == nullptr) rep = getCardinalRep(); return fitStatuses_.at(rep);}
+  FitStatus* getFitStatus(const AbsTrackRep* rep = nullptr) const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    if (rep == nullptr) rep = getCardinalRep();
+    return fitStatuses_.at(rep);
+  }
 
   //! Check if track has a KalmanFitStatus for given AbsTrackRep. Per default, check for cardinal rep.
   bool hasKalmanFitStatus(const AbsTrackRep* rep = nullptr) const;
@@ -159,18 +199,39 @@ class Track : public TObject {
 
   void setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep);
 
-  double getTimeSeed() const {return timeSeed_;}
-  void setTimeSeed(double time) {timeSeed_ = time;}
+  double getTimeSeed() const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return timeSeed_;
+  }
+  void setTimeSeed(double time) {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    timeSeed_ = time;
+  }
 
-  const TVectorD& getStateSeed() const {return stateSeed_;}
-  void setStateSeed(const TVectorD& s) {stateSeed_.ResizeTo(s); stateSeed_ = s;}
+  const TVectorD& getStateSeed() const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return stateSeed_;
+  }
+  void setStateSeed(const TVectorD& s) {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    stateSeed_.ResizeTo(s); stateSeed_ = s;
+  }
   void setStateSeed(const TVector3& pos, const TVector3& mom);
 
-  const TMatrixDSym& getCovSeed() const {return covSeed_;}
-  void setCovSeed(const TMatrixDSym& c) {covSeed_.ResizeTo(c); covSeed_ = c;}
+  const TMatrixDSym& getCovSeed() const {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    return covSeed_;
+  }
+  void setCovSeed(const TMatrixDSym& c) {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    covSeed_.ResizeTo(c); covSeed_ = c;
+  }
 
   //! Set the MCT track id, for MC simulations
-  void setMcTrackId(int i) {mcTrackId_ = i;}
+  void setMcTrackId(int i) {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+    mcTrackId_ = i;
+  }
 
   /**
    * @brief Insert TrackPoint BEFORE TrackPoint with position id, if id >= 0.
@@ -232,6 +293,7 @@ class Track : public TObject {
 
   //! Flip direction of momentum seed
   void reverseMomSeed() {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
     stateSeed_(3) *= -1; stateSeed_(4) *= -1; stateSeed_(5) *= -1;
   }
 
@@ -301,6 +363,8 @@ class Track : public TObject {
   void checkConsistency() const;
 
  private:
+
+  mutable std::recursive_mutex usageMutex_; //!
 
   void trackHasChanged();
 

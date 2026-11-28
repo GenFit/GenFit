@@ -23,6 +23,12 @@
 namespace genfit {
 
 void AbsFitter::processTrack(Track* tr, bool resortHits) {
+  // Serialize whole fits: concurrent processTrack() calls on the same fitter or
+  // the same track run one after the other, each to completion. Lock order is
+  // always fitter -> track (never the other way round).
+  std::lock_guard<std::recursive_mutex> fitterLock(usageMutex_);
+  std::lock_guard<std::recursive_mutex> trackLock(tr->usageMutex());
+
   AbsTrackRep* cardRep = tr->getCardinalRep();
   // process cardinal rep first
   processTrackWithRep(tr, cardRep, resortHits);
