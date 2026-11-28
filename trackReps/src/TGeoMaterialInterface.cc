@@ -28,11 +28,25 @@
 #include <assert.h>
 #include <math.h>
 
+#include <mutex>
+
 
 namespace genfit {
 
 double MeanExcEnergy_get(int Z);
 double MeanExcEnergy_get(TGeoMaterial*);
+
+
+namespace {
+//! Serializes usage sequences: all instances share gGeoManager.
+std::mutex tgeoUsageMutex;
+}
+
+
+std::mutex* TGeoMaterialInterface::usageMutex()
+{
+  return &tgeoUsageMutex;
+}
 
 
 bool

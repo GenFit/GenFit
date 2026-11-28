@@ -27,6 +27,7 @@
 #include "AbsMaterialInterface.h"
 
 #include <iostream>
+#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -61,6 +62,11 @@ class MaterialEffects {
   // configuration set through the setters below is kept in a template which every
   // instance created later copies, so the public API (getInstance()) is unchanged.
   static thread_local MaterialEffects* instance_;
+  //! RAII: deletes the calling thread's instance at thread exit.
+  struct InstanceHolder {
+    ~InstanceHolder() { delete instance_; }
+  };
+  static thread_local InstanceHolder holder_;
   static MaterialEffects* configTemplate_;
   static std::mutex configMutex_;
 
@@ -73,7 +79,8 @@ public:
   static MaterialEffects* getInstance();
   static void destruct();
 
-  //! set the material interface here. Material interface classes must be derived from AbsMaterialInterface.
+  //! Set the material interface here. Material interface classes must be derived
+  //! from AbsMaterialInterface. Takes ownership of the interface.
   void init(AbsMaterialInterface* matIfc);
   bool isInitialized() { return materialInterface_ != nullptr; }
 
@@ -211,10 +218,9 @@ public:
 
   int mscModelCode_ = 0; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
 
-  AbsMaterialInterface* materialInterface_ = nullptr;
-  //! Only the instance on which init() was called owns the interface; per-thread
-  //! copies share it and must not delete it.
-  bool ownsMaterialInterface_ = false;
+  //! Set through init(), which takes ownership. Shared with all per-thread
+  //! instances and deleted when the last of them is destroyed.
+  std::shared_ptr<AbsMaterialInterface> materialInterface_;
 
   unsigned int debugLvl_ = 0;
 

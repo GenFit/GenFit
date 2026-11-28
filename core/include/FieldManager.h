@@ -150,6 +150,11 @@ class FieldManager {
   // useCache() is kept in a template which every instance created later copies, so the
   // public API (getInstance()) is unchanged.
   static thread_local FieldManager* instance_;
+  //! RAII: deletes the calling thread's instance at thread exit.
+  struct InstanceHolder {
+    ~InstanceHolder() { delete instance_; }
+  };
+  static thread_local InstanceHolder holder_;
   static FieldManager* configTemplate_;
   static std::mutex configMutex_;
   AbsBField* field_ = nullptr;

@@ -28,6 +28,7 @@
 #include <TEveBox.h>
 #include <TVector3.h>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <TGButton.h>
@@ -165,6 +166,10 @@ class EventDisplay : public TNamed {
 
 
     static EventDisplay* eventDisplay_; //!
+    //! EVE is single-threaded: all use must stay on the creating thread (checked).
+    static std::thread::id ownerThread_; //!
+    //! Throws genfit::Exception when called from a thread other than the creating one.
+    void checkThread() const;
     unsigned int eventId_; //!
     double errorScale_; //!
     std::vector< std::vector<genfit::Track*>* > events_; //!

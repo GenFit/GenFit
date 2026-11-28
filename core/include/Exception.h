@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <exception>
 #include <string>
 #include <vector>
@@ -78,7 +79,7 @@ class Exception : public std::exception {
 
  private:
 
-  static bool quiet_;
+  static std::atomic<bool> quiet_;
 
   std::string excString_;
   int line_;

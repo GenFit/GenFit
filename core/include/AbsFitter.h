@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <mutex>
 
 namespace genfit {
 
@@ -35,6 +36,9 @@ class AbsFitter {
  public:
   AbsFitter() : debugLvl_(0) {}
   virtual ~AbsFitter() {}
+
+  //! Per-object operation lock: serializes concurrent calls on this fitter.
+  std::recursive_mutex& usageMutex() const { return usageMutex_; }
 
   /**
    * Process Track with one AbsTrackRep of the Track. Optionally resort the hits if necessary (and supported by the fitter)
@@ -52,6 +56,10 @@ class AbsFitter {
  protected:
 
   unsigned int debugLvl_;
+
+ private:
+
+  mutable std::recursive_mutex usageMutex_;
 
 };
 

@@ -53,11 +53,13 @@ double AbsTrackRep::extrapolateToMeasurement(StateOnPlane& state,
     bool stopAtBoundary,
     bool calcJacobianNoise) const {
 
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   return this->extrapolateToPlane(state, measurement->constructPlane(state), stopAtBoundary, calcJacobianNoise);
 }
 
 
 TVectorD AbsTrackRep::get6DState(const StateOnPlane& state) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   TVector3 pos, mom;
   getPosMom(state, pos, mom);
 
@@ -76,6 +78,7 @@ TVectorD AbsTrackRep::get6DState(const StateOnPlane& state) const {
 
 
 void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane& state, TVectorD& stateVec, TMatrixDSym& cov) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   TVector3 pos, mom;
   getPosMomCov(state, pos, mom, cov);
 
@@ -92,19 +95,18 @@ void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane& state, TVectorD& sta
 
 
 double AbsTrackRep::getPDGCharge() const {
-  TParticlePDG* particle = nullptr;
-  {
-    std::lock_guard<std::mutex> lock(pdgSingletonMutex());
-    particle = TDatabasePDG::Instance()->GetParticle(pdgCode_);
-  }
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+  // Per-thread cached lookup (see PDGGuard.h); the lock guards pdgCode_,
+  // which switchPDGSign() may flip concurrently.
+  const TParticlePDG* particle = pdgParticle(pdgCode_);
   assert(particle != nullptr);
   return particle->Charge()/(3.);
 }
 
 
 double AbsTrackRep::getMass(const StateOnPlane& /*state*/) const {
-  std::lock_guard<std::mutex> lock(pdgSingletonMutex());
-  return TDatabasePDG::Instance()->GetParticle(pdgCode_)->Mass();
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+  return pdgParticle(pdgCode_)->Mass();
 }
 
 
@@ -112,6 +114,7 @@ void AbsTrackRep::calcJacobianNumerically(const genfit::StateOnPlane& origState,
                                                const genfit::SharedPlanePtr destPlane,
                                                TMatrixD& jacobian) const {
 
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   // Find the transport matrix for track propagation from origState to destPlane
   // I.e. this finds
   //            d stateDestPlane / d origState |_origState
@@ -187,8 +190,8 @@ void AbsTrackRep::calcJacobianNumerically(const genfit::StateOnPlane& origState,
 
 
 bool AbsTrackRep::switchPDGSign() {
-  TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(-pdgCode_);
-  if(particle != nullptr) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
+  if(pdgParticle(-pdgCode_) != nullptr) {
     pdgCode_ *= -1;
     return true;
   }
@@ -198,6 +201,7 @@ bool AbsTrackRep::switchPDGSign() {
 
 
 void AbsTrackRep::Print(const Option_t*) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   printOut << "genfit::AbsTrackRep, pdgCode = " << pdgCode_ << ". PropDir = " << (int)propDir_ << "\n";
 }
 

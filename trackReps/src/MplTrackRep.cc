@@ -31,18 +31,10 @@
 
 using namespace genfit;
 
-namespace {
-//! Guarded TDatabasePDG lookup (see PDGGuard.h) for const-member initialization.
-double pdgMass(int pdgCode) {
-  std::lock_guard<std::mutex> lock(genfit::pdgSingletonMutex());
-  return TDatabasePDG::Instance()->GetParticle(pdgCode)->Mass();
-}
-}
-
 MplTrackRep::MplTrackRep(int pdgCode, float magCharge, char propDir) :
   RKTrackRep(pdgCode, propDir),
   m_magCharge(magCharge),
-  m_mass(pdgMass(pdgCode)) // We could ofc use AbsTrackRep::getMass(state) but we have no state here to call on
+  m_mass(genfit::pdgParticle(pdgCode)->Mass()) // We could ofc use AbsTrackRep::getMass(state) but we have no state here to call on
 {
 }
 
@@ -51,6 +43,7 @@ MplTrackRep::~MplTrackRep()
 }
 
 double MplTrackRep::getCharge(const StateOnPlane& state) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   if (dynamic_cast<const MeasurementOnPlane*>(&state) != nullptr) {
     Exception exc("RKTrackRep::getCharge - cannot get charge from MeasurementOnPlane",__LINE__,__FILE__);
@@ -74,6 +67,7 @@ double MplTrackRep::RKPropagate(M1x7& state7,
                                 bool varField,
                                 bool /*calcOnlyLastRowOfJ*/) const
 {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   // The algorithm is
   //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
   //  "Track parameter propagation through the application of a new adaptive Runge-Kutta-Nyström method in the ATLAS experiment"

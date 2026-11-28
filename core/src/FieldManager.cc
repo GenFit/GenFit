@@ -24,6 +24,7 @@
 namespace genfit {
 
 thread_local FieldManager* FieldManager::instance_ = nullptr;
+thread_local FieldManager::InstanceHolder FieldManager::holder_;
 FieldManager* FieldManager::configTemplate_ = nullptr;
 std::mutex FieldManager::configMutex_;
 
@@ -71,8 +72,8 @@ void FieldManager::getFieldVal(const double& posX, const double& posY, const dou
     static const double epsilon = 0.001;
 
     #ifdef DEBUG
-    static int used = 0;
-    static int notUsed = 0;
+    thread_local int used = 0;
+    thread_local int notUsed = 0;
     #endif
 
     do {

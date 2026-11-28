@@ -30,6 +30,7 @@
 #include "Material.h"
 
 #include <algorithm>
+#include <mutex>
 
 namespace genfit {
 
@@ -81,7 +82,7 @@ class RKTrackRep : public AbsTrackRep {
 
   virtual ~RKTrackRep();
 
-  virtual AbsTrackRep* clone() const override {return new RKTrackRep(*this);}
+  virtual AbsTrackRep* clone() const override {std::lock_guard<std::recursive_mutex> lock(usageMutex_); return new RKTrackRep(*this);}
 
   virtual double extrapolateToPlane(StateOnPlane& state,
       const SharedPlanePtr& plane,
@@ -100,6 +101,7 @@ class RKTrackRep : public AbsTrackRep {
       const TVector3& point,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const override {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
     return extrapToPoint(state, point, nullptr, stopAtBoundary, calcJacobianNoise);
   }
 
@@ -108,6 +110,7 @@ class RKTrackRep : public AbsTrackRep {
       const TMatrixDSym& G, // weight matrix (metric)
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const override {
+    std::lock_guard<std::recursive_mutex> lock(usageMutex_);
     return extrapToPoint(state, point, &G, stopAtBoundary, calcJacobianNoise);
   }
 

@@ -1,5 +1,8 @@
 
 #include "EventDisplay.h"
+#include "Exception.h"
+
+#include <mutex>
 
 #include <assert.h>
 #include <algorithm>
@@ -60,6 +63,15 @@ namespace genfit {
 
 
 EventDisplay* EventDisplay::eventDisplay_ = nullptr;
+std::thread::id EventDisplay::ownerThread_;
+
+void EventDisplay::checkThread() const {
+  if (ownerThread_ != std::this_thread::get_id()) {
+    Exception exc("EventDisplay ==> must be used from the thread that created it (EVE is single-threaded)", __LINE__, __FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+}
 
 EventDisplay::EventDisplay() :
   errorScale_(1.),
@@ -135,9 +147,14 @@ void EventDisplay::setErrScale(double errScale) { errorScale_ = errScale; }
 double EventDisplay::getErrScale() { return errorScale_; }
 
 EventDisplay* EventDisplay::getInstance() {
+  // EVE itself is single-threaded (use from the GUI thread only), but creation is
+  // serialized so a race cannot produce two instances.
+  static std::mutex mutex;
+  std::lock_guard<std::mutex> lock(mutex);
 
   if(eventDisplay_ == nullptr) {
     eventDisplay_ = new EventDisplay();
+    ownerThread_ = std::this_thread::get_id();
   }
   return eventDisplay_;
 
@@ -146,6 +163,7 @@ EventDisplay* EventDisplay::getInstance() {
 EventDisplay::~EventDisplay() { reset(); }
 
 void EventDisplay::reset() {
+  checkThread();
 
   for(unsigned int i = 0; i < events_.size(); i++) {
 
@@ -162,6 +180,7 @@ void EventDisplay::reset() {
 
 
 void EventDisplay::addEvent(std::vector<Track*>& tracks) {
+  checkThread();
 
   std::vector<Track*>* vec = new std::vector<Track*>;
 
@@ -174,6 +193,7 @@ void EventDisplay::addEvent(std::vector<Track*>& tracks) {
 
 
 void EventDisplay::addEvent(std::vector<const Track*>& tracks) {
+  checkThread();
 
   std::vector<Track*>* vec = new std::vector<Track*>;
 
@@ -186,6 +206,7 @@ void EventDisplay::addEvent(std::vector<const Track*>& tracks) {
 
 
 void EventDisplay::addEvent(const Track* tr) {
+  checkThread();
 
   std::vector<Track*>* vec = new std::vector<Track*>;
   vec->push_back(new Track(*tr));
@@ -244,6 +265,7 @@ void EventDisplay::gotoEvent(unsigned int id) {
 }
 
 void EventDisplay::open() {
+  checkThread();
 
   std::cout << "EventDisplay::open(); " << getNEvents() << " events loaded" << std::endl;
 
@@ -269,6 +291,7 @@ void EventDisplay::open() {
 
 
 void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
+  checkThread();
 
   std::cout << "EventDisplay::drawEvent(" << id << ")" << std::endl;
 

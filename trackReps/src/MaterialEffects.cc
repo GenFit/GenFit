@@ -40,6 +40,7 @@
 namespace genfit {
 
 thread_local MaterialEffects* MaterialEffects::instance_ = nullptr;
+thread_local MaterialEffects::InstanceHolder MaterialEffects::holder_;
 MaterialEffects* MaterialEffects::configTemplate_ = nullptr;
 std::mutex MaterialEffects::configMutex_;
 
@@ -62,7 +63,8 @@ MaterialEffects::MaterialEffects(const MaterialEffects& cfg):
 
 MaterialEffects::~MaterialEffects()
 {
-  if (ownsMaterialInterface_ && materialInterface_ != nullptr) delete materialInterface_;
+  // materialInterface_ is a shared_ptr: the interface is deleted when the last
+  // per-thread instance and the config template are gone.
 }
 
 void MaterialEffects::recordConfig()
@@ -95,12 +97,8 @@ void MaterialEffects::destruct()
 {
   {
     std::lock_guard<std::mutex> lock(configMutex_);
-    if (configTemplate_ != nullptr) {
-      // the template never owns the material interface
-      configTemplate_->materialInterface_ = nullptr;
-      delete configTemplate_;
-      configTemplate_ = nullptr;
-    }
+    delete configTemplate_;
+    configTemplate_ = nullptr;
   }
   delete instance_;
   instance_ = nullptr;
@@ -112,8 +110,7 @@ void MaterialEffects::init(AbsMaterialInterface* matIfc)
     std::string msg("MaterialEffects::initMaterialInterface(): Already initialized! ");
     std::runtime_error err(msg);
   }
-  materialInterface_ = matIfc;
-  ownsMaterialInterface_ = true;
+  materialInterface_.reset(matIfc); // genfit takes ownership; shared with per-thread instances
   recordConfig();
 }
 
@@ -296,6 +293,14 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   state7[1] += limits.getStepSign() * minStep * state7[4];
   state7[2] += limits.getStepSign() * minStep * state7[5];
 
+  // The navigator state persists between the interface calls below (see
+  // AbsMaterialInterface::usageMutex()), so hold the interface's usage mutex for
+  // the whole sequence.
+  std::unique_lock<std::mutex> interfaceLock;
+  if (std::mutex* usageMutex = materialInterface_->usageMutex()) {
+    interfaceLock = std::unique_lock<std::mutex>(*usageMutex);
+  }
+
   materialInterface_->initTrack(state7[0], state7[1], state7[2],
                                 limits.getStepSign() * state7[3], limits.getStepSign() * state7[4], limits.getStepSign() * state7[5]);
 
@@ -390,12 +395,9 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
 void MaterialEffects::getParticleParameters()
 {
-  // TDatabasePDG is a ROOT singleton whose lookup may lazily add entries: guard it.
-  TParticlePDG* part = nullptr;
-  {
-    std::lock_guard<std::mutex> lock(pdgSingletonMutex());
-    part = TDatabasePDG::Instance()->GetParticle(pdg_);
-  }
+  // Per-thread cached lookup (see PDGGuard.h): no lock on the transport hot path,
+  // where this runs on every Runge Kutta step.
+  const TParticlePDG* part = pdgParticle(pdg_);
   charge_ = part->Charge() / 3.;  // We only ever use the square
   mass_ = part->Mass(); // GeV
 }
@@ -859,6 +861,10 @@ void MaterialEffects::setDebugLvl(unsigned int lvl) {
 
 
 void MaterialEffects::drawdEdx(int pdg) {
+  std::unique_lock<std::mutex> interfaceLock;
+  if (materialInterface_ && materialInterface_->usageMutex()) {
+    interfaceLock = std::unique_lock<std::mutex>(*materialInterface_->usageMutex());
+  }
   pdg_ = pdg;
   this->getParticleParameters();
 

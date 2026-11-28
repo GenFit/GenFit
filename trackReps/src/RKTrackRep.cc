@@ -85,6 +85,7 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane& state,
     bool stopAtBoundary,
     bool calcJacobianNoise) const {
 
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (debugLvl_ > 0) {
     debugOut << "RKTrackRep::extrapolateToPlane()\n";
   }
@@ -141,6 +142,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
     bool stopAtBoundary,
     bool calcJacobianNoise) const {
 
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (debugLvl_ > 0) {
     debugOut << "RKTrackRep::extrapolateToLine()\n";
   }
@@ -360,6 +362,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     bool stopAtBoundary,
     bool calcJacobianNoise) const {
 
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (debugLvl_ > 0) {
     debugOut << "RKTrackRep::extrapolateToCylinder()\n";
   }
@@ -485,6 +488,7 @@ double RKTrackRep::extrapolateToCone(StateOnPlane& state,
     bool stopAtBoundary,
     bool calcJacobianNoise) const {
 
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (debugLvl_ > 0) {
     debugOut << "RKTrackRep::extrapolateToCone()\n";
   }
@@ -618,6 +622,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
     bool stopAtBoundary,
     bool calcJacobianNoise) const {
 
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (debugLvl_ > 0) {
     debugOut << "RKTrackRep::extrapolateToSphere()\n";
   }
@@ -728,6 +733,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
     bool stopAtBoundary,
     bool calcJacobianNoise) const {
 
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (debugLvl_ > 0) {
     debugOut << "RKTrackRep::extrapolateBy()\n";
   }
@@ -827,6 +833,7 @@ TVector3 RKTrackRep::getPos(const StateOnPlane& state) const {
 
 
 TVector3 RKTrackRep::getMom(const StateOnPlane& state) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
   getState7(state, state7);
 
@@ -837,6 +844,7 @@ TVector3 RKTrackRep::getMom(const StateOnPlane& state) const {
 
 
 void RKTrackRep::getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
   getState7(state, state7);
 
@@ -847,6 +855,7 @@ void RKTrackRep::getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& m
 
 
 void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   getPosMom(state, pos, mom);
   cov.ResizeTo(6,6);
   transformPM6(state, *((M6x6*) cov.GetMatrixArray()));
@@ -854,6 +863,7 @@ void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, 
 
 
 TMatrixDSym RKTrackRep::get6DCov(const MeasuredStateOnPlane& state) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   TMatrixDSym cov(6);
   transformPM6(state, *((M6x6*) cov.GetMatrixArray()));
 
@@ -862,6 +872,7 @@ TMatrixDSym RKTrackRep::get6DCov(const MeasuredStateOnPlane& state) const {
 
 
 double RKTrackRep::getCharge(const StateOnPlane& state) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   if (dynamic_cast<const MeasurementOnPlane*>(&state) != nullptr) {
     Exception exc("RKTrackRep::getCharge - cannot get charge from MeasurementOnPlane",__LINE__,__FILE__);
@@ -880,6 +891,7 @@ double RKTrackRep::getCharge(const StateOnPlane& state) const {
 
 
 double RKTrackRep::getMomMag(const StateOnPlane& state) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   // p = q / qop
   double p = getCharge(state)/state.getState()(0);
   assert (p>=0);
@@ -888,6 +900,7 @@ double RKTrackRep::getMomMag(const StateOnPlane& state) const {
 
 
 double RKTrackRep::getMomVar(const MeasuredStateOnPlane& state) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   if (dynamic_cast<const MeasurementOnPlane*>(&state) != nullptr) {
     Exception exc("RKTrackRep::getMomVar - cannot get momVar from MeasurementOnPlane",__LINE__,__FILE__);
@@ -989,6 +1002,7 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
 }
 
 void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   jacobian.ResizeTo(5,5);
   jacobian = fJacobian_;
@@ -999,6 +1013,7 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
 }
 
 void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   jacobian.ResizeTo(5,5);
   jacobian = fJacobian_;
@@ -1023,6 +1038,7 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
 
 
 void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   if (debugLvl_ > 0) {
     debugOut << "RKTrackRep::getBackwardJacobianAndNoise " << std::endl;
@@ -1063,6 +1079,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 
 
 std::vector<genfit::MatStep> RKTrackRep::getSteps() const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   // Todo: test
 
@@ -1083,6 +1100,7 @@ std::vector<genfit::MatStep> RKTrackRep::getSteps() const {
 
 
 double RKTrackRep::getRadiationLenght() const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   // Todo: test
 
@@ -1103,6 +1121,7 @@ double RKTrackRep::getRadiationLenght() const {
 
 
 void RKTrackRep::setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   if (state.getRep() != this){
     Exception exc("RKTrackRep::setPosMom ==> state is defined wrt. another TrackRep",__LINE__,__FILE__);
@@ -1173,6 +1192,7 @@ void RKTrackRep::setPosMom(StateOnPlane& state, const TVector3& pos, const TVect
 
 
 void RKTrackRep::setPosMom(StateOnPlane& state, const TVectorD& state6) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (state6.GetNrows()!=6){
     Exception exc("RKTrackRep::setPosMom ==> state has to be 6d (x, y, z, px, py, pz)",__LINE__,__FILE__);
     throw exc;
@@ -1182,6 +1202,7 @@ void RKTrackRep::setPosMom(StateOnPlane& state, const TVectorD& state6) const {
 
 
 void RKTrackRep::setPosMomErr(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   // TODO: test!
 
@@ -1224,6 +1245,7 @@ void RKTrackRep::setPosMomErr(MeasuredStateOnPlane& state, const TVector3& pos, 
 
 
 void RKTrackRep::setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   if (cov6x6.GetNcols()!=6 || cov6x6.GetNrows()!=6){
     Exception exc("RKTrackRep::setPosMomCov ==> cov has to be 6x6 (x, y, z, px, py, pz)",__LINE__,__FILE__);
@@ -1242,6 +1264,7 @@ void RKTrackRep::setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, 
 }
 
 void RKTrackRep::setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   if (state6.GetNrows()!=6){
     Exception exc("RKTrackRep::setPosMomCov ==> state has to be 6d (x, y, z, px, py, pz)",__LINE__,__FILE__);
@@ -1299,6 +1322,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
                         double S,
                         bool varField,
                         bool calcOnlyLastRowOfJ) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   // The algorithm is
   //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
   //  "Track parameter propagation through the application of a new adaptive Runge-Kutta-Nyström method in the ATLAS experiment"
@@ -2692,6 +2716,8 @@ bool RKTrackRep::isSameType(const AbsTrackRep* other) {
 
 
 bool RKTrackRep::isSame(const AbsTrackRep* other) {
+  // Deliberately no usageMutex_ lock here: getPDG() locks each rep's own mutex
+  // separately, so two different usageMutex_ are never held at the same time.
   if (getPDG() != other->getPDG())
     return false;
 

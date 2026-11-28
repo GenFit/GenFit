@@ -30,6 +30,12 @@ namespace genfit {
 
 /**
  * @brief AbsMaterialInterface implementation for use with ROOT's TGeoManager.
+ *
+ * Thread safe: TGeo navigation is not safe for concurrent use (reproducible with a
+ * pure-ROOT stress test on 6.40.04, also with TGeoManager::SetMaxThreads), so the
+ * usage sequences of this interface are serialized process-wide and the navigator
+ * keeps single-threaded semantics. Material lookup does not scale across threads;
+ * the rest of the fit does.
  */
 class TGeoMaterialInterface : public AbsMaterialInterface {
 
@@ -56,6 +62,11 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
                           const M1x7& state7,
                           double sMax,
                           bool varField = true) override;
+
+  //! TGeo navigation is not safe for concurrent use (verified with a pure-ROOT
+  //! repro on 6.40.04, also with TGeoManager::SetMaxThreads), so usage sequences
+  //! are serialized process-wide.
+  std::mutex* usageMutex() override;
 
   // ClassDefOverride(TGeoMaterialInterface, 1);
 

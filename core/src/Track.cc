@@ -74,6 +74,7 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<AbsMeasurement
 void
 Track::createMeasurements(const TrackCand& trackCand, const MeasurementFactory<AbsMeasurement>& factory)
 {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   // create the measurements using the factory.
   std::vector <AbsMeasurement*> factoryHits = factory.createMany(trackCand);
 
@@ -148,6 +149,7 @@ Track::Track(const Track& rhs) :
 }
 
 Track& Track::operator=(Track other) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   swap(other);
 
   for (std::vector<TrackPoint*>::const_iterator it=trackPoints_.begin(); it!=trackPoints_.end(); ++it) {
@@ -162,6 +164,7 @@ Track& Track::operator=(Track other) {
 }
 
 void Track::swap(Track& other) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   std::swap(this->trackReps_, other.trackReps_);
   std::swap(this->cardinalRep_, other.cardinalRep_);
   std::swap(this->trackPoints_, other.trackPoints_);
@@ -180,6 +183,7 @@ Track::~Track() {
 
 void Track::Clear(Option_t*)
 {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   // This function is needed for TClonesArray embedding.
   // FIXME: smarter containers or pointers needed ...
   for (size_t i = 0; i < trackPoints_.size(); ++i)
@@ -207,6 +211,7 @@ void Track::Clear(Option_t*)
 
 
 TrackPoint* Track::getPoint(int id) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (id < 0)
     id += trackPoints_.size();
 
@@ -215,6 +220,7 @@ TrackPoint* Track::getPoint(int id) const {
 
 
 TrackPoint* Track::getPointWithMeasurement(int id) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (id < 0)
     id += trackPointsWithMeasurement_.size();
 
@@ -223,6 +229,7 @@ TrackPoint* Track::getPointWithMeasurement(int id) const {
 
 
 TrackPoint* Track::getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRep* rep) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (rep == nullptr)
     rep = getCardinalRep();
 
@@ -253,6 +260,7 @@ TrackPoint* Track::getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRe
 
 
 TrackPoint* Track::getPointWithFitterInfo(int id, const AbsTrackRep* rep) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (rep == nullptr)
     rep = getCardinalRep();
 
@@ -283,6 +291,7 @@ TrackPoint* Track::getPointWithFitterInfo(int id, const AbsTrackRep* rep) const 
 
 
 const MeasuredStateOnPlane& Track::getFittedState(int id, const AbsTrackRep* rep, bool biased) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (rep == nullptr)
     rep = getCardinalRep();
 
@@ -298,6 +307,7 @@ const MeasuredStateOnPlane& Track::getFittedState(int id, const AbsTrackRep* rep
 
 int Track::getIdForRep(const AbsTrackRep* rep) const
 {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   for (size_t i = 0; i < trackReps_.size(); ++i)
     if (trackReps_[i] == rep)
       return i;
@@ -309,6 +319,7 @@ int Track::getIdForRep(const AbsTrackRep* rep) const
 
 
 bool Track::hasFitStatus(const AbsTrackRep* rep) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (rep == nullptr)
     rep = getCardinalRep();
 
@@ -320,6 +331,7 @@ bool Track::hasFitStatus(const AbsTrackRep* rep) const {
 
 
 bool Track::hasKalmanFitStatus(const AbsTrackRep* rep) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (rep == nullptr)
     rep = getCardinalRep();
 
@@ -331,11 +343,13 @@ bool Track::hasKalmanFitStatus(const AbsTrackRep* rep) const {
 
 
 KalmanFitStatus* Track::getKalmanFitStatus(const AbsTrackRep* rep) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   return dynamic_cast<KalmanFitStatus*>(getFitStatus(rep));
 }
 
 
 void Track::setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (fitStatuses_.find(rep) != fitStatuses_.end())
     delete fitStatuses_.at(rep);
 
@@ -344,6 +358,7 @@ void Track::setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep) {
 
 
 void Track::setStateSeed(const TVector3& pos, const TVector3& mom) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   stateSeed_.ResizeTo(6);
 
   stateSeed_(0) = pos.X();
@@ -358,6 +373,7 @@ void Track::setStateSeed(const TVector3& pos, const TVector3& mom) {
 
 
 void Track::insertPoint(TrackPoint* point, int id) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   point->setTrack(this);
 
@@ -418,6 +434,7 @@ void Track::insertPoint(TrackPoint* point, int id) {
 
 
 void Track::insertPoints(std::vector<TrackPoint*> points, int id) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   int nBefore = getNumPoints();
   int n = points.size();
@@ -468,6 +485,7 @@ void Track::insertPoints(std::vector<TrackPoint*> points, int id) {
 
 
 void Track::deletePoint(int id) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   #ifdef DEBUG
   debugOut << "Track::deletePoint at position " << id  << "\n";
@@ -503,10 +521,12 @@ void Track::deletePoint(int id) {
 
 
 void Track::insertMeasurement(AbsMeasurement* measurement, int id) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   insertPoint(new TrackPoint(measurement, this), id);
 }
   
 void Track::deleteFittedState(const genfit::AbsTrackRep* rep) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if(hasFitStatus(rep)) {
     delete fitStatuses_.at(rep);
     fitStatuses_.erase(rep);
@@ -522,6 +542,7 @@ void Track::deleteFittedState(const genfit::AbsTrackRep* rep) {
 
 
 void Track::mergeTrack(const Track* other, int id) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   #ifdef DEBUG
   debugOut << "Track::mergeTrack\n";
@@ -571,12 +592,14 @@ void Track::mergeTrack(const Track* other, int id) {
 
 
 void Track::addTrackRep(AbsTrackRep* trackRep) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   trackReps_.push_back(trackRep);
   fitStatuses_[trackRep] = new FitStatus();
 }
 
 
 void Track::deleteTrackRep(int id) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (id < 0)
     id += trackReps_.size();
 
@@ -604,6 +627,7 @@ void Track::deleteTrackRep(int id) {
 
 
 void Track::setCardinalRep(int id) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   if (id < 0)
     id += trackReps_.size();
@@ -618,6 +642,7 @@ void Track::setCardinalRep(int id) {
 
 
 void Track::determineCardinalRep() {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   // Todo: test
 
@@ -643,6 +668,7 @@ void Track::determineCardinalRep() {
 
 
 bool Track::sort() {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   #ifdef DEBUG
   debugOut << "Track::sort \n";
   #endif
@@ -692,6 +718,7 @@ bool Track::sort() {
 
 
 bool Track::updateSeed(int id, AbsTrackRep* rep, bool biased) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   try {
     const MeasuredStateOnPlane& fittedState = getFittedState(id, rep, biased);
     setTimeSeed(fittedState.getTime());
@@ -715,6 +742,7 @@ bool Track::updateSeed(int id, AbsTrackRep* rep, bool biased) {
 
 
 void Track::reverseTrackPoints() {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   std::reverse(trackPoints_.begin(),trackPoints_.end());
 
@@ -727,6 +755,7 @@ void Track::reverseTrackPoints() {
 
 
 void Track::switchPDGSigns(AbsTrackRep* rep) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   if (rep != nullptr) {
     rep->switchPDGSign();
     return;
@@ -739,6 +768,7 @@ void Track::switchPDGSigns(AbsTrackRep* rep) {
 
 
 void Track::reverseTrack() {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   updateSeed(-1); // set fitted state of last hit as new seed
   reverseMomSeed(); // flip momentum direction
   switchPDGSigns();
@@ -747,6 +777,7 @@ void Track::reverseTrack() {
 
 
 void Track::deleteForwardInfo(int startId, int endId, const AbsTrackRep* rep) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   #ifdef DEBUG
   debugOut << "Track::deleteForwardInfo from position " << startId  << " to " << endId << "\n";
   #endif
@@ -776,6 +807,7 @@ void Track::deleteForwardInfo(int startId, int endId, const AbsTrackRep* rep) {
 }
 
 void Track::deleteBackwardInfo(int startId, int endId, const AbsTrackRep* rep) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   #ifdef DEBUG
   debugOut << "Track::deleteBackwardInfo from position " << startId  << " to " << endId << "\n";
@@ -807,6 +839,7 @@ void Track::deleteBackwardInfo(int startId, int endId, const AbsTrackRep* rep) {
 }
 
 void Track::deleteReferenceInfo(int startId, int endId, const AbsTrackRep* rep) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   #ifdef DEBUG
   debugOut << "Track::deleteReferenceInfo from position " << startId  << " to " << endId << "\n";
@@ -837,6 +870,7 @@ void Track::deleteReferenceInfo(int startId, int endId, const AbsTrackRep* rep) 
 }
 
 void Track::deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   #ifdef DEBUG
   debugOut << "Track::deleteMeasurementInfo from position " << startId  << " to " << endId << "\n";
@@ -867,6 +901,7 @@ void Track::deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep
 }
 
 void Track::deleteFitterInfo(int startId, int endId, const AbsTrackRep* rep) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   #ifdef DEBUG
   debugOut << "Track::deleteFitterInfo from position " << startId  << " to " << endId << "\n";
@@ -898,6 +933,7 @@ void Track::deleteFitterInfo(int startId, int endId, const AbsTrackRep* rep) {
 
 
 double Track::getTrackLen(AbsTrackRep* rep, int startId, int endId) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   if (startId < 0)
     startId += trackPoints_.size();
@@ -941,6 +977,7 @@ double Track::getTrackLen(AbsTrackRep* rep, int startId, int endId) const {
 
 
 TrackCand* Track::constructTrackCand() const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   TrackCand* cand = new TrackCand();
 
   cand->setTime6DSeedAndPdgCode(timeSeed_, stateSeed_, getCardinalRep()->getPDG());
@@ -977,6 +1014,7 @@ TrackCand* Track::constructTrackCand() const {
 
 
 double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   if (startId < 0)
     startId += trackPoints_.size();
@@ -1010,6 +1048,7 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
 
 
 void Track::fixWeights(AbsTrackRep* rep, int startId, int endId) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   if (startId < 0)
     startId += trackPoints_.size();
@@ -1043,6 +1082,7 @@ void Track::fixWeights(AbsTrackRep* rep, int startId, int endId) {
 
 
 void Track::prune(const Option_t* option) {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   PruneFlags f;
   f.setFlags(option);
@@ -1118,6 +1158,7 @@ void Track::prune(const Option_t* option) {
 
 
 void Track::Print(const Option_t* option) const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   TString opt = option;
   opt.ToUpper();
   if (opt.Contains("C")) { // compact
@@ -1284,6 +1325,7 @@ void Track::Print(const Option_t* option) const {
 
 
 void Track::checkConsistency() const {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
 
   // cppcheck-suppress unreadVariable
   bool consistent = true;
@@ -1640,6 +1682,7 @@ void Track::Streamer(TBuffer &R__b)
 }
 
 void Track::deleteTrackPointsAndFitStatus() {
+  std::lock_guard<std::recursive_mutex> lock(usageMutex_);
   for (size_t i = 0; i < trackPoints_.size(); ++i)
     delete trackPoints_[i];
 

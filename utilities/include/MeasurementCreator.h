@@ -32,6 +32,7 @@
 #include "HelixTrackModel.h"
 
 #include <TObject.h>
+#include <TRandom3.h>
 #include <TVector3.h>
 
 
@@ -118,6 +119,10 @@ class MeasurementCreator : public TObject {
   // misc
   int measurementCounter_;
   bool debug_;
+  //! Per-instance RNG, seeded from gRandom's seed at construction (set gRandom's
+  //! seed before constructing for reproducible events). Several threads may
+  //! generate measurements concurrently, each with its own MeasurementCreator.
+  TRandom3 rand_; //!
 
 
  public:
